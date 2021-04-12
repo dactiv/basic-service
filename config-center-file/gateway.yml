@@ -1,0 +1,47 @@
+spring:
+  application:
+    crypto:
+      access:
+        algorithm-mode:
+          algorithm: "AES"
+          mode: "CBC"
+          block-size: 0
+          padding-scheme: "PKCS5"
+          streaming-mode: "CBC"
+          streaming-block-size: 0
+          streaming-padding-scheme: "PKCS5"
+          keySize: 128
+          initialization-vector-size: 128
+  redis:
+    host: localhost
+    port: 6379
+  cloud:
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+          predicates:
+            - name: Path
+              args:
+                pattern: "'/'+serviceId+'/**'"
+          filters:
+            - name: RewritePath
+              args:
+                regexp: "'/' + serviceId + '/(?<remaining>.*)'"
+                replacement: "'/${remaining}'"
+            - name: AddRequestHeader
+              args:
+                name: "'X-REQUEST-CLIENT'"
+                value: "'SPRING_GATEWAY'"
+    sentinel:
+      transport:
+        port: 8787
+        dashboard: localhost:8787
+      eager: true
+      datasource:
+        gateway-api-group-api-group:
+          nacos:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            data-id: sentinel-gateway-api-group.json
+            group-id: DEFAULT_GROUP
+            rule-type: GW_API_GROUP

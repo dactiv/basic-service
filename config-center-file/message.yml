@@ -1,0 +1,65 @@
+spring:
+  mail:
+    username: 用户名
+    password: 密码
+    host: smtp.exmail.qq.com
+    protocol: smtp
+    port: 465
+    properties:
+      mail:
+        smtp:
+          auth: true
+          ssl:
+            enable: true
+            socketFactory:
+              class: com.sun.mail.util.MailSSLSocketFactory
+              fallback: false
+  sms:
+    channel: yimei
+    yimei:
+      id: appid
+      password: 密码
+      url: 接口地址
+  site:
+    message:
+      channel: umeng
+      umeng:
+        url: 接口地址
+        production-mode: false
+        expire-time-in-second: 86400000
+        ios:
+          app-key: app 密钥
+          secret-key: 安全密钥
+        android:
+          app-key: app 密钥
+          secret-key: 安全密钥
+          push: true
+          activity: 路径
+  datasource:
+    url: jdbc:mysql://localhost:3306/message?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    driverClassName: com.mysql.jdbc.Driver
+    username: 用户名
+    password: 密码
+    type: com.zaxxer.hikari.HikariDataSource
+  redis:
+    host: localhost
+    port: 6379
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: 用户名
+    password: 密码
+    publisher-returns: true
+    publisher-confirm-type: correlated
+    listener:
+      direct:
+        acknowledge-mode: manual
+      simple:
+        acknowledge-mode: manual
+        retry:
+          initial-interval: 45000
+          max-interval: 80000
+          enabled: true
+    cache:
+      channel:
+        size: 100

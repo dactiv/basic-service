@@ -1,0 +1,151 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--系统用户映射文件-->
+
+<mapper namespace="com.fuyu.basic.authentication.dao.MemberUserDao">
+
+    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.MemberUser">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
+        <result column="username" jdbcType="VARCHAR" property="username"/>
+        <result column="password" jdbcType="CHAR" property="password"/>
+        <result column="email" jdbcType="VARCHAR" property="email"/>
+        <result column="phone" jdbcType="VARCHAR" property="phone"/>
+        <result column="status" jdbcType="TINYINT" property="status"/>
+    </resultMap>
+
+    <!-- 查询条件 -->
+    <sql id="selectCondition">
+        <include refid="com.fuyu.basic.authentication.support.Include.memberUserSelectCondition"></include>
+    </sql>
+
+    <sql id="baseColumnList">
+        id,
+        creation_time,
+        username,
+        password,
+        email,
+        phone,
+        status
+    </sql>
+
+    <select id="get" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_member_user
+        WHERE
+        id = #{id}
+    </select>
+
+    <select id="lock" resultMap="baseResultMap">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_member_user
+        WHERE
+            id = #{id}
+        FOR UPDATE
+    </select>
+
+    <select id="count" resultType="long" parameterType="java.util.Map">
+        SELECT
+            COUNT(id)
+        FROM
+            tb_member_user
+        <include refid="selectCondition" />
+    </select>
+
+    <select id="find" resultMap="baseResultMap" parameterType="java.util.Map">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_member_user
+        <include refid="selectCondition"/>
+        ORDER BY id DESC
+        <if test="first != null and last != null">
+            LIMIT #{first}, #{last}
+        </if>
+    </select>
+
+    <delete id="delete">
+        DELETE FROM tb_member_user WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="memberUser">
+        UPDATE
+            tb_member_user
+        SET
+            creation_time = #{creationTime},
+            username = #{username},
+            password = #{password},
+            email = #{email},
+            phone = #{phone},
+            status = #{status}
+        WHERE
+            id = #{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="memberUser">
+        INSERT INTO tb_member_user (
+            creation_time,
+            username,
+            password,
+            email,
+            phone,
+            status
+        ) VALUES (
+            #{creationTime},
+            #{username},
+            #{password},
+            #{email},
+            #{phone},
+            #{status}
+        )
+    </insert>
+
+    <!-- 将代码添加到以下区域，以免生成后被覆盖 -->
+
+    <delete id="deleteGroupAssociation">
+        DELETE FROM tb_group_member_user WHERE user_id = #{id}
+    </delete>
+
+    <insert id="insertGroupAssociation">
+        INSERT INTO
+        tb_group_member_user(user_id,group_id)
+        VALUES
+        <foreach collection="groupIds" item="groupId" index="index" separator=",">
+            (#{id}, #{groupId})
+        </foreach>
+    </insert>
+
+    <update id="updatePassword">
+        UPDATE
+            tb_member_user
+        SET
+            password = #{password}
+        WHERE
+            id = #{id}
+    </update>
+
+    <update id="updateUsername">
+        UPDATE
+            tb_member_user
+        SET
+            username = #{username}
+        WHERE
+            id = #{id}
+    </update>
+
+    <select id="getByIdentified" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_member_user
+        WHERE
+        username = #{identified}
+        OR email = #{identified}
+        OR phone = #{identified}
+    </select>
+</mapper>

@@ -1,0 +1,15 @@
+{
+  "groups": [
+    {
+      "name": "fuyu"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.security.support.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enabled spring security support .",
+      "defaultValue": true
+    }
+  ]
+}

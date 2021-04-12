@@ -1,0 +1,47 @@
+[
+  {
+    "id": 1,
+    "app": "gateway",
+    "ip": "localhost",
+    "port": 8080,
+    "gmtCreate": null,
+    "gmtModified": null,
+    "apiName": "authentication",
+    "predicateItems": [
+      {
+        "pattern": "/authentication/**",
+        "matchStrategy": 1
+      }
+    ]
+  },
+  {
+    "id": 2,
+    "app": "gateway",
+    "ip": "localhost",
+    "port": 8080,
+    "gmtCreate": null,
+    "gmtModified": null,
+    "apiName": "config",
+    "predicateItems": [
+      {
+        "pattern": "/config/**",
+        "matchStrategy": 1
+      }
+    ]
+  },
+  {
+    "id": 3,
+    "app": "gateway",
+    "ip": "localhost",
+    "port": 8080,
+    "gmtCreate": null,
+    "gmtModified": null,
+    "apiName": "captcha",
+    "predicateItems": [
+      {
+        "pattern": "/captcha/**",
+        "matchStrategy": 1
+      }
+    ]
+  }
+]

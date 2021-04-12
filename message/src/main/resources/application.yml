@@ -1,0 +1,16 @@
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.fuyu.basic.message.dao.entity
+
+
+plugin:
+  base-packages: com.fuyu.basic.message.controller
+  parent:
+    message:
+      name: '消息管理'
+
+info:
+  version: @version@
+  name: @name@
+  artifact-id: ${spring.application.name}
+  group-id: @groupId@

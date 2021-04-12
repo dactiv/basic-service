@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="com.fuyu.basic.config.support.Include">
+
+    <!-- tb_access_crypto[访问加解密表]列表查询条件 -->
+    <sql id="accessCryptoSelectCondition">
+        <where>
+
+            <if test="typeEq != null and !''.equals(typeEq)">
+                AND type = #{typeEq}
+            </if>
+
+            <if test="enabledEq != null and !''.equals(enabledEq)">
+                AND enabled = #{enabledEq}
+            </if>
+
+            <if test="responseEncryptEq != null and !''.equals(responseEncryptEq)">
+                AND response_encrypt = #{responseEncryptEq}
+            </if>
+
+            <if test="requestDecryptEq != null and !''.equals(requestDecryptEq)">
+                AND request_decrypt = #{requestDecryptEq}
+            </if>
+
+            <if test="valueLike != null and !''.equals(valueLike)">
+                <bind name="valueLike" value=" '%' + valueLike + '%' "/>
+                AND value LIKE #{valueLike}
+            </if>
+
+            AND enabled = 1
+
+        </where>
+    </sql>
+
+    <!-- tb_access_crypto_predicate[访问加解密条件表]列表查询条件 -->
+    <sql id="accessCryptoPredicateSelectCondition">
+        <where>
+
+            <if test="accessCryptoIdEq != null and !''.equals(accessCryptoIdEq)">
+                AND access_crypto_id = #{accessCryptoIdEq}
+            </if>
+
+        </where>
+    </sql>
+
+    <!-- tb_data_dictionary[数据字典表]列表查询条件 -->
+    <sql id="dataDictionarySelectCondition">
+        <where>
+
+            <if test="nameLike != null and !''.equals(nameLike)">
+                <bind name="nameLike" value=" '%' + nameLike + '%' "/>
+                AND name LIKE #{name}
+            </if>
+
+            <if test="valueEq != null and !''.equals(valueEq)">
+                AND value = #{valueEq}
+            </if>
+
+            <if test="valueLike != null and !''.equals(valueLike)">
+                <bind name="valueLike" value=" '%' + valueLike + '%' "/>
+                AND value LIKE #{valueLike}
+            </if>
+
+            <if test="codeEq != null and !''.equals(codeEq)">
+                AND code = #{codeEq}
+            </if>
+
+            <if test="codeLike != null and !''.equals(codeLike)">
+                <bind name="codeLike" value=" '%' + codeLike + '%' "/>
+                AND code LIKE #{codeLike}
+            </if>
+
+            <if test="parentIdEq != null and !''.equals(parentIdEq)">
+                AND parent_id = #{parentIdEq}
+            </if>
+
+            <if test="typeIdEq != null and !''.equals(typeIdEq)">
+                AND type_id = #{typeIdEq}
+            </if>
+        </where>
+    </sql>
+
+    <!-- tb_dictionary_type[数据字典类型表]列表查询条件 -->
+    <sql id="dictionaryTypeSelectCondition">
+        <where>
+            <trim suffixOverrides="and">
+
+                <if test="nameLike != null and !''.equals(nameLike)">
+                    <bind name="nameLike" value=" '%' + nameLike + '%' "/>
+                    AND name LIKE #{nameLike}
+                </if>
+
+                <if test="codeLike != null and !''.equals(codeLike)">
+                    <bind name="codeLike" value=" '%' + codeLike + '%' "/>
+                    AND code LIKE #{codeLike}
+                </if>
+
+                <if test="codeEq != null and !''.equals(codeEq)">
+                    AND code = #{codeEq}
+                </if>
+
+                <if test="parentIdEq != null and !''.equals(parentIdEq)">
+                    AND parent_id = #{parentIdEq}
+                </if>
+
+            </trim>
+        </where>
+    </sql>
+
+
+</mapper>

@@ -1,0 +1,15 @@
+{
+  "groups": [
+    {
+      "name": "fuyu"
+    }
+  ],
+  "properties": [
+    {
+      "name": "spring.mvc.support.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enabled spring mvc support .",
+      "defaultValue": true
+    }
+  ]
+}

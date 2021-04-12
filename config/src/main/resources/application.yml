@@ -1,0 +1,20 @@
+mybatis:
+  mapper-locations: classpath*:mapper/*.xml
+  type-aliases-package: com.fuyu.basic.config.dao.entity
+
+enumerate:
+  base-packages:
+    - com.fuyu.basic.commons.enumerate
+    - com.fuyu.basic.support.security
+
+plugin:
+  base-packages: com.fuyu.basic.config.controller
+  parent:
+    config:
+      name: '配置管理'
+
+info:
+  version: @version@
+  name: @name@
+  artifact-id: ${spring.application.name}
+  group-id: @groupId@

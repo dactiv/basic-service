@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 数据字典表数据访问映射 -->
+<mapper namespace="com.fuyu.basic.config.dao.DataDictionaryDao">
+
+    <resultMap id="baseResultMap" type="com.fuyu.basic.config.dao.entity.DataDictionary">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="level" jdbcType="VARCHAR" property="level"/>
+        <result column="value" jdbcType="VARCHAR" property="value"/>
+        <result column="status" jdbcType="TINYINT" property="status"/>
+        <result column="type_id" jdbcType="INTEGER" property="typeId"/>
+        <result column="parent_id" jdbcType="INTEGER" property="parentId"/>
+        <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
+        <result column="sort" jdbcType="TINYINT" property="sort"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+    </resultMap>
+
+    <!-- 查询条件 -->
+    <sql id="selectCondition">
+        <include refid="com.fuyu.basic.config.support.Include.dataDictionarySelectCondition"></include>
+    </sql>
+
+    <sql id="baseColumnList">
+        id,
+        code,
+        name,
+        level,
+        value,
+        status,
+        type_id,
+        parent_id,
+        creation_time,
+        sort,
+        remark
+    </sql>
+
+    <select id="get" resultMap="baseResultMap">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_data_dictionary
+        WHERE
+            id = #{id}
+    </select>
+
+    <select id="lock" resultMap="baseResultMap">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_data_dictionary
+        WHERE
+            id = #{id}
+        FOR UPDATE
+    </select>
+
+    <select id="count" resultType="long" parameterType="java.util.Map">
+        SELECT
+            COUNT(id)
+        FROM
+            tb_data_dictionary
+        <include refid="selectCondition" />
+    </select>
+
+    <select id="find" resultMap="baseResultMap" parameterType="java.util.Map">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_data_dictionary
+        <include refid="selectCondition"/>
+        ORDER BY id
+        <if test="first != null and last != null">
+            LIMIT #{first}, #{last}
+        </if>
+    </select>
+
+    <delete id="delete">
+        DELETE FROM tb_data_dictionary WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="dataDictionary">
+        UPDATE
+            tb_data_dictionary
+        SET
+            code = #{code},
+            name = #{name},
+            level = #{level},
+            value = #{value},
+            status = #{status},
+            type_id = #{typeId},
+            parent_id = #{parentId},
+            creation_time = #{creationTime},
+            sort = #{sort},
+            remark = #{remark}
+        WHERE
+            id = #{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="dataDictionary">
+        INSERT INTO tb_data_dictionary (
+            code,
+            name,
+            level,
+            value,
+            status,
+            type_id,
+            parent_id,
+            creation_time,
+            sort,
+            remark
+        ) VALUES (
+            #{code},
+            #{name},
+            #{level},
+            #{value},
+            #{status},
+            #{typeId},
+            #{parentId},
+            #{creationTime},
+            #{sort},
+            #{remark}
+        )
+    </insert>
+
+    <!-- 将代码添加到以下区域，以免生成后被覆盖 -->
+
+</mapper>

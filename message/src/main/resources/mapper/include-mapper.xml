@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+
+<mapper namespace="com.fuyu.basic.message.support.Include">
+
+    <!-- tb_email_message[邮件消息]列表查询条件 -->
+    <sql id="emailMessageSelectCondition">
+        <where>
+            <trim suffixOverrides="AND">
+                <if test="retryCountLt != null and !''.equals(retryCountLt)">
+                    <![CDATA[ AND retry_count < #{retryCountLt}]]>
+                </if>
+
+                <if test="fromUserLike != null and !''.equals(fromUserLike)">
+                    <bind name="fromUserLike" value=" '%' + fromUserLike + '%' "/>
+                    AND from_user LIKE #{fromUserLike}
+                </if>
+
+                <if test="toUserLike != null and !''.equals(toUserLike)">
+                    <bind name="toUserLike" value=" '%' + toUserLike + '%' "/>
+                    AND to_user LIKE #{toUserLike}
+                </if>
+
+                <if test="contentLike != null and !''.equals(contentLike)">
+                    <bind name="contentLike" value=" '%' + contentLike + '%' "/>
+                    AND content LIKE #{contentLike}
+                </if>
+
+                <if test="fromUserEq != null and !''.equals(fromUserEq)">
+                    AND from_user = #{fromUserEq}
+                </if>
+
+                <if test="toUserEq != null and !''.equals(toUserEq)">
+                    AND to_user = #{toUserEq}
+                </if>
+
+                <if test="typeLike != null and !''.equals(typeLike)">
+                    <bind name="typeLike" value=" '%' + typeLike + '%' "/>
+                    AND type LIKE #{typeLike}
+                </if>
+
+                <if test="statusEq != null and !''.equals(statusEq)">
+                    AND status = #{statusEq}
+                </if>
+            </trim>
+        </where>
+    </sql>
+
+    <!-- tb_site_message[站内信消息]列表查询条件 -->
+    <sql id="siteMessageSelectCondition">
+        <where>
+            <trim suffixOverrides="AND">
+
+                <if test="contentLike != null and !''.equals(contentLike)">
+                    <bind name="contentLike" value=" '%' + contentLike + '%' "/>
+                    AND content LIKE #{contentLike}
+                </if>
+
+                <if test="fromUserIdEq != null and !''.equals(fromUserIdEq)">
+                    AND from_user_id = #{fromUserIdEq}
+                </if>
+
+                <if test="toUserIdEq != null and !''.equals(toUserIdEq)">
+                    AND to_user_id = #{toUserIdEq}
+                </if>
+
+                <if test="typeEq != null and !''.equals(typeEq)">
+                    AND type = #{typeEq}
+                </if>
+
+                <if test="typeContain != null and typeContain.size > 0">
+                    AND type IN
+                    <foreach collection="typeContain" item="s" index="index" open="(" close=")" separator=",">
+                        #{s}
+                    </foreach>
+                </if>
+
+                <if test="pushMessageEq != null and !''.equals(pushMessageEq)">
+                    AND push_message = #{pushMessageEq}
+                </if>
+
+                <if test="readEq != null and !''.equals(readEq)">
+                    AND read = #{readEq}
+                </if>
+            </trim>
+        </where>
+    </sql>
+
+    <!-- tb_sms_message[短信消息]列表查询条件 -->
+    <sql id="smsMessageSelectCondition">
+        <where>
+            <trim suffixOverrides="AND">
+
+                <if test="contentLike != null and !''.equals(contentLike)">
+                    <bind name="contentLike" value=" '%' + contentLike + '%' "/>
+                    AND content LIKE #{contentLike}
+                </if>
+
+                <if test="phoneNumberLike != null and !''.equals(phoneNumberLike)">
+                    <bind name="phoneNumberLike" value=" '%' + phoneNumberLike + '%' "/>
+                    AND phone_number LIKE #{phoneNumberLike}
+                </if>
+
+                <if test="phoneNumberEq != null and !''.equals(phoneNumberEq)">
+                    AND phone_number = #{phoneNumberEq}
+                </if>
+
+                <if test="statusEq != null and !''.equals(statusEq)">
+                    AND status = #{statusEq}
+                </if>
+
+                <if test="retryCountLt != null and !''.equals(retryCountLt)">
+                    <![CDATA[ AND retry_count < #{retryCountLt}]]>
+                </if>
+
+                <if test="typeLike != null and !''.equals(typeLike)">
+                    <bind name="typeLike" value=" '%' + typeLike + '%' "/>
+                    AND type LIKE #{typeLike}
+                </if>
+
+            </trim>
+        </where>
+    </sql>
+
+
+</mapper>

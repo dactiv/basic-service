@@ -1,0 +1,246 @@
+1234567890abcdefghijklnmopqrsduvwxyz一串中文后面跟着标点符号~!@#$%^&*()_+-=[]{}';,./?><:
+
+AES only supports key sizes of 16, 24 or 32 bytes. You either need to provide exactly that amount or you derive the key from what you type in.
+
+There are different ways to derive the key from a passphrase. Java provides a PBKDF2 implementation for such a purpose.
+
+I used erickson's answer to paint a complete picture (only encryption, since the decryption is similar, but includes splitting the ciphertext):
+
+SecureRandom random = new SecureRandom();
+byte[] salt = new byte[16];
+random.nextBytes(salt);
+
+KeySpec spec = new PBEKeySpec("password".toCharArray(), salt, 65536, 256); // AES-256
+SecretKeyFactory f = SecretKeyFactory.getInstance("PBKDF2WithHmacSHA1");
+byte[] key = f.generateSecret(spec).getEncoded();
+
+byte[] ivBytes = new byte[16];
+random.nextBytes(ivBytes);
+IvParameterSpec iv = new IvParameterSpec(ivBytes);
+
+Cipher c = Cipher.getInstance("AES/CBC/PKCS5Padding");
+c.init(Cipher.ENCRYPT_MODE, key, iv);
+byte[] encValue = c.doFinal(valueToEnc.getBytes());
+
+byte[] finalCiphertext = new byte[encValue.length+2*16];
+System.arraycopy(ivBytes, 0, finalCiphertext, 0, 16);
+System.arraycopy(salt, 0, finalCiphertext, 16, 16);
+System.arraycopy(encValue, 0, finalCiphertext, 32, encValue.length);
+
+return finalCiphertext;
+Other things to keep in mind:
+
+Always use a fully qualified Cipher name. AES is not appropriate in such a case, because different JVMs/JCE providers may use different defaults for mode of operation and padding. Use AES/CBC/PKCS5Padding. Don't use ECB mode, because it is not semantically secure.
+If you don't use ECB mode then you need to send the IV along with the ciphertext. This is usually done by prefixing the IV to the ciphertext byte array. The IV is automatically created for you and you can get it through cipherInstance.getIV().
+Whenever you send something, you need to be sure that it wasn't altered along the way. It is hard to implement a encryption with MAC correctly. I recommend you to use an authenticated mode like CCM or GCM.
+
+
+6
+down vote
+favorite
+2
+I am working on a web based text encryption and decryption project on eclipse(following Struts 2)
+
+Whenever I enter the password and the plain text I get a Invalid AES Key Length error.
+
+The Service Class(SymAES.java)
+
+package com.anoncrypt.services;
+
+import java.security.Key;
+import javax.crypto.Cipher;
+import javax.crypto.spec.SecretKeySpec;
+
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
+
+public class SymAES
+{
+    private static final String ALGORITHM = "AES";
+    private static byte[] keyValue= new byte[] { 'T', 'h', 'i', 's', 'I', 's', 'A', 'S', 'e', 'c', 'r', 'e', 't', 'K', 'e', 'y' };
+
+     public  String encode(String valueToEnc) throws Exception {
+         System.out.println("The Key byte value"+keyValue );
+
+        Key key = generateKey();
+        Cipher c = Cipher.getInstance(ALGORITHM);
+        c.init(Cipher.ENCRYPT_MODE, key);
+        byte[] encValue = c.doFinal(valueToEnc.getBytes());
+        String encryptedValue = new BASE64Encoder().encode(encValue);
+        return encryptedValue;
+    }
+
+    public  String decode(String encryptedValue) throws Exception {
+        Key key = generateKey();
+        Cipher c = Cipher.getInstance(ALGORITHM);
+        c.init(Cipher.DECRYPT_MODE, key);
+        byte[] decordedValue = new BASE64Decoder().decodeBuffer(encryptedValue);
+        byte[] decValue = c.doFinal(decordedValue);
+        String decryptedValue = new String(decValue);
+        return decryptedValue;
+    }
+
+    private static Key generateKey() throws Exception {
+        //System.out.println("passs value"+pass);
+
+        System.out.println("The Key byte value instde genkey"+keyValue );
+        Key key = new SecretKeySpec(keyValue, ALGORITHM);
+        return key;
+    }
+
+    public  void start(String passcode)throws Exception
+    {
+        keyValue = passcode.getBytes();
+        System.out.println("passcode"+passcode);
+        System.out.println("The Key byte value inside start"+keyValue );
+    }
+}
+Here is the Action Class(SymEncrypt.java)
+
+package com.anoncrypt.actions;
+
+import com.anoncrypt.services.SymAES;
+
+public class SymEncrypt  {
+    private String encrypt;
+    private String encrypted;
+    private String password;
+
+    boolean TEMP;
+
+    public String execute() throws Exception {
+        SymAES ob=new SymAES();
+        ob.start(getPassword());
+
+        setEncrypted( ob.encode(getEncrypt()));
+        System.out.println("into action class "+getEncrypted());
+
+        if(getEncrypted().equals(null))
+             return "error";
+        else
+             return "success";
+    }
+
+    public String getEncrypted() {
+        return encrypted;
+    }
+
+    public void setEncrypted(String encrypted) {
+        this.encrypted = encrypted;
+    }
+
+    public String getEncrypt() {
+        return encrypt;
+    }
+
+    public void setEncrypt(String encrypt) {
+        this.encrypt = encrypt;
+    }
+
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
+}
+And this is the error
+
+java.security.InvalidKeyException: Invalid AES key length: 6 bytes
+    com.sun.crypto.provider.AESCrypt.init(AESCrypt.java:87)
+    com.sun.crypto.provider.ElectronicCodeBook.init(ElectronicCodeBook.java:93)
+    com.sun.crypto.provider.CipherCore.init(CipherCore.java:582)
+    com.sun.crypto.provider.CipherCore.init(CipherCore.java:458)
+    com.sun.crypto.provider.AESCipher.engineInit(AESCipher.java:307)
+    javax.crypto.Cipher.implInit(Cipher.java:797)
+    javax.crypto.Cipher.chooseProvider(Cipher.java:859)
+    javax.crypto.Cipher.init(Cipher.java:1229)
+    javax.crypto.Cipher.init(Cipher.java:1166)
+    com.anoncrypt.services.SymAES.encode(SymAES.java:35)
+    com.anoncrypt.actions.SymEncrypt.execute(SymEncrypt.java:24)
+    sun.reflect.NativeMethodAccessorImpl.invoke0(Native Method)
+    sun.reflect.NativeMethodAccessorImpl.invoke(Unknown Source)
+    sun.reflect.DelegatingMethodAccessorImpl.invoke(Unknown Source)
+    java.lang.reflect.Method.invoke(Unknown Source)
+    ognl.OgnlRuntime.invokeMethod(OgnlRuntime.java:870)
+    ognl.OgnlRuntime.callAppropriateMethod(OgnlRuntime.java:1293)
+    ognl.ObjectMethodAccessor.callMethod(ObjectMethodAccessor.java:68)
+    com.opensymphony.xwork2.ognl.accessor.XWorkMethodAccessor.callMethodWithDebugInfo(XWorkMethodAccessor.java:117)
+    com.opensymphony.xwork2.ognl.accessor.XWorkMethodAccessor.callMethod(XWorkMethodAccessor.java:108)
+    ognl.OgnlRuntime.callMethod(OgnlRuntime.java:1369)
+    ognl.ASTMethod.getValueBody(ASTMethod.java:90)
+    ognl.SimpleNode.evaluateGetValueBody(SimpleNode.java:212)
+    ognl.SimpleNode.getValue(SimpleNode.java:258)
+    ognl.Ognl.getValue(Ognl.java:494)
+    ognl.Ognl.getValue(Ognl.java:458)
+    com.opensymphony.xwork2.ognl.OgnlUtil$2.execute(OgnlUtil.java:309)
+    com.opensymphony.xwork2.ognl.OgnlUtil.compileAndExecute(OgnlUtil.java:340)
+    com.opensymphony.xwork2.ognl.OgnlUtil.getValue(OgnlUtil.java:307)
+    com.opensymphony.xwork2.DefaultActionInvocation.invokeAction(DefaultActionInvocation.java:423)
+    com.opensymphony.xwork2.DefaultActionInvocation.invokeActionOnly(DefaultActionInvocation.java:287)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:250)
+    org.apache.struts2.interceptor.DeprecationInterceptor.intercept(DeprecationInterceptor.java:41)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.debugging.DebuggingInterceptor.intercept(DebuggingInterceptor.java:256)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.DefaultWorkflowInterceptor.doIntercept(DefaultWorkflowInterceptor.java:167)
+    com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept(MethodFilterInterceptor.java:98)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.validator.ValidationInterceptor.doIntercept(ValidationInterceptor.java:265)
+    org.apache.struts2.interceptor.validation.AnnotationValidationInterceptor.doIntercept(AnnotationValidationInterceptor.java:76)
+    com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept(MethodFilterInterceptor.java:98)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ConversionErrorInterceptor.intercept(ConversionErrorInterceptor.java:138)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept(ParametersInterceptor.java:229)
+    com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept(MethodFilterInterceptor.java:98)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ParametersInterceptor.doIntercept(ParametersInterceptor.java:229)
+    com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept(MethodFilterInterceptor.java:98)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.StaticParametersInterceptor.intercept(StaticParametersInterceptor.java:191)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.MultiselectInterceptor.intercept(MultiselectInterceptor.java:73)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.DateTextFieldInterceptor.intercept(DateTextFieldInterceptor.java:125)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.CheckboxInterceptor.intercept(CheckboxInterceptor.java:91)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.FileUploadInterceptor.intercept(FileUploadInterceptor.java:253)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ModelDrivenInterceptor.intercept(ModelDrivenInterceptor.java:100)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ScopedModelDrivenInterceptor.intercept(ScopedModelDrivenInterceptor.java:141)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ChainingInterceptor.intercept(ChainingInterceptor.java:145)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.PrepareInterceptor.doIntercept(PrepareInterceptor.java:171)
+    com.opensymphony.xwork2.interceptor.MethodFilterInterceptor.intercept(MethodFilterInterceptor.java:98)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.I18nInterceptor.intercept(I18nInterceptor.java:139)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.interceptor.ServletConfigInterceptor.intercept(ServletConfigInterceptor.java:164)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.AliasInterceptor.intercept(AliasInterceptor.java:193)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    com.opensymphony.xwork2.interceptor.ExceptionMappingInterceptor.intercept(ExceptionMappingInterceptor.java:189)
+    com.opensymphony.xwork2.DefaultActionInvocation.invoke(DefaultActionInvocation.java:244)
+    org.apache.struts2.impl.StrutsActionProxy.execute(StrutsActionProxy.java:54)
+    org.apache.struts2.dispatcher.Dispatcher.serviceAction(Dispatcher.java:564)
+    org.apache.struts2.dispatcher.ng.ExecuteOperations.executeAction(ExecuteOperations.java:81)
+    org.apache.struts2.dispatcher.ng.filter.StrutsPrepareAndExecuteFilter.doFilter(StrutsPrepareAndExecuteFilter.java:99)
+java encryption aes
+shareimprove this question
+edited Mar 30 '15 at 19:09
+
+Artjom B.
+49.1k1664107
+asked Mar 30 '15 at 19:02
+
+Rishabh Upadhyay
+53115
+
+I guess you don't have Unlimited Strength Jurisdiction Policy (which are not default with JRE) Files.stackoverflow.com/questions/2568841/… – kosa Mar 30 '15 at 19:13
+
+i do have Unlimited Strength Jurisdiction Policy jars@nambari – Rishabh Upadhyay Mar 30 '15 at 19:20

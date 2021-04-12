@@ -1,0 +1,135 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<!-- 认证信息表数据访问映射 -->
+<mapper namespace="com.fuyu.basic.authentication.dao.AuthenticationInfoDao">
+
+    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.AuthenticationInfo">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
+        <result column="user_id" jdbcType="INTEGER" property="userId"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="ip" jdbcType="VARCHAR" property="ip"/>
+        <result column="device" jdbcType="VARCHAR" property="device"/>
+        <result column="province" jdbcType="VARCHAR" property="province"/>
+        <result column="city" jdbcType="VARCHAR" property="city"/>
+        <result column="area" jdbcType="VARCHAR" property="area"/>
+        <result column="sync_status" jdbcType="INTEGER" property="syncStatus"/>
+        <result column="retry_count" jdbcType="INTEGER" property="retryCount"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+    </resultMap>
+
+    <!-- 查询条件 -->
+    <sql id="selectCondition">
+        <include refid="com.fuyu.basic.authentication.support.Include.authenticationInfoSelectCondition"></include>
+    </sql>
+
+    <sql id="baseColumnList">
+        id,
+        creation_time,
+        user_id,
+        type,
+        ip,
+        device,
+        province,
+        city,
+        area,
+        sync_status,
+        retry_count,
+        remark
+    </sql>
+
+    <select id="get" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_authentication_info
+        WHERE
+        id = #{id}
+    </select>
+
+    <select id="lock" resultMap="baseResultMap">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_authentication_info
+        WHERE
+        id = #{id}
+        FOR UPDATE
+    </select>
+
+    <select id="count" resultType="long" parameterType="java.util.Map">
+        SELECT
+            COUNT(id)
+        FROM
+            tb_authentication_info
+        <include refid="selectCondition" />
+    </select>
+
+    <select id="find" resultMap="baseResultMap" parameterType="java.util.Map">
+        SELECT
+        <include refid="baseColumnList"/>
+        FROM
+        tb_authentication_info
+        <include refid="selectCondition"/>
+        ORDER BY id DESC
+        <if test="first != null and last != null">
+            LIMIT #{first}, #{last}
+        </if>
+    </select>
+
+    <delete id="delete">
+        DELETE FROM tb_authentication_info WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="authenticationInfo">
+        UPDATE
+            tb_authentication_info
+        SET
+            creation_time = #{creationTime},
+            user_id = #{userId},
+            type = #{type},
+            ip = #{ip},
+            device = #{device},
+            province = #{province},
+            city = #{city},
+            area = #{area},
+            sync_status = #{syncStatus},
+            retry_count = #{retryCount},
+            remark = #{remark}
+        WHERE
+            id = #{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="authenticationInfo">
+        INSERT INTO tb_authentication_info (
+            creation_time,
+            user_id,
+            type,
+            ip,
+            device,
+            province,
+            city,
+            area,
+            sync_status,
+            retry_count,
+            remark
+        ) VALUES (
+            #{creationTime},
+            #{userId},
+            #{type},
+            #{ip},
+            #{device},
+            #{province},
+            #{city},
+            #{area},
+            #{syncStatus},
+            #{retryCount},
+            #{remark}
+        )
+    </insert>
+
+    <!-- 将代码添加到以下区域，以免生成后被覆盖 -->
+
+</mapper>

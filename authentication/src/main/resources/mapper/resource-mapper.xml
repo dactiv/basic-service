@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd" >
+
+<!--用户组资源表，用于表示用户组下能够访问什么资源。映射文件-->
+
+<mapper namespace="com.fuyu.basic.authentication.dao.ResourceDao">
+
+    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.Resource">
+        <id column="id" jdbcType="INTEGER" property="id"/>
+        <result column="name" jdbcType="VARCHAR" property="name"/>
+        <result column="code" jdbcType="VARCHAR" property="code"/>
+        <result column="application_name" jdbcType="VARCHAR" property="applicationName"/>
+        <result column="type" jdbcType="VARCHAR" property="type"/>
+        <result column="source" jdbcType="VARCHAR" property="source"/>
+        <result column="version" jdbcType="VARCHAR" property="version"/>
+        <result column="value" jdbcType="VARCHAR" property="value"/>
+        <result column="authority" jdbcType="VARCHAR" property="authority"/>
+        <result column="icon" jdbcType="VARCHAR" property="icon"/>
+        <result column="parent_id" jdbcType="INTEGER" property="parentId"/>
+        <result column="status" jdbcType="TINYINT" property="status"/>
+        <result column="sort" jdbcType="TINYINT" property="sort"/>
+        <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
+        <result column="remark" jdbcType="VARCHAR" property="remark"/>
+    </resultMap>
+
+    <!-- 查询条件 -->
+    <sql id="selectCondition">
+        <include refid="com.fuyu.basic.authentication.support.Include.resourceSelectCondition"></include>
+    </sql>
+
+    <sql id="baseColumnList">
+        id,
+        name,
+        code,
+        application_name,
+        type,
+        source,
+        version,
+        value,
+        authority,
+        icon,
+        parent_id,
+        status,
+        sort,
+        creation_time,
+        remark
+    </sql>
+
+    <select id="get" resultMap="baseResultMap">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_resource
+        WHERE
+            id = #{id}
+    </select>
+
+    <select id="lock" resultMap="baseResultMap">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_resource
+        WHERE
+            id = #{id}
+        FOR UPDATE
+    </select>
+
+    <select id="count" resultType="long" parameterType="java.util.Map">
+        SELECT
+            COUNT(id)
+        FROM
+            tb_resource
+        <include refid="selectCondition" />
+    </select>
+
+    <select id="find" resultMap="baseResultMap" parameterType="java.util.Map">
+        SELECT
+            <include refid="baseColumnList"/>
+        FROM
+            tb_resource
+        <include refid="selectCondition"/>
+        ORDER BY id DESC
+        <if test="first != null and last != null">
+            LIMIT #{first}, #{last}
+        </if>
+    </select>
+
+    <delete id="delete">
+        DELETE FROM tb_resource WHERE id = #{id}
+    </delete>
+
+    <update id="update" parameterType="resource">
+        UPDATE
+            tb_resource
+        SET
+            name = #{name},
+            code = #{code},
+            application_name = #{applicationName},
+            type = #{type},
+            source = #{source},
+            version = #{version},
+            value = #{value},
+            authority = #{authority},
+            icon = #{icon},
+            parent_id = #{parentId},
+            status = #{status},
+            sort = #{sort},
+            creation_time = #{creationTime},
+            remark = #{remark}
+        WHERE
+            id = #{id}
+    </update>
+
+    <insert id="insert" useGeneratedKeys="true" keyProperty="id" parameterType="resource">
+        INSERT INTO tb_resource (
+            name,
+            code,
+            application_name,
+            type,
+            source,
+            version,
+            value,
+            authority,
+            icon,
+            parent_id,
+            status,
+            sort,
+            creation_time,
+            remark
+        ) VALUES (
+            #{name},
+            #{code},
+            #{applicationName},
+            #{type},
+            #{source},
+            #{version},
+            #{value},
+            #{authority},
+            #{icon},
+            #{parentId},
+            #{status},
+            #{sort},
+            #{creationTime},
+            #{remark}
+        )
+    </insert>
+
+    <!-- 将代码添加到以下区域，以免生成后被覆盖 -->
+
+    <select id="getGroupResources" resultMap="baseResultMap">
+        SELECT DISTINCT
+          r.id,
+          r.name,
+          r.code,
+          r.application_name,
+          r.type,
+          r.version,
+          r.value,
+          r.authority,
+          r.icon,
+          r.parent_id,
+          r.status,
+          r.sort,
+          r.creation_time,
+          r.source,
+          r.remark
+        FROM
+          tb_resource r
+        LEFT JOIN
+          tb_group_resource gr ON gr.resource_id = r.id
+        LEFT JOIN
+          tb_group g ON gr.group_id = g.id
+        WHERE
+          g.id = #{groupId}
+    </select>
+
+    <select id="getConsolePrincipalResources" resultMap="baseResultMap">
+        SELECT DISTINCT
+        r.id,
+        r.name,
+        r.code,
+        r.application_name,
+        r.type,
+        r.version,
+        r.value,
+        r.authority,
+        r.icon,
+        r.parent_id,
+        r.status,
+        r.sort,
+        r.creation_time,
+        r.source,
+        r.remark
+        FROM
+        tb_resource r
+        LEFT JOIN
+        tb_group_resource gr ON gr.resource_id = r.id
+        LEFT JOIN
+        tb_group g ON gr.group_id = g.id
+        LEFT JOIN
+        tb_group_console_user gu ON gu.group_id = g.id
+        LEFT JOIN
+        tb_console_user u ON gu.user_id = u.id
+        WHERE
+        (u.id = #{userId}
+        OR
+        r.id in (
+        SELECT
+        ur.resource_id
+        FROM
+        tb_console_user_resource ur
+        WHERE
+        ur.user_id = #{userId}
+        ))
+        AND r.status = 1
+
+        <if test="filter.sourceContains != null and filter.sourceContains.size > 0">
+            AND r.source IN
+            <foreach collection="filter.sourceContains" item="s" index="index" open="(" close=")" separator=",">
+                #{s}
+            </foreach>
+        </if>
+
+        <if test="filter.typeEq != null and filter.typeEq != ''">
+            AND r.type = #{filter.typeEq}
+        </if>
+
+        ORDER BY
+        r.sort
+    </select>
+
+    <select id="getConsoleUserResources" resultMap="baseResultMap">
+        SELECT DISTINCT
+          r.id,
+          r.name,
+          r.code,
+          r.application_name,
+          r.type,
+          r.version,
+          r.value,
+          r.authority,
+          r.icon,
+          r.parent_id,
+          r.status,
+          r.sort,
+          r.creation_time,
+          r.source,
+          r.remark
+        FROM
+          tb_resource r
+        LEFT JOIN
+          tb_console_user_resource ur ON ur.resource_id = r.id
+        LEFT JOIN
+          tb_console_user u ON ur.user_id = u.id
+        WHERE
+          u.id = #{userId}
+        GROUP BY
+          r.id
+        ORDER BY
+          r.sort
+    </select>
+
+    <delete id="deleteGroupAssociation">
+        DELETE FROM tb_group_resource WHERE resource_id = #{id}
+    </delete>
+
+    <delete id="deleteConsoleUserAssociation">
+        DELETE FROM tb_console_user_resource WHERE resource_id = #{id}
+    </delete>
+
+</mapper>

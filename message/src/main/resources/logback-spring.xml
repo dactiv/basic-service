@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<configuration>
+
+    <springProperty scope="context" name="logName" source="spring.application.name" defaultValue="localhost.log"/>
+    <springProperty scope="context" name="path" source="spring.application.logging.path"
+                    defaultValue="${user.home}/basic-service"/>
+
+    <!-- 控制台日志输出设置 -->
+    <appender name="CONSOLE-APPENDER" class="ch.qos.logback.core.ConsoleAppender">
+        <encoder>
+            <pattern>%yellow(%d) [%green(%t)] %highlight(%-5p) [%cyan(%c:%L)] - %m%n</pattern>
+        </encoder>
+    </appender>
+
+    <appender name="LOG-STASH-APPENDER" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${path}/${logName}.json</file>
+        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
+            <fileNamePattern>${path}/${logName}-%d{yyyy-MM-dd}-%i.json</fileNamePattern>
+            <maxFileSize>50MB</maxFileSize>
+            <maxHistory>30</maxHistory>
+            <totalSizeCap>10GB</totalSizeCap>
+        </rollingPolicy>
+        <encoder class="net.logstash.logback.encoder.LoggingEventCompositeJsonEncoder">
+            <providers>
+                <timestamp>
+                    <timeZone>UTC</timeZone>
+                </timestamp>
+                <pattern>
+                    <pattern>
+                        {
+                        "level": "%level",
+                        "service": "${logName:-}",
+                        "pid": "${PID:-}",
+                        "thread": "%thread",
+                        "class": "%logger:[%L]",
+                        "message": "%message",
+                        "stack_trace": "%exception{5}"
+                        }
+                    </pattern>
+                </pattern>
+            </providers>
+        </encoder>
+    </appender>
+
+    <logger name="com.fuyu.basic.message" level="DEBUG"/>
+
+    <root level="INFO">
+        <appender-ref ref="CONSOLE-APPENDER"/>
+        <springProfile name="pro">
+            <appender-ref ref="LOG-STASH-APPENDER"/>
+        </springProfile>
+    </root>
+
+</configuration>
