@@ -42,7 +42,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.fuyu.basic.captcha" level="DEBUG"/>
+    <logger name="com.github.dactiv.basic.basic.captcha" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE-APPENDER"/>

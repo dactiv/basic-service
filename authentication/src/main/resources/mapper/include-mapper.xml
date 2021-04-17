@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.fuyu.basic.authentication.support.Include">
+<mapper namespace="com.github.dactiv.basic.basic.authentication.support.Include">
 
     <!-- tb_member_user_initialization[用户初始化表]列表查询条件 -->
     <sql id="memberUserInitializationSelectCondition">

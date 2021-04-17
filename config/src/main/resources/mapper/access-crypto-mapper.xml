@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 访问加解密表数据访问映射 -->
-<mapper namespace="com.fuyu.basic.config.dao.AccessCryptoDao">
+<mapper namespace="com.github.dactiv.basic.config.dao.AccessCryptoDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.support.crypto.access.AccessCrypto">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.basic.support.crypto.access.AccessCrypto">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="type" jdbcType="VARCHAR" property="type"/>
@@ -19,7 +19,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.config.support.Include.accessCryptoSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.config.support.Include.accessCryptoSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">
@@ -77,7 +77,7 @@
         DELETE FROM tb_access_crypto WHERE id = #{id}
     </delete>
 
-    <update id="update" parameterType="com.fuyu.basic.support.crypto.access.AccessCrypto">
+    <update id="update" parameterType="com.github.dactiv.basic.basic.support.crypto.access.AccessCrypto">
         UPDATE
             tb_access_crypto
         SET
@@ -94,7 +94,7 @@
     </update>
 
     <insert id="insert" useGeneratedKeys="true" keyProperty="id"
-            parameterType="com.fuyu.basic.support.crypto.access.AccessCrypto">
+            parameterType="com.github.dactiv.basic.basic.support.crypto.access.AccessCrypto">
         INSERT INTO tb_access_crypto (
             name,
             type,

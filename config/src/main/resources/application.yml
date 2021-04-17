@@ -4,8 +4,8 @@ mybatis:
 
 enumerate:
   base-packages:
-    - com.fuyu.basic.commons.enumerate
-    - com.fuyu.basic.support.security
+    - com.github.dactiv.framework.commons.enumerate
+    - com.github.dactiv.framework.spring.security
 
 plugin:
   base-packages: com.fuyu.basic.config.controller

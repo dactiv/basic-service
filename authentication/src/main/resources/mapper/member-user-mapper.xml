@@ -3,9 +3,9 @@
 
 <!--系统用户映射文件-->
 
-<mapper namespace="com.fuyu.basic.authentication.dao.MemberUserDao">
+<mapper namespace="com.github.dactiv.basic.authentication.dao.MemberUserDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.MemberUser">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.authentication.dao.entity.MemberUser">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
         <result column="username" jdbcType="VARCHAR" property="username"/>
@@ -17,7 +17,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.authentication.support.Include.memberUserSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.authentication.support.Include.memberUserSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">

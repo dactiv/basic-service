@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 数据字典表数据访问映射 -->
-<mapper namespace="com.fuyu.basic.config.dao.DataDictionaryDao">
+<mapper namespace="com.github.dactiv.basic.config.dao.DataDictionaryDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.config.dao.entity.DataDictionary">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.config.dao.entity.DataDictionary">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="code" jdbcType="VARCHAR" property="code"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
@@ -21,7 +21,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.config.support.Include.dataDictionarySelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.config.support.Include.dataDictionarySelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">

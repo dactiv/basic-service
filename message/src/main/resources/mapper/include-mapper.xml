@@ -3,7 +3,7 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 
-<mapper namespace="com.fuyu.basic.message.support.Include">
+<mapper namespace="com.github.dactiv.basic.basic.message.support.Include">
 
     <!-- tb_email_message[邮件消息]列表查询条件 -->
     <sql id="emailMessageSelectCondition">

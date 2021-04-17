@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 站内信消息数据访问映射 -->
-<mapper namespace="com.fuyu.basic.message.dao.SiteMessageDao">
+<mapper namespace="com.github.dactiv.basic.message.dao.SiteMessageDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.message.dao.entity.SiteMessage">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.message.dao.entity.SiteMessage">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
         <result column="type" jdbcType="VARCHAR" property="type"/>
@@ -17,8 +17,8 @@
         <result column="push_message" jdbcType="TINYINT" property="pushMessage"/>
         <result column="is_read" jdbcType="TINYINT" property="isRead"/>
         <result column="read_time" jdbcType="TIMESTAMP" property="readTime"/>
-        <result column="link" jdbcType="VARCHAR" property="link" typeHandler="com.fuyu.basic.message.dao.entity.handler.MapTypeHandler"/>
-        <result column="data" jdbcType="VARCHAR" property="data" typeHandler="com.fuyu.basic.message.dao.entity.handler.MapTypeHandler"/>
+        <result column="link" jdbcType="VARCHAR" property="link" typeHandler="com.github.dactiv.basic.message.dao.entity.handler.MapTypeHandler"/>
+        <result column="data" jdbcType="VARCHAR" property="data" typeHandler="com.github.dactiv.basic.message.dao.entity.handler.MapTypeHandler"/>
         <result column="retry_count" jdbcType="TINYINT" property="retryCount"/>
         <result column="max_retry_count" jdbcType="TINYINT" property="maxRetryCount"/>
         <result column="last_send_time" jdbcType="TIMESTAMP" property="lastSendTime"/>
@@ -30,7 +30,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.message.support.Include.siteMessageSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.message.support.Include.siteMessageSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">
@@ -113,8 +113,8 @@
             push_message = #{pushMessage},
             is_read = #{isRead},
             read_time = #{readTime},
-            link = #{link, typeHandler=com.fuyu.basic.message.dao.entity.handler.MapTypeHandler},
-            data = #{data, typeHandler=com.fuyu.basic.message.dao.entity.handler.MapTypeHandler},
+            link = #{link, typeHandler=com.github.dactiv.basic.basic.message.dao.entity.handler.MapTypeHandler},
+            data = #{data, typeHandler=com.github.dactiv.basic.basic.message.dao.entity.handler.MapTypeHandler},
             retry_count = #{retryCount},
             max_retry_count = #{maxRetryCount},
             last_send_time = #{lastSendTime},
@@ -158,8 +158,8 @@
             #{pushMessage},
             #{isRead},
             #{readTime},
-            #{link, typeHandler=com.fuyu.basic.message.dao.entity.handler.MapTypeHandler},
-            #{data, typeHandler=com.fuyu.basic.message.dao.entity.handler.MapTypeHandler},
+            #{link, typeHandler=com.github.dactiv.basic.basic.message.dao.entity.handler.MapTypeHandler},
+            #{data, typeHandler=com.github.dactiv.basic.basic.message.dao.entity.handler.MapTypeHandler},
             #{retryCount},
             #{maxRetryCount},
             #{lastSendTime},

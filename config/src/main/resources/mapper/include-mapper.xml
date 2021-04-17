@@ -2,7 +2,7 @@
 <!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
-<mapper namespace="com.fuyu.basic.config.support.Include">
+<mapper namespace="com.github.dactiv.basic.basic.config.support.Include">
 
     <!-- tb_access_crypto[访问加解密表]列表查询条件 -->
     <sql id="accessCryptoSelectCondition">

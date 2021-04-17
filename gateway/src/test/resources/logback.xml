@@ -7,7 +7,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.fuyu.basic.config" level="DEBUG"/>
+    <logger name="com.github.dactiv.basic.basic.config" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE-APPENDER"/>

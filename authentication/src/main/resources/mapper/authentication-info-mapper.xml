@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 认证信息表数据访问映射 -->
-<mapper namespace="com.fuyu.basic.authentication.dao.AuthenticationInfoDao">
+<mapper namespace="com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.AuthenticationInfo">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
         <result column="user_id" jdbcType="INTEGER" property="userId"/>
@@ -22,7 +22,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.authentication.support.Include.authenticationInfoSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.authentication.support.Include.authenticationInfoSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">

@@ -3,9 +3,9 @@
 
 <!--用户组资源表，用于表示用户组下能够访问什么资源。映射文件-->
 
-<mapper namespace="com.fuyu.basic.authentication.dao.ResourceDao">
+<mapper namespace="com.github.dactiv.basic.authentication.dao.ResourceDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.Resource">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.authentication.dao.entity.Resource">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="name" jdbcType="VARCHAR" property="name"/>
         <result column="code" jdbcType="VARCHAR" property="code"/>
@@ -25,7 +25,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.authentication.support.Include.resourceSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.authentication.support.Include.resourceSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">

@@ -3,9 +3,9 @@
         "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 
 <!-- 短信消息数据访问映射 -->
-<mapper namespace="com.fuyu.basic.message.dao.SmsMessageDao">
+<mapper namespace="com.github.dactiv.basic.message.dao.SmsMessageDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.message.dao.entity.SmsMessage">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.message.dao.entity.SmsMessage">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="creation_time" jdbcType="TIMESTAMP" property="creationTime"/>
         <result column="type" jdbcType="VARCHAR" property="type"/>
@@ -23,7 +23,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.message.support.Include.smsMessageSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.message.support.Include.smsMessageSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">

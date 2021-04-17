@@ -3,9 +3,9 @@
 
 <!--系统用户映射文件-->
 
-<mapper namespace="com.fuyu.basic.authentication.dao.ConsoleUserDao">
+<mapper namespace="com.github.dactiv.basic.authentication.dao.ConsoleUserDao">
 
-    <resultMap id="baseResultMap" type="com.fuyu.basic.authentication.dao.entity.ConsoleUser">
+    <resultMap id="baseResultMap" type="com.github.dactiv.basic.authentication.dao.entity.ConsoleUser">
         <id column="id" jdbcType="INTEGER" property="id"/>
         <result column="email" jdbcType="VARCHAR" property="email"/>
         <result column="password" jdbcType="CHAR" property="password"/>
@@ -18,7 +18,7 @@
 
     <!-- 查询条件 -->
     <sql id="selectCondition">
-        <include refid="com.fuyu.basic.authentication.support.Include.consoleUserSelectCondition"></include>
+        <include refid="com.github.dactiv.basic.basic.authentication.support.Include.consoleUserSelectCondition"></include>
     </sql>
 
     <sql id="baseColumnList">
