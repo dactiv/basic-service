@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
@@ -21,12 +23,10 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +69,7 @@ public class AuthorizationService {
      * 获取账户认证的用户明细服务
      *
      * @param source 资源累袁
+     *
      * @return 账户认证的用户明细服务
      */
     public UserDetailsService getUserDetailsService(ResourceSource source) {
@@ -81,7 +82,7 @@ public class AuthorizationService {
 
         Optional<UserDetailsService> userDetailsService = authenticationProvider.getUserDetailsService(token);
 
-        if (!userDetailsService.isPresent()) {
+        if (userDetailsService.isEmpty()) {
             throw new ServiceException("找不到类型为 [" + source + "] 的 UserDetailsService 实现");
         }
 
@@ -158,7 +159,11 @@ public class AuthorizationService {
      * @param group 用户组实体
      */
     public void insertGroup(Group group) {
-        Group entity = getGroupByFilter(group.getUniqueFilter());
+        Group entity = groupDao.selectOne(
+                Wrappers.
+                        <Group>lambdaQuery()
+                        .eq(Group::getName, group.getName())
+        );
 
         if (entity != null) {
             throw new ServiceException("用户组【" + group.getAuthority() + "】角色已存在");
@@ -174,11 +179,11 @@ public class AuthorizationService {
      */
     public void updateGroup(Group group) {
 
-        if (YesOrNo.No.getValue().equals(group.getCanBeModify())) {
+        if (YesOrNo.No.getValue().equals(group.getModifiable())) {
             throw new ServiceException("用户组【" + group.getName() + "】不可修改");
         }
 
-        groupDao.update(group);
+        groupDao.updateById(group);
 
         deleteAuthorizationCache();
 
@@ -209,21 +214,18 @@ public class AuthorizationService {
             throw new ServiceException("不能删除管理员组");
         }
 
-        if (YesOrNo.No.getValue().equals(group.getCanBeDelete())) {
+        if (YesOrNo.No.getValue().equals(group.getRemovable())) {
             throw new ServiceException("用户组【" + group.getName() + "】不可删除");
         }
 
-        Map<String, Object> filter = new HashMap<>(16);
-        filter.put("parentIdEq", id);
-
-        List<Group> groups = findGroups(filter);
+        List<Group> groups = findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getParentId, id));
 
         groups.forEach(g -> deleteGroup(g.getId()));
 
         groupDao.deleteResourceAssociation(id);
         groupDao.deleteConsoleUserAssociation(id);
         groupDao.deleteMemberUserAssociation(id);
-        groupDao.delete(id);
+        groupDao.deleteById(id);
 
         if (groups.isEmpty()) {
             deleteAuthorizationCache();
@@ -234,30 +236,18 @@ public class AuthorizationService {
      * 获取用户组
      *
      * @param id 主键 id
+     *
      * @return 用户组实体
      */
     public Group getGroup(Integer id) {
-        return getGroup(id, false);
-    }
-
-    /**
-     * 获取用户组
-     *
-     * @param id   主键 id
-     * @param lock 是否加锁
-     * @return 用户组实体
-     */
-    public Group getGroup(Integer id, Boolean lock) {
-        if (lock) {
-            return groupDao.lock(id);
-        }
-        return groupDao.get(id);
+        return groupDao.selectById(id);
     }
 
     /**
      * 获取系统用户所关联用户组
      *
      * @param userId 系统用户主键 id
+     *
      * @return 用户组集合
      */
     public List<Group> getConsoleUserGroups(Integer userId) {
@@ -268,6 +258,7 @@ public class AuthorizationService {
      * 获取会员用户所关联用户组
      *
      * @param userId 会员用户主键 id
+     *
      * @return 用户组集合
      */
     public List<Group> getMemberUserGroups(Integer userId) {
@@ -275,31 +266,14 @@ public class AuthorizationService {
     }
 
     /**
-     * 获取用户组
-     *
-     * @param filter 查询条件
-     * @return 用户组
-     */
-    public Group getGroupByFilter(Map<String, Object> filter) {
-        List<Group> result = findGroups(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录等于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<Group> iterator = result.iterator();
-
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
-    /**
      * 根据过滤条件查找用户组
      *
-     * @param filter 过滤条件
+     * @param wrapper 包装器
+     *
      * @return 用户组实体集合
      */
-    public List<Group> findGroups(Map<String, Object> filter) {
-        return groupDao.find(filter);
+    public List<Group> findGroups(Wrapper<Group> wrapper) {
+        return groupDao.selectList(wrapper);
     }
 
     // -------------------------------- 资源管理 -------------------------------- //
@@ -324,7 +298,7 @@ public class AuthorizationService {
      */
     public void insertResource(Resource resource) {
 
-        if (getResourceByFilter(resource.getUniqueFilter()) != null) {
+        if (resourceDao.selectOne(resource.getUniqueWrapper()) != null) {
             String msg = "资源[" + resource.getApplicationName() + "_" + resource.getCode() + "_" + resource.getType() + "]已存在";
             throw new ServiceException(msg);
         }
@@ -338,7 +312,7 @@ public class AuthorizationService {
      * @param resource 资源实体
      */
     public void updateResource(Resource resource) {
-        resourceDao.update(resource);
+        resourceDao.updateById(resource);
 
         deleteAuthorizationCache();
 
@@ -359,16 +333,18 @@ public class AuthorizationService {
      * @param id 主键 id
      */
     public void deleteResource(Integer id) {
-        Map<String, Object> filter = new HashMap<>(16);
-        filter.put("parentIdEq", id);
 
-        List<Resource> resources = findResources(filter);
+        List<Resource> resources = resourceDao.selectList(
+                Wrappers
+                        .<Resource>lambdaQuery()
+                        .eq(Resource::getParentId, id)
+        );
 
         resources.forEach(r -> deleteResource(r.getId()));
 
         resourceDao.deleteConsoleUserAssociation(id);
         resourceDao.deleteGroupAssociation(id);
-        resourceDao.delete(id);
+        resourceDao.deleteById(id);
 
         if (resources.isEmpty()) {
             deleteAuthorizationCache();
@@ -379,47 +355,18 @@ public class AuthorizationService {
      * 获取资源
      *
      * @param id 主键 id
+     *
      * @return 资源实体
      */
     public Resource getResource(Integer id) {
-        return getResource(id, false);
-    }
-
-    /**
-     * 获取资源
-     *
-     * @param id   主键 id
-     * @param lock 是否加锁
-     * @return 资源实体
-     */
-    public Resource getResource(Integer id, Boolean lock) {
-        if (lock) {
-            return resourceDao.lock(id);
-        }
-        return resourceDao.get(id);
-    }
-
-    /**
-     * 获取资源
-     *
-     * @param filter 过滤条件
-     * @return 资源实体
-     */
-    public Resource getResourceByFilter(Map<String, Object> filter) {
-        List<Resource> result = findResources(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录等于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<Resource> iterator = result.iterator();
-        return iterator.hasNext() ? iterator.next() : null;
+        return resourceDao.selectById(id);
     }
 
     /**
      * 获取资源
      *
      * @param groupId 组主键值
+     *
      * @return 资源实体集合
      */
     public List<Resource> getGroupResources(Integer groupId) {
@@ -430,6 +377,7 @@ public class AuthorizationService {
      * 获取系统用户关联资源
      *
      * @param userId 用户主键值
+     *
      * @return 资源实体集合
      */
     public List<Resource> getConsoleUserResources(Integer userId) {
@@ -440,20 +388,11 @@ public class AuthorizationService {
      * 获取系统用户关联(包含系统用户组关联，所有资源)资源实体集合
      *
      * @param userId 用户主键值
-     * @return 资源实体集合
-     */
-    public List<Resource> getConsolePrincipalResources(Integer userId, Map<String, Object> filter) {
-        return resourceDao.getConsolePrincipalResources(userId, filter);
-    }
-
-    /**
-     * 根据过滤条件查找资源
      *
-     * @param filter 过滤条件
      * @return 资源实体集合
      */
-    public List<Resource> findResources(Map<String, Object> filter) {
-        return resourceDao.find(filter);
+    public List<Resource> getConsolePrincipalResources(Integer userId, List<String> sourceContains, String type) {
+        return resourceDao.getConsolePrincipalResources(userId, sourceContains, type);
     }
 
     /**
@@ -475,12 +414,13 @@ public class AuthorizationService {
             LOGGER.debug("开始绑定[" + applicationName + "]资源信息，当前版本为:" + serviceInfo.getVersion());
         }
 
-        Map<String, Object> filter = new HashMap<>(16);
-
-        filter.put("applicationNameEq", applicationName);
-        filter.put("sourceContains", Resource.DEFAULT_ALL_SOURCE_VALUES);
         // 获取一次旧的资源，在递归完最新的资源后，把所有未匹配旧的资源全部删除掉
-        List<Resource> oldResourceList = findResources(filter);
+        List<Resource> oldResourceList = resourceDao.selectList(
+                Wrappers
+                        .<Resource>lambdaQuery()
+                        .eq(Resource::getApplicationName, applicationName)
+                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
+        );
 
         List<Map<String, Object>> pluginList = Casts.cast(
                 serviceInfo.getInfo().get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME),
@@ -511,9 +451,21 @@ public class AuthorizationService {
     }
 
     /**
+     * 获取資源集合
+     *
+     * @param wrapper 包装器
+     *
+     * @return 資源集合
+     */
+    public List<Resource> findResources(Wrapper<Resource> wrapper) {
+        return resourceDao.selectList(wrapper);
+    }
+
+    /**
      * 启用资源
      *
      * @param resource 资源信息
+     *
      * @return 流集合
      */
     private Stream<Resource> enabledApplicationResource(Resource resource) {
@@ -539,11 +491,12 @@ public class AuthorizationService {
      * 获取目标资源，如果 resource 在数据库理存在数据，将获取数据库的记录，并用 resource 数据替换一次
      *
      * @param resource 当前资源
+     *
      * @return 目标资源
      */
     private Resource getTargetResource(Resource resource) {
         // 根据唯一条件查询目标资源
-        Resource target = getResourceByFilter(resource.getUniqueFilter());
+        Resource target = resourceDao.selectOne(resource.getUniqueWrapper());
 
         if (target == null) {
             target = resource;
@@ -583,6 +536,7 @@ public class AuthorizationService {
      *
      * @param entry       插件信息
      * @param serviceInfo 服务系你想
+     *
      * @return 流集合
      */
     private Stream<Resource> createResource(Map<String, Object> entry, ServiceInfo serviceInfo) {
@@ -632,14 +586,17 @@ public class AuthorizationService {
      * @param applicationName 资源名称
      */
     public void disabledApplicationResource(String applicationName) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-
-        filter.put("applicationNameEq", applicationName);
-        filter.put("sourceContains", Resource.DEFAULT_ALL_SOURCE_VALUES);
-        filter.put("statusEq", DisabledOrEnabled.Enabled.getValue());
 
         // 查询所有符合条件的资源,并设置为禁用状态
-        findResources(filter)
+        List<Resource> resources = resourceDao.selectList(
+                Wrappers
+                        .<Resource>lambdaQuery()
+                        .eq(Resource::getApplicationName, applicationName)
+                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
+                        .eq(Resource::getStatus, DisabledOrEnabled.Enabled.getValue())
+        );
+
+        resources
                 .stream()
                 .peek(resource -> resource.setStatus(DisabledOrEnabled.Disabled.getValue()))
                 .forEach(this::saveResource);
@@ -667,5 +624,4 @@ public class AuthorizationService {
             redisTemplate.delete(keys);
         }
     }
-
 }

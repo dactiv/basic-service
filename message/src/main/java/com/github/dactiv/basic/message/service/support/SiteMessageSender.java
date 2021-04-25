@@ -2,15 +2,13 @@ package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.rabbitmq.client.Channel;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;

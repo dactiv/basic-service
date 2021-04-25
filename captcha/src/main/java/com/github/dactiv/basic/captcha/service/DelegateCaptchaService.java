@@ -1,8 +1,7 @@
 package com.github.dactiv.basic.captcha.service;
 
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
-import org.apache.commons.lang.StringUtils;
+import com.github.dactiv.framework.commons.RestResult;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

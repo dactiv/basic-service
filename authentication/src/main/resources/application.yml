@@ -1,10 +1,13 @@
-mybatis:
-  mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: com.fuyu.basic.authentication.dao.entity
-
+mybatis-plus:
+  type-aliases-package: com.github.dactiv.basic.authentication.dao.entity
+  configuration:
+    call-setters-on-nulls: on
+  global-config:
+    db-config:
+      id-type: auto
 
 plugin:
-  base-packages: com.fuyu.basic.authentication.controller
+  base-packages: com.github.dactiv.basic.authentication.controller
   parent:
     system:
       name: '系统管理'

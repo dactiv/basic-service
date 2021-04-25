@@ -1,9 +1,10 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.IdEntity;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
@@ -86,8 +87,8 @@ public class DiscoveryPluginResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @ConcurrentProcess(value = "sync.plugin.resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作")
     @Scheduled(cron = "${spring.security.plugin.sync.cron.expression:30 * * * * ?}")
+    @ConcurrentProcess(value = "sync.plugin.resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作")
     public void syncPluginResource() {
 
         // 获取所有服务
@@ -112,11 +113,13 @@ public class DiscoveryPluginResourceService {
                     .forEach(s -> disabledApplicationResource(s.getService()));
         }
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-
-        filter.put("applicationNameNotContains", services);
-
-        authorizationService.findResources(filter).forEach(r -> authorizationService.deleteResource(r.getId()));
+        authorizationService
+                .findResources(
+                        Wrappers
+                                .<Resource>lambdaQuery()
+                                .notIn(Resource::getApplicationName, services)
+                )
+                .forEach(r -> authorizationService.deleteResource(r.getId()));
 
         // 如果默认存在 admin 组，自动管理最新资源
         if (Objects.nonNull(adminGroupId)) {
@@ -125,12 +128,12 @@ public class DiscoveryPluginResourceService {
 
             if (group != null) {
 
-                List<Resource> newResourceList = authorizationService.findResources(new LinkedHashMap<>());
+                List<Resource> newResourceList = authorizationService.findResources(new QueryWrapper<>());
 
                 List<Integer> resourceIds = Arrays.stream(StringUtils.split(group.getSource(), ","))
                         .map(StringUtils::trim)
                         .flatMap(s -> newResourceList.stream().filter(r -> isControllerResource(r, s)))
-                        .map(IdEntity::getId)
+                        .map(Resource::getId)
                         .distinct()
                         .collect(Collectors.toList());
 
@@ -173,6 +176,7 @@ public class DiscoveryPluginResourceService {
      * 获取存储在 redis 的插件资源服务 key 名称
      *
      * @param service 服务名称
+     *
      * @return 插件资源服务 key 名称
      */
     private String getPluginResourceServiceKey(String service) {
@@ -183,6 +187,7 @@ public class DiscoveryPluginResourceService {
      * 判断是否服务为最大版本
      *
      * @param entity 同步插件实体
+     *
      * @return 是 true，否则 false
      */
     private boolean isMaxVersion(ServiceInfo entity) {
@@ -278,6 +283,7 @@ public class DiscoveryPluginResourceService {
      * 获取最大版本的实例
      *
      * @param service 服务名称
+     *
      * @return 最大版本实例
      */
     private Optional<ServiceInfo> getMaxVersionSyncPluginEntity(String service) {
@@ -295,6 +301,7 @@ public class DiscoveryPluginResourceService {
      *
      * @param instance 服务实例
      * @param service  服务名称
+     *
      * @return 同步插件实体
      */
     private ServiceInfo createServiceInfo(ServiceInstance instance, String service) {
@@ -312,6 +319,7 @@ public class DiscoveryPluginResourceService {
      * 获取实例 info
      *
      * @param instance 实例
+     *
      * @return 实例信息
      */
     private Map<String, Object> getInstanceInfo(ServiceInstance instance) {
@@ -337,6 +345,7 @@ public class DiscoveryPluginResourceService {
      *
      * @param ip   ip地址
      * @param port 端口
+     *
      * @return 连接 url
      */
     public String getPluginInfoUrl(String ip, int port) {

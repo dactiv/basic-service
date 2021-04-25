@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.dao;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUserInitialization;
-import com.github.dactiv.framework.commons.BasicCurdDao;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  */
 @Mapper
 @Repository
-public interface MemberUserInitializationDao extends BasicCurdDao<MemberUserInitialization, Integer> {
+public interface MemberUserInitializationDao extends BaseMapper<MemberUserInitialization> {
 
 }

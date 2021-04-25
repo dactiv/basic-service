@@ -7,7 +7,7 @@ import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
@@ -103,7 +103,7 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
                     Object isNew = request.getAttribute(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME);
 
-                    if(Objects.nonNull(isNew)) {
+                    if (Objects.nonNull(isNew)) {
                         data.put(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME, isNew);
                     }
 

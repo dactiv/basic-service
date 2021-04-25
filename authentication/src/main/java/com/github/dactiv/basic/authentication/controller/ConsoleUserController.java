@@ -1,25 +1,26 @@
 package com.github.dactiv.basic.authentication.controller;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.dactiv.basic.authentication.dao.entity.ConsoleUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 系统用户控制器
@@ -43,24 +44,29 @@ public class ConsoleUserController {
     @Autowired
     private UserService userService;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<ConsoleUser> queryGenerator;
+
     /**
      * 查找系统用户分页信息
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param page    分页请求
+     * @param request http 请求
+     *
      * @return 分页实体
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
     @Plugin(name = "查询分页", source = ResourceSource.Console)
-    public Page<ConsoleUser> page(PageRequest pageRequest, @RequestParam Map<String, Object> filter) {
-        return userService.findConsoleUserPage(pageRequest, filter);
+    public IPage<ConsoleUser> page(Page<ConsoleUser> page, HttpServletRequest request) {
+        return userService.findConsoleUserPage(page, queryGenerator.getQueryWrapperFromHttpRequest(request));
     }
 
     /**
      * 获取系统用户实体
      *
      * @param id 主键值
+     *
      * @return 用户实体
      */
     @GetMapping("get")
@@ -76,24 +82,26 @@ public class ConsoleUserController {
      * @param entity      系统用户实体
      * @param groupIds    用户组 ID 集合
      * @param resourceIds 用户组资源 ID 集合
+     *
      * @return 消息结果集
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[console_user:save]')")
     @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@Valid ConsoleUser entity,
-                                                       @RequestParam(required = false) List<Integer> groupIds,
-                                                       @RequestParam(required = false) List<Integer> resourceIds) {
+    public RestResult.Result<Integer> save(@Valid ConsoleUser entity,
+                                           @RequestParam(required = false) List<Integer> groupIds,
+                                           @RequestParam(required = false) List<Integer> resourceIds) {
 
         userService.saveConsoleUser(entity, groupIds, resourceIds);
 
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**
      * 删除系统用户
      *
      * @param ids 系统用户主键 ID 集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")
@@ -133,6 +141,7 @@ public class ConsoleUserController {
      *
      * @param securityContext 安全上下文
      * @param newUsername     新登录账户
+     *
      * @return 消息结果集
      */
     @PostMapping("updateUsername")
@@ -152,30 +161,28 @@ public class ConsoleUserController {
      * 判断登录账户是否唯一
      *
      * @param username 登录账户
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断登录账户是否唯一", source = ResourceSource.Console)
     public boolean isUsernameUnique(@RequestParam String username) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("usernameEq", username);
-        return userService.findConsoleUsers(filter).isEmpty();
+        return userService.getConsoleUserByUsername(username) == null;
     }
 
     /**
      * 判断邮件是否唯一
      *
      * @param email 电子邮件
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断邮件是否唯一", source = ResourceSource.Console)
     public boolean isEmailUnique(@RequestParam String email) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("emailEq", email);
-        return userService.findConsoleUsers(filter).isEmpty();
+        return userService.findConsoleUsers(new LambdaQueryWrapper<ConsoleUser>().eq(ConsoleUser::getEmail, email)).isEmpty();
     }
 
 }

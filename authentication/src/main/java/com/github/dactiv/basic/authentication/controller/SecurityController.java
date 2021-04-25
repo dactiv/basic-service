@@ -6,15 +6,15 @@ import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
 import com.github.dactiv.framework.spring.security.audit.AuditEventEntity;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.ElasticsearchAuditEventRepository;
-import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
+import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
@@ -42,7 +42,8 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.*;
+import java.util.Date;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -73,6 +74,7 @@ public class SecurityController {
      * @param startTime 数据发生时间
      * @param endTime   数据发生时间
      * @param type      审计类型
+     *
      * @return 审计事件
      */
     @PostMapping("audit")
@@ -128,6 +130,7 @@ public class SecurityController {
      * 登录预处理
      *
      * @param request http servlet request
+     *
      * @return rest 结果集
      */
     @GetMapping("prepare")
@@ -149,6 +152,7 @@ public class SecurityController {
      * 登陆成功后跳转的连接，直接获取当前用户
      *
      * @param securityContext 安全上下文
+     *
      * @return 当前用户
      */
     @GetMapping("getPrincipal")
@@ -163,6 +167,7 @@ public class SecurityController {
      * @param deviceIdentified 唯一识别
      * @param username         登录账户
      * @param password         登录密码
+     *
      * @return 移动端的用户明细实现
      */
     @PreAuthorize("isAuthenticated()")
@@ -208,6 +213,7 @@ public class SecurityController {
      *
      * @param id     用户 id
      * @param status 状态值
+     *
      * @return 消息结果集
      */
     @PreAuthorize("hasRole('BASIC')")

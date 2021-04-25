@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.service.security.handler.JsonAuthenticationFailureHandler;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

@@ -4,7 +4,7 @@ import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.DelegateCaptchaService;
 import com.github.dactiv.basic.captcha.service.SimpleBuildToken;
 import com.github.dactiv.basic.captcha.service.intercept.Interceptor;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;

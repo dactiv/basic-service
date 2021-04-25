@@ -2,6 +2,8 @@ server:
   port: 8084
 
 spring:
+  jackson:
+    serialization:
   main:
     banner-mode: "off"
   application:

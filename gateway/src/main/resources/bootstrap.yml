@@ -4,7 +4,7 @@ spring:
   main:
     banner-mode: "off"
   application:
-    name: @artifactId@
+    name: @project.artifactId@
   cloud:
     nacos:
       discovery:

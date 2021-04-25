@@ -2,7 +2,7 @@ package com.github.dactiv.basic.config.controller;
 
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;

@@ -2,7 +2,7 @@ package com.github.dactiv.basic.message.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.service.MessageSender;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;

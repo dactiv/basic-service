@@ -21,7 +21,10 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
 import java.util.stream.Collectors;
 
 /**
@@ -42,10 +45,7 @@ public class ConsoleUserDetailsService implements UserDetailsService {
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
             throws AuthenticationException {
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("usernameEq", token.getPrincipal());
-
-        ConsoleUser user = userService.getConsoleUserByFilter(filter);
+        ConsoleUser user = userService.getConsoleUserByUsername(token.getPrincipal().toString());
 
         if (user == null) {
             throw new UsernameNotFoundException("用户名或密码错误");
@@ -59,22 +59,17 @@ public class ConsoleUserDetailsService implements UserDetailsService {
     @Override
     public Collection<? extends GrantedAuthority> getPrincipalAuthorities(SecurityUserDetails userDetails) {
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-
-        filter.put(
-                "sourceContains",
-                Arrays.asList(
-                        userDetails.getType(),
-                        ResourceSource.All.toString(),
-                        ResourceSource.System.toString()
-                )
+        List<String> sourceContains = Arrays.asList(
+                userDetails.getType(),
+                ResourceSource.All.toString(),
+                ResourceSource.System.toString()
         );
 
         Integer userId = Casts.cast(userDetails.getId());
 
         List<Resource> resources = userService
                 .getAuthorizationService()
-                .getConsolePrincipalResources(userId, filter);
+                .getConsolePrincipalResources(userId, sourceContains, null);
 
         userDetails.setResourceAuthorities(
                 resources

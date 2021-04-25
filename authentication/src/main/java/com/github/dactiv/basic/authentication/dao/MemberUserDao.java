@@ -1,7 +1,9 @@
 package com.github.dactiv.basic.authentication.dao;
 
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
-import com.github.dactiv.framework.commons.BasicCurdDao;
+import org.apache.ibatis.annotations.Delete;
+import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
@@ -15,29 +17,14 @@ import java.util.List;
  */
 @Mapper
 @Repository
-public interface MemberUserDao extends BasicCurdDao<MemberUser, Integer> {
-
-    /**
-     * 更新会员用户登陆密码
-     *
-     * @param id       用户主键 ID
-     * @param password 密码
-     */
-    void updatePassword(@Param("id") Integer id, @Param("password") String password);
-
-    /**
-     * 更新会员用户登陆账户
-     *
-     * @param id       用户主键 ID
-     * @param username 密码
-     */
-    void updateUsername(@Param("id") Integer id, @Param("password") String username);
+public interface MemberUserDao extends BaseMapper<MemberUser> {
 
     /**
      * 删除会员用户组关联
      *
      * @param id 用户主键 ID
      */
+    @Delete("<script>DELETE FROM tb_group_member_user WHERE user_id = #{id}</script>")
     void deleteGroupAssociation(@Param("id") Integer id);
 
     /**
@@ -46,13 +33,15 @@ public interface MemberUserDao extends BasicCurdDao<MemberUser, Integer> {
      * @param id       用户主键 ID
      * @param groupIds 用户组主键ID集合
      */
+    @Insert(
+            "<script>" +
+                    "INSERT INTO " +
+                    "   tb_group_member_user(user_id,group_id) " +
+                    "VALUES " +
+                    "<foreach collection='groupIds' item='groupId' separator=','>" +
+                    "    (#{id}, #{groupId}) " +
+                    "</foreach>" +
+                    "</script>"
+    )
     void insertGroupAssociation(@Param("id") Integer id, @Param("groupIds") List<Integer> groupIds);
-
-    /**
-     * 根据唯一识别获取会员用户
-     *
-     * @param identified 唯一识别
-     * @return 会员用户
-     */
-    MemberUser getByIdentified(@Param("identified") String identified);
 }

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service;
 
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;
 

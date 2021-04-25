@@ -2,7 +2,7 @@ package com.github.dactiv.basic.captcha.service;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;

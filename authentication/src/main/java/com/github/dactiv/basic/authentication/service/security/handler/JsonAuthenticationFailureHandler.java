@@ -4,8 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.service.security.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
@@ -107,8 +106,8 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
             if (LoginType.Mobile.toString().equals(loginType)) {
 
                 String token = request.getParameter(smsCaptchaParamName);
-                
-                if(StringUtils.isNotEmpty(token)) {
+
+                if (StringUtils.isNotEmpty(token)) {
                     Map<String, Object> buildToken = captchaService.createGenerateCaptchaIntercept(
                             token,
                             mobileFailureCaptchaType,

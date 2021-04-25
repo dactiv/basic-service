@@ -1,5 +1,10 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
@@ -9,8 +14,6 @@ import com.github.dactiv.basic.authentication.dao.entity.MemberUserInitializatio
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
@@ -47,8 +50,6 @@ import static com.github.dactiv.framework.spring.security.enumerate.ResourceSour
 @RefreshScope
 @Transactional(rollbackFor = Exception.class)
 public class UserService implements InitializingBean {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(UserService.class);
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -158,7 +159,6 @@ public class UserService implements InitializingBean {
         expireUserSession(entity.getUsername());
     }
 
-
     /**
      * 新增系统用户
      *
@@ -170,7 +170,11 @@ public class UserService implements InitializingBean {
             throw new ServiceException("登陆密码不能为空");
         }
 
-        ConsoleUser entity = getConsoleUserByFilter(consoleUser.getUniqueFilter());
+        ConsoleUser entity = consoleUserDao.selectOne(
+                Wrappers
+                        .<ConsoleUser>lambdaQuery()
+                        .eq(ConsoleUser::getUsername, consoleUser.getUsername())
+        );
 
         if (entity != null) {
             throw new ServiceException("登陆账户【" + consoleUser.getUsername() + "】已存在");
@@ -191,7 +195,7 @@ public class UserService implements InitializingBean {
      * @param consoleUser 系统用户实体
      */
     public void updateConsoleUser(ConsoleUser consoleUser) {
-        consoleUserDao.update(consoleUser);
+        consoleUserDao.updateById(consoleUser);
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 consoleUser.getUsername(),
@@ -232,9 +236,16 @@ public class UserService implements InitializingBean {
 
         PasswordEncoder passwordEncoder = userDetailsService.getPasswordEncoder();
 
-        checkPassword(passwordEncoder, oldPassword, consoleUser.getPassword());
+        if (!passwordEncoder.matches(oldPassword, consoleUser.getPassword())) {
+            throw new ServiceException("旧密码不正确");
+        }
 
-        consoleUserDao.updatePassword(consoleUser.getId(), passwordEncoder.encode(newPassword));
+        consoleUserDao.update(
+                consoleUser,
+                Wrappers.<ConsoleUser>lambdaUpdate()
+                        .set(ConsoleUser::getPassword, passwordEncoder.encode(newPassword))
+                        .eq(ConsoleUser::getId, consoleUser.getId())
+        );
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 consoleUser.getUsername(),
@@ -245,12 +256,6 @@ public class UserService implements InitializingBean {
         redisTemplate.delete(userDetailsService.getAuthenticationCacheName(token));
 
         expireUserSession(consoleUser.getUsername());
-    }
-
-    private void checkPassword(PasswordEncoder passwordEncoder, String assertPassword, String expectPassword) {
-        if (!passwordEncoder.matches(assertPassword, expectPassword)) {
-            throw new ServiceException("旧密码不正确");
-        }
     }
 
     /**
@@ -298,7 +303,7 @@ public class UserService implements InitializingBean {
 
         consoleUserDao.deleteGroupAssociation(consoleUser.getId());
         consoleUserDao.deleteResourceAssociation(consoleUser.getId());
-        consoleUserDao.delete(consoleUser.getId());
+        consoleUserDao.deleteById(consoleUser.getId());
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 consoleUser.getUsername(),
@@ -318,69 +323,46 @@ public class UserService implements InitializingBean {
      * 获取系统用户
      *
      * @param id 主键 id
+     *
      * @return 系统用户实体
      */
     public ConsoleUser getConsoleUser(Integer id) {
-        return getConsoleUser(id, false);
+        return consoleUserDao.selectById(id);
     }
 
     /**
      * 获取系统用户
      *
-     * @param id   主键 id
-     * @param lock 是否加锁
+     * @param username 登陆账户
+     *
      * @return 系统用户实体
      */
-    public ConsoleUser getConsoleUser(Integer id, Boolean lock) {
-        if (lock) {
-            return consoleUserDao.lock(id);
-        }
-        return consoleUserDao.get(id);
+    public ConsoleUser getConsoleUserByUsername(String username) {
+        return consoleUserDao.selectOne(Wrappers.<ConsoleUser>lambdaQuery().eq(ConsoleUser::getUsername, username));
     }
 
     /**
-     * 获取系统用户
+     * 获取后台用户集合
      *
-     * @param filter 登陆账户
-     * @return 系统用户实体
-     */
-    public ConsoleUser getConsoleUserByFilter(Map<String, Object> filter) {
-
-        List<ConsoleUser> result = findConsoleUsers(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录等于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<ConsoleUser> iterator = result.iterator();
-
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
-    /**
-     * 根据过滤条件查找系统用户
+     * @param wrapper 包装器
      *
-     * @param filter 过滤条件
-     * @return 系统用户实体集合
+     * @return 后台用户集合
      */
-    public List<ConsoleUser> findConsoleUsers(Map<String, Object> filter) {
-        return consoleUserDao.find(filter);
+    public List<ConsoleUser> findConsoleUsers(Wrapper<ConsoleUser> wrapper) {
+        return consoleUserDao.selectList(wrapper);
     }
 
     /**
      * 查找系统用户分页信息
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param page         分页请求
+     * @param queryWrapper 过滤条件
+     *
      * @return 分页实体
      */
-    public Page<ConsoleUser> findConsoleUserPage(PageRequest pageRequest, Map<String, Object> filter) {
+    public IPage<ConsoleUser> findConsoleUserPage(Page<ConsoleUser> page, Wrapper<ConsoleUser> queryWrapper) {
 
-        filter.putAll(pageRequest.getOffsetMap());
-
-        List<ConsoleUser> data = findConsoleUsers(filter);
-
-        return new Page<>(pageRequest, data);
+        return consoleUserDao.selectPage(page, queryWrapper);
     }
 
     // -------------------------------- 会员用户管理 -------------------------------- //
@@ -438,7 +420,17 @@ public class UserService implements InitializingBean {
             throw new ServiceException("登陆密码不能为空");
         }
 
-        checkMemberUserData(memberUser, memberUser.getUniqueFilter());
+        if (memberUserDao.selectOne(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getUsername, memberUser.getUsername())) != null) {
+            throw new ServiceException("登陆账户【" + memberUser.getUsername() + "】已存在");
+        }
+
+        if (memberUserDao.selectOne(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getPhone, memberUser.getPhone())) != null) {
+            throw new ServiceException("手机号码【" + memberUser.getPhone() + "】已存在");
+        }
+
+        if (memberUserDao.selectOne(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getEmail, memberUser.getEmail())) != null) {
+            throw new ServiceException("邮箱号码【" + memberUser.getEmail() + "】已存在");
+        }
 
         UserDetailsService userDetailsService = authorizationService.getUserDetailsService(UserCenter);
 
@@ -456,61 +448,12 @@ public class UserService implements InitializingBean {
     }
 
     /**
-     * 检查会用用户数据是否正确
-     *
-     * @param memberUser 会员用户
-     * @param filter     条件信息
-     */
-    private void checkMemberUserData(MemberUser memberUser, Map<String, Object> filter) {
-
-        if (filter.containsKey("usernameEq")) {
-
-            Map<String, Object> testFilter = new LinkedHashMap<>();
-
-            testFilter.put("usernameEq", filter.get("usernameEq"));
-
-            MemberUser exist = getMemberUserByFilter(testFilter);
-
-            if (exist != null) {
-                throw new ServiceException("登陆账户【" + memberUser.getUsername() + "】已存在");
-            }
-        }
-
-        if (filter.containsKey("phoneEq")) {
-
-            Map<String, Object> testFilter = new LinkedHashMap<>();
-
-            testFilter.put("phoneEq", filter.get("phoneEq"));
-
-            MemberUser exist = getMemberUserByFilter(testFilter);
-
-            if (exist != null) {
-                throw new ServiceException("手机号码【" + memberUser.getPhone() + "】已存在");
-            }
-        }
-
-        if (filter.containsKey("emailEq")) {
-
-            Map<String, Object> testFilter = new LinkedHashMap<>();
-
-            testFilter.put("emailEq", filter.get("emailEq"));
-
-            MemberUser exist = getMemberUserByFilter(testFilter);
-
-            if (exist != null) {
-                throw new ServiceException("邮箱号码【" + memberUser.getEmail() + "】已存在");
-            }
-        }
-
-    }
-
-    /**
      * 更新会员用户
      *
      * @param memberUser 会员用户实体
      */
     public void updateMemberUser(MemberUser memberUser) {
-        memberUserDao.update(memberUser);
+        memberUserDao.updateById(memberUser);
 
         deleteMemberUserAuthenticationCache(memberUser);
 
@@ -533,14 +476,25 @@ public class UserService implements InitializingBean {
         UserDetailsService userDetailsService = authorizationService.getUserDetailsService(UserCenter);
 
         if (YesOrNo.No.getValue().equals(initialization.getModifyPassword())) {
-            checkPassword(userDetailsService.getPasswordEncoder(), oldPassword, memberUser.getPassword());
+
+            if (!passwordEncoder.matches(oldPassword, memberUser.getPassword())) {
+                throw new ServiceException("旧密码不正确");
+            }
+
         } else {
             initialization.setModifyPassword(YesOrNo.Yes.getValue());
             updateMemberUserInitialization(initialization);
         }
 
         memberUser.setPassword(userDetailsService.getPasswordEncoder().encode(newPassword));
-        memberUserDao.updatePassword(memberUser.getId(), newPassword);
+
+        memberUserDao.update(
+                memberUser,
+                Wrappers
+                        .<MemberUser>lambdaUpdate()
+                        .set(MemberUser::getPassword, memberUser.getPassword())
+                        .eq(MemberUser::getId, memberUser.getId())
+        );
 
         deleteMemberUserAuthenticationCache(memberUser);
 
@@ -581,16 +535,23 @@ public class UserService implements InitializingBean {
             throw new ServiceException("不能多次修改登录账户");
         }
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("usernameEq", newUsername);
-
-        MemberUser exist = getMemberUserByFilter(filter);
+        MemberUser exist = memberUserDao.selectOne(
+                Wrappers
+                        .<MemberUser>lambdaQuery()
+                        .eq(MemberUser::getUsername, newUsername)
+        );
 
         if (exist != null) {
             throw new ServiceException("登录账户[" + newUsername + "]已存在");
         }
 
-        memberUserDao.updateUsername(id, newUsername);
+        memberUserDao.update(
+                memberUser,
+                Wrappers
+                        .<MemberUser>lambdaUpdate()
+                        .set(MemberUser::getUsername, newUsername)
+                        .eq(MemberUser::getId, id)
+        );
 
         initialization.setModifyUsername(YesOrNo.Yes.getValue());
 
@@ -605,11 +566,12 @@ public class UserService implements InitializingBean {
      * 获取会员用户
      *
      * @param id 主键 id
+     *
      * @return 会员用户实体
      */
     public MemberUser getMemberUser(Integer id) {
 
-        MemberUser memberUser = getMemberUser(id, false);
+        MemberUser memberUser = memberUserDao.selectById(id);
 
         memberUser.setInitialization(getMemberUserInitialization(id));
 
@@ -618,72 +580,44 @@ public class UserService implements InitializingBean {
     }
 
     /**
-     * 获取会员用户
-     *
-     * @param id   主键 id
-     * @param lock 是否加锁
-     * @return 会员用户实体
-     */
-    public MemberUser getMemberUser(Integer id, Boolean lock) {
-        if (lock) {
-            return memberUserDao.lock(id);
-        }
-        return memberUserDao.get(id);
-    }
-
-    /**
-     * 获取会员用户
-     *
-     * @param filter 登陆账户
-     * @return 会员用户实体
-     */
-    public MemberUser getMemberUserByFilter(Map<String, Object> filter) {
-
-        List<MemberUser> result = findMemberUsers(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录等于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<MemberUser> iterator = result.iterator();
-
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
-    /**
      * 根据唯一识别获取会员用户
      *
      * @param identified 唯一识别
+     *
      * @return 会员用户
      */
     public MemberUser getMemberUserByIdentified(String identified) {
-        return memberUserDao.getByIdentified(identified);
+        return memberUserDao.selectOne(
+                Wrappers.
+                        <MemberUser>lambdaQuery()
+                        .eq(MemberUser::getUsername, identified)
+                        .or()
+                        .eq(MemberUser::getPhone, identified)
+                        .or().eq(MemberUser::getEmail, identified)
+        );
     }
 
     /**
-     * 根据过滤条件查找会员用户
+     * 获取会员用户集合
      *
-     * @param filter 过滤条件
-     * @return 会员用户实体集合
+     * @param wrapper 包装器
+     *
+     * @return 会员用户集合
      */
-    public List<MemberUser> findMemberUsers(Map<String, Object> filter) {
-        return memberUserDao.find(filter);
+    public List<MemberUser> findMemberUsers(LambdaQueryWrapper<MemberUser> wrapper) {
+        return memberUserDao.selectList(wrapper);
     }
 
     /**
      * 查找会员用户分页信息
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param page    信息
+     * @param wrapper 条件
+     *
      * @return 分页实体
      */
-    public Page<MemberUser> findMemberUserPage(PageRequest pageRequest, Map<String, Object> filter) {
-
-        filter.putAll(pageRequest.getOffsetMap());
-
-        List<MemberUser> data = findMemberUsers(filter);
-
-        return new Page<>(pageRequest, data);
+    public IPage<MemberUser> findMemberUserPage(Page<MemberUser> page, Wrapper<MemberUser> wrapper) {
+        return memberUserDao.selectPage(page, wrapper);
     }
 
     // -------------------------------- 会员用户初始化信息管理 -------------------------------- //
@@ -704,7 +638,7 @@ public class UserService implements InitializingBean {
      */
     public void updateMemberUserInitialization(MemberUserInitialization memberUserInitialization) {
 
-        memberUserInitializationDao.update(memberUserInitialization);
+        memberUserInitializationDao.updateById(memberUserInitialization);
 
         String key = getMemberUserInitializationKey(memberUserInitialization.getUserId());
         redisTemplate.delete(key);
@@ -715,6 +649,7 @@ public class UserService implements InitializingBean {
      * 获取用户初始化实体
      *
      * @param userId 用户 id
+     *
      * @return 用户初始化实体
      */
     public MemberUserInitialization getMemberUserInitialization(Integer userId) {
@@ -727,18 +662,11 @@ public class UserService implements InitializingBean {
             return Casts.cast(value);
         }
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("userIdEq", userId);
-
-        List<MemberUserInitialization> result = memberUserInitializationDao.find(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录大于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<MemberUserInitialization> iterator = result.iterator();
-
-        MemberUserInitialization initialization = iterator.hasNext() ? iterator.next() : null;
+        MemberUserInitialization initialization = memberUserInitializationDao.selectOne(
+                Wrappers
+                        .<MemberUserInitialization>lambdaQuery()
+                        .eq(MemberUserInitialization::getUserId, userId)
+        );
 
         if (initialization != null) {
             redisTemplate.opsForValue().set(key, initialization);

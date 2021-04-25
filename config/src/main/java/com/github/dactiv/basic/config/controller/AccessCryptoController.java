@@ -2,7 +2,7 @@ package com.github.dactiv.basic.config.controller;
 
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;

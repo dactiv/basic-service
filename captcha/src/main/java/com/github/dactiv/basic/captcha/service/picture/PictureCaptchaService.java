@@ -4,7 +4,7 @@ import com.github.dactiv.basic.captcha.service.AbstractRedisCaptchaService;
 import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.ExpiredCaptcha;
 import com.github.dactiv.basic.captcha.service.GenerateCaptchaResult;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;

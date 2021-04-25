@@ -22,7 +22,7 @@ public enum LoginType implements NameEnum {
         this.name = name;
     }
 
-    private String name;
+    private final String name;
 
     @Override
     public String getName() {

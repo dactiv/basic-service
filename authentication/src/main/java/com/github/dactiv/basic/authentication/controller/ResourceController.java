@@ -1,27 +1,27 @@
 package com.github.dactiv.basic.authentication.controller;
 
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.DiscoveryPluginResourceService;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import org.apache.commons.collections.CollectionUtils;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.Arrays;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 资源控制器
@@ -48,26 +48,22 @@ public class ResourceController {
     @Autowired
     private DiscoveryPluginResourceService discoveryPluginResourceService;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<Resource> queryGenerator;
+
     /**
      * 查找资源
      *
-     * @param filter 过滤条件
+     * @param request http 请求
+     *
      * @return 资源实体集合
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", source = ResourceSource.Console)
-    public List<Resource> find(@RequestParam Map<String, Object> filter,
-                               @RequestParam(required = false) List<String> sourceContains,
-                               @RequestParam(required = false) boolean mergeTree) {
+    public List<Resource> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
-        if (CollectionUtils.isNotEmpty(sourceContains)) {
-            filter.put("sourceContains", sourceContains);
-        } else {
-            filter.remove("sourceContains");
-        }
-
-        List<Resource> resourceList = authorizationService.findResources(filter);
+        List<Resource> resourceList = authorizationService.findResources(queryGenerator.getQueryWrapperFromHttpRequest(request));
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);
@@ -80,6 +76,7 @@ public class ResourceController {
      * 获取资源
      *
      * @param id 主键值
+     *
      * @return 资源实体
      */
     @GetMapping("get")
@@ -93,24 +90,26 @@ public class ResourceController {
      * 保存资源
      *
      * @param entity 资源实体
+     *
      * @return 消息结果集
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[resource:save]')")
     @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@Valid Resource entity) {
+    public RestResult.Result<Integer> save(@Valid Resource entity) {
 
         entity.setType(ResourceType.Menu.toString());
 
         authorizationService.saveResource(entity);
 
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**
      * 删除资源
      *
      * @param ids 主键值集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")
@@ -127,6 +126,7 @@ public class ResourceController {
      * 获取用户关联资源实体集合
      *
      * @param userId 用户主键值
+     *
      * @return 资源实体集合
      */
     @GetMapping("getConsoleUserResources")
@@ -147,25 +147,22 @@ public class ResourceController {
      *
      * @param securityContext 安全上下文
      * @param mergeTree       是否合并树形 true，是 否则 false
+     *
      * @return 资源实体集合
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
     @Plugin(name = "获取当前用户资源", source = ResourceSource.Console)
     public List<Resource> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
-                                                       @RequestParam Map<String, Object> filter,
+                                                       @RequestParam(required = false) String type,
                                                        @RequestParam(required = false) boolean mergeTree) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        filter.put("sourceContains", Arrays.asList(
-                userDetails.getType(),
-                ResourceSource.All.toString(),
-                ResourceSource.System)
-        );
+        List<String> sourceContains = Arrays.asList(userDetails.getType(), ResourceSource.All.toString(), ResourceSource.System.toString());
 
         Integer userId = Casts.cast(userDetails.getId());
-        List<Resource> resourceList = authorizationService.getConsolePrincipalResources(userId, filter);
+        List<Resource> resourceList = authorizationService.getConsolePrincipalResources(userId, sourceContains, type);
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);
@@ -178,6 +175,7 @@ public class ResourceController {
      * 获取组资源集合
      *
      * @param groupId 组 id
+     *
      * @return 资源实体集合
      */
     @GetMapping("getGroupResource")
@@ -197,17 +195,22 @@ public class ResourceController {
      * 判断唯一识别值是否唯一
      *
      * @param code 唯一识别值
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isCodeUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断唯一识别值是否唯一", source = ResourceSource.Console)
     public boolean isCodeUnique(@RequestParam String code) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("codeEq", code);
-        return authorizationService.findResources(filter).isEmpty();
+
+        return authorizationService.findResources(Wrappers.<Resource>lambdaQuery().eq(Resource::getCode, code)).isEmpty();
     }
 
+    /**
+     * 同步插件資源
+     *
+     * @return reset 结果集
+     */
     @PostMapping("syncPluginResource")
     @PreAuthorize("hasAuthority('perms[resource:syncPluginResource]')")
     @Plugin(name = "同步插件资源", source = ResourceSource.Console, audit = true)

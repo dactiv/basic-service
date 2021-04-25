@@ -2,7 +2,7 @@ package com.github.dactiv.basic.gateway;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;

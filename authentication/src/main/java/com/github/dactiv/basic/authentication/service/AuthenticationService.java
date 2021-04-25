@@ -1,13 +1,17 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -24,9 +28,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -69,6 +70,9 @@ public class AuthenticationService {
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * 保存认证信息表实体
      *
@@ -97,7 +101,7 @@ public class AuthenticationService {
      * @param authenticationInfo 认证信息表实体
      */
     public void updateAuthenticationInfo(AuthenticationInfo authenticationInfo) {
-        authenticationInfoDao.update(authenticationInfo);
+        authenticationInfoDao.updateById(authenticationInfo);
     }
 
     /**
@@ -106,7 +110,7 @@ public class AuthenticationService {
      * @param id 主键 id
      */
     public void deleteAuthenticationInfo(Integer id) {
-        authenticationInfoDao.delete(id);
+        authenticationInfoDao.deleteById(id);
     }
 
     /**
@@ -124,69 +128,65 @@ public class AuthenticationService {
      * 获取认证信息表实体
      *
      * @param id 主键 id
+     *
      * @return 认证信息表实体
      */
     public AuthenticationInfo getAuthenticationInfo(Integer id) {
-        return authenticationInfoDao.get(id);
+        return authenticationInfoDao.selectById(id);
     }
 
     /**
-     * 获取认证信息表实体
+     * 获取最后一条认证信息表实体
      *
-     * @param filter 过滤条件
+     * @param userId 用户 id
+     * @param types  类型
+     *
      * @return 认证信息表实体
      */
-    public AuthenticationInfo getAuthenticationInfoByFilter(Map<String, Object> filter) {
-
-        List<AuthenticationInfo> result = findAuthenticationInfoList(filter);
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件[" + filter + "]查询出来的记录大于" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<AuthenticationInfo> iterator = result.iterator();
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
-    /**
-     * 根据过滤条件查找认证信息表实体
-     *
-     * @param filter 过滤条件
-     * @return 认证信息表实体集合
-     */
-    public List<AuthenticationInfo> findAuthenticationInfoList(Map<String, Object> filter) {
-        return authenticationInfoDao.find(filter);
+    public AuthenticationInfo getLastAuthenticationInfo(Integer userId, List<String> types) {
+        return authenticationInfoDao.selectOne(Wrappers
+                .<AuthenticationInfo>lambdaQuery()
+                .eq(AuthenticationInfo::getUserId, userId)
+                .in(AuthenticationInfo::getType, types)
+        );
     }
 
     /**
      * 查找认证信息表实体分页数据
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param page    分页请求
+     * @param wrapper 查询包装器
+     *
      * @return 分页实体
      */
-    public Page<AuthenticationInfo> findAuthenticationInfoPage(PageRequest pageRequest, Map<String, Object> filter) {
-
-        filter.putAll(pageRequest.getOffsetMap());
-
-        List<AuthenticationInfo> data = findAuthenticationInfoList(filter);
-
-        return new Page<>(pageRequest, data);
+    public IPage<AuthenticationInfo> findAuthenticationInfoPage(Page<AuthenticationInfo> page, Wrapper<AuthenticationInfo> wrapper) {
+        return authenticationInfoDao.selectPage(page, wrapper);
     }
 
+    /**
+     * 验证认证信息
+     *
+     * @param info 认证信息
+     */
     public void validAuthenticationInfo(AuthenticationInfo info) {
 
-        PageRequest pageRequest = new PageRequest(0, 1);
+        Page<AuthenticationInfo> page = new Page<>(0, 1, false);
+        page.addOrder(OrderItem.desc("id"));
 
-        Map<String, Object> filter = new LinkedHashMap<>(pageRequest.getOffsetMap());
+        IPage<AuthenticationInfo> result = findAuthenticationInfoPage(
+                page,
+                Wrappers.
+                        <AuthenticationInfo>lambdaQuery()
+                        .eq(AuthenticationInfo::getUserId, info.getUserId())
+                        .in(AuthenticationInfo::getType, Collections.singletonList(info.getType()))
+                        .ne(AuthenticationInfo::getId, info.getId())
+        );
 
-        filter.put("userIdEq", info.getUserId());
-        filter.put("typeContain", Collections.singletonList(info.getType()));
-        filter.put("idNeq", info.getId());
+        Iterator<AuthenticationInfo> iterator = result.getRecords().iterator();
 
-        AuthenticationInfo authenticationInfo = getAuthenticationInfoByFilter(filter);
+        AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
-        if (authenticationInfo != null && !authenticationInfo.equals(info) && info.getId() > authenticationInfo.getId()) {
+        if (Objects.nonNull(authenticationInfo) && !authenticationInfo.equals(info) && info.getId() > authenticationInfo.getId()) {
 
             Map<String, Object> param = new LinkedHashMap<>();
 
@@ -197,15 +197,14 @@ public class AuthenticationService {
             param.put("toUserId", info.getUserId());
             param.put("type", messageType);
             param.put("title", title);
-            param.put("link", info.idEntityToMap());
-            param.put("data", info.toMap());
+            param.put("data", objectMapper.convertValue(info, Map.class));
             param.put("pushMessage", YesOrNo.Yes.getValue());
 
-            RestResult<Map<String, Object>> result = messageService.sendMessage(param);
+            /*RestResult<Map<String, Object>> result = messageService.sendMessage(param);
 
             if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
                 throw new ServiceException(result.getMessage());
-            }
+            }*/
 
         }
     }
@@ -214,18 +213,17 @@ public class AuthenticationService {
     @Scheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }")
     public void syncAuthenticationInfo() {
 
-        PageRequest pageRequest = new PageRequest(0, 100);
+        IPage<AuthenticationInfo> page = authenticationInfoDao.selectPage(
+                new Page<>(0, 100, false),
+                Wrappers.
+                        <AuthenticationInfo>lambdaQuery()
+                        .le(AuthenticationInfo::getRetryCount, maxRetryCount)
+                        .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue())
+        );
 
-        Map<String, Object> filter = pageRequest.getOffsetMap();
+        LOGGER.info("开始同步" + page.getRecords().size() + "认证信息到 es");
 
-        filter.put("retryCountLeq", maxRetryCount);
-        filter.put("syncStatusNeq", ExecuteStatus.Success.getValue());
-
-        List<AuthenticationInfo> authenticationInfos = findAuthenticationInfoList(filter);
-
-        LOGGER.info("开始同步" + authenticationInfos.size() + "认证信息到 es");
-
-        authenticationInfos.forEach(this::onAuthenticationSuccess);
+        page.getRecords().forEach(this::onAuthenticationSuccess);
 
     }
 
@@ -236,7 +234,7 @@ public class AuthenticationService {
 
             String index = getIndexString(info);
 
-            IndexOperations indexOperations =elasticsearchRestTemplate.indexOps(IndexCoordinates.of(index));
+            IndexOperations indexOperations = elasticsearchRestTemplate.indexOps(IndexCoordinates.of(index));
 
             if (!indexOperations.exists()) {
                 indexOperations.create();
@@ -262,9 +260,6 @@ public class AuthenticationService {
     }
 
     public String getIndexString(AuthenticationInfo info) {
-        Instant instant = info.getCreationTime().toInstant();
-        LocalDateTime time = LocalDateTime.ofInstant(instant, ZoneId.systemDefault());
-
-        return DEFAULT_ES_INDEX + "-" + info.getUserId() + "-" + time.format(DateTimeFormatter.ISO_LOCAL_DATE);
+        return DEFAULT_ES_INDEX + "-" + info.getUserId() + "-" + info.getCreationTime().format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 }

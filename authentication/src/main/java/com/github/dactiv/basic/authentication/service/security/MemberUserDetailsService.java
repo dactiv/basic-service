@@ -4,10 +4,9 @@ import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
-import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -21,7 +20,6 @@ import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
-import org.springframework.security.authentication.CredentialsExpiredException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -186,23 +184,21 @@ public class MemberUserDetailsService implements UserDetailsService {
     /**
      * 创建一个基础会员用户
      *
-     *
-     * @param token 认证 token
+     * @param token       认证 token
      * @param userDetails 用户信息
      *
      * @return 新的会员用户
      */
     private MemberUser createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails) {
-        return createMemberUser(token, userDetails,null);
+        return createMemberUser(token, userDetails, null);
     }
 
     /**
      * 创建一个基础会员用户
      *
-     *
-     * @param token 认证 token
+     * @param token       认证 token
      * @param userDetails 用户信息
-     * @param phone 手机号码
+     * @param phone       手机号码
      *
      * @return 新的会员用户
      */

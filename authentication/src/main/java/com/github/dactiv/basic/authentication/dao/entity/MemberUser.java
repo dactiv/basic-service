@@ -1,12 +1,18 @@
 package com.github.dactiv.basic.authentication.dao.entity;
 
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.dactiv.framework.commons.IntegerIdEntity;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -15,9 +21,8 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import javax.validation.constraints.Pattern;
-import java.util.LinkedHashMap;
-import java.util.Map;
-import java.util.Objects;
+import java.io.Serializable;
+import java.time.LocalDateTime;
 
 /**
  * <p>会员用户实体类</p>
@@ -26,10 +31,32 @@ import java.util.Objects;
  * @author maurice
  * @since 2020-04-13 10:14:46
  */
+@Data
+@EqualsAndHashCode
 @Alias("memberUser")
-public class MemberUser extends IntegerIdEntity {
+@TableName("tb_member_user")
+public class MemberUser implements Serializable {
 
     private static final long serialVersionUID = 1L;
+
+    /**
+     * 主键
+     */
+    @TableId(value = "id", type = IdType.AUTO)
+    private Integer id;
+
+    /**
+     * 创建时间
+     */
+    @JsonSerialize(using = JacksonDateTime.Serializer.class)
+    private LocalDateTime creationTime = LocalDateTime.now();
+
+    /**
+     * 最后更新时间
+     */
+    @Version
+    @JsonIgnore
+    private LocalDateTime lastUpdateTime = LocalDateTime.now();
 
     /**
      * 登录帐号
@@ -67,122 +94,6 @@ public class MemberUser extends IntegerIdEntity {
     @NotNull
     @Range(min = 1, max = 3)
     private Integer status;
-
-    /**
-     * 会员用户实体类
-     */
-    public MemberUser() {
-    }
-
-    /**
-     * 获取登录帐号
-     *
-     * @return String
-     */
-    public String getUsername() {
-        return this.username;
-    }
-
-    /**
-     * 设置登录帐号
-     *
-     * @param username 登录帐号
-     */
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    /**
-     * 获取密码
-     *
-     * @return String
-     */
-    public String getPassword() {
-        return this.password;
-    }
-
-    /**
-     * 设置密码
-     *
-     * @param password 密码
-     */
-    public void setPassword(String password) {
-        this.password = password;
-    }
-
-    /**
-     * 获取邮箱
-     *
-     * @return String
-     */
-    public String getEmail() {
-        return this.email;
-    }
-
-    /**
-     * 设置邮箱
-     *
-     * @param email 邮箱
-     */
-    public void setEmail(String email) {
-        this.email = email;
-    }
-
-    /**
-     * 获取手机号码
-     *
-     * @return String
-     */
-    public String getPhone() {
-        return this.phone;
-    }
-
-    /**
-     * 设置手机号码
-     *
-     * @param phone 备注
-     */
-    public void setPhone(String phone) {
-        this.phone = phone;
-    }
-
-    /**
-     * 获取状态:1.启用、2.禁用、3.锁定
-     *
-     * @return Integer
-     */
-    public Integer getStatus() {
-        return this.status;
-    }
-
-    /**
-     * 设置状态:1.启用、2.禁用、3.锁定
-     *
-     * @param status 状态:1.启用、2.禁用、3.锁定
-     */
-    public void setStatus(Integer status) {
-        this.status = status;
-    }
-
-    /**
-     * 获取唯一索引查询条件
-     *
-     * @return 查询条件
-     */
-    @JsonIgnore
-    public Map<String, Object> getUniqueFilter() {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        if (Objects.nonNull(this.username) && !"".equals(this.username)) {
-            filter.put("usernameEq", getUsername());
-        }
-        if (Objects.nonNull(this.email) && !"".equals(this.email)) {
-            filter.put("emailEq", getEmail());
-        }
-        if (Objects.nonNull(this.phone) && !"".equals(this.phone)) {
-            filter.put("phoneEq", getPhone());
-        }
-        return filter;
-    }
 
     // -------------------- 将代码新增添加在这里，以免代码重新生成后覆盖新增内容 -------------------- //
 

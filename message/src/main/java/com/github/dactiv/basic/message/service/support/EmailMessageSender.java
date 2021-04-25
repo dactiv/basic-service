@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;

@@ -2,7 +2,7 @@ package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.captcha.service;
 
-import com.github.dactiv.framework.commons.spring.web.RestResult;
+import com.github.dactiv.framework.commons.RestResult;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Map;
