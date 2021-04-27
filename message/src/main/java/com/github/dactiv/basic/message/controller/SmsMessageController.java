@@ -1,22 +1,23 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -42,37 +43,29 @@ public class SmsMessageController {
     @Autowired
     private List<SmsChannelSender> smsChannelSenders;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<SmsMessage> queryGenerator;
+
     /**
      * 获取短信消息分页信息
      *
-     * @param pageRequest 分页信息
-     * @param filter      过滤条件
+     * @param pageable 分页信息
+     * @param request  过滤条件
+     *
      * @return 分页实体
      */
     @PostMapping("page")
     @Plugin(name = "获取短信消息分页", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[sms_message:page]')")
-    public Page<SmsMessage> page(PageRequest pageRequest, @RequestParam Map<String, Object> filter) {
-        return messageService.findSmsMessagePage(pageRequest, filter);
-    }
-
-    /**
-     * 根据条件获取短信消息
-     *
-     * @param filter 查询条件
-     * @return 短信消息实体
-     */
-    @GetMapping("getByFilter")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "根据条件获取单个短信消息", source = ResourceSource.Console)
-    public SmsMessage getByFilter(@RequestParam Map<String, Object> filter) {
-        return messageService.getSmsMessageByFilter(filter);
+    public Page<SmsMessage> page(Pageable pageable, HttpServletRequest request) {
+        return messageService.findSmsMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
      * 获取短信消息
      *
      * @param id 短信消息主键 ID
+     *
      * @return 短信消息实体
      */
     @GetMapping("get")
@@ -90,9 +83,9 @@ public class SmsMessageController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[sms_message:save]')")
     @Plugin(name = "保存短信消息实体", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@Valid SmsMessage entity) {
+    public RestResult.Result<Integer> save(@Valid SmsMessage entity) {
         messageService.saveSmsMessage(entity);
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**

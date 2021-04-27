@@ -1,11 +1,11 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -25,6 +25,7 @@ import org.springframework.stereotype.Component;
 
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -87,7 +88,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(new Date());
+            entity.setLastSendTime(LocalDateTime.now());
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
 
@@ -102,13 +103,10 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
                 mailSender.send(mimeMessage);
 
-                entity.setRemark("发送邮件成功");
-                entity.setSuccessTime(new Date());
-                entity.setStatus(ExecuteStatus.Success.getValue());
+                ExecuteStatus.success(entity,"发送邮件成功");
             } catch (Exception ex) {
                 LOGGER.error("发送邮件错误", ex);
-                entity.setStatus(ExecuteStatus.Failure.getValue());
-                entity.setRemark(ex.getCause().getMessage());
+                ExecuteStatus.failure(entity,ex.getCause().getMessage());
             }
 
             if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {

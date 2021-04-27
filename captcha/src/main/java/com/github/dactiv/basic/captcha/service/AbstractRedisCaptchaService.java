@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.captcha.service;
 
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -96,7 +96,13 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         String value = DigestUtils.md5Hex(deviceIdentified);
 
-        SimpleBuildToken token = new SimpleBuildToken(deviceIdentified, value, getType(), getTokenParamName(), args);
+        SimpleBuildToken token = new SimpleBuildToken();
+
+        token.setId(deviceIdentified);
+        token.setToken(value);
+        token.setType(getType());
+        token.setParamName(getTokenParamName());
+        token.setArgs(args);
 
         saveBuildToken(token);
 

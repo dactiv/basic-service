@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
@@ -18,13 +17,14 @@ import com.github.dactiv.framework.spring.security.authentication.UserDetailsSer
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.session.SessionInformation;
@@ -36,7 +36,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 
 import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.Console;
 import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.UserCenter;
@@ -355,14 +357,19 @@ public class UserService implements InitializingBean {
     /**
      * 查找系统用户分页信息
      *
-     * @param page         分页请求
-     * @param queryWrapper 过滤条件
+     * @param pageable 分页请求
+     * @param wrapper  过滤条件
      *
      * @return 分页实体
      */
-    public IPage<ConsoleUser> findConsoleUserPage(Page<ConsoleUser> page, Wrapper<ConsoleUser> queryWrapper) {
+    public Page<ConsoleUser> findConsoleUserPage(Pageable pageable, Wrapper<ConsoleUser> wrapper) {
 
-        return consoleUserDao.selectPage(page, queryWrapper);
+        IPage<ConsoleUser> result = consoleUserDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
+
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
     // -------------------------------- 会员用户管理 -------------------------------- //
@@ -611,13 +618,19 @@ public class UserService implements InitializingBean {
     /**
      * 查找会员用户分页信息
      *
-     * @param page    信息
+     * @param pageable    信息
      * @param wrapper 条件
      *
      * @return 分页实体
      */
-    public IPage<MemberUser> findMemberUserPage(Page<MemberUser> page, Wrapper<MemberUser> wrapper) {
-        return memberUserDao.selectPage(page, wrapper);
+    public Page<MemberUser> findMemberUserPage(Pageable pageable, Wrapper<MemberUser> wrapper) {
+
+        IPage<MemberUser> result = memberUserDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
+
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
     // -------------------------------- 会员用户初始化信息管理 -------------------------------- //

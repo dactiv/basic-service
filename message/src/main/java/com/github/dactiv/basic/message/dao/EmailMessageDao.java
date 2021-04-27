@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.dao;
 
-import com.github.dactiv.framework.commons.BasicCurdDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
@@ -13,6 +13,6 @@ import org.springframework.stereotype.Repository;
  */
 @Mapper
 @Repository
-public interface EmailMessageDao extends BasicCurdDao<EmailMessage, Integer> {
+public interface EmailMessageDao extends BaseMapper<EmailMessage> {
 
 }

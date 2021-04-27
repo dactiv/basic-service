@@ -2,8 +2,6 @@ package com.github.dactiv.basic.message.service.support.site.umeng;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.PropertyNamingStrategy;
-import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AuthenticationService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
@@ -14,6 +12,8 @@ import com.github.dactiv.basic.message.service.support.site.umeng.android.Androi
 import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayload;
 import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayloadAps;
 import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayloadApsAlert;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mobile.DevicePlatform;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -77,11 +77,10 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     @Autowired
     private AuthenticationService authenticationService;
 
-    private final ObjectMapper objectMapper;
+    @Autowired
+    private ObjectMapper objectMapper;
 
     public UmengSiteMessageService() {
-        objectMapper = new ObjectMapper();
-        objectMapper.setPropertyNamingStrategy(PropertyNamingStrategy.SNAKE_CASE);
     }
 
     @Override
@@ -179,6 +178,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * @param entity 站内信实体
      * @return 基础消息实体
      */
+    @SuppressWarnings("unchecked")
     public BasicMessage getIosMessage(SiteMessage entity, MessageType type) {
         BasicMessage result = new BasicMessage();
 
@@ -202,7 +202,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         iosPayloadAps.setAlert(iosPayloadApsAlert);
 
-        Map<String, Object> payloadMap = Casts.castObjectToMap(iosPayload);
+        Map<String, Object> payloadMap = objectMapper.convertValue(iosPayload, Map.class);
 
         payloadMap.putAll(entity.getLink());
         payloadMap.put("type", entity.getType());

@@ -5,12 +5,14 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -30,6 +32,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode
+@NoArgsConstructor
 @Alias("consoleUser")
 @TableName("tb_console_user")
 public class ConsoleUser implements Serializable {
@@ -46,14 +49,15 @@ public class ConsoleUser implements Serializable {
      * 创建时间
      */
     @JsonSerialize(using = JacksonDateTime.Serializer.class)
+    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
     private LocalDateTime creationTime = LocalDateTime.now();
 
     /**
-     * 最后更新时间
+     * 版本号
      */
     @Version
     @JsonIgnore
-    private LocalDateTime lastUpdateTime = LocalDateTime.now();
+    private Integer updateVersion = 1;
 
     /**
      * 邮箱

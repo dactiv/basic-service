@@ -1,6 +1,10 @@
 package com.github.dactiv.basic.captcha.service.sms;
 
 import com.github.dactiv.basic.captcha.service.SimpleMessageType;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
@@ -10,6 +14,10 @@ import javax.validation.constraints.Pattern;
  *
  * @author maurice
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
+@EqualsAndHashCode(callSuper = true)
 public class SmsEntity extends SimpleMessageType {
 
     /**
@@ -21,40 +29,5 @@ public class SmsEntity extends SimpleMessageType {
     )
     @NotBlank(message = "手机号码不能为空")
     private String phoneNumber;
-
-    /**
-     * 短信实体
-     */
-    public SmsEntity() {
-    }
-
-    /**
-     * 短信实体
-     *
-     * @param messageType 消息类型
-     * @param phoneNumber 手机号码
-     */
-    public SmsEntity(String messageType, String phoneNumber) {
-        super(messageType);
-        this.phoneNumber = phoneNumber;
-    }
-
-    /**
-     * 获取手机号码
-     *
-     * @return 手机号码
-     */
-    public String getPhoneNumber() {
-        return phoneNumber;
-    }
-
-    /**
-     * 设置手机号码
-     *
-     * @param phoneNumber 手机号码
-     */
-    public void setPhoneNumber(String phoneNumber) {
-        this.phoneNumber = phoneNumber;
-    }
 
 }

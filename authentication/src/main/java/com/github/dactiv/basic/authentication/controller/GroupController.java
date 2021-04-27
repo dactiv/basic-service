@@ -33,9 +33,6 @@ import java.util.List;
 )
 public class GroupController {
 
-    /**
-     * 账户管理服务
-     */
     @Autowired
     private AuthorizationService authorizationService;
 
@@ -51,7 +48,7 @@ public class GroupController {
     public List<Group> find(HttpServletRequest request,
                             @RequestParam(required = false) boolean mergeTree) {
 
-        List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperFromHttpRequest(request));
+        List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperByHttpRequest(request));
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(groupList);

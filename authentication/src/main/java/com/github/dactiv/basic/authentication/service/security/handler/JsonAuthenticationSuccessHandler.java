@@ -15,6 +15,7 @@ import com.github.dactiv.framework.spring.web.mobile.Device;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mobile.LiteDeviceResolver;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
@@ -34,6 +35,7 @@ import java.util.Objects;
  *
  * @author maurice.chen
  */
+@Slf4j
 @Component
 public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
 
@@ -123,7 +125,9 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
             info.setRetryCount(0);
             // FIXME 省市县没有通过 ip 分析后进行赋值，如果有接口，节点改成 MQ 形式保存。
             authenticationService.saveAuthenticationInfo(info);
+
             authenticationService.validAuthenticationInfo(info);
+
         }
 
         if (MobileUserDetails.class.isAssignableFrom(details.getClass())) {

@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -68,6 +69,9 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     private final DeviceResolver deviceResolver = new LiteDeviceResolver();
 
@@ -158,13 +162,14 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      *
      * @return map
      */
+    @SuppressWarnings("unchecked")
     public Map<String, Object> createMobileAuthenticationResult(MobileUserDetails details) {
 
         String authenticationKey = getMobileAuthenticationTokenKey(details.getUsername());
 
         details.setPassword(RandomStringUtils.randomAlphanumeric(randomPasswordCount));
 
-        Map<String, Object> result = Casts.castObjectToMap(details);
+        Map<String, Object> result = objectMapper.convertValue(details, Map.class);
 
         String token = createReturnToken(details);
 

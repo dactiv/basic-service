@@ -1,23 +1,24 @@
 package com.github.dactiv.basic.config.controller;
 
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import com.github.dactiv.basic.config.service.DictionaryService;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
+import java.util.Objects;
 
 /**
  * 数据字典管理控制器
@@ -38,35 +39,46 @@ public class DictionaryController {
     @Autowired
     private DictionaryService dictionaryService;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator;
+
     // ----------------------------------------------- 数据字典管理 ----------------------------------------------- //
 
     /**
      * 获取数据字典分页信息
      *
-     * @param pageRequest 分页信息
-     * @param filter      过滤条件
+     * @param pageable 分页信息
+     * @param request  http servlet request
+     *
      * @return 分页实体
      */
     @PostMapping("getDataDictionaryPage")
     @PreAuthorize("hasAuthority('perms[data-dictionary:page]')")
     @Plugin(name = "获取数据字典分页", source = ResourceSource.Console)
-    public Page<DataDictionary> getDataDictionaryPage(PageRequest pageRequest, @RequestParam Map<String, Object> filter) {
-        return dictionaryService.findDataDictionariesPage(pageRequest, filter);
+    public Page<DataDictionary> getDataDictionaryPage(Pageable pageable, HttpServletRequest request) {
+        return dictionaryService.findDataDictionariesPage(
+                pageable,
+                mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
+        );
     }
 
     /**
      * 获取所有数据字典
      *
-     * @param filter    过滤条件
+     * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
+     *
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionary")
     @Plugin(name = "查询全部", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[data-dictionary:find]')")
-    public List<DataDictionary> findDataDictionary(@RequestParam Map<String, Object> filter,
+    public List<DataDictionary> findDataDictionary(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
-        List<DataDictionary> dataDictionaries = dictionaryService.findDataDictionaries(filter);
+
+        List<DataDictionary> dataDictionaries = dictionaryService.findDataDictionaries(
+                mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
+        );
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(dataDictionaries);
@@ -79,21 +91,21 @@ public class DictionaryController {
      * 判断数据字典唯一识别值是否唯一
      *
      * @param code 唯一识别值
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isDataDictionaryCodeUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断数据字典唯一识别值是否唯一", source = ResourceSource.Console)
     public boolean isDataDictionaryCodeUnique(@RequestParam String code) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("codeEq", code);
-        return dictionaryService.findDataDictionaries(filter).size() > 0;
+        return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
     }
 
     /**
      * 获取数据字典
      *
      * @param id 数据字典 ID
+     *
      * @return 数据字典实体
      */
     @GetMapping("getDataDictionary")
@@ -111,9 +123,9 @@ public class DictionaryController {
     @PostMapping("saveDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:save]')")
     @Plugin(name = "保存数据字典实体", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> saveDataDictionary(@Valid DataDictionary entity) {
+    public RestResult.Result<Integer> saveDataDictionary(@Valid DataDictionary entity) {
         dictionaryService.saveDataDictionary(entity);
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**
@@ -134,16 +146,20 @@ public class DictionaryController {
     /**
      * 获取所有字典类型
      *
-     * @param filter    过滤条件
+     * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
+     *
      * @return 字典类型集合
      */
     @PostMapping("findDictionaryType")
     @Plugin(name = "查询全部", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[dictionary-type:find]')")
-    public List<DictionaryType> findDictionaryType(@RequestParam Map<String, Object> filter,
+    public List<DictionaryType> findDictionaryType(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
-        List<DictionaryType> dictionaryTypes = dictionaryService.findDictionaryTypes(filter);
+
+        List<DictionaryType> dictionaryTypes = dictionaryService.findDictionaryTypes(
+                mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
+        );
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(dictionaryTypes);
@@ -156,6 +172,7 @@ public class DictionaryController {
      * 获取字典类型实体
      *
      * @param id 主键 ID
+     *
      * @return 字典类型实体
      */
     @GetMapping("getDictionaryType")
@@ -169,15 +186,15 @@ public class DictionaryController {
      * 判断字典类型唯一识别值是否唯一
      *
      * @param code 唯一识别值
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isDictionaryTypeCodeUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断字类型典唯一识别值是否唯一", source = ResourceSource.Console)
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
-        Map<String, Object> filter = new LinkedHashMap<>();
-        filter.put("codeEq", code);
-        return dictionaryService.findDataDictionaries(filter).size() > 0;
+
+        return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
     }
 
     /**
@@ -188,10 +205,9 @@ public class DictionaryController {
     @PostMapping("saveDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary-type:save]')")
     @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> saveDictionaryType(@Valid DictionaryType entity) {
+    public RestResult.Result<Integer> saveDictionaryType(@Valid DictionaryType entity) {
         dictionaryService.saveDictionaryType(entity);
-
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**

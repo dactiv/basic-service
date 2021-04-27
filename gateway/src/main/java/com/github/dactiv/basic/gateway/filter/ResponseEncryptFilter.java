@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.gateway.filter;
 
-import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.basic.gateway.AccessCryptoResolver;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import org.reactivestreams.Publisher;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -33,7 +33,6 @@ import java.util.Optional;
  * @author maurice
  */
 @Component
-@SuppressWarnings({"rawtypes", "unchecked"})
 public class ResponseEncryptFilter implements GlobalFilter, Ordered {
 
     @Autowired

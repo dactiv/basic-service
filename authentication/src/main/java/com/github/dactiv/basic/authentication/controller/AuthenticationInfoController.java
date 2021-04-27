@@ -1,13 +1,14 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -30,22 +31,25 @@ public class AuthenticationInfoController {
     private AuthenticationService authenticationService;
 
     @Autowired
-    private MybatisPlusQueryGenerator<AuthenticationInfo> queryGenerator;
+    private MybatisPlusQueryGenerator<?> queryGenerator;
 
     /**
      * 获取认证信息表分页信息
      *
-     * @param page    分页请求
-     * @param request http 请求
+     * @param pageable 分页请求
+     * @param request  http 请求
      *
      * @return 分页实体
      */
     @RequestMapping("page")
     @Plugin(name = "获取认证信息表分页", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
-    public IPage<AuthenticationInfo> page(Page<AuthenticationInfo> page, HttpServletRequest request) {
+    public Page<AuthenticationInfo> page(@PageableDefault Pageable pageable, HttpServletRequest request) {
 
-        return authenticationService.findAuthenticationInfoPage(page, queryGenerator.getQueryWrapperFromHttpRequest(request));
+        return authenticationService.findAuthenticationInfoPage(
+                pageable,
+                queryGenerator.getQueryWrapperByHttpRequest(request)
+        );
     }
 
     /**

@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.controller;
 
-
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
@@ -8,8 +7,6 @@ import com.github.dactiv.basic.authentication.service.security.handler.JsonLogou
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.audit.AuditEventEntity;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.ElasticsearchAuditEventRepository;
@@ -29,6 +26,9 @@ import org.elasticsearch.search.sort.SortBuilders;
 import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.SearchHit;
 import org.springframework.data.elasticsearch.core.SearchHits;
@@ -43,6 +43,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
@@ -87,13 +88,7 @@ public class SecurityController {
 
         String index = ElasticsearchAuditEventRepository.DEFAULT_ES_INDEX + "-*";
 
-        NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder()
-                .withPageable(
-                        org.springframework.data.domain.PageRequest.of(
-                                pageRequest.getPageNumber() - 1,
-                                pageRequest.getPageSize()
-                        )
-                );
+        NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder().withPageable(pageRequest);
 
         BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
 
@@ -122,8 +117,8 @@ public class SecurityController {
         builder.withSort(SortBuilders.fieldSort("creationTime").order(SortOrder.DESC));
 
         SearchHits<AuditEventEntity> data = elasticsearchRestTemplate.search(builder.build(), AuditEventEntity.class, IndexCoordinates.of(index));
-
-        return new Page<>(pageRequest, data.stream().map(SearchHit::getContent).collect(Collectors.toList()));
+        List<AuditEventEntity> content = data.stream().map(SearchHit::getContent).collect(Collectors.toList());
+        return new PageImpl<>(content, pageRequest, content.size());
     }
 
     /**

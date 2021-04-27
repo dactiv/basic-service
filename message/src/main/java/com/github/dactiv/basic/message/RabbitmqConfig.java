@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.message;
 
-import org.springframework.amqp.core.*;
+import org.springframework.amqp.core.AcknowledgeMode;
+import org.springframework.amqp.core.AsyncAmqpTemplate;
 import org.springframework.amqp.rabbit.AsyncRabbitTemplate;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;
 import org.springframework.amqp.rabbit.connection.ConnectionFactory;
@@ -9,12 +10,8 @@ import org.springframework.amqp.support.converter.Jackson2JsonMessageConverter;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
-import java.math.BigDecimal;
-import java.util.LinkedHashMap;
-import java.util.Map;
-
 /**
- * rabbitmq 的 direct 配置
+ * rabbitmq 配置
  *
  * @author maurice.chen
  */

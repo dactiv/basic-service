@@ -1,11 +1,9 @@
 package com.github.dactiv.basic.authentication.dao.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
@@ -13,6 +11,7 @@ import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -33,6 +32,7 @@ import java.time.LocalDateTime;
  */
 @Data
 @EqualsAndHashCode
+@NoArgsConstructor
 @Alias("memberUser")
 @TableName("tb_member_user")
 public class MemberUser implements Serializable {
@@ -49,14 +49,15 @@ public class MemberUser implements Serializable {
      * 创建时间
      */
     @JsonSerialize(using = JacksonDateTime.Serializer.class)
+    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
     private LocalDateTime creationTime = LocalDateTime.now();
 
     /**
-     * 最后更新时间
+     * 版本号
      */
     @Version
     @JsonIgnore
-    private LocalDateTime lastUpdateTime = LocalDateTime.now();
+    private Integer updateVersion = 1;
 
     /**
      * 登录帐号
@@ -95,7 +96,12 @@ public class MemberUser implements Serializable {
     @Range(min = 1, max = 3)
     private Integer status;
 
-    // -------------------- 将代码新增添加在这里，以免代码重新生成后覆盖新增内容 -------------------- //
+    /**
+     * 用户初始化
+     */
+    @TableField(exist = false)
+    @JsonInclude(JsonInclude.Include.NON_EMPTY)
+    private MemberUserInitialization initialization;
 
     /**
      * 获取用户状态名称
@@ -104,29 +110,5 @@ public class MemberUser implements Serializable {
      */
     public String getStatusName() {
         return NameValueEnumUtils.getName(status, UserStatus.class);
-    }
-
-    /**
-     * 用户初始化
-     */
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
-    private MemberUserInitialization initialization;
-
-    /**
-     * 获取用户初始化信息
-     *
-     * @return 用户初始化信息
-     */
-    public MemberUserInitialization getInitialization() {
-        return initialization;
-    }
-
-    /**
-     * 设置用户初始化信息
-     *
-     * @param initialization 用户初始化信息
-     */
-    public void setInitialization(MemberUserInitialization initialization) {
-        this.initialization = initialization;
     }
 }

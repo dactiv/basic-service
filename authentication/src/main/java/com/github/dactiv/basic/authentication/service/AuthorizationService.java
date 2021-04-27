@@ -2,16 +2,17 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
-import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.IdEntity;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.PrincipalAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -58,6 +59,9 @@ public class AuthorizationService {
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     /**
      * 超级管理员组 id
      */
@@ -80,13 +84,9 @@ public class AuthorizationService {
                 source.toString()
         );
 
-        Optional<UserDetailsService> userDetailsService = authenticationProvider.getUserDetailsService(token);
-
-        if (userDetailsService.isEmpty()) {
-            throw new ServiceException("找不到类型为 [" + source + "] 的 UserDetailsService 实现");
-        }
-
-        return userDetailsService.get();
+        return authenticationProvider
+                .getUserDetailsService(token)
+                .orElseThrow(() -> new ServiceException("找不到类型为 [" + source + "] 的 UserDetailsService 实现"));
     }
 
     /**
@@ -422,9 +422,9 @@ public class AuthorizationService {
                         .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
         );
 
-        List<Map<String, Object>> pluginList = Casts.cast(
+        List<PluginInfo> pluginList = objectMapper.convertValue(
                 serviceInfo.getInfo().get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME),
-                List.class
+                new TypeReference<>() {}
         );
 
         // 遍历新资源，更新 serviceInfo 相关的资源信息
@@ -522,7 +522,7 @@ public class AuthorizationService {
             BeanUtils.copyProperties(
                     resource,
                     target,
-                    IdEntity.DEFAULT_ID_NAME,
+                    "id",
                     PluginInfo.DEFAULT_CHILDREN_NAME,
                     PluginInfo.DEFAULT_SOURCE_NAME
             );
@@ -539,22 +539,19 @@ public class AuthorizationService {
      *
      * @return 流集合
      */
-    private Stream<Resource> createResource(Map<String, Object> entry, ServiceInfo serviceInfo) {
+    private Stream<Resource> createResource(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
 
-        PluginInfo plugin = Casts.castMapToObject(
-                entry,
-                PluginInfo.class,
-                PluginInfo.DEFAULT_CHILDREN_NAME
-        );
+        PluginInfo plugin = objectMapper.convertValue(entry, PluginInfo.class);
 
         return Arrays.stream(StringUtils.split(plugin.getSource(), ",")).map(source -> {
+
             Resource target = new Resource();
 
             BeanUtils.copyProperties(plugin, target);
 
             target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
-
-            List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
+            List<Tree<String, PluginInfo>> children = plugin.getChildren();
+            //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
             // 设置 target 变量的子节点
             children.stream()
                     .flatMap(c -> createResource(c, serviceInfo))

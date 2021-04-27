@@ -1,11 +1,14 @@
 package com.github.dactiv.basic.config.controller;
 
 
-import com.github.dactiv.framework.commons.Casts;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.DiscoveryEnumerateResourceService;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
@@ -17,7 +20,6 @@ import com.github.dactiv.framework.crypto.algorithm.ByteSource;
 import com.github.dactiv.framework.crypto.algorithm.SimpleByteSource;
 import com.github.dactiv.framework.crypto.algorithm.cipher.AbstractBlockCipherService;
 import com.github.dactiv.framework.crypto.algorithm.cipher.RsaCipherService;
-import com.github.dactiv.framework.crypto.algorithm.exception.CryptoException;
 import com.github.dactiv.framework.crypto.algorithm.hash.Hash;
 import com.github.dactiv.framework.crypto.algorithm.hash.HashAlgorithmMode;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
@@ -111,17 +113,18 @@ public class ConfigController {
      */
     @GetMapping("findDataDictionaries/{name:.*}")
     public List<DataDictionary> findDataDictionaries(@PathVariable String name) {
-        Map<String, Object> filter = new LinkedHashMap<>(16);
 
         int index = StringUtils.indexOf(name, "*");
 
+        LambdaQueryWrapper<DataDictionary> wrapper = Wrappers.lambdaQuery();
+
         if (index > 0) {
-            filter.put("codeLike", StringUtils.substring(name, 0, index));
+            wrapper.like(DataDictionary::getCode, StringUtils.substring(name, 0, index));
         } else {
-            filter.put("codeEq", name);
+            wrapper.eq(DataDictionary::getCode, name);
         }
 
-        return dictionaryService.findDataDictionaries(filter);
+        return dictionaryService.findDataDictionaries(wrapper);
 
     }
 
@@ -134,11 +137,11 @@ public class ConfigController {
     @GetMapping("findAccessCrypto")
     public Map<String, Object> findAccessCrypto(@RequestParam String type) {
 
-        Map<String, Object> filter = new LinkedHashMap<>();
-
-        filter.put("typeEq", type);
-
-        List<AccessCrypto> accessCryptoList = accessCryptoService.findAccessCryptoList(filter);
+        List<ConfigAccessCrypto> accessCryptoList = accessCryptoService.findAccessCryptoList(
+                Wrappers
+                        .<ConfigAccessCrypto>lambdaQuery()
+                        .eq(AccessCrypto::getType, type)
+        );
 
         Map<String, Object> entry = new LinkedHashMap<>();
 

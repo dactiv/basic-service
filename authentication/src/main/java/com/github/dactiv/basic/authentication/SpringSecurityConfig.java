@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-public class SecurityConfiguration<S extends Session> extends WebSecurityConfigurerAdapter {
+public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigurerAdapter {
 
     @Autowired
     private JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;

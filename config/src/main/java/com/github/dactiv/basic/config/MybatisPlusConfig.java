@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.config;
+package com.github.dactiv.basic.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -8,6 +8,11 @@ import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPl
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
+/**
+ * Mybatis-Plus 配置
+ *
+ * @author maurice.chen
+ */
 @Configuration
 public class MybatisPlusConfig {
 
@@ -23,6 +28,7 @@ public class MybatisPlusConfig {
     }
 
     @Bean
+    @SuppressWarnings("rawtypes")
     public MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator() {
         return new MybatisPlusQueryGenerator();
     }

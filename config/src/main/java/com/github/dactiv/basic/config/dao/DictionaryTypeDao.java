@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.config.dao;
 
-import com.github.dactiv.framework.commons.BasicCurdDao;
+import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
@@ -12,6 +12,6 @@ import org.springframework.stereotype.Repository;
  */
 @Mapper
 @Repository
-public interface DictionaryTypeDao extends BasicCurdDao<DictionaryType, Integer> {
+public interface DictionaryTypeDao extends BaseMapper<DictionaryType> {
 }
 

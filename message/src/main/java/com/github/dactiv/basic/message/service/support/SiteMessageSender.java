@@ -1,13 +1,13 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -21,6 +21,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -76,7 +77,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(new Date());
+            entity.setLastSendTime(LocalDateTime.now());
 
             SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
@@ -87,17 +88,13 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
                 RestResult<Map<String, Object>> restResult = siteMessageChannelSender.sendSiteMessage(entity);
 
                 if (restResult.getStatus() == HttpStatus.OK.value()) {
-                    entity.setStatus(ExecuteStatus.Success.getValue());
-                    entity.setSuccessTime(new Date());
-                    entity.setRemark(String.format("%s:%s", restResult.getMessage(), restResult.getData()));
+                    ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
                 } else {
-                    entity.setStatus(ExecuteStatus.Failure.getValue());
-                    entity.setException(restResult.getMessage());
+                    ExecuteStatus.failure(entity, restResult.getMessage());
                 }
 
             } catch (Exception e) {
-                entity.setStatus(ExecuteStatus.Failure.getValue());
-                entity.setException(e.getMessage());
+                ExecuteStatus.failure(entity, e.getMessage());
             }
 
             if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {
@@ -124,16 +121,11 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
     }
 
     private SiteMessageChannelSender getSiteMessageChannelSender(String channel) {
-        Optional<SiteMessageChannelSender> siteMessageChannelSender = siteMessageChannelSenderList
+        return siteMessageChannelSenderList
                 .stream()
                 .filter(s -> channel.equals(s.getType()))
-                .findFirst();
-
-        if (!siteMessageChannelSender.isPresent()) {
-            throw new ServiceException("找不到渠道为[" + channel + "]的消息推送渠道支持");
-        }
-
-        return siteMessageChannelSender.get();
+                .findFirst()
+                .orElseThrow(() -> new ServiceException("找不到渠道为[" + channel + "]的消息推送渠道支持"));
     }
 
     @Override

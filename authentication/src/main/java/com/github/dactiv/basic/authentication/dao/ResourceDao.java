@@ -29,31 +29,31 @@ public interface ResourceDao extends BaseMapper<Resource> {
      */
     @Select(
             "<script>" +
-                    "SELECT DISTINCT " +
-                    "   r.id, " +
-                    "   r.name, " +
-                    "   r.code, " +
-                    "   r.application_name, " +
-                    "   r.type, " +
-                    "   r.version, " +
-                    "   r.value, " +
-                    "   r.authority, " +
-                    "   r.icon, " +
-                    "   r.parent_id, " +
-                    "   r.status, " +
-                    "   r.sort, " +
-                    "   r.creation_time, " +
-                    "   r.source, " +
-                    "   r.remark " +
-                    "FROM " +
-                    "   tb_resource r " +
-                    "LEFT JOIN " +
-                    "   tb_group_resource gr ON gr.resource_id = r.id " +
-                    "LEFT JOIN " +
-                    "   tb_group g ON gr.group_id = g.id " +
-                    "WHERE " +
-                    "   g.id = #{groupId}" +
-                    "</script>"
+            "SELECT DISTINCT " +
+            "   r.id, " +
+            "   r.name, " +
+            "   r.code, " +
+            "   r.application_name, " +
+            "   r.type, " +
+            "   r.version, " +
+            "   r.value, " +
+            "   r.authority, " +
+            "   r.icon, " +
+            "   r.parent_id, " +
+            "   r.status, " +
+            "   r.sort, " +
+            "   r.creation_time, " +
+            "   r.source, " +
+            "   r.remark " +
+            "FROM " +
+            "   tb_resource r " +
+            "LEFT JOIN " +
+            "   tb_group_resource gr ON gr.resource_id = r.id " +
+            "LEFT JOIN " +
+            "   tb_group g ON gr.group_id = g.id " +
+            "WHERE " +
+            "   g.id = #{groupId}" +
+            "</script>"
     )
     List<Resource> getGroupResources(@Param("groupId") Integer groupId);
 
@@ -68,56 +68,56 @@ public interface ResourceDao extends BaseMapper<Resource> {
      */
     @Select(
             "<script>" +
-                    "SELECT DISTINCT " +
-                    "   r.id, " +
-                    "   r.name, " +
-                    "   r.code, " +
-                    "   r.application_name, " +
-                    "   r.type, " +
-                    "   r.version, " +
-                    "   r.value, " +
-                    "   r.authority, " +
-                    "   r.icon, " +
-                    "   r.parent_id, " +
-                    "   r.status, " +
-                    "   r.sort, " +
-                    "   r.creation_time, " +
-                    "   r.source, " +
-                    "   r.remark " +
-                    "FROM " +
-                    "   tb_resource r " +
-                    "LEFT JOIN " +
-                    "   tb_group_resource gr ON gr.resource_id = r.id " +
-                    "LEFT JOIN " +
-                    "   tb_group g ON gr.group_id = g.id " +
-                    "LEFT JOIN " +
-                    "   tb_group_console_user gu ON gu.group_id = g.id " +
-                    "LEFT JOIN " +
-                    "   tb_console_user u ON gu.user_id = u.id " +
-                    "WHERE " +
-                    "   (u.id = #{userId} OR r.id in ( " +
-                    "      SELECT " +
-                    "      ur.resource_id " +
-                    "      FROM " +
-                    "      tb_console_user_resource ur " +
-                    "      WHERE " +
-                    "      ur.user_id = #{userId} " +
-                    "      ) " +
-                    "   ) " +
-                    "   AND " +
-                    "   r.status = 1" +
-                    "<if test='sourceContains != null and sourceContains.size &gt; 0'>" +
-                    "   AND r.source IN" +
-                    "   <foreach collection='sourceContains' item='s' open='(' close=')' separator=','>" +
-                    "       #{s}" +
-                    "   </foreach>" +
-                    "</if>" +
-                    "<if test='type != null'>" +
-                    "    AND r.type = #{filter.typeEq} " +
-                    "</if>" +
-                    "ORDER BY " +
-                    "   r.sort" +
-                    "</script>"
+            "SELECT DISTINCT " +
+            "   r.id, " +
+            "   r.name, " +
+            "   r.code, " +
+            "   r.application_name, " +
+            "   r.type, " +
+            "   r.version, " +
+            "   r.value, " +
+            "   r.authority, " +
+            "   r.icon, " +
+            "   r.parent_id, " +
+            "   r.status, " +
+            "   r.sort, " +
+            "   r.creation_time, " +
+            "   r.source, " +
+            "   r.remark " +
+            "FROM " +
+            "   tb_resource r " +
+            "LEFT JOIN " +
+            "   tb_group_resource gr ON gr.resource_id = r.id " +
+            "LEFT JOIN " +
+            "   tb_group g ON gr.group_id = g.id " +
+            "LEFT JOIN " +
+            "   tb_group_console_user gu ON gu.group_id = g.id " +
+            "LEFT JOIN " +
+            "   tb_console_user u ON gu.user_id = u.id " +
+            "WHERE " +
+            "   (u.id = #{userId} OR r.id in ( " +
+            "      SELECT " +
+            "      ur.resource_id " +
+            "      FROM " +
+            "      tb_console_user_resource ur " +
+            "      WHERE " +
+            "      ur.user_id = #{userId} " +
+            "      ) " +
+            "   ) " +
+            "   AND " +
+            "   r.status = 1" +
+            "<if test='sourceContains != null and sourceContains.size &gt; 0'>" +
+            "   AND r.source IN" +
+            "   <foreach collection='sourceContains' item='s' open='(' close=')' separator=','>" +
+            "       #{s}" +
+            "   </foreach>" +
+            "</if>" +
+            "<if test='type != null'>" +
+            "    AND r.type = #{filter.typeEq} " +
+            "</if>" +
+            "ORDER BY " +
+            "   r.sort" +
+            "</script>"
     )
     List<Resource> getConsolePrincipalResources(@Param("userId") Integer userId,
                                                 @Param("sourceContains") List<String> sourceContains,
@@ -132,35 +132,35 @@ public interface ResourceDao extends BaseMapper<Resource> {
      */
     @Select(
             "<script>" +
-                    "SELECT DISTINCT " +
-                    "   r.id, " +
-                    "   r.name, " +
-                    "   r.code, " +
-                    "   r.application_name, " +
-                    "   r.type, " +
-                    "   r.version, " +
-                    "   r.value, " +
-                    "   r.authority, " +
-                    "   r.icon, " +
-                    "   r.parent_id, " +
-                    "   r.status, " +
-                    "   r.sort, " +
-                    "   r.creation_time, " +
-                    "   r.source, " +
-                    "   r.remark " +
-                    "FROM " +
-                    "   tb_resource r " +
-                    "LEFT JOIN " +
-                    "   tb_console_user_resource ur ON ur.resource_id = r.id " +
-                    "LEFT JOIN " +
-                    "   tb_console_user u ON ur.user_id = u.id " +
-                    "WHERE " +
-                    "   u.id = #{userId} " +
-                    "GROUP BY " +
-                    "   r.id " +
-                    "ORDER BY " +
-                    "   r.sort " +
-                    "</script>"
+            "SELECT DISTINCT " +
+            "   r.id, " +
+            "   r.name, " +
+            "   r.code, " +
+            "   r.application_name, " +
+            "   r.type, " +
+            "   r.version, " +
+            "   r.value, " +
+            "   r.authority, " +
+            "   r.icon, " +
+            "   r.parent_id, " +
+            "   r.status, " +
+            "   r.sort, " +
+            "   r.creation_time, " +
+            "   r.source, " +
+            "   r.remark " +
+            "FROM " +
+            "   tb_resource r " +
+            "LEFT JOIN " +
+            "   tb_console_user_resource ur ON ur.resource_id = r.id " +
+            "LEFT JOIN " +
+            "   tb_console_user u ON ur.user_id = u.id " +
+            "WHERE " +
+            "   u.id = #{userId} " +
+            "GROUP BY " +
+            "   r.id " +
+            "ORDER BY " +
+            "   r.sort " +
+            "</script>"
     )
     List<Resource> getConsoleUserResources(@Param("userId") Integer userId);
 

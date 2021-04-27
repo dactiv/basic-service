@@ -1,21 +1,22 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * <p>邮件消息控制器</p>
@@ -43,37 +44,29 @@ public class EmailMessageController {
     @Value("${spring.mail.username}")
     private String sendMailUsername;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<EmailMessage> queryGenerator;
+
     /**
      * 获取邮件消息分页信息
      *
-     * @param pageRequest 分页信息
-     * @param filter      过滤条件
+     * @param pageable 分页信息
+     * @param request  http servlet request
+     *
      * @return 分页实体
      */
     @PostMapping("page")
     @Plugin(name = "获取邮件消息分页", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[email_message:page]')")
-    public Page<EmailMessage> page(PageRequest pageRequest, @RequestParam Map<String, Object> filter) {
-        return messageService.findEmailMessagePage(pageRequest, filter);
-    }
-
-    /**
-     * 根据条件获取邮件消息
-     *
-     * @param filter 查询条件
-     * @return 邮件消息实体
-     */
-    @GetMapping("getByFilter")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "根据条件获取单个邮件消息", source = ResourceSource.Console)
-    public EmailMessage getByFilter(@RequestParam Map<String, Object> filter) {
-        return messageService.getEmailMessageByFilter(filter);
+    public Page<EmailMessage> page(Pageable pageable, HttpServletRequest request) {
+        return messageService.findEmailMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
      * 获取邮件消息
      *
      * @param id 邮件消息主键 ID
+     *
      * @return 邮件消息实体
      */
     @GetMapping("get")
@@ -91,10 +84,10 @@ public class EmailMessageController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[email_message:save]')")
     @Plugin(name = "保存邮件消息实体", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@Valid EmailMessage entity) {
+    public RestResult.Result<Integer> save(@Valid EmailMessage entity) {
         entity.setFromUser(sendMailUsername);
         messageService.saveEmailMessage(entity);
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**

@@ -56,24 +56,24 @@ public interface GroupDao extends BaseMapper<Group> {
      */
     @Select(
             "<script>" +
-                    "SELECT " +
-                    "   g.id, " +
-                    "   g.name, " +
-                    "   g.authority, " +
-                    "   g.source, " +
-                    "   g.parent_id, " +
-                    "   g.removable, " +
-                    "   g.modifiable, " +
-                    "   g.remark " +
-                    "FROM " +
-                    "   tb_group g " +
-                    "LEFT JOIN " +
-                    "  tb_group_member_user gu ON g.id = gu.group_id " +
-                    "LEFT JOIN " +
-                    "  tb_member_user u ON u.id = gu.user_id " +
-                    "WHERE " +
-                    "u.id = #{userId} " +
-                    "</script>"
+            "SELECT " +
+            "   g.id, " +
+            "   g.name, " +
+            "   g.authority, " +
+            "   g.source, " +
+            "   g.parent_id, " +
+            "   g.removable, " +
+            "   g.modifiable, " +
+            "   g.remark " +
+            "FROM " +
+            "   tb_group g " +
+            "LEFT JOIN " +
+            "  tb_group_member_user gu ON g.id = gu.group_id " +
+            "LEFT JOIN " +
+            "  tb_member_user u ON u.id = gu.user_id " +
+            "WHERE " +
+            "u.id = #{userId} " +
+            "</script>"
     )
     List<Group> getMemberUserGroups(@Param("userId") Integer userId);
 
@@ -85,13 +85,13 @@ public interface GroupDao extends BaseMapper<Group> {
      */
     @Insert(
             "<script>" +
-                    "INSERT INTO " +
-                    "tb_group_resource(group_id,resource_id) " +
-                    "VALUES " +
-                    "<foreach collection='resourceIds' item='resourceId' separator=','>" +
-                    "    (#{id}, #{resourceId}) " +
-                    "</foreach>" +
-                    "</script>"
+            "INSERT INTO " +
+            "tb_group_resource(group_id,resource_id) " +
+            "VALUES " +
+            "<foreach collection='resourceIds' item='resourceId' separator=','>" +
+            "    (#{id}, #{resourceId}) " +
+            "</foreach>" +
+            "</script>"
     )
     void insertResourceAssociation(@Param("id") Integer id, @Param("resourceIds") List<Integer> resourceIds);
 

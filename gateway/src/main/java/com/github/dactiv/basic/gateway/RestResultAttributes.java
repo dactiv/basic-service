@@ -1,8 +1,11 @@
 package com.github.dactiv.basic.gateway;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.reactive.error.DefaultErrorAttributes;
 import org.springframework.core.annotation.MergedAnnotation;
 import org.springframework.core.annotation.MergedAnnotations;
@@ -25,8 +28,12 @@ import java.util.Map;
 @Component
 public class RestResultAttributes extends DefaultErrorAttributes {
 
+    @Autowired
+    private ObjectMapper objectMapper;
+
     @Override
-    public Map<String, Object> getErrorAttributes(ServerRequest request, boolean includeStackTrace) {
+    @SuppressWarnings("unchecked")
+    public Map<String, Object> getErrorAttributes(ServerRequest request, ErrorAttributeOptions options) {
         Throwable error = getError(request);
 
         MergedAnnotation<ResponseStatus> responseStatusAnnotation = MergedAnnotations.from(
@@ -55,7 +62,7 @@ public class RestResultAttributes extends DefaultErrorAttributes {
             result.setMessage(errorCodeException.getMessage());
         }
 
-        return Casts.castObjectToMap(result);
+        return objectMapper.convertValue(result, Map.class);
     }
 
     private HttpStatus determineHttpStatus(Throwable error, MergedAnnotation<ResponseStatus> responseStatusAnnotation) {

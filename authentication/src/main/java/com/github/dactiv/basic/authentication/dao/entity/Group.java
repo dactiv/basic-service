@@ -2,9 +2,8 @@ package com.github.dactiv.basic.authentication.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.dactiv.framework.commons.IntegerIdEntity;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
@@ -14,6 +13,7 @@ import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
@@ -37,6 +37,7 @@ import java.util.stream.Collectors;
  */
 @Data
 @Alias("group")
+@NoArgsConstructor
 @EqualsAndHashCode
 @TableName("tb_group")
 public class Group implements Tree<Integer, Group>, Serializable {
@@ -53,14 +54,15 @@ public class Group implements Tree<Integer, Group>, Serializable {
      * 创建时间
      */
     @JsonSerialize(using = JacksonDateTime.Serializer.class)
+    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
     private LocalDateTime creationTime = LocalDateTime.now();
 
     /**
-     * 最后更新时间
+     * 版本号
      */
     @Version
     @JsonIgnore
-    private LocalDateTime lastUpdateTime = LocalDateTime.now();
+    private Integer updateVersion = 1;
 
     /**
      * 名称
@@ -118,7 +120,6 @@ public class Group implements Tree<Integer, Group>, Serializable {
      * 子节点
      */
     @TableField(exist = false)
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Tree<Integer, Group>> children = new ArrayList<>();
 
     @Override

@@ -35,13 +35,13 @@ public interface MemberUserDao extends BaseMapper<MemberUser> {
      */
     @Insert(
             "<script>" +
-                    "INSERT INTO " +
-                    "   tb_group_member_user(user_id,group_id) " +
-                    "VALUES " +
-                    "<foreach collection='groupIds' item='groupId' separator=','>" +
-                    "    (#{id}, #{groupId}) " +
-                    "</foreach>" +
-                    "</script>"
+            "INSERT INTO " +
+            "   tb_group_member_user(user_id,group_id) " +
+            "VALUES " +
+            "<foreach collection='groupIds' item='groupId' separator=','>" +
+            "    (#{id}, #{groupId}) " +
+            "</foreach>" +
+            "</script>"
     )
     void insertGroupAssociation(@Param("id") Integer id, @Param("groupIds") List<Integer> groupIds);
 }

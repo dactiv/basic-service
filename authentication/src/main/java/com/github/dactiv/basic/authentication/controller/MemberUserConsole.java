@@ -1,8 +1,6 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
@@ -13,6 +11,8 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -37,9 +37,6 @@ import javax.servlet.http.HttpServletRequest;
 )
 public class MemberUserConsole {
 
-    /**
-     * 账户管理服务
-     */
     @Autowired
     private UserService userService;
 
@@ -49,17 +46,17 @@ public class MemberUserConsole {
     /**
      * 查找会员用户分页信息
      *
-     * @param page    分页请求
-     * @param request http 请求
+     * @param pageable 分页请求
+     * @param request  http 请求
      *
      * @return 分页实体
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
     @Plugin(name = "查询分页", source = ResourceSource.Console)
-    public IPage<MemberUser> page(Page<MemberUser> page, HttpServletRequest request) {
+    public Page<MemberUser> page(Pageable pageable, HttpServletRequest request) {
 
-        return userService.findMemberUserPage(page, queryGenerator.getQueryWrapperFromHttpRequest(request));
+        return userService.findMemberUserPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**

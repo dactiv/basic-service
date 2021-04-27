@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
+import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
@@ -15,6 +15,7 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -38,6 +39,7 @@ import java.util.Objects;
 @Data
 @Alias("resource")
 @EqualsAndHashCode
+@NoArgsConstructor
 @TableName("tb_resource")
 public class Resource implements Serializable, Tree<Integer, Resource> {
 
@@ -70,14 +72,15 @@ public class Resource implements Serializable, Tree<Integer, Resource> {
      * 创建时间
      */
     @JsonSerialize(using = JacksonDateTime.Serializer.class)
+    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
     private LocalDateTime creationTime = LocalDateTime.now();
 
     /**
-     * 最后更新时间
+     * 版本号
      */
     @Version
     @JsonIgnore
-    private LocalDateTime lastUpdateTime = LocalDateTime.now();
+    private Integer updateVersion = 1;
 
     /**
      * 名称
@@ -169,7 +172,6 @@ public class Resource implements Serializable, Tree<Integer, Resource> {
      * 子节点
      */
     @TableField(exist = false)
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private List<Tree<Integer, Resource>> children = new ArrayList<>();
 
     /**

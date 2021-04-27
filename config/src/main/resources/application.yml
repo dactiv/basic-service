@@ -1,6 +1,10 @@
-mybatis:
-  mapper-locations: classpath*:mapper/*.xml
-  type-aliases-package: com.fuyu.basic.config.dao.entity
+mybatis-plus:
+  type-aliases-package: com.github.dactiv.basic.config.dao.entity
+  configuration:
+    call-setters-on-nulls: on
+  global-config:
+    db-config:
+      id-type: auto
 
 enumerate:
   base-packages:
@@ -8,7 +12,7 @@ enumerate:
     - com.github.dactiv.framework.spring.security
 
 plugin:
-  base-packages: com.fuyu.basic.config.controller
+  base-packages: com.github.dactiv.basic.config.controller
   parent:
     config:
       name: '配置管理'

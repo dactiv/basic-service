@@ -38,7 +38,7 @@ public interface BuildToken extends Serializable, Expired {
      *
      * @return 提交时的绑定 token 参数名称
      */
-    String getParamsName();
+    String getParamName();
 
     /**
      * 获取过期时间

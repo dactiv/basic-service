@@ -5,8 +5,9 @@ import com.github.dactiv.basic.captcha.service.CaptchaService;
 import com.github.dactiv.basic.captcha.service.DelegateCaptchaService;
 import com.github.dactiv.basic.captcha.service.intercept.Interceptor;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.google.common.base.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -41,7 +42,7 @@ public class RedisInterceptor implements Interceptor {
     public BuildToken generateCaptchaIntercept(String token, String type, String interceptType) {
 
         // 通过 token 值获取验证码服务
-        Optional<CaptchaService> tokenCaptchaServiceOptional = delegateCaptchaService.getCaptchaServices()
+        Optional<CaptchaService> optional = delegateCaptchaService.getCaptchaServices()
                 .stream()
                 .filter(c -> {
                     try {
@@ -57,12 +58,9 @@ public class RedisInterceptor implements Interceptor {
                     }
                 })
                 .findFirst();
-        // 如果找不到服务，无法拦截，抛出异常
-        if (!tokenCaptchaServiceOptional.isPresent()) {
-            throw new ServiceException("找不到 token 为[" + token + "]的记录");
-        }
 
-        CaptchaService tokenCaptchaService = tokenCaptchaServiceOptional.get();
+        CaptchaService tokenCaptchaService = optional.orElseThrow(() -> new ServiceException("找不到 token 为[" + token + "]的记录"));
+
         // 获取当前要拦截的验证码绑定 token
         BuildToken exist = tokenCaptchaService.getBuildToken(token);
 

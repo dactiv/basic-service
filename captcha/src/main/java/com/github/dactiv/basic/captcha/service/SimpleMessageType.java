@@ -1,5 +1,9 @@
 package com.github.dactiv.basic.captcha.service;
 
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
 import javax.validation.constraints.NotNull;
 
 /**
@@ -7,6 +11,9 @@ import javax.validation.constraints.NotNull;
  *
  * @author maurice
  */
+@Data
+@NoArgsConstructor
+@AllArgsConstructor
 public class SimpleMessageType implements MessageType {
 
     /**
@@ -14,33 +21,4 @@ public class SimpleMessageType implements MessageType {
      */
     @NotNull(message = "消息类型不能为空")
     private String messageType;
-
-    /**
-     * 简单的消息类型实体实现
-     */
-    public SimpleMessageType() {
-    }
-
-    /**
-     * 简单的消息类型实体实现
-     *
-     * @param messageType 消息类型
-     */
-    public SimpleMessageType(String messageType) {
-        this.messageType = messageType;
-    }
-
-    /**
-     * 设置消息类型
-     *
-     * @param messageType 消息类型
-     */
-    public void setMessageType(String messageType) {
-        this.messageType = messageType;
-    }
-
-    @Override
-    public String getMessageType() {
-        return messageType;
-    }
 }

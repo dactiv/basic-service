@@ -13,6 +13,7 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -39,9 +40,6 @@ import java.util.List;
 )
 public class ResourceController {
 
-    /**
-     * 账户管理服务
-     */
     @Autowired
     private AuthorizationService authorizationService;
 
@@ -63,7 +61,7 @@ public class ResourceController {
     @Plugin(name = "查找全部", source = ResourceSource.Console)
     public List<Resource> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
-        List<Resource> resourceList = authorizationService.findResources(queryGenerator.getQueryWrapperFromHttpRequest(request));
+        List<Resource> resourceList = authorizationService.findResources(queryGenerator.getQueryWrapperByHttpRequest(request));
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);

@@ -1,24 +1,24 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import org.apache.commons.collections.CollectionUtils;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -42,40 +42,29 @@ public class SiteMessageController {
     @Autowired
     private MessageService messageService;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<SiteMessage> queryGenerator;
+
     /**
      * 获取站内信消息分页信息
      *
-     * @param pageRequest 分页信息
-     * @param filter      过滤条件
+     * @param pageable 分页信息
+     * @param request  过滤条件
+     *
      * @return 分页实体
      */
     @PostMapping("page")
-    @PreAuthorize("hasAuthority('perms[site_message:page]') || hasRole('ORDINARY')")
+    @PreAuthorize("hasAuthority('perms[site_message:page]')")
     @Plugin(name = "获取站内信消息分页", source = ResourceSource.All)
-    public Page<SiteMessage> page(PageRequest pageRequest,
-                                  @RequestParam Map<String, Object> filter,
-                                  @RequestParam(required = false) List<String> typeContain,
-                                  @CurrentSecurityContext SecurityContext securityContext) {
-
-        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
-
-        if (userDetails.getType().equals(ResourceSource.Mobile.toString()) || userDetails.getType().equals(ResourceSource.UserCenter.toString())) {
-            filter.put("toUserIdEq", userDetails.getId());
-        }
-
-        if (!CollectionUtils.isEmpty(typeContain)) {
-            filter.put("typeContain", typeContain);
-        } else {
-            filter.put("typeContain", new ArrayList<>());
-        }
-
-        return messageService.findSiteMessagePage(pageRequest, filter);
+    public Page<SiteMessage> page(Pageable pageable, HttpServletRequest request) {
+        return messageService.findSiteMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
      * 按类型分组获取站内信未读数量
      *
      * @param securityContext 安全上下文
+     *
      * @return 按类型分组的未读数量
      */
     @GetMapping("unreadQuantity")
@@ -95,6 +84,7 @@ public class SiteMessageController {
      *
      * @param types           站内信类型
      * @param securityContext 安全上下文
+     *
      * @return 消息结果集
      */
     @PostMapping("read")
@@ -113,22 +103,10 @@ public class SiteMessageController {
     }
 
     /**
-     * 根据条件获取站内信消息
-     *
-     * @param filter 查询条件
-     * @return 站内信消息实体
-     */
-    @GetMapping("getByFilter")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "根据条件获取单个站内信消息", source = ResourceSource.Console)
-    public SiteMessage getByFilter(@RequestParam Map<String, Object> filter) {
-        return messageService.getSiteMessageByFilter(filter);
-    }
-
-    /**
      * 获取站内信消息
      *
      * @param id 站内信消息主键 ID
+     *
      * @return 站内信消息实体
      */
     @GetMapping("get")
@@ -142,20 +120,22 @@ public class SiteMessageController {
      * 保存站内信消息
      *
      * @param entity 站内信消息实体
+     *
      * @return 消息结果集
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[site_message:save]')")
     @Plugin(name = "保存站内信消息实体", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@Valid SiteMessage entity) {
+    public RestResult.Result<Integer> save(@Valid SiteMessage entity) {
         messageService.saveSiteMessage(entity);
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**
      * 删除站内信消息
      *
      * @param ids 站内信消息主键 ID 值集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")

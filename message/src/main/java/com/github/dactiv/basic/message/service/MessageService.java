@@ -1,21 +1,26 @@
 package com.github.dactiv.basic.message.service;
 
-import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
 import com.github.dactiv.basic.message.dao.SiteMessageDao;
 import com.github.dactiv.basic.message.dao.SmsMessageDao;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
+import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -42,6 +47,7 @@ public class MessageService {
      *
      * @param result 结果集
      * @param <T>    结果集类型
+     *
      * @return 单个记录
      */
     private <T> T checkResultAndReturnOne(List<T> result) {
@@ -92,7 +98,7 @@ public class MessageService {
      * @param emailMessage 邮件消息实体
      */
     public void updateEmailMessage(EmailMessage emailMessage) {
-        emailMessageDao.update(emailMessage);
+        emailMessageDao.updateById(emailMessage);
     }
 
     /**
@@ -101,7 +107,7 @@ public class MessageService {
      * @param id 主键 id
      */
     public void deleteEmailMessage(Integer id) {
-        emailMessageDao.delete(id);
+        emailMessageDao.deleteById(id);
     }
 
     /**
@@ -119,49 +125,29 @@ public class MessageService {
      * 获取邮件消息
      *
      * @param id 主键 id
+     *
      * @return 邮件消息实体
      */
     public EmailMessage getEmailMessage(Integer id) {
-        return emailMessageDao.get(id);
-    }
-
-    /**
-     * 获取邮件消息
-     *
-     * @param filter 过滤条件
-     * @return 邮件消息
-     */
-    public EmailMessage getEmailMessageByFilter(Map<String, Object> filter) {
-
-        List<EmailMessage> result = findEmailMessageList(filter);
-
-        return checkResultAndReturnOne(result);
-    }
-
-    /**
-     * 根据过滤条件查找邮件消息数据
-     *
-     * @param filter 过滤条件
-     * @return 邮件消息实体集合
-     */
-    public List<EmailMessage> findEmailMessageList(Map<String, Object> filter) {
-        return emailMessageDao.find(filter);
+        return emailMessageDao.selectById(id);
     }
 
     /**
      * 查找邮件消息分页数据
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param pageable 分页请求
+     * @param wrapper  过滤条件
+     *
      * @return 分页实体
      */
-    public Page<EmailMessage> findEmailMessagePage(PageRequest pageRequest, Map<String, Object> filter) {
+    public Page<EmailMessage> findEmailMessagePage(Pageable pageable, Wrapper<EmailMessage> wrapper) {
 
-        filter.putAll(pageRequest.getOffsetMap());
+        IPage<EmailMessage> result = emailMessageDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
 
-        List<EmailMessage> data = findEmailMessageList(filter);
-
-        return new Page<>(pageRequest, data);
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
     // ----------------------------- 站内信消息管理 ----------------------------- //
@@ -198,7 +184,7 @@ public class MessageService {
      * @param siteMessage 站内信消息实体
      */
     public void updateSiteMessage(SiteMessage siteMessage) {
-        siteMessageDao.update(siteMessage);
+        siteMessageDao.updateById(siteMessage);
     }
 
     /**
@@ -207,7 +193,7 @@ public class MessageService {
      * @param id 主键 id
      */
     public void deleteSiteMessage(Integer id) {
-        siteMessageDao.delete(id);
+        siteMessageDao.deleteById(id);
     }
 
     /**
@@ -225,55 +211,47 @@ public class MessageService {
      * 获取站内信消息
      *
      * @param id 主键 id
+     *
      * @return 站内信消息实体
      */
     public SiteMessage getSiteMessage(Integer id) {
-        return siteMessageDao.get(id);
-    }
-
-    /**
-     * 获取站内信消息
-     *
-     * @param filter 过滤条件
-     * @return 站内信消息
-     */
-    public SiteMessage getSiteMessageByFilter(Map<String, Object> filter) {
-
-        List<SiteMessage> result = findSiteMessageList(filter);
-
-        return checkResultAndReturnOne(result);
+        return siteMessageDao.selectById(id);
     }
 
     /**
      * 根据过滤条件查找站内信消息数据
      *
-     * @param filter 过滤条件
+     * @param wrapper 包装器
+     *
      * @return 站内信消息实体集合
      */
-    public List<SiteMessage> findSiteMessageList(Map<String, Object> filter) {
-        return siteMessageDao.find(filter);
+    public List<SiteMessage> findSiteMessageList(Wrapper<SiteMessage> wrapper) {
+        return siteMessageDao.selectList(wrapper);
     }
 
     /**
      * 查找站内信消息分页数据
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param pageable 分页请求
+     * @param wrapper  包装器
+     *
      * @return 分页实体
      */
-    public Page<SiteMessage> findSiteMessagePage(PageRequest pageRequest, Map<String, Object> filter) {
+    public Page<SiteMessage> findSiteMessagePage(Pageable pageable, Wrapper<SiteMessage> wrapper) {
 
-        filter.putAll(pageRequest.getOffsetMap());
+        IPage<SiteMessage> result = siteMessageDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
 
-        List<SiteMessage> data = findSiteMessageList(filter);
-
-        return new Page<>(pageRequest, data);
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
     /**
      * 计数站内信未读数量
      *
      * @param userId 用户 id
+     *
      * @return 按类型分组的未读数量
      */
     public List<Map<String, Object>> countSiteMessageUnreadQuantity(Integer userId) {
@@ -288,24 +266,23 @@ public class MessageService {
      */
     public void readSiteMessage(List<String> types, Integer userId) {
 
+        LambdaQueryWrapper<SiteMessage> queryWrapper = new LambdaQueryWrapper<>();
+
         Map<String, Object> filter = new LinkedHashMap<>();
 
         if (CollectionUtils.isNotEmpty(types)) {
-            filter.put("typeContain", types);
+            queryWrapper.in(SiteMessage::getType, types);
         }
 
-        filter.put("toUserIdEq", userId);
+        queryWrapper.eq(SiteMessage::getToUserId, userId);
 
-        List<SiteMessage> siteMessages = findSiteMessageList(filter);
+        List<SiteMessage> siteMessages = findSiteMessageList(queryWrapper);
 
-        siteMessages.forEach(s -> {
-
-            s.setIsRead(YesOrNo.Yes.getValue());
-            s.setReadTime(new Date());
-
-            saveSiteMessage(s);
-
-        });
+        siteMessages
+                .stream()
+                .peek(s -> s.setIsRead(YesOrNo.Yes.getValue()))
+                .peek(s -> s.setReadTime(LocalDateTime.now()))
+                .forEach(this::saveSiteMessage);
     }
 
     // ----------------------------- 短信消息管理 ----------------------------- //
@@ -346,7 +323,7 @@ public class MessageService {
      * @param smsMessage 短信消息实体
      */
     public void updateSmsMessage(SmsMessage smsMessage) {
-        smsMessageDao.update(smsMessage);
+        smsMessageDao.updateById(smsMessage);
     }
 
     /**
@@ -355,7 +332,7 @@ public class MessageService {
      * @param id 主键 id
      */
     public void deleteSmsMessage(Integer id) {
-        smsMessageDao.delete(id);
+        smsMessageDao.deleteById(id);
     }
 
     /**
@@ -373,48 +350,28 @@ public class MessageService {
      * 获取短信消息
      *
      * @param id 主键 id
+     *
      * @return 短信消息实体
      */
     public SmsMessage getSmsMessage(Integer id) {
-        return smsMessageDao.get(id);
-    }
-
-    /**
-     * 获取短信消息
-     *
-     * @param filter 过滤条件
-     * @return 短信消息
-     */
-    public SmsMessage getSmsMessageByFilter(Map<String, Object> filter) {
-
-        List<SmsMessage> result = findSmsMessageList(filter);
-
-        return checkResultAndReturnOne(result);
-    }
-
-    /**
-     * 根据过滤条件查找短信消息数据
-     *
-     * @param filter 过滤条件
-     * @return 短信消息实体集合
-     */
-    public List<SmsMessage> findSmsMessageList(Map<String, Object> filter) {
-        return smsMessageDao.find(filter);
+        return smsMessageDao.selectById(id);
     }
 
     /**
      * 查找短信消息分页数据
      *
-     * @param pageRequest 分页请求
-     * @param filter      过滤条件
+     * @param pageable 分页请求
+     * @param wrapper  包装器
+     *
      * @return 分页实体
      */
-    public Page<SmsMessage> findSmsMessagePage(PageRequest pageRequest, Map<String, Object> filter) {
+    public Page<SmsMessage> findSmsMessagePage(Pageable pageable, Wrapper<SmsMessage> wrapper) {
 
-        filter.putAll(pageRequest.getOffsetMap());
+        IPage<SmsMessage> result = smsMessageDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
 
-        List<SmsMessage> data = findSmsMessageList(filter);
-
-        return new Page<>(pageRequest, data);
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 }

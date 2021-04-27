@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.captcha.service;
 
-import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -28,17 +28,11 @@ public class DelegateCaptchaService {
      * @return 验证码服务
      */
     public CaptchaService getCaptchaServiceByRequest(HttpServletRequest request) {
-
-        Optional<CaptchaService> captchaService = captchaServices
+        return captchaServices
                 .stream()
                 .filter(c -> c.isSupport(request))
-                .findFirst();
-
-        if (!captchaService.isPresent()) {
-            throw new ServiceException("找不到验证码服务");
-        }
-
-        return captchaService.get();
+                .findFirst()
+                .orElseThrow(() -> new ServiceException("找不到验证码服务"));
     }
 
     /**
@@ -54,7 +48,7 @@ public class DelegateCaptchaService {
                 .filter(c -> c.getType().equals(type))
                 .findFirst();
 
-        if (!captchaService.isPresent()) {
+        if (captchaService.isEmpty()) {
             throw new ServiceException("找不到验证码服务");
         }
 

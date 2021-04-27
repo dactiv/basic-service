@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
@@ -13,11 +12,17 @@ import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -37,6 +42,7 @@ import java.util.*;
  * @author maurice
  * @since 2020-06-01 08:20:59
  */
+@Slf4j
 @Service
 @RefreshScope
 @Transactional(rollbackFor = Exception.class)
@@ -154,13 +160,19 @@ public class AuthenticationService {
     /**
      * 查找认证信息表实体分页数据
      *
-     * @param page    分页请求
-     * @param wrapper 查询包装器
+     * @param pageable 分页请求
+     * @param wrapper  查询包装器
      *
      * @return 分页实体
      */
-    public IPage<AuthenticationInfo> findAuthenticationInfoPage(Page<AuthenticationInfo> page, Wrapper<AuthenticationInfo> wrapper) {
-        return authenticationInfoDao.selectPage(page, wrapper);
+    public Page<AuthenticationInfo> findAuthenticationInfoPage(Pageable pageable, Wrapper<AuthenticationInfo> wrapper) {
+
+        IPage<AuthenticationInfo> result = authenticationInfoDao.selectPage(
+                MybatisPlusQueryGenerator.createQueryPage(pageable),
+                wrapper
+        );
+
+        return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
     /**
@@ -170,11 +182,8 @@ public class AuthenticationService {
      */
     public void validAuthenticationInfo(AuthenticationInfo info) {
 
-        Page<AuthenticationInfo> page = new Page<>(0, 1, false);
-        page.addOrder(OrderItem.desc("id"));
-
-        IPage<AuthenticationInfo> result = findAuthenticationInfoPage(
-                page,
+        Page<AuthenticationInfo> page = findAuthenticationInfoPage(
+                PageRequest.of(0,1, Sort.by(Sort.Order.asc("id"))),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
                         .eq(AuthenticationInfo::getUserId, info.getUserId())
@@ -182,7 +191,7 @@ public class AuthenticationService {
                         .ne(AuthenticationInfo::getId, info.getId())
         );
 
-        Iterator<AuthenticationInfo> iterator = result.getRecords().iterator();
+        Iterator<AuthenticationInfo> iterator = page.iterator();
 
         AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
@@ -200,11 +209,17 @@ public class AuthenticationService {
             param.put("data", objectMapper.convertValue(info, Map.class));
             param.put("pushMessage", YesOrNo.Yes.getValue());
 
-            /*RestResult<Map<String, Object>> result = messageService.sendMessage(param);
+            try {
 
-            if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
-                throw new ServiceException(result.getMessage());
-            }*/
+                RestResult<Map<String, Object>> result = messageService.sendMessage(param);
+
+                if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
+                    throw new ServiceException(result.getMessage());
+                }
+
+            } catch (Exception e) {
+                log.warn("发送站内信错误", e);
+            }
 
         }
     }
@@ -213,17 +228,17 @@ public class AuthenticationService {
     @Scheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }")
     public void syncAuthenticationInfo() {
 
-        IPage<AuthenticationInfo> page = authenticationInfoDao.selectPage(
-                new Page<>(0, 100, false),
+        Page<AuthenticationInfo> page = findAuthenticationInfoPage(
+                PageRequest.of(1,100),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
                         .le(AuthenticationInfo::getRetryCount, maxRetryCount)
                         .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue())
         );
 
-        LOGGER.info("开始同步" + page.getRecords().size() + "认证信息到 es");
+        LOGGER.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
 
-        page.getRecords().forEach(this::onAuthenticationSuccess);
+        page.forEach(this::onAuthenticationSuccess);
 
     }
 

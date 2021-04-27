@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.service.MessageSender;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -61,17 +61,11 @@ public class MessageController {
      * @return 验证码服务
      */
     private MessageSender getMessageService(String type) {
-
-        Optional<MessageSender> messageSender = messageSenders
+        return messageSenders
                 .stream()
                 .filter(c -> c.getMessageType().equals(type))
-                .findFirst();
-
-        if (!messageSender.isPresent()) {
-            throw new ServiceException("找不到类型为[ " + type + " ]的消息发送服务");
-        }
-
-        return messageSender.get();
+                .findFirst()
+                .orElseThrow(() -> new ServiceException("找不到类型为[ " + type + " ]的消息发送服务"));
     }
 
 }

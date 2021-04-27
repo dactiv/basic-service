@@ -25,7 +25,7 @@ public interface ConsoleUserDao extends BaseMapper<ConsoleUser> {
      *
      * @param id 用户主键 ID
      */
-    @Delete("DELETE FROM tb_group_console_user WHERE user_id = #{id}")
+    @Delete("<script>DELETE FROM tb_group_console_user WHERE user_id = #{id}</script>")
     void deleteGroupAssociation(@Param("id") Integer id);
 
     /**
@@ -36,13 +36,13 @@ public interface ConsoleUserDao extends BaseMapper<ConsoleUser> {
      */
     @Insert(
             "<script>" +
-                    "INSERT INTO " +
-                    "   tb_group_console_user(user_id,group_id) " +
-                    "VALUES" +
-                    "<foreach collection='groupIds' item='groupId' separator=','>" +
-                    "   (#{id}, #{groupId}) " +
-                    "</foreach>" +
-                    "</script>"
+            "INSERT INTO " +
+            "   tb_group_console_user(user_id,group_id) " +
+            "VALUES" +
+            "<foreach collection='groupIds' item='groupId' separator=','>" +
+            "   (#{id}, #{groupId}) " +
+            "</foreach>" +
+            "</script>"
     )
     void insertGroupAssociation(@Param("id") Integer id, @Param("groupIds") List<Integer> groupIds);
 
@@ -62,13 +62,13 @@ public interface ConsoleUserDao extends BaseMapper<ConsoleUser> {
      */
     @Insert(
             "<script>" +
-                    "INSERT INTO " +
-                    "   tb_console_user_resource(user_id,resource_id) " +
-                    "VALUES " +
-                    "<foreach collection='resourceIds' item='resourceId' separator=','>" +
-                    "   (#{id}, #{resourceId}) " +
-                    "</foreach>" +
-                    "</script>"
+            "INSERT INTO " +
+            "   tb_console_user_resource(user_id,resource_id) " +
+            "VALUES " +
+            "<foreach collection='resourceIds' item='resourceId' separator=','>" +
+            "   (#{id}, #{resourceId}) " +
+            "</foreach>" +
+            "</script>"
     )
     void insertResourceAssociation(@Param("id") Integer id, @Param("resourceIds") List<Integer> resourceIds);
 

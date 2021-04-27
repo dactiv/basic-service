@@ -1,20 +1,22 @@
 package com.github.dactiv.basic.config.controller;
 
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Map;
 
 /**
  * 访问加解密控制器
@@ -35,24 +37,29 @@ public class AccessCryptoController {
     @Autowired
     private AccessCryptoService accessCryptoService;
 
+    @Autowired
+    private MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator;
+
     /**
      * 获取访问加解密分页信息
      *
-     * @param pageRequest 分页信息
-     * @param filter      过滤条件
+     * @param pageable 分页信息
+     * @param request  http servlet request
+     *
      * @return 分页实体
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[access_crypto:page]')")
     @Plugin(name = "获取访问加解密分页", source = ResourceSource.Console)
-    public Page<AccessCrypto> page(PageRequest pageRequest, @RequestParam Map<String, Object> filter) {
-        return accessCryptoService.findAccessCryptoPage(pageRequest, filter);
+    public Page<ConfigAccessCrypto> page(Pageable pageable, HttpServletRequest request) {
+        return accessCryptoService.findAccessCryptoPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
      * 获取访问加解密
      *
      * @param id 访问加解密主键 id
+     *
      * @return 访问加解密实体
      */
     @GetMapping("get")
@@ -70,9 +77,9 @@ public class AccessCryptoController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[access_crypto:save]')")
     @Plugin(name = "保存访问加解密实体", source = ResourceSource.Console, audit = true)
-    public RestResult.Result<Map<String, Object>> save(@RequestBody @Valid AccessCrypto entity) {
+    public RestResult.Result<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
         accessCryptoService.saveAccessCrypto(entity);
-        return RestResult.build("保存成功", entity.idEntityToMap());
+        return RestResult.build("保存成功", entity.getId());
     }
 
     /**

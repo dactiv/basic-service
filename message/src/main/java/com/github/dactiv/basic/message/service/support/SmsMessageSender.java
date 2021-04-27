@@ -1,13 +1,13 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -22,6 +22,7 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -80,7 +81,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(new Date());
+            entity.setLastSendTime(LocalDateTime.now());
 
             SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
@@ -91,16 +92,13 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
                 RestResult<Map<String, Object>> restResult = smsChannelSender.sendSms(entity);
 
                 if (restResult.getStatus() == HttpStatus.OK.value()) {
-                    entity.setStatus(ExecuteStatus.Success.getValue());
-                    entity.setSuccessTime(new Date());
-                    entity.setRemark(String.format("%s:%s", restResult.getMessage(), restResult.getData()));
+                    ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
                 } else {
-                    entity.setStatus(ExecuteStatus.Failure.getValue());
-                    entity.setException(restResult.getMessage());
+                    ExecuteStatus.failure(entity, restResult.getMessage());
                 }
+
             } catch (Exception e) {
-                entity.setStatus(ExecuteStatus.Failure.getValue());
-                entity.setException(e.getMessage());
+                ExecuteStatus.failure(entity, e.getMessage());
             }
 
             if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {
@@ -128,16 +126,11 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
     }
 
     private SmsChannelSender getSmsChannelSender(String channel) {
-        Optional<SmsChannelSender> smsChannelSender = smsChannelSenderList
+        return smsChannelSenderList
                 .stream()
                 .filter(s -> channel.equals(s.getType()))
-                .findFirst();
-
-        if (!smsChannelSender.isPresent()) {
-            throw new ServiceException("找不到渠道为[" + channel + "]的短信渠道支持");
-        }
-
-        return smsChannelSender.get();
+                .findFirst()
+                .orElseThrow(() -> new ServiceException("找不到渠道为[" + channel + "]的短信渠道支持"));
     }
 
     @Override
