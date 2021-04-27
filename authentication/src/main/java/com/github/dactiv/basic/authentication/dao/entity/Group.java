@@ -42,8 +42,7 @@ import java.util.stream.Collectors;
 @TableName("tb_group")
 public class Group implements Tree<Integer, Group>, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -5357157352791368716L;
     /**
      * 主键
      */

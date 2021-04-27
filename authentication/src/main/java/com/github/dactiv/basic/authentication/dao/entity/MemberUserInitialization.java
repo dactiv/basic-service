@@ -33,8 +33,7 @@ import java.time.LocalDateTime;
 @TableName("tb_member_user_initialization")
 public class MemberUserInitialization implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 1714564243745969863L;
     /**
      * 主键
      */

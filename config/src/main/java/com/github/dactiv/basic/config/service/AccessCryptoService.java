@@ -15,6 +15,7 @@ import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,9 +26,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 
@@ -168,7 +167,7 @@ public class AccessCryptoService implements InitializingBean {
             insertAccessCrypto(entity);
         }
 
-        syncAccessCryptoListToRedis();
+        syncRedisAccessCryptoList();
     }
 
     /**
@@ -222,13 +221,13 @@ public class AccessCryptoService implements InitializingBean {
             accessCryptoDao.deleteById(id);
             accessCryptoPredicateDao.deleteByAccessCryptoId(id);
         }
-        syncAccessCryptoListToRedis();
+        syncRedisAccessCryptoList();
     }
 
     /**
      * 通过访问加解密集合到 redis 中
      */
-    public void syncAccessCryptoListToRedis() {
+    public void syncRedisAccessCryptoList() {
 
         List<ConfigAccessCrypto> data = findAccessCryptoList(
                 Wrappers
@@ -237,7 +236,20 @@ public class AccessCryptoService implements InitializingBean {
                 true
         );
 
-        redisTemplate.opsForValue().set(accessCryptoListKey, data);
+        List<AccessCrypto> result = data.stream().map(c -> {
+            AccessCrypto accessCrypto = new AccessCrypto();
+            BeanUtils.copyProperties(c, accessCrypto, "predicates");
+
+            c.getPredicates().forEach(p -> {
+                AccessCryptoPredicate accessCryptoPredicate = new AccessCryptoPredicate();
+                BeanUtils.copyProperties(p, accessCryptoPredicate);
+                accessCrypto.getPredicates().add(accessCryptoPredicate);
+            });
+
+            return accessCrypto;
+        }).collect(Collectors.toList());
+
+        redisTemplate.opsForValue().set(accessCryptoListKey, result);
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("同步: " + data + " 到 redis [" + accessCryptoListKey + "] 中");
@@ -246,7 +258,7 @@ public class AccessCryptoService implements InitializingBean {
 
     @Override
     public void afterPropertiesSet() {
-        syncAccessCryptoListToRedis();
+        syncRedisAccessCryptoList();
     }
 
     /**

@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
@@ -53,6 +54,9 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
     @Autowired
     private ObjectMapper mapper;
+
+    @Autowired
+    private AuthenticationProperties authenticationProperties;
 
     @Autowired
     private JsonAuthenticationFailureHandler failureHandler;
@@ -136,7 +140,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
         Integer number = failureHandler.getAllowableFailureNumber(request);
 
-        Integer allowableFailureNumber = failureHandler.getAllowableFailureNumber();
+        Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
 
         String executeCode = RestResult.ERROR_EXECUTE_CODE;
 
@@ -162,7 +166,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
                 String token = buildToken.get(DEFAULT_TOKEN_NAME).toString();
 
-                String captchaType = failureHandler.getMobileFailureCaptchaType();
+                String captchaType = authenticationProperties.getMobileFailureCaptchaType();
 
                 Map<String, Object> interceptToken = failureHandler
                         .getCaptchaService()
@@ -176,7 +180,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 data.putAll(interceptToken);
 
             } else {
-                String captchaType = failureHandler.getUsernameFailureCaptchaType();
+                String captchaType = authenticationProperties.getUsernameFailureCaptchaType();
 
                 Map<String, Object> buildToken = failureHandler
                         .getCaptchaService()
@@ -185,7 +189,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 data.putAll(buildToken);
             }
 
-            executeCode = RestResult.CAPTCHA_EXECUTE_CODE;
+            executeCode = JsonAuthenticationFailureHandler.CAPTCHA_EXECUTE_CODE;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

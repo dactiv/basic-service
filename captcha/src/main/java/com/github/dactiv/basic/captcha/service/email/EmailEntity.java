@@ -6,6 +6,7 @@ import lombok.EqualsAndHashCode;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotBlank;
+import java.io.Serializable;
 
 /**
  * 电子邮件实体
@@ -14,8 +15,9 @@ import javax.validation.constraints.NotBlank;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class EmailEntity extends SimpleMessageType {
+public class EmailEntity extends SimpleMessageType implements Serializable {
 
+    private static final long serialVersionUID = -3429703228723485142L;
     /**
      * 电子邮件
      */

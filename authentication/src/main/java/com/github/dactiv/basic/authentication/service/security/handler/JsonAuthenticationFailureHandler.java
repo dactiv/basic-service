@@ -1,17 +1,17 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.basic.authentication.service.security.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -22,7 +22,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -32,40 +31,16 @@ import java.util.Map;
  * @author maurice.chen
  */
 @Component
-@RefreshScope
 public class JsonAuthenticationFailureHandler implements AuthenticationFailureHandler {
 
     public static final String DEFAULT_TYPE_PARAM_NAME = "type";
 
     public static final String DEFAULT_MOBILE_CAPTCHA_TYPE = "sms";
 
-    /**
-     * 允许认证错误次数，当达到峰值时，出现验证码
-     */
-    @Value("${spring.security.authentication.allow-failure-count:1}")
-    private Integer allowableFailureNumber;
-    /**
-     * 用户名密码登录错误使用的验证码类型
-     */
-    @Value("${spring.security.authentication.captcha.username-failure-captcha-type:picture}")
-    private String usernameFailureCaptchaType;
-    /**
-     * 手机号码认证错误使用的验证码类型
-     */
-    @Value("${spring.security.authentication.captcha.mobile-failure-captcha-type:picture}")
-    private String mobileFailureCaptchaType;
-    /**
-     * 短信 token 参数名称，用于手机号码认证错误时，
-     * 在次发送短信验证码时，需要 mobileFailureCaptchaType 类型的验证码通过才能发送短信验证码
-     */
-    @Value("${spring.security.authentication.captcha.sms-captcha-token-param-name:_smsCaptchaToken}")
-    private String smsCaptchaParamName;
+    public static final String CAPTCHA_EXECUTE_CODE = "1001";
 
-    @Value("${spring.security.authentication.allowable-failure-number-key-prefix:1800}")
-    private Integer allowableFailureNumberExpireTime;
-
-    @Value("${spring.security.authentication.allowable-failure-number-key-prefix:spring.security:authentication:failure:}")
-    private String allowableFailureNumberKeyPrefix;
+    @Autowired
+    private AuthenticationProperties authenticationProperties;
 
     @Autowired
     private ObjectMapper objectMapper;
@@ -92,7 +67,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         String executeCode = RestResult.ERROR_EXECUTE_CODE;
         // 登录或注册错输次数大于等于允许错误次数时，做一下策略
-        if (number >= allowableFailureNumber) {
+        if (number >= authenticationProperties.getAllowableFailureNumber()) {
 
             // 获取设备唯一识别
             String identified = SpringMvcUtils.getDeviceIdentified(request);
@@ -105,12 +80,12 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
             // 让客户端在页面生成一个验证码，该验证码为发送短信时需要验证的验证码，方式短信被刷行为。
             if (LoginType.Mobile.toString().equals(loginType)) {
 
-                String token = request.getParameter(smsCaptchaParamName);
+                String token = request.getParameter(authenticationProperties.getSmsCaptchaParamName());
 
                 if (StringUtils.isNotEmpty(token)) {
                     Map<String, Object> buildToken = captchaService.createGenerateCaptchaIntercept(
                             token,
-                            mobileFailureCaptchaType,
+                            authenticationProperties.getMobileFailureCaptchaType(),
                             DEFAULT_MOBILE_CAPTCHA_TYPE
                     );
 
@@ -118,11 +93,14 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
                 }
 
             } else {
-                Map<String, Object> buildToken = captchaService.generateToken(usernameFailureCaptchaType, identified);
+                Map<String, Object> buildToken = captchaService.generateToken(
+                        authenticationProperties.getUsernameFailureCaptchaType(),
+                        identified
+                );
                 data.putAll(buildToken);
             }
 
-            executeCode = RestResult.CAPTCHA_EXECUTE_CODE;
+            executeCode = CAPTCHA_EXECUTE_CODE;
 
         }
 
@@ -144,7 +122,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
     public boolean isCaptchaAuthentication(HttpServletRequest request) {
         Integer number = getAllowableFailureNumber(request);
         String type = request.getParameter(DEFAULT_TYPE_PARAM_NAME);
-        return number > allowableFailureNumber && !LoginType.Mobile.toString().equals(type);
+        return number > authenticationProperties.getAllowableFailureNumber() && !LoginType.Mobile.toString().equals(type);
     }
 
     public void deleteAllowableFailureNumber(HttpServletRequest request) {
@@ -160,7 +138,9 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         String key = getAllowableFailureNumberKey(identified);
 
-        redisTemplate.opsForValue().set(key, number, Duration.ofSeconds(allowableFailureNumberExpireTime));
+        TimeProperties properties = authenticationProperties.getAllowableFailureNumberExpireTime();
+
+        redisTemplate.opsForValue().set(key, number, properties.getValue(), properties.getUnit());
     }
 
     public Integer getAllowableFailureNumber(HttpServletRequest request) {
@@ -178,11 +158,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
     }
 
     private String getAllowableFailureNumberKey(String identified) {
-        return allowableFailureNumberKeyPrefix + identified;
-    }
-
-    public Integer getAllowableFailureNumber() {
-        return allowableFailureNumber;
+        return authenticationProperties.getAllowableFailureNumberKeyPrefix() + identified;
     }
 
     /**
@@ -192,13 +168,5 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
      */
     public CaptchaService getCaptchaService() {
         return captchaService;
-    }
-
-    public String getUsernameFailureCaptchaType() {
-        return usernameFailureCaptchaType;
-    }
-
-    public String getMobileFailureCaptchaType() {
-        return mobileFailureCaptchaType;
     }
 }

@@ -278,7 +278,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
     @Override
     public Mono<String> encryptResponseBody(ServerWebExchange serverWebExchange, AccessCrypto accessCrypto, String originalBody) {
         // 获取客户端发过来的访问 token 值,详情参考
-        // config 项目的 com.fuyu.basic.config.test.controller.TestConfigController,
+        // config 项目的 com.github.dactiv.basic.config.test.controller.TestConfigController,
         // 了解获取流程
         String accessToken = getAccessTokenValue(serverWebExchange);
         // 获取响应加密的访问 token

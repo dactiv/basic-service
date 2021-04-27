@@ -42,24 +42,6 @@ public class MessageService {
     @Autowired
     private SmsMessageDao smsMessageDao;
 
-    /**
-     * 检查结果集并返回一条数据
-     *
-     * @param result 结果集
-     * @param <T>    结果集类型
-     *
-     * @return 单个记录
-     */
-    private <T> T checkResultAndReturnOne(List<T> result) {
-
-        if (result.size() > 1) {
-            throw new ServiceException("通过条件查询出来的记录存在" + result.size() + "条,并非单一记录");
-        }
-
-        Iterator<T> iterator = result.iterator();
-        return iterator.hasNext() ? iterator.next() : null;
-    }
-
     // ----------------------------- 邮件消息管理 ----------------------------- //
 
     public void saveEmailMessages(List<EmailMessage> emailMessages) {

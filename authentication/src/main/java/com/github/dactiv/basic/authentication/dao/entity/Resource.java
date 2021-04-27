@@ -43,7 +43,7 @@ import java.util.Objects;
 @TableName("tb_resource")
 public class Resource implements Serializable, Tree<Integer, Resource> {
 
-    private static final long serialVersionUID = 1L;
+    private static final long serialVersionUID = -4709419291009298510L;
 
     /**
      * 所有自动配置的可用来源

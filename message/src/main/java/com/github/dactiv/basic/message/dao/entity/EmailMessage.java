@@ -15,6 +15,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 
@@ -30,10 +31,9 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("emailMessage")
 @TableName("tb_email_message")
-public class EmailMessage implements Retryable, ExecuteStatus.Body {
+public class EmailMessage implements Retryable, ExecuteStatus.Body, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = 8360029094205090328L;
     /**
      * 主键
      */

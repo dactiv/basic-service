@@ -37,8 +37,7 @@ import java.time.LocalDateTime;
 @TableName("tb_console_user")
 public class ConsoleUser implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -542256170672538050L;
     /**
      * 主键
      */

@@ -14,6 +14,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
@@ -30,10 +31,10 @@ import java.util.Map;
 @NoArgsConstructor
 @Alias("siteMessage")
 @TableName("tb_site_message")
-public class SiteMessage implements Retryable, ExecuteStatus.Body {
+public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable {
 
-    private static final long serialVersionUID = 1L;
 
+    private static final long serialVersionUID = 2037280001998945900L;
     /**
      * 主键
      */

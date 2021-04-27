@@ -13,6 +13,7 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -28,10 +29,9 @@ import java.util.Objects;
 @NoArgsConstructor
 @Alias("dictionaryType")
 @TableName("tb_dictionary_type")
-public class DictionaryType implements Tree<Integer, DictionaryType> {
+public class DictionaryType implements Tree<Integer, DictionaryType>, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -2211302874891670273L;
     /**
      * 主键
      */

@@ -18,6 +18,7 @@ import org.hibernate.validator.constraints.Range;
 import javax.validation.constraints.Max;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.LinkedList;
 import java.util.List;
@@ -33,10 +34,9 @@ import java.util.Objects;
 @NoArgsConstructor
 @Alias("dataDictionary")
 @TableName("tb_data_dictionary")
-public class DataDictionary implements Tree<Integer, DataDictionary> {
+public class DataDictionary implements Tree<Integer, DataDictionary>, Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -4219144269288469584L;
     /**
      * 主键
      */

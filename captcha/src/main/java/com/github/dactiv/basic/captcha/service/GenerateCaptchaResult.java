@@ -4,6 +4,7 @@ import lombok.Data;
 import lombok.RequiredArgsConstructor;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 
 /**
  * 生成验证码结果集
@@ -12,8 +13,9 @@ import javax.validation.constraints.NotNull;
  */
 @Data
 @RequiredArgsConstructor
-public class GenerateCaptchaResult {
+public class GenerateCaptchaResult implements Serializable {
 
+    private static final long serialVersionUID = -1739665352581051182L;
     /**
      * 结果集
      */

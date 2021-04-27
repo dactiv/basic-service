@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotBlank;
 import javax.validation.constraints.Pattern;
+import java.io.Serializable;
 
 /**
  * 短信验证码描述实体
@@ -18,8 +19,9 @@ import javax.validation.constraints.Pattern;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class SmsEntity extends SimpleMessageType {
+public class SmsEntity extends SimpleMessageType implements Serializable {
 
+    private static final long serialVersionUID = -1235954873943241073L;
     /**
      * 手机号码
      */

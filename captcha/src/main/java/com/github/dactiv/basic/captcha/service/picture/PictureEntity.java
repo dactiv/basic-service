@@ -5,6 +5,8 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
+import java.io.Serializable;
+
 /**
  * 图片验证码描述实体
  *
@@ -14,8 +16,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @EqualsAndHashCode
 @AllArgsConstructor
-public class PictureEntity {
+public class PictureEntity implements Serializable {
 
+    private static final long serialVersionUID = 2309714787571972942L;
     /**
      * 宽度
      */

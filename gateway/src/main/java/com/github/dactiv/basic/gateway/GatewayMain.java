@@ -21,7 +21,7 @@ import org.springframework.scheduling.annotation.EnableScheduling;
  */
 @EnableScheduling
 @EnableDiscoveryClient
-@SpringBootApplication(scanBasePackages = "com.fuyu.basic.gateway")
+@SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.gateway")
 public class GatewayMain {
 
     public static void main(String[] args) {

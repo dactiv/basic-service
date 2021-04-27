@@ -2,7 +2,9 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
+import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
@@ -43,26 +45,8 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
-    /**
-     * 移动端认证缓存 key 名称
-     */
-    @Value("${spring.application.mobile.authentication.token-key-name:spring:security:authentication:mobile:token:}")
-    private String mobileAuthenticationTokenKeyName;
-    /**
-     * 缓存超时时间
-     */
-    @Value("${spring.application.mobile.authentication.token-expires-time:2592000}")
-    private long expiresTime;
-    /**
-     * token 名称
-     */
-    @Value("${spring.application.mobile.authentication.token-param-name:token}")
-    private String tokenParamName;
-    /**
-     * 随机密码位数
-     */
-    @Value("${spring.application.mobile.authentication.random-password-count:16}")
-    private int randomPasswordCount;
+    @Autowired
+    private AuthenticationProperties authenticationProperties;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -121,7 +105,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
-        return mobileAuthenticationTokenKeyName + username;
+        return authenticationProperties.getMobile().getCacheName() + username;
     }
 
     /**
@@ -167,13 +151,13 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
         String authenticationKey = getMobileAuthenticationTokenKey(details.getUsername());
 
-        details.setPassword(RandomStringUtils.randomAlphanumeric(randomPasswordCount));
+        details.setPassword(RandomStringUtils.randomAlphanumeric(authenticationProperties.getRegister().getRandomPasswordCount()));
 
         Map<String, Object> result = objectMapper.convertValue(details, Map.class);
 
         String token = createReturnToken(details);
 
-        result.put(tokenParamName, token);
+        result.put(authenticationProperties.getMobile().getParamName(), token);
 
         String password = DigestUtils.md5DigestAsHex(
                 (token + details.getUsername() + details.getDeviceIdentified()).getBytes()
@@ -188,7 +172,9 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
         details.setPassword(getPasswordEncoder().encode(password));
 
-        redisTemplate.opsForValue().set(authenticationKey, details, Duration.ofSeconds(expiresTime));
+        TimeProperties time = authenticationProperties.getMobile().getExpiresTime();
+
+        redisTemplate.opsForValue().set(authenticationKey, details, time.getValue(), time.getUnit());
 
         return result;
     }
@@ -205,10 +191,11 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @Override
     public void onSuccessAuthentication(PrincipalAuthenticationToken result) {
         String authenticationKey = getMobileAuthenticationTokenKey(result.getPrincipal().toString());
-        redisTemplate.opsForValue().set(authenticationKey, result.getDetails(), Duration.ofSeconds(expiresTime));
+        TimeProperties time = authenticationProperties.getMobile().getExpiresTime();
+        redisTemplate.opsForValue().set(authenticationKey, result.getDetails(), time.getValue(), time.getUnit());
 
         String authorizationKey = getAuthorizationCacheName(result);
-        redisTemplate.expire(authorizationKey, expiresTime, TimeUnit.SECONDS);
+        redisTemplate.expire(authorizationKey, time.getValue(), time.getUnit());
     }
 
     @Override
@@ -222,8 +209,8 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     }
 
     @Override
-    public Duration getAuthorizationCacheExpiresTime() {
-        return Duration.ofSeconds(expiresTime);
+    public TimeProperties getAuthorizationCacheExpiresTime() {
+        return authenticationProperties.getMobile().getExpiresTime();
     }
 
     /**

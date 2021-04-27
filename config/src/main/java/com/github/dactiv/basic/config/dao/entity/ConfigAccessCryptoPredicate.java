@@ -29,6 +29,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode(callSuper = true)
 public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate {
 
+    private static final long serialVersionUID = -5764360440250914629L;
     /**
      * 主键
      */

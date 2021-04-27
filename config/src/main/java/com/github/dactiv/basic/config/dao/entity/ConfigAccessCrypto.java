@@ -28,6 +28,7 @@ import java.util.List;
 @EqualsAndHashCode(callSuper = true)
 public class ConfigAccessCrypto extends AccessCrypto {
 
+    private static final long serialVersionUID = -126959369778385198L;
     /**
      * 主键
      */

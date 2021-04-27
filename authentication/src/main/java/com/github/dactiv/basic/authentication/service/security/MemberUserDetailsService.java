@@ -3,6 +3,7 @@ package com.github.dactiv.basic.authentication.service.security;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -46,20 +47,9 @@ public class MemberUserDetailsService implements UserDetailsService {
 
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
-    @Value("${spring.application.register.random-username-count:6}")
-    private int randomUsernameCount;
+    @Autowired
+    private AuthenticationProperties authenticationProperties;
 
-    @Value("${spring.application.captcha.token.sms.param-name:_smsCaptcha}")
-    private String smsCaptchaParamName;
-
-    @Value("${spring.security.authentication.captcha.sms-captcha-token-param-name:_smsCaptchaToken}")
-    private String smsTokenParamName;
-
-    @Value("${spring.security.authentication.captcha.sms-captcha-username-param-name:phoneNumber}")
-    private String smsUsernameParamName;
-
-    @Value("${spring.application.register.default-group:2}")
-    private int defaultGroup;
 
     @Autowired
     private UserService userService;
@@ -96,8 +86,10 @@ public class MemberUserDetailsService implements UserDetailsService {
                 user = new MemberUser();
 
                 user.setPhone(token.getPrincipal().toString());
-                user.setUsername(RandomStringUtils.randomAlphanumeric(randomUsernameCount) + user.getPhone());
                 user.setPassword(generateRandomPassword());
+
+                int count = authenticationProperties.getRegister().getRandomUsernameCount();
+                user.setUsername(RandomStringUtils.randomAlphanumeric(count) + user.getPhone());
 
                 user.setStatus(UserStatus.Enabled.getValue());
 
@@ -127,7 +119,8 @@ public class MemberUserDetailsService implements UserDetailsService {
      * @return 密码
      */
     protected String generateRandomPassword() {
-        String key = RandomStringUtils.randomAlphanumeric(randomUsernameCount) + System.currentTimeMillis();
+        int count = authenticationProperties.getRegister().getRandomUsernameCount();
+        String key = RandomStringUtils.randomAlphanumeric(count) + System.currentTimeMillis();
         return DigestUtils.md5DigestAsHex(key.getBytes());
     }
 
@@ -151,9 +144,9 @@ public class MemberUserDetailsService implements UserDetailsService {
 
             Map<String, Object> params = new LinkedHashMap<>();
 
-            params.put(smsTokenParamName, token.getHttpServletRequest().getParameter(smsTokenParamName));
-            params.put(smsCaptchaParamName, presentedPassword);
-            params.put(smsUsernameParamName, token.getHttpServletRequest().getParameter(CaptchaAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY));
+            params.put(authenticationProperties.getCaptcha().getTokenParamName(), token.getHttpServletRequest().getParameter(authenticationProperties.getCaptcha().getTokenParamName()));
+            params.put(authenticationProperties.getCaptcha().getCaptchaParamName(), presentedPassword);
+            params.put(authenticationProperties.getMobile().getUsernameParamName(), token.getHttpServletRequest().getParameter(CaptchaAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY));
 
             RestResult<Map<String, Object>> result;
 
@@ -210,7 +203,10 @@ public class MemberUserDetailsService implements UserDetailsService {
         user.setPassword(userDetails.getPassword());
         user.setStatus(userDetails.getStatus());
 
-        userService.saveMemberUser(user, Collections.singletonList(defaultGroup));
+        userService.saveMemberUser(
+                user,
+                Collections.singletonList(authenticationProperties.getRegister().getDefaultGroup())
+        );
 
         userDetails.setId(user.getId());
 

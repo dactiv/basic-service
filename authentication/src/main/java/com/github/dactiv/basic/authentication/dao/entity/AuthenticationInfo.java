@@ -33,8 +33,7 @@ import java.time.LocalDateTime;
 @Document(indexName = "authentication-info")
 public class AuthenticationInfo implements Serializable {
 
-    private static final long serialVersionUID = 1L;
-
+    private static final long serialVersionUID = -5548079224380108843L;
     /**
      * 主键
      */
