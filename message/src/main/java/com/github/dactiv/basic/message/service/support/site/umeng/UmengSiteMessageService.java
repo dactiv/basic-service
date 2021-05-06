@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service.support.site.umeng;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AuthenticationService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
@@ -76,9 +75,6 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     @Autowired
     private AuthenticationService authenticationService;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     public UmengSiteMessageService() {
     }
 
@@ -127,7 +123,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         headers.setContentType(MediaType.APPLICATION_JSON);
 
-        String requestJson = objectMapper.writeValueAsString(basicMessage);
+        String requestJson = Casts.writeValueAsString(basicMessage);
 
         HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
@@ -137,7 +133,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         // OK 为成功，否则失败
         if (result.getStatusCode().equals(HttpStatus.OK)) {
 
-            Map<String, Object> resultBody = objectMapper.readValue(result.getBody(), Map.class);
+            Map<String, Object> resultBody = Casts.readValue(result.getBody(), Map.class);
 
             Map<String, Object> data = new LinkedHashMap<>();
 
@@ -201,7 +197,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         iosPayloadAps.setAlert(iosPayloadApsAlert);
 
-        Map<String, Object> payloadMap = objectMapper.convertValue(iosPayload, Map.class);
+        Map<String, Object> payloadMap = Casts.convertValue(iosPayload, Map.class);
 
         payloadMap.putAll(entity.getLink());
         payloadMap.put("type", entity.getType());

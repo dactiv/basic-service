@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.service.security.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
@@ -41,9 +40,6 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
     @Autowired
     private AuthenticationProperties authenticationProperties;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Autowired
     private CaptchaService captchaService;
@@ -116,7 +112,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
         );
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(result));
+        response.getWriter().write(Casts.writeValueAsString(result));
     }
 
     public boolean isCaptchaAuthentication(HttpServletRequest request) {

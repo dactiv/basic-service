@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -62,9 +61,6 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
     @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");
 
     @Override
@@ -112,7 +108,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     LOGGER.debug("对号码为[" + entity.getPhoneNumber() + "]发送短信的响应结果为:" + r.getBody());
                 }
 
-                Map<String, Object> data = objectMapper.readValue(r.getBody(), Map.class);
+                Map<String, Object> data = Casts.readValue(r.getBody(), Map.class);
 
                 if (MapUtils.isEmpty(data)) {
                     return new RestResult<>(
@@ -169,7 +165,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     LOGGER.warn("通过 API " + url + DEFAULT_GET_BALANCE_API + " 无任何响应");
                 } else {
 
-                    Map<String, Object> data = objectMapper.readValue(r.getBody(), Map.class);
+                    Map<String, Object> data = Casts.readValue(r.getBody(), Map.class);
                     Map<String, Object> balanceMap = Casts.cast(data.get(responseDataField));
                     BigDecimal balance = Casts.cast(balanceMap.get(balanceFieldName), BigDecimal.class);
 

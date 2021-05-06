@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
@@ -38,9 +37,6 @@ import java.util.Objects;
 @Slf4j
 @Component
 public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     @Autowired
     private MobileUserDetailsService mobileAuthenticationService;
@@ -140,7 +136,7 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
         }
 
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(objectMapper.writeValueAsString(result));
+        response.getWriter().write(Casts.writeValueAsString(result));
 
     }
 }

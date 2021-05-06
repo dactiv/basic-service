@@ -3,11 +3,11 @@ package com.github.dactiv.basic.authentication.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
@@ -61,9 +61,6 @@ public class AuthorizationService {
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     /**
      * 超级管理员组 id
@@ -425,9 +422,9 @@ public class AuthorizationService {
                         .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
         );
 
-        List<PluginInfo> pluginList = objectMapper.convertValue(
+        List<PluginInfo> pluginList = Casts.convertValue(
                 serviceInfo.getInfo().get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME),
-                new TypeReference<>() {}
+                new TypeReference<List<PluginInfo>>() {}
         );
 
         // 遍历新资源，更新 serviceInfo 相关的资源信息
@@ -544,7 +541,7 @@ public class AuthorizationService {
      */
     private Stream<Resource> createResource(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
 
-        PluginInfo plugin = objectMapper.convertValue(entry, PluginInfo.class);
+        PluginInfo plugin = Casts.convertValue(entry, PluginInfo.class);
 
         return Arrays.stream(StringUtils.split(plugin.getSource(), ",")).map(source -> {
 

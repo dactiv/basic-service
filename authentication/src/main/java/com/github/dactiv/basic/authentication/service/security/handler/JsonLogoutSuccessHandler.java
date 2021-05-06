@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
@@ -53,9 +52,6 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private final static String DEFAULT_TOKEN_NAME = "token";
 
     @Autowired
-    private ObjectMapper mapper;
-
-    @Autowired
     private AuthenticationProperties authenticationProperties;
 
     @Autowired
@@ -98,7 +94,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 RestResult.SUCCESS_EXECUTE_CODE,
                 new LinkedHashMap<>());
 
-        response.getWriter().write(mapper.writeValueAsString(result));
+        response.getWriter().write(Casts.writeValueAsString(result));
     }
 
     private void clearCache(SecurityUserDetails userDetails, String principal) {

@@ -1,8 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.web.session.SessionInformationExpiredEvent;
@@ -22,13 +21,6 @@ import java.util.Map;
 @Component
 public class JsonSessionInformationExpiredStrategy implements SessionInformationExpiredStrategy {
 
-    @Autowired
-    private ObjectMapper mapper;
-
-    public JsonSessionInformationExpiredStrategy(ObjectMapper mapper) {
-        this.mapper = mapper;
-    }
-
     @Override
     public void onExpiredSessionDetected(SessionInformationExpiredEvent event) throws IOException {
         HttpServletResponse response = event.getResponse();
@@ -43,7 +35,7 @@ public class JsonSessionInformationExpiredStrategy implements SessionInformation
                 new LinkedHashMap<>()
         );
 
-        response.getWriter().write(mapper.writeValueAsString(result));
+        response.getWriter().write(Casts.writeValueAsString(result));
 
     }
 }

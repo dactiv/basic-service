@@ -3,9 +3,9 @@ package com.github.dactiv.basic.authentication.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
@@ -76,9 +76,6 @@ public class AuthenticationService {
 
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
-
-    @Autowired
-    private ObjectMapper objectMapper;
 
     /**
      * 保存认证信息表实体
@@ -207,7 +204,7 @@ public class AuthenticationService {
             param.put("toUserId", info.getUserId());
             param.put("type", messageType);
             param.put("title", title);
-            param.put("data", objectMapper.convertValue(info, Map.class));
+            param.put("data", Casts.convertValue(info, Map.class));
             param.put("pushMessage", YesOrNo.Yes.getValue());
 
             try {
