@@ -2,11 +2,12 @@ package com.github.dactiv.basic.captcha.service;
 
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
 
 import java.io.Serializable;
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 
 /**
  * 抽象的可过期验证码实现
@@ -18,15 +19,16 @@ import java.time.LocalDateTime;
 public class ExpiredCaptcha implements Expired, Serializable {
 
     private static final long serialVersionUID = -2371567553401150929L;
+
     /**
      * 创建时间
      */
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 过期时间（单位：秒）
      */
-    private Duration expireTime;
+    private Duration expireDuration;
 
     /**
      * 验证码
@@ -39,7 +41,11 @@ public class ExpiredCaptcha implements Expired, Serializable {
 
     @Override
     public boolean isExpired() {
-        return !expireTime.isNegative() && LocalDateTime.now().minus(expireTime).isAfter(getCreationTime());
+
+        LocalDateTime expireTime = LocalDateTime.now().minus(expireDuration);
+        LocalDateTime creationTime = LocalDateTime.ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault());
+
+        return !expireDuration.isNegative() && expireTime.isAfter(creationTime);
     }
 
 }

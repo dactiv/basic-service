@@ -11,7 +11,6 @@ import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -20,7 +19,6 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -263,7 +261,7 @@ public class MessageService {
         siteMessages
                 .stream()
                 .peek(s -> s.setIsRead(YesOrNo.Yes.getValue()))
-                .peek(s -> s.setReadTime(LocalDateTime.now()))
+                .peek(s -> s.setReadTime(new Date()))
                 .forEach(this::saveSiteMessage);
     }
 

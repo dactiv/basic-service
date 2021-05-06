@@ -2,9 +2,7 @@ package com.github.dactiv.basic.config.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.commons.tree.Tree;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -14,7 +12,7 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
@@ -41,8 +39,7 @@ public class DictionaryType implements Tree<Integer, DictionaryType>, Serializab
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 版本号

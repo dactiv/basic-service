@@ -13,7 +13,7 @@ spring:
   aop:
     proxyTargetClass: true
   jackson:
-    default-property-inclusion: non_null
+    default-property-inclusion: non_empty
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
   http:

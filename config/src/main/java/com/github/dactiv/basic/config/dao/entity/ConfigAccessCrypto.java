@@ -2,9 +2,6 @@ package com.github.dactiv.basic.config.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import lombok.Data;
@@ -12,8 +9,8 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
-import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -38,9 +35,7 @@ public class ConfigAccessCrypto extends AccessCrypto {
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 版本号

@@ -7,7 +7,6 @@ import com.github.dactiv.basic.captcha.service.intercept.Interceptor;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.google.common.base.Supplier;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
@@ -90,7 +89,7 @@ public class RedisInterceptor implements Interceptor {
      */
     public void saveInterceptToken(BuildToken token) {
         String key = getInterceptTokenKey(token.getType(), token.getToken());
-        redisTemplate.opsForValue().set(key, token, token.getExpireTime());
+        redisTemplate.opsForValue().set(key, token, token.getExpireDuration());
     }
 
     /**

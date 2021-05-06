@@ -2,13 +2,10 @@ package com.github.dactiv.basic.authentication.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
@@ -22,9 +19,9 @@ import org.hibernate.validator.constraints.Range;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -43,6 +40,7 @@ import java.util.stream.Collectors;
 public class Group implements Tree<Integer, Group>, Serializable {
 
     private static final long serialVersionUID = -5357157352791368716L;
+
     /**
      * 主键
      */
@@ -52,9 +50,7 @@ public class Group implements Tree<Integer, Group>, Serializable {
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 版本号

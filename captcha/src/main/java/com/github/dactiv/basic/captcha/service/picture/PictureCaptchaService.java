@@ -54,7 +54,7 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
     private long captchaExpireTime;
 
     @Override
-    protected Duration getCaptchaExpireTime() {
+    protected Duration getCaptchaExpireDuration() {
         return Duration.ofSeconds(captchaExpireTime);
     }
 

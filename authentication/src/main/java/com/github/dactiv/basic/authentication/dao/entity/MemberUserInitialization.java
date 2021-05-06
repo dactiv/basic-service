@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,7 +14,7 @@ import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.time.LocalDateTime;
+import java.util.Date;
 
 /**
  * <p>用户初始化实体类</p>
@@ -43,9 +40,7 @@ public class MemberUserInitialization implements Serializable {
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 版本号

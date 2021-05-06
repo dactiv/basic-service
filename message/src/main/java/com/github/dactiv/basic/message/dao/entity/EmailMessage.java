@@ -5,10 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,7 +13,6 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Date;
 
 /**
@@ -43,9 +39,7 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, Serializable
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 更新版本号
@@ -92,16 +86,12 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, Serializable
     /**
      * 最后发送时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime lastSendTime;
+    private Date lastSendTime;
 
     /**
      * 发送成功时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime successTime;
+    private Date successTime;
 
     /**
      * 状态：0.执行中、1.执行成功，99.执行失败

@@ -2,7 +2,6 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
@@ -33,6 +32,8 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 
@@ -275,6 +276,11 @@ public class AuthenticationService {
     }
 
     public String getIndexString(AuthenticationInfo info) {
-        return DEFAULT_ES_INDEX + "-" + info.getUserId() + "-" + info.getCreationTime().format(DateTimeFormatter.ISO_LOCAL_DATE);
+        LocalDateTime creationTime = LocalDateTime.ofInstant(
+                info.getCreationTime().toInstant(),
+                ZoneId.systemDefault()
+        );
+
+        return DEFAULT_ES_INDEX + "-" + info.getUserId() + "-" + creationTime.format(DateTimeFormatter.ISO_LOCAL_DATE);
     }
 }

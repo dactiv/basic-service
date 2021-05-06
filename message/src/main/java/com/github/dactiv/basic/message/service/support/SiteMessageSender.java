@@ -21,7 +21,6 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -77,7 +76,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(LocalDateTime.now());
+            entity.setLastSendTime(new Date());
 
             SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
@@ -147,4 +146,5 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
     public String getMessageType() {
         return DEFAULT_TYPE;
     }
+
 }

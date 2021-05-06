@@ -82,7 +82,7 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
     }
 
     @Override
-    protected Duration getCaptchaExpireTime() {
+    protected Duration getCaptchaExpireDuration() {
         return Duration.ofSeconds(captchaExpireTime);
     }
 

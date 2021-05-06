@@ -81,7 +81,7 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
     }
 
     @Override
-    protected Duration getCaptchaExpireTime() {
+    protected Duration getCaptchaExpireDuration() {
         return Duration.ofSeconds(captchaExpireTime);
     }
 

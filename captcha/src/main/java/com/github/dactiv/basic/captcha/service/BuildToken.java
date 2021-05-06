@@ -45,14 +45,14 @@ public interface BuildToken extends Serializable, Expired {
      *
      * @return 过期时间
      */
-    Duration getExpireTime();
+    Duration getExpireDuration();
 
     /**
      * 设置过期时间
      *
      * @param expireTime 过期时间
      */
-    void setExpireTime(Duration expireTime);
+    void setExpireDuration(Duration expireTime);
 
     /**
      * 设置拦截 token

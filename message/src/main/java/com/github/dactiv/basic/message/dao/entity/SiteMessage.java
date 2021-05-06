@@ -3,11 +3,8 @@ package com.github.dactiv.basic.message.dao.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.databind.annotation.JsonDeserialize;
-import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.jackson.JacksonDateTime;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +12,6 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.io.Serializable;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.Map;
 
@@ -44,9 +40,7 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable 
     /**
      * 创建时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 更新版本号
@@ -98,9 +92,7 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable 
     /**
      * 读取时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime readTime;
+    private Date readTime;
 
     /**
      * 链接
@@ -127,9 +119,7 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable 
     /**
      * 最后发送时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime lastSendTime;
+    private Date lastSendTime;
 
     /**
      * 异常信息
@@ -144,9 +134,7 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable 
     /**
      * 发送成功时间
      */
-    @JsonSerialize(using = JacksonDateTime.Serializer.class)
-    @JsonDeserialize(using = JacksonDateTime.Deserializer.class)
-    private LocalDateTime successTime;
+    private Date successTime;
 
     /**
      * 备注

@@ -6,6 +6,8 @@ import lombok.NoArgsConstructor;
 
 import java.time.Duration;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Date;
 import java.util.Map;
 
 /**
@@ -27,7 +29,7 @@ public class SimpleBuildToken implements BuildToken {
     /**
      * 创建时间
      */
-    private final LocalDateTime creationTime = LocalDateTime.now();
+    private Date creationTime = new Date();
 
     /**
      * 绑定 token 值
@@ -48,7 +50,7 @@ public class SimpleBuildToken implements BuildToken {
      * 活期时间
      */
     @JsonIgnore
-    private Duration expireTime;
+    private Duration expireDuration;
 
     /**
      * 构造验证码的参数信息
@@ -63,6 +65,11 @@ public class SimpleBuildToken implements BuildToken {
 
     @Override
     public boolean isExpired() {
-        return !expireTime.isNegative() && LocalDateTime.now().minus(expireTime).isAfter(creationTime);
+
+        LocalDateTime expireTime = LocalDateTime.now().minus(expireDuration);
+        LocalDateTime creationTime = LocalDateTime.ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault());
+
+        return !expireDuration.isNegative() && expireTime.isAfter(creationTime);
     }
+
 }

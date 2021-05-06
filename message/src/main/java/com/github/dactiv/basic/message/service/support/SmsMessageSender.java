@@ -22,7 +22,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -81,7 +80,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(LocalDateTime.now());
+            entity.setLastSendTime(new Date());
 
             SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 

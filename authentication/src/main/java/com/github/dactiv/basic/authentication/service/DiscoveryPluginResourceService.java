@@ -334,7 +334,7 @@ public class DiscoveryPluginResourceService {
             return restTemplate.getForObject(getPluginInfoUrl(ip, port), Map.class);
         } catch (Exception e) {
             exceptionServices.add(instance.getServiceId());
-            LOGGER.warn("通过url[" + getPluginInfoUrl(ip, port) + "]获取信息出现异常");
+            LOGGER.warn("通过url[" + getPluginInfoUrl(ip, port) + "]获取信息出现异常", e);
         }
 
         return null;

@@ -112,8 +112,8 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
     @Override
     public void saveBuildToken(BuildToken token) {
         String key = getBuildTokenKey(token.getToken());
-        token.setExpireTime(getBuildTokenExpireTime());
-        redisTemplate.opsForValue().set(key, token, token.getExpireTime());
+        token.setExpireDuration(getBuildTokenExpireDuration());
+        redisTemplate.opsForValue().set(key, token, token.getExpireDuration());
     }
 
     /**
@@ -121,7 +121,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @return 过期时间
      */
-    private Duration getBuildTokenExpireTime() {
+    private Duration getBuildTokenExpireDuration() {
         return DEFAULT_BUILD_TOKEN_EXPIRE_TIME;
     }
 
@@ -130,7 +130,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @return 过期时间（单位:秒）
      */
-    protected abstract Duration getCaptchaExpireTime();
+    protected abstract Duration getCaptchaExpireDuration();
 
     @Override
     public String getTokenParamName() {
@@ -287,9 +287,9 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
         saveBuildToken(buildToken);
 
         String key = getBuildTokenKey(buildToken.getToken());
-        redisTemplate.opsForValue().set(key, buildToken, getBuildTokenExpireTime());
+        redisTemplate.opsForValue().set(key, buildToken, getBuildTokenExpireDuration());
 
-        E entity = entityClass.newInstance();
+        E entity = ClassUtils.newInstance(entityClass);
 
         WebDataBinder binder = new WebDataBinder(entity, entityClass.getSimpleName());
 
@@ -310,7 +310,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         C captcha = ClassUtils.newInstance(captchaClass);
 
-        captcha.setExpireTime(getCaptchaExpireTime());
+        captcha.setExpireDuration(getCaptchaExpireDuration());
         captcha.setCaptcha(result.getCaptchaValue());
 
         if (StringUtils.isNotEmpty(getUsernameParamName())) {
@@ -331,12 +331,12 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         if (ReusableCaptcha.class.isAssignableFrom(captcha.getClass())) {
             ReusableCaptcha reusableCaptcha = Casts.cast(captcha);
-            reusableCaptcha.setRetryTime(getRetryTime());
+            reusableCaptcha.setRetryDuration(getRetryTime());
         }
 
         String captchaKey = getCaptchaKey(buildToken);
 
-        redisTemplate.opsForValue().set(captchaKey, captcha, captcha.getExpireTime());
+        redisTemplate.opsForValue().set(captchaKey, captcha, captcha.getExpireDuration());
 
         return result.getResult();
     }

@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.dao.DataDictionaryDao;
 import com.github.dactiv.basic.config.dao.DictionaryTypeDao;
-import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import com.github.dactiv.framework.commons.exception.ServiceException;

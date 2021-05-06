@@ -25,7 +25,6 @@ import org.springframework.stereotype.Component;
 
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.*;
 
 /**
@@ -88,7 +87,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
         data.forEach(entity -> {
 
-            entity.setLastSendTime(LocalDateTime.now());
+            entity.setLastSendTime(new Date());
 
             MimeMessage mimeMessage = mailSender.createMimeMessage();
 
