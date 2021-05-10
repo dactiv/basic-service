@@ -7,9 +7,8 @@ import com.github.dactiv.basic.authentication.service.security.handler.JsonLogou
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.spring.security.audit.AuditEventEntity;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
-import com.github.dactiv.framework.spring.security.audit.elasticsearch.ElasticsearchAuditEventRepository;
+import com.github.dactiv.framework.spring.security.audit.PageAuditEventRepository;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -18,22 +17,13 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
-import org.apache.commons.lang.StringUtils;
-import org.elasticsearch.index.query.BoolQueryBuilder;
-import org.elasticsearch.index.query.QueryBuilders;
-import org.elasticsearch.index.query.RangeQueryBuilder;
-import org.elasticsearch.search.sort.SortBuilders;
-import org.elasticsearch.search.sort.SortOrder;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.actuate.audit.AuditEvent;
+import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.SearchHit;
-import org.springframework.data.elasticsearch.core.SearchHits;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.NativeSearchQueryBuilder;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -43,9 +33,7 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 
 /**
  * 授权控制器
@@ -63,7 +51,7 @@ public class SecurityController {
     private JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
 
     @Autowired
-    private ElasticsearchRestTemplate elasticsearchRestTemplate;
+    private AuditEventRepository auditEventRepository;
 
     @Autowired
     private MobileUserDetailsService mobileUserDetailsService;
@@ -71,54 +59,27 @@ public class SecurityController {
     /**
      * 获取用户审计数据
      *
+     * @param pageable  分页请求
      * @param principal 用户登陆账户
-     * @param startTime 数据发生时间
-     * @param endTime   数据发生时间
+     * @param after     数据发生时间
      * @param type      审计类型
      *
      * @return 审计事件
      */
     @PostMapping("audit")
     @Plugin(name = "审计管理", id = "audit", parent = "system", type = ResourceType.Menu, source = ResourceSource.Console)
-    public Page<AuditEventEntity> audit(PageRequest pageRequest,
-                                        @RequestParam(required = false) String principal,
-                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date startTime,
-                                        @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date endTime,
-                                        @RequestParam(required = false) String type) {
+    public Page<AuditEvent> audit(@PageableDefault Pageable pageable,
+                                  @RequestParam(required = false) String principal,
+                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
+                                  @RequestParam(required = false) String type) {
 
-        String index = ElasticsearchAuditEventRepository.DEFAULT_ES_INDEX + "-*";
-
-        NativeSearchQueryBuilder builder = new NativeSearchQueryBuilder().withPageable(pageRequest);
-
-        BoolQueryBuilder boolQueryBuilder = QueryBuilders.boolQuery();
-
-        builder.withQuery(boolQueryBuilder);
-
-        RangeQueryBuilder rangeQueryBuilder = QueryBuilders.rangeQuery("creationTime");
-        boolQueryBuilder.must(rangeQueryBuilder);
-
-        if (StringUtils.isNotEmpty(principal)) {
-            index = ElasticsearchAuditEventRepository.DEFAULT_ES_INDEX + "-" + principal + "-*";
-            boolQueryBuilder.must(QueryBuilders.termQuery("principal", principal));
+        if (!PageAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
+            throw new ServiceException("当前审计不支持分页查询");
         }
 
-        if (startTime != null) {
-            rangeQueryBuilder.gte(startTime);
-        }
+        PageAuditEventRepository pageAuditEventRepository = Casts.cast(auditEventRepository);
 
-        if (endTime != null) {
-            rangeQueryBuilder.lte(endTime);
-        }
-
-        if (StringUtils.isNotEmpty(type)) {
-            boolQueryBuilder.must(QueryBuilders.termQuery("type", type));
-        }
-
-        builder.withSort(SortBuilders.fieldSort("creationTime").order(SortOrder.DESC));
-
-        SearchHits<AuditEventEntity> data = elasticsearchRestTemplate.search(builder.build(), AuditEventEntity.class, IndexCoordinates.of(index));
-        List<AuditEventEntity> content = data.stream().map(SearchHit::getContent).collect(Collectors.toList());
-        return new PageImpl<>(content, pageRequest, content.size());
+        return pageAuditEventRepository.findPage(pageable, principal, after.toInstant(), type);
     }
 
     /**
