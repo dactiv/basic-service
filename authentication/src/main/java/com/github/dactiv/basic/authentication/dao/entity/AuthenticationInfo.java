@@ -9,7 +9,8 @@ import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.springframework.data.elasticsearch.annotations.Document;
+import org.springframework.data.annotation.Id;
+import org.springframework.data.mongodb.core.index.Indexed;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -27,13 +28,15 @@ import java.util.Date;
 @EqualsAndHashCode
 @NoArgsConstructor
 @TableName("tb_authentication_info")
-@Document(indexName = "authentication-info")
 public class AuthenticationInfo implements Serializable {
+
+    public static final String DEFAULT_INDEX = "authentication-info";
 
     private static final long serialVersionUID = -5548079224380108843L;
     /**
      * 主键
      */
+    @Id
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
@@ -53,12 +56,14 @@ public class AuthenticationInfo implements Serializable {
      * 用户 id
      */
     @NotNull
+    @Indexed
     private Integer userId;
 
     /**
      * 用户类型
      */
     @NotEmpty
+    @Indexed
     private String type;
 
     /**

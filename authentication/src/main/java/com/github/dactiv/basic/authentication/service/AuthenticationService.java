@@ -10,6 +10,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -76,6 +77,8 @@ public class AuthenticationService {
 
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
+
+    private final DateIndexGenerator dateIndexGenerator = new DateIndexGenerator(AuthenticationInfo.DEFAULT_INDEX, "-", "creationTime");
 
     /**
      * 保存认证信息表实体
@@ -245,7 +248,7 @@ public class AuthenticationService {
 
             info.setSyncStatus(ExecuteStatus.Failure.getValue());
 
-            String index = getIndexString(info);
+            String index = dateIndexGenerator.generateIndex(info);
 
             IndexOperations indexOperations = elasticsearchRestTemplate.indexOps(IndexCoordinates.of(index));
 
@@ -272,12 +275,4 @@ public class AuthenticationService {
         saveAuthenticationInfo(info);
     }
 
-    public String getIndexString(AuthenticationInfo info) {
-        LocalDateTime creationTime = LocalDateTime.ofInstant(
-                info.getCreationTime().toInstant(),
-                ZoneId.systemDefault()
-        );
-
-        return DEFAULT_ES_INDEX + "-" + info.getUserId() + "-" + creationTime.format(DateTimeFormatter.ISO_LOCAL_DATE);
-    }
 }

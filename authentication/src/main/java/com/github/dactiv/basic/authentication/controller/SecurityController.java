@@ -32,8 +32,10 @@ import org.springframework.util.DigestUtils;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.time.Instant;
 import java.util.Date;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 授权控制器
@@ -79,7 +81,9 @@ public class SecurityController {
 
         PageAuditEventRepository pageAuditEventRepository = Casts.cast(auditEventRepository);
 
-        return pageAuditEventRepository.findPage(pageable, principal, after.toInstant(), type);
+        Instant instant = Objects.nonNull(after) ? after.toInstant() : null;
+
+        return pageAuditEventRepository.findPage(pageable, principal, instant, type);
     }
 
     /**
