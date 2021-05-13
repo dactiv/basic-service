@@ -24,6 +24,3 @@ spring:
       name: feign
       password: feign
       roles: BASIC
-  elasticsearch:
-    rest:
-      uris: http://localhost:9200

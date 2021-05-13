@@ -9,6 +9,11 @@ spring:
   security:
     support:
       override-http-security: false
+      audit:
+        type: elasticsearch
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
   cloud:
     nacos:
       discovery:

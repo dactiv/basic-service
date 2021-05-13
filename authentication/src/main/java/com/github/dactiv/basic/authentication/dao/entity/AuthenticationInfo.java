@@ -10,7 +10,6 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.index.Indexed;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
@@ -56,14 +55,12 @@ public class AuthenticationInfo implements Serializable {
      * 用户 id
      */
     @NotNull
-    @Indexed
     private Integer userId;
 
     /**
      * 用户类型
      */
     @NotEmpty
-    @Indexed
     private String type;
 
     /**

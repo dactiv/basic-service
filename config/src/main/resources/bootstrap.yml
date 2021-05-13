@@ -6,6 +6,13 @@ spring:
     banner-mode: "off"
   application:
     name: @artifactId@
+  security:
+    support:
+      audit:
+        type: elasticsearch
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
   cloud:
     nacos:
       discovery:

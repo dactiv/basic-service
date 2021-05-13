@@ -1,8 +1,9 @@
-package com.github.dactiv.basic.authentication.service.security.config;
+package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -64,6 +65,11 @@ public class AuthenticationProperties {
      * 验证码配置
      */
     private Captcha captcha = new Captcha();
+
+    /**
+     * 异地区域配置
+     */
+    private AbnormalArea abnormalArea = new AbnormalArea();
 
     /**
      * 注册配置
@@ -139,6 +145,39 @@ public class AuthenticationProperties {
          */
         private TimeProperties expiresTime = new TimeProperties(2592, TimeUnit.SECONDS);
 
+    }
+
+    /**
+     * 异地区域配置
+     */
+    @Data
+    @NoArgsConstructor
+    public static class AbnormalArea {
+
+        /**
+         * 发送站内信的消息内容
+         */
+        private String sendContent = "您的账户在异地登录，如果非本人操作。请及时修改密码。";
+
+        /**
+         * 发送站内信的标题内容
+         */
+        private String title = "异地登录通知";
+
+        /**
+         * 发送站内信的消息类型
+         */
+        private String messageType = "system";
+
+        /**
+         * 使用哪个用户发送
+         */
+        private Integer fromUserId = 1;
+
+        /**
+         * 发送失败后的重试次数
+         */
+        private Integer maxRetryCount = 3;
     }
 
 }

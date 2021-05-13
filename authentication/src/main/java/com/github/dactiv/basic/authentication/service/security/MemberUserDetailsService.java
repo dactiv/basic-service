@@ -3,7 +3,6 @@ package com.github.dactiv.basic.authentication.service.security;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
-import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -24,6 +23,7 @@ import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
@@ -47,8 +47,7 @@ public class MemberUserDetailsService implements UserDetailsService {
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
     @Autowired
-    private AuthenticationProperties authenticationProperties;
-
+    private AuthenticationProperties properties;
 
     @Autowired
     private UserService userService;
@@ -87,7 +86,7 @@ public class MemberUserDetailsService implements UserDetailsService {
                 user.setPhone(token.getPrincipal().toString());
                 user.setPassword(generateRandomPassword());
 
-                int count = authenticationProperties.getRegister().getRandomUsernameCount();
+                int count = properties.getRegister().getRandomUsernameCount();
                 user.setUsername(RandomStringUtils.randomAlphanumeric(count) + user.getPhone());
 
                 user.setStatus(UserStatus.Enabled.getValue());
@@ -118,7 +117,7 @@ public class MemberUserDetailsService implements UserDetailsService {
      * @return 密码
      */
     protected String generateRandomPassword() {
-        int count = authenticationProperties.getRegister().getRandomUsernameCount();
+        int count = properties.getRegister().getRandomUsernameCount();
         String key = RandomStringUtils.randomAlphanumeric(count) + System.currentTimeMillis();
         return DigestUtils.md5DigestAsHex(key.getBytes());
     }
@@ -143,32 +142,42 @@ public class MemberUserDetailsService implements UserDetailsService {
 
             Map<String, Object> params = new LinkedHashMap<>();
 
-            params.put(authenticationProperties.getCaptcha().getTokenParamName(), token.getHttpServletRequest().getParameter(authenticationProperties.getCaptcha().getTokenParamName()));
-            params.put(authenticationProperties.getCaptcha().getCaptchaParamName(), presentedPassword);
-            params.put(authenticationProperties.getMobile().getUsernameParamName(), token.getHttpServletRequest().getParameter(CaptchaAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY));
+            String username = token.getHttpServletRequest().getParameter(
+                    CaptchaAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY
+            );
 
-            RestResult<Map<String, Object>> result;
+            String tokenValue = token.getHttpServletRequest().getParameter(
+                    properties.getCaptcha().getTokenParamName()
+            );
+
+            params.put(properties.getCaptcha().getTokenParamName(), tokenValue);
+            params.put(properties.getCaptcha().getCaptchaParamName(), presentedPassword);
+            params.put(properties.getMobile().getUsernameParamName(), username);
 
             try {
-                result = captchaService.verifyCaptcha(params);
+
+                RestResult<Map<String, Object>> result = captchaService.verifyCaptcha(params);
+
+                if (result.getStatus() == HttpStatus.OK.value()) {
+
+                    token.getHttpServletRequest().setAttribute(DEFAULT_IS_NEW_MEMBER_KEY_NAME, false);
+
+                    if (userDetails.getId() == null) {
+
+                        createMemberUser(token, userDetails, token.getPrincipal().toString());
+
+                    }
+
+                    return true;
+                } else {
+                    throw new BadCredentialsException(result.getMessage());
+                }
+
             } catch (Exception e) {
                 throw new AuthenticationServiceException("调用验证码服务出现异常", e);
             }
 
-            if (result.getStatus() == HttpStatus.OK.value()) {
 
-                token.getHttpServletRequest().setAttribute(DEFAULT_IS_NEW_MEMBER_KEY_NAME, false);
-
-                if (userDetails.getId() == null) {
-
-                    createMemberUser(token, userDetails, token.getPrincipal().toString());
-
-                }
-
-                return true;
-            } else {
-                throw new BadCredentialsException(result.getMessage());
-            }
 
         }
     }
@@ -204,7 +213,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
         userService.saveMemberUser(
                 user,
-                Collections.singletonList(authenticationProperties.getRegister().getDefaultGroup())
+                Collections.singletonList(properties.getRegister().getDefaultGroup())
         );
 
         userDetails.setId(user.getId());

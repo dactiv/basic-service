@@ -42,11 +42,6 @@ public class DiscoveryPluginResourceService {
      * 默认获取应用信息的后缀 uri
      */
     private static final String DEFAULT_PLUGIN_INFO_URL = "actuator/plugin";
-    /**
-     * 超级管理员组 id
-     */
-    @Value("${spring.security.admin.group-id:1}")
-    private Integer adminGroupId;
 
     @Autowired
     private RedisTemplate<String, Object> redisTemplate;
@@ -60,14 +55,8 @@ public class DiscoveryPluginResourceService {
     @Autowired
     private AuthorizationService authorizationService;
 
-    @Value("${spring.security.plugin.resource-service-key-name:plugin:resource:service:}")
-    private String pluginResourceServiceKeyName;
-
-    /**
-     * 缓存超时时间
-     */
-    @Value("${spring.security.plugin.cache-expires-time:1800}")
-    private long cacheExpiresTime;
+    @Autowired
+    private PluginProperties properties;
 
     /**
      * 当前服务缓存
@@ -122,9 +111,9 @@ public class DiscoveryPluginResourceService {
                 .forEach(r -> authorizationService.deleteResource(r.getId()));
 
         // 如果默认存在 admin 组，自动管理最新资源
-        if (Objects.nonNull(adminGroupId)) {
+        if (Objects.nonNull(properties.getAdminGroupId())) {
 
-            Group group = authorizationService.getGroup(adminGroupId);
+            Group group = authorizationService.getGroup(properties.getAdminGroupId());
 
             if (group != null) {
 
@@ -158,7 +147,7 @@ public class DiscoveryPluginResourceService {
     private List<ServiceInfo> getCacheServiceInfos() {
 
 
-        Set<String> keys = redisTemplate.keys(pluginResourceServiceKeyName + "*");
+        Set<String> keys = redisTemplate.keys(properties.getCache().getName() + "*");
 
         if (keys == null) {
             return new ArrayList<>();
@@ -180,7 +169,7 @@ public class DiscoveryPluginResourceService {
      * @return 插件资源服务 key 名称
      */
     private String getPluginResourceServiceKey(String service) {
-        return pluginResourceServiceKeyName + service;
+        return properties.getCache().getName() + service;
     }
 
     /**
@@ -265,7 +254,8 @@ public class DiscoveryPluginResourceService {
                 redisTemplate.opsForValue().set(
                         getPluginResourceServiceKey(entity.getService()),
                         entity,
-                        Duration.ofSeconds(cacheExpiresTime)
+                        properties.getCache().getExpiresTime().getValue(),
+                        properties.getCache().getExpiresTime().getUnit()
                 );
 
                 if (LOGGER.isDebugEnabled()) {

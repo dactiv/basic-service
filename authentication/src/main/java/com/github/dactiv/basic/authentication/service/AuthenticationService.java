@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.service.security.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
@@ -17,7 +18,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
@@ -33,9 +33,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.LocalDateTime;
-import java.time.ZoneId;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 
 /**
@@ -52,28 +49,14 @@ public class AuthenticationService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationService.class);
 
-    private static final String DEFAULT_ES_INDEX = "authentication-info";
-
     @Autowired
     private AuthenticationInfoDao authenticationInfoDao;
 
     @Autowired
     private MessageService messageService;
 
-    @Value("${spring.security.authentication.offsite.send-content:您的账户在异地登录，如果非本人操作。请及时修改密码。}")
-    private String sendContent;
-
-    @Value("${spring.security.authentication.offsite.title:异地登录通知}")
-    private String title;
-
-    @Value("${spring.security.authentication.offsite.message-type:system}")
-    private String messageType;
-
-    @Value("${spring.security.authentication.offsite.from-user-id:1}")
-    private Integer fromUserId;
-
-    @Value("${spring.security.authentication.offsite.max-retry-count:3}")
-    private Integer maxRetryCount;
+    @Autowired
+    private AuthenticationProperties properties;
 
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
@@ -202,11 +185,11 @@ public class AuthenticationService {
 
             param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, MessageService.DEFAULT_MESSAGE_TYPE_VALUE);
 
-            param.put("content", sendContent);
-            param.put("fromUserId", fromUserId);
+            param.put("content", properties.getAbnormalArea().getSendContent());
+            param.put("fromUserId", properties.getAbnormalArea().getFromUserId());
             param.put("toUserId", info.getUserId());
-            param.put("type", messageType);
-            param.put("title", title);
+            param.put("type", properties.getAbnormalArea().getMessageType());
+            param.put("title", properties.getAbnormalArea().getTitle());
             param.put("data", Casts.convertValue(info, Map.class));
             param.put("pushMessage", YesOrNo.Yes.getValue());
 
@@ -224,16 +207,15 @@ public class AuthenticationService {
 
         }
     }
-
-    @ConcurrentProcess(value = "sync.authentication.info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作")
     @Scheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }")
+    @ConcurrentProcess(value = "sync.authentication.info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作")
     public void syncAuthenticationInfo() {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(
                 PageRequest.of(1,100),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
-                        .le(AuthenticationInfo::getRetryCount, maxRetryCount)
+                        .le(AuthenticationInfo::getRetryCount, properties.getAbnormalArea().getMaxRetryCount())
                         .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue())
         );
 

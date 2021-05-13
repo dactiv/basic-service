@@ -400,7 +400,6 @@ public class AuthorizationService {
      *
      * @param serviceInfo 应用信息
      */
-    @SuppressWarnings("unchecked")
     public void enabledApplicationResource(ServiceInfo serviceInfo) {
 
         if (serviceInfo == null || serviceInfo.getVersion() == null) {
@@ -424,7 +423,7 @@ public class AuthorizationService {
 
         List<PluginInfo> pluginList = Casts.convertValue(
                 serviceInfo.getInfo().get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME),
-                new TypeReference<List<PluginInfo>>() {}
+                new TypeReference<>() {}
         );
 
         // 遍历新资源，更新 serviceInfo 相关的资源信息

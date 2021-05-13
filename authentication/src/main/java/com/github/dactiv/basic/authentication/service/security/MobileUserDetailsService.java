@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
-import com.github.dactiv.basic.authentication.service.security.config.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
