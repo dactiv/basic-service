@@ -6,14 +6,13 @@ import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
+import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -22,7 +21,6 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.time.Duration;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,7 +75,7 @@ public class DiscoveryPluginResourceService {
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
     @Scheduled(cron = "${spring.security.plugin.sync.cron.expression:30 * * * * ?}")
-    @ConcurrentProcess(value = "sync.plugin.resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作")
+    @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作")
     public void syncPluginResource() {
 
         // 获取所有服务

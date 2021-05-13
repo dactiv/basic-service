@@ -15,7 +15,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.ConcurrentProcess;
+import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
@@ -693,7 +693,7 @@ public class UserService implements InitializingBean {
     }
 
     @Override
-    @ConcurrentProcess(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
+    @Concurrent(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
     public void afterPropertiesSet() {
 
         String key = getAnonymousUserKeyPrefix();
@@ -725,7 +725,7 @@ public class UserService implements InitializingBean {
         return Casts.cast(redisTemplate.opsForValue().get(key));
     }
 
-    @ConcurrentProcess(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
+    @Concurrent(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
     @Scheduled(cron = "${spring.security.anonymous-user.update-password-cron-expression:0 0/30 * * * ?}")
     public void updateAnonymousUserPassword() {
 
