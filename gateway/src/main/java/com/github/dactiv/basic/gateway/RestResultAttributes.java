@@ -41,7 +41,7 @@ public class RestResultAttributes extends DefaultErrorAttributes {
         RestResult<Object> result = new RestResult<>(
                 status.getReasonPhrase(),
                 status.value(),
-                RestResult.ERROR_EXECUTE_CODE,
+                ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                 new LinkedHashMap<>()
         );
 

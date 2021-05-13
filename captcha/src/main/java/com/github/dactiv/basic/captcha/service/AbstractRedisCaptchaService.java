@@ -2,6 +2,7 @@ package com.github.dactiv.basic.captcha.service;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
@@ -148,7 +149,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
             return new RestResult<>(
                     "验证码 token 已过期",
                     HttpStatus.REQUEST_TIMEOUT.value(),
-                    RestResult.ERROR_EXECUTE_CODE,
+                    ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                     new LinkedHashMap<>()
             );
         }
@@ -165,7 +166,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
                 return new RestResult<>(
                         "验证码不正确",
                         HttpStatus.BAD_REQUEST.value(),
-                        RestResult.ERROR_EXECUTE_CODE,
+                        ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                         new LinkedHashMap<>()
                 );
             }
@@ -189,7 +190,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
                 return new RestResult<>(
                         "验证码已过期",
                         HttpStatus.REQUEST_TIMEOUT.value(),
-                        RestResult.ERROR_EXECUTE_CODE,
+                        ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                         new LinkedHashMap<>()
                 );
             }
@@ -214,7 +215,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
             return new RestResult<>(
                     "验证码不正确",
                     HttpStatus.BAD_REQUEST.value(),
-                    RestResult.ERROR_EXECUTE_CODE,
+                    ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                     new LinkedHashMap<>()
             );
 
@@ -222,7 +223,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
             return new RestResult<>(
                     e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    RestResult.ERROR_EXECUTE_CODE,
+                    ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                     new LinkedHashMap<>()
             );
         } finally {
@@ -260,7 +261,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
             return new RestResult<>(
                     "验证码 token 已过期",
                     HttpStatus.REQUEST_TIMEOUT.value(),
-                    RestResult.ERROR_EXECUTE_CODE,
+                    ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                     new LinkedHashMap<>()
             );
         }
@@ -277,7 +278,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
                 return new RestResult<>(
                         "验证码未到可生成时间",
                         HttpStatus.TOO_MANY_REQUESTS.value(),
-                        RestResult.ERROR_EXECUTE_CODE,
+                        ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                         new LinkedHashMap<>()
                 );
             }
@@ -321,7 +322,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
                 return new RestResult<>(
                         getUsernameParamName() + "参数不能为空",
                         HttpStatus.TOO_MANY_REQUESTS.value(),
-                        RestResult.ERROR_EXECUTE_CODE,
+                        ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                         new LinkedHashMap<>()
                 );
             }

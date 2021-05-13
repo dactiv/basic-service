@@ -12,6 +12,7 @@ import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayload
 import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayloadApsAlert;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mobile.DevicePlatform;
 import org.apache.commons.codec.digest.DigestUtils;
@@ -154,7 +155,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
                 return new RestResult<>(
                         resultBody.get("ret").toString(),
                         result.getStatusCodeValue(),
-                        RestResult.ERROR_EXECUTE_CODE,
+                        ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                         data
                 );
             }
@@ -163,7 +164,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         return new RestResult<>(
                 result.getStatusCode().getReasonPhrase(),
                 result.getStatusCodeValue(),
-                RestResult.ERROR_EXECUTE_CODE
+                ErrorCodeException.DEFAULT_EXCEPTION_CODE
         );
     }
 

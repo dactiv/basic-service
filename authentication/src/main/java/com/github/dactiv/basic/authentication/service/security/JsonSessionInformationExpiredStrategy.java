@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.web.session.SessionInformationExpiredEvent;
@@ -31,7 +32,7 @@ public class JsonSessionInformationExpiredStrategy implements SessionInformation
         RestResult<Map<String, Object>> result = new RestResult<>(
                 httpStatus.getReasonPhrase(),
                 httpStatus.value(),
-                RestResult.ERROR_EXECUTE_CODE,
+                ErrorCodeException.DEFAULT_EXCEPTION_CODE,
                 new LinkedHashMap<>()
         );
 

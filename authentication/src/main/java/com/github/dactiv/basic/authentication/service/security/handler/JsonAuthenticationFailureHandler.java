@@ -6,6 +6,7 @@ import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.TimeProperties;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
@@ -61,7 +62,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         String type = request.getHeader(RequestAuthenticationFilter.SPRING_SECURITY_FORM_TYPE_HEADER_NAME);
 
-        String executeCode = RestResult.ERROR_EXECUTE_CODE;
+        String executeCode = ErrorCodeException.DEFAULT_EXCEPTION_CODE;
         // 登录或注册错输次数大于等于允许错误次数时，做一下策略
         if (number >= authenticationProperties.getAllowableFailureNumber()) {
 

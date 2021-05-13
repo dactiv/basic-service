@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support.sms;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,7 +102,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     return new RestResult<>(
                             "返回的数据为 null",
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            RestResult.ERROR_EXECUTE_CODE);
+                            ErrorCodeException.DEFAULT_EXCEPTION_CODE);
                 }
 
                 if (LOGGER.isDebugEnabled()) {
@@ -114,7 +115,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     return new RestResult<>(
                             "返回的数据为 null",
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            RestResult.ERROR_EXECUTE_CODE);
+                            ErrorCodeException.DEFAULT_EXCEPTION_CODE);
                 }
 
                 if (data.containsKey(successFieldName) && data.get(successFieldName).equals(successFieldValue)) {
@@ -127,7 +128,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     return new RestResult<>(
                             "执行返回的[" + successFieldName + "]值为:" + data.get(successFieldName) + "，不等于 " + successFieldValue,
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            RestResult.ERROR_EXECUTE_CODE);
+                            ErrorCodeException.DEFAULT_EXCEPTION_CODE);
                 }
 
             } else {
@@ -142,7 +143,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
             return new RestResult<>(
                     "执行时候出现异常:" + e.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    RestResult.ERROR_EXECUTE_CODE);
+                    ErrorCodeException.DEFAULT_EXCEPTION_CODE);
         }
     }
 

@@ -6,6 +6,7 @@ import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdentifiedSecurityContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -138,7 +139,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
         Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
 
-        String executeCode = RestResult.ERROR_EXECUTE_CODE;
+        String executeCode = ErrorCodeException.DEFAULT_EXCEPTION_CODE;
 
         Map<String, Object> data = new LinkedHashMap<>();
 

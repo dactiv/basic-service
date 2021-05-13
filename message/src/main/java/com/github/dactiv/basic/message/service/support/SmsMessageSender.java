@@ -7,6 +7,7 @@ import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -149,7 +150,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
             );
 
         } catch (Exception e) {
-            return new RestResult<>(RestResult.ERROR_EXECUTE_CODE, e);
+            return new RestResult<>(ErrorCodeException.DEFAULT_EXCEPTION_CODE, e);
         }
 
 
