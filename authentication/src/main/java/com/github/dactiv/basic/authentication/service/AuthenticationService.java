@@ -209,7 +209,7 @@ public class AuthenticationService {
         }
     }
 
-    @NacosCronScheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }", name = "同步认真信息")
+    @NacosCronScheduled(cron = "${spring.security.authentication.sync.auth-info-cron-expression:0 0/3 * * * ? }", name = "同步认真信息")
     @Concurrent(value = "sync:authentication:info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作")
     public void syncAuthenticationInfo() {
 
