@@ -13,6 +13,7 @@ import com.github.dactiv.basic.authentication.dao.entity.MemberUserInitializatio
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
@@ -725,8 +726,11 @@ public class UserService implements InitializingBean {
         return Casts.cast(redisTemplate.opsForValue().get(key));
     }
 
+    /**
+     * 更新匿名用户密码
+     */
     @Concurrent(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
-    @Scheduled(cron = "${spring.security.anonymous-user.update-password-cron-expression:0 0/30 * * * ?}")
+    @NacosCronScheduled(cron = "${spring.security.anonymous-user.update-password-cron-expression:0 0/30 * * * ?}", name = "更新匿名用户密码")
     public void updateAnonymousUserPassword() {
 
         String password = DigestUtils.md5DigestAsHex(String.valueOf(System.currentTimeMillis()).getBytes());

@@ -11,6 +11,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -207,7 +208,8 @@ public class AuthenticationService {
 
         }
     }
-    @Scheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }")
+
+    @NacosCronScheduled(cron = "${dynamic.retry.cron.expression:0 0/3 * * * ? }", name = "同步认真信息")
     @Concurrent(value = "sync:authentication:info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作")
     public void syncAuthenticationInfo() {
 

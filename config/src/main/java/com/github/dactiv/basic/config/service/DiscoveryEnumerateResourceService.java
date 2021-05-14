@@ -3,6 +3,7 @@ package com.github.dactiv.basic.config.service;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.web.endpoint.EnumerateEndpoint;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
@@ -51,7 +52,7 @@ public class DiscoveryEnumerateResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @Scheduled(cron = "${spring.application.enum.sync.cron.expression:0 0/10 * * * ?}")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/10 * * * ?}")
     public void syncEnumerate() {
         // 获取所有服务
         discoveryClient
@@ -66,7 +67,7 @@ public class DiscoveryEnumerateResourceService {
     /**
      * 清除不同步的服务
      */
-    @Scheduled(cron = "${spring.application.enum.sync.cron.expression:0 0/30 * * * ?}")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/30 * * * ?}", name = "清除不同步的服务")
     public void cleanNotSyncServiceList() {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("开始清除不同步的服务[" + notSyncServiceList + "]");
