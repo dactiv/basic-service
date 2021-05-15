@@ -31,10 +31,7 @@ import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -421,10 +418,7 @@ public class AuthorizationService {
                         .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
         );
 
-        List<PluginInfo> pluginList = Casts.convertValue(
-                serviceInfo.getInfo().get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME),
-                new TypeReference<>() {}
-        );
+        List<PluginInfo> pluginList = createPluginInfoListFromInfo(serviceInfo.getInfo());
 
         // 遍历新资源，更新 serviceInfo 相关的资源信息
         List<Resource> newResourceList = pluginList
@@ -447,6 +441,57 @@ public class AuthorizationService {
 
         deleteAuthorizationCache();
 
+    }
+
+    /**
+     * 通过 info 信息创建插件信息实体集合
+     *
+     * @param info info 信息
+     *
+     * @return 插件信息实体集合
+     */
+    private List<PluginInfo> createPluginInfoListFromInfo(Map<String, Object> info) {
+
+        List<PluginInfo> result = new LinkedList<>();
+
+        List<Map<String, Object>> pluginMapList = Casts.cast(info.get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME));
+
+        for (Map<String, Object> pluginMap : pluginMapList) {
+            PluginInfo pluginInfo = createPluginInfoListFromPluginMap(pluginMap);
+            result.add(pluginInfo);
+        }
+
+        return result;
+    }
+
+    /**
+     * 通过插件 map 创建插件信息实体
+     *
+     * @param pluginMap 插件 map
+     *
+     * @return 插件信息实体
+     */
+    private PluginInfo createPluginInfoListFromPluginMap(Map<String, Object> pluginMap) {
+
+        List<Map<String, Object>> children = new LinkedList<>();
+
+        if (pluginMap.containsKey(PluginInfo.DEFAULT_CHILDREN_NAME)) {
+            children = Casts.cast(pluginMap.get(PluginInfo.DEFAULT_CHILDREN_NAME));
+            pluginMap.remove(PluginInfo.DEFAULT_CHILDREN_NAME);
+        }
+
+        PluginInfo pluginInfo = Casts.convertValue(pluginMap, PluginInfo.class);
+
+        List<Tree<String, PluginInfo>> childrenNode = new LinkedList<>();
+
+        pluginInfo.setChildren(childrenNode);
+
+        for (Map<String, Object> child : children) {
+            PluginInfo childNode = createPluginInfoListFromPluginMap(child);
+            childrenNode.add(childNode);
+        }
+
+        return pluginInfo;
     }
 
     /**
@@ -476,7 +521,7 @@ public class AuthorizationService {
 
         List<Resource> result = resource.getChildren()
                 .stream()
-                .map(c -> (Resource) c)
+                .map(c -> Casts.cast(c, Resource.class))
                 .peek(c -> c.setParentId(target.getId()))
                 .flatMap(this::enabledApplicationResource)
                 .collect(Collectors.toList());
@@ -540,21 +585,23 @@ public class AuthorizationService {
      */
     private Stream<Resource> createResource(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
 
-        PluginInfo plugin = Casts.convertValue(entry, PluginInfo.class);
+        PluginInfo plugin = Casts.cast(entry);
 
         return Arrays.stream(StringUtils.split(plugin.getSource(), ",")).map(source -> {
 
             Resource target = new Resource();
 
-            BeanUtils.copyProperties(plugin, target);
+            BeanUtils.copyProperties(plugin, target, PluginInfo.DEFAULT_CHILDREN_NAME);
 
             target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
-            List<Tree<String, PluginInfo>> children = plugin.getChildren();
+
+            //List<Tree<String, PluginInfo>> children = plugin.getChildren();
             //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
             // 设置 target 变量的子节点
-            children.stream()
+            plugin.getChildren()
+                    .stream()
                     .flatMap(c -> createResource(c, serviceInfo))
-                    .forEach(c -> target.getChildren().add(c));
+                    .forEach(r -> target.getChildren().add(r));
 
             if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
                 target.setParentId(null);
