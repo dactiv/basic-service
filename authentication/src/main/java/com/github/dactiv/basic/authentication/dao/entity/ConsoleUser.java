@@ -46,12 +46,6 @@ public class ConsoleUser implements Serializable {
      */
     private Date creationTime = new Date();
 
-    /**
-     * 版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
 
     /**
      * 邮箱

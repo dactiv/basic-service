@@ -10,7 +10,6 @@ CREATE TABLE `tb_authentication_info`
 (
     `id`             int(11) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
     `creation_time`  datetime(3) NOT NULL COMMENT '创建时间',
-    `update_version` int(11) NOT NULL DEFAULT '1' COMMENT '更新版本号',
     `user_id`        int(11) NOT NULL COMMENT '用户 id',
     `type`           varchar(32) NOT NULL COMMENT '用户类型',
     `ip`             varchar(32) NOT NULL COMMENT 'ip 地址',
@@ -38,7 +37,6 @@ CREATE TABLE `tb_console_user`
 (
     `id`             int(11) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
     `creation_time`  datetime(3) NOT NULL COMMENT '创建时间',
-    `update_version` int(11) NOT NULL DEFAULT '1' COMMENT '更新版本号',
     `email`          varchar(64)  DEFAULT NULL COMMENT '邮箱',
     `password`       char(64)    NOT NULL COMMENT '密码',
     `status`         tinyint(4) NOT NULL COMMENT '状态:1.启用、2.禁用、3.锁定',
@@ -54,7 +52,7 @@ CREATE TABLE `tb_console_user`
 -- Records of tb_console_user
 -- ----------------------------
 BEGIN;
-INSERT INTO `tb_console_user` VALUES (1, '2020-03-01 21:57:46.000', 1, 'admin@domian.com', '$2a$10$U2787VFuFP9NMyxwdsP1bOmtvofTgwU5nLcdV7Gj3ZyhdiZO.T8mG', 1, 'admin', '超级管理员', NULL);
+INSERT INTO `tb_console_user` VALUES (1, '2020-03-01 21:57:46.000', 'admin@domian.com', '$2a$10$U2787VFuFP9NMyxwdsP1bOmtvofTgwU5nLcdV7Gj3ZyhdiZO.T8mG', 1, 'admin', '超级管理员', NULL);
 COMMIT;
 
 -- ----------------------------
@@ -82,7 +80,6 @@ CREATE TABLE `tb_group`
 (
     `id`             int(11) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
     `creation_time`  datetime(3) NOT NULL COMMENT '创建时间',
-    `update_version` int(11) NOT NULL DEFAULT '1' COMMENT '更新版本号',
     `name`           varchar(32)  NOT NULL COMMENT '名称',
     `authority`      varchar(64)  DEFAULT NULL COMMENT 'spring security role 的 authority 值',
     `source`         varchar(128) NOT NULL COMMENT '来源:Front.前端、Console.管理后台、UserCenter.用户中心、System.系统、Mobile.移动端、All.全部',
@@ -99,8 +96,8 @@ CREATE TABLE `tb_group`
 -- Records of tb_group
 -- ----------------------------
 BEGIN;
-INSERT INTO `tb_group` VALUES (1, '2020-03-01 21:56:25.000', 1, '超级管理员', 'ADMIN', 'Console', NULL, 0, 1, 0, NULL);
-INSERT INTO `tb_group` VALUES (2, '2020-03-01 21:56:25.000', 1, '普通用户', 'ORDINARY', 'UserCenter', NULL, 0, 1, 0, NULL);
+INSERT INTO `tb_group` VALUES (1, '2020-03-01 21:56:25.000', '超级管理员', 'ADMIN', 'Console', NULL, 0, 1, 0, NULL);
+INSERT INTO `tb_group` VALUES (2, '2020-03-01 21:56:25.000', '普通用户', 'ORDINARY', 'UserCenter', NULL, 0, 1, 0, NULL);
 COMMIT;
 
 -- ----------------------------
@@ -215,7 +212,6 @@ CREATE TABLE `tb_resource`
 (
     `id`               int(11) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
     `creation_time`    datetime(3) NOT NULL COMMENT '创建时间',
-    `update_version`   int(11) NOT NULL DEFAULT '1' COMMENT '更新版本号',
     `name`             varchar(32)  NOT NULL COMMENT '名称',
     `code`             varchar(128) NOT NULL COMMENT '唯一识别',
     `application_name` varchar(64)  NOT NULL COMMENT '应用名称',

@@ -38,13 +38,6 @@ public class ConfigAccessCrypto extends AccessCrypto {
     private Date creationTime = new Date();
 
     /**
-     * 版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
-
-    /**
      * 加解密条件
      */
     @TableField(exist = false)

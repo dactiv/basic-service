@@ -42,13 +42,6 @@ public class DictionaryType implements Tree<Integer, DictionaryType>, Serializab
     private Date creationTime = new Date();
 
     /**
-     * 版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
-
-    /**
      * 键名称
      */
     @NotEmpty

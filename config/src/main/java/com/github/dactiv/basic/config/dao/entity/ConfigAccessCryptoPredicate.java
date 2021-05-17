@@ -38,12 +38,6 @@ public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate {
      */
     private Date creationTime = new Date();
 
-    /**
-     * 版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
 
     public ConfigAccessCryptoPredicate(AccessCryptoPredicate accessCryptoPredicate) {
         BeanUtils.copyProperties(accessCryptoPredicate, this);

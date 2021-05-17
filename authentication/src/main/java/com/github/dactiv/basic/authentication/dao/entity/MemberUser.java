@@ -2,7 +2,6 @@ package com.github.dactiv.basic.authentication.dao.entity;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
@@ -95,7 +94,6 @@ public class MemberUser implements Serializable {
      * 用户初始化
      */
     @TableField(exist = false)
-    @JsonInclude(JsonInclude.Include.NON_EMPTY)
     private MemberUserInitialization initialization;
 
     /**
