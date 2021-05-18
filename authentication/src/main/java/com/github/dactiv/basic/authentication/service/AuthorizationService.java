@@ -2,11 +2,11 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.dao.entity.Resource;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
@@ -19,15 +19,14 @@ import com.github.dactiv.framework.spring.security.authentication.token.Principa
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
-import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -57,7 +56,7 @@ public class AuthorizationService {
     private PrincipalAuthenticationProvider authenticationProvider;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     /**
      * 超级管理员组 id
@@ -660,11 +659,8 @@ public class AuthorizationService {
 
         UserDetailsService userDetailsService = getUserDetailsService(ResourceSource.Console);
 
-        Set<String> keys = redisTemplate.keys(userDetailsService.getAuthorizationCacheName(token));
+        CacheProperties cache = userDetailsService.getAuthorizationCache(token);
 
-        if (CollectionUtils.isNotEmpty(keys)) {
-            // 删除所有授权缓存
-            redisTemplate.delete(keys);
-        }
+        redissonClient.getBucket(cache.getName()).deleteAsync();
     }
 }

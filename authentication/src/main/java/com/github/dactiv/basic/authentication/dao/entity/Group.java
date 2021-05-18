@@ -1,6 +1,9 @@
 package com.github.dactiv.basic.authentication.dao.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -39,7 +42,7 @@ import java.util.stream.Collectors;
 @TableName("tb_group")
 public class Group implements Tree<Integer, Group>, Serializable {
 
-    private static final long serialVersionUID = -5357157352791368716L;
+    private static final long serialVersionUID = 5357157352791368716L;
 
     /**
      * 主键

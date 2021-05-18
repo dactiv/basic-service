@@ -1,4 +1,27 @@
 spring:
+  application:
+    captcha:
+      sms:
+        captcha-expire-time:
+          value: 300
+          unit: SECONDS
+        captcha-param-name: "_smsCaptcha"
+        random-numeric-count: 6
+        phone-number-paramn-name: "phoneNumber"
+        type-param-name: "messageType"
+      email:
+        captcha-expire-time:
+          value: 300
+          unit: SECONDS
+        captcha-param-name: "_smsCaptcha"
+        random-numeric-count: 4
+        email-param-name: "phoneNumber"
+        type-param-name: "messageType"
+      picture:
+        captcha-expire-time:
+          value: 900
+          unit: SECONDS
+        captcha-param-name: "_pictureCaptcha"
   redis:
     host: localhost
     port: 6379

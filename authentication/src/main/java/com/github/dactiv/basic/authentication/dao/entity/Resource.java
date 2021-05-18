@@ -1,6 +1,9 @@
 package com.github.dactiv.basic.authentication.dao.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
@@ -36,7 +39,7 @@ import java.util.*;
 @TableName("tb_resource")
 public class Resource implements Serializable, Tree<Integer, Resource> {
 
-    private static final long serialVersionUID = -4709419291009298510L;
+    private static final long serialVersionUID = 4709419291009298510L;
 
     /**
      * 所有自动配置的可用来源

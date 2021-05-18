@@ -10,6 +10,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>com.github.dactiv.basic</groupId>
     <artifactId>config</artifactId>
     <name>config</name>
     <description>config service</description>

@@ -2,15 +2,14 @@ package com.github.dactiv.basic.captcha.service.email;
 
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
+import com.github.dactiv.framework.commons.TimeProperties;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 邮件验证码服务
@@ -24,33 +23,8 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
      */
     private static final String DEFAULT_TYPE = "email";
 
-    /**
-     * 邮件验证码的超时时间
-     */
-    @Value("${spring.application.captcha.token.email.expire-time:300}")
-    private long captchaExpireTime;
-    /**
-     * 提交邮件验证码的参数名称
-     */
-    @Value("${spring.application.captcha.token.email.captcha-param-name:_emailCaptcha}")
-    private String captchaParamName;
-
-    /**
-     * 邮件验证码的随机生成数量
-     */
-    @Value("${spring.application.captcha.token.email.random-numeric-count:4}")
-    private Integer randomNumericCount;
-
-    /**
-     * 提交邮件的参数名称
-     */
-    @Value("${spring.application.captcha.token.email.email-param-name:email}")
-    private String emailParamName;
-    /**
-     * 提交消息类型的参数名称
-     */
-    @Value("${spring.application.captcha.token.email.type-param-name:messageType}")
-    private String typeParamName;
+    @Autowired
+    private EmailCaptchaProperties properties;
 
     @Override
     protected Map<String, Object> createSendMessageParam(EmailEntity entity, Map<String, Object> entry, String captcha) {
@@ -62,7 +36,7 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
                 entry.get("value").toString(),
                 entry.get("name"),
                 captcha,
-                TimeUnit.SECONDS.toMinutes(captchaExpireTime)
+                properties.getCaptchaExpireTime().getValue()
         );
 
         // 构造参数，提交给消息服务发送信息
@@ -77,12 +51,12 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
 
     @Override
     protected String generateCaptcha() {
-        return RandomStringUtils.randomNumeric(randomNumericCount);
+        return RandomStringUtils.randomNumeric(properties.getRandomNumericCount());
     }
 
     @Override
-    protected Duration getCaptchaExpireDuration() {
-        return Duration.ofSeconds(captchaExpireTime);
+    protected TimeProperties getCaptchaExpireTime() {
+        return properties.getCaptchaExpireTime();
     }
 
     @Override
@@ -92,7 +66,7 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
 
     @Override
     public String getCaptchaParamName() {
-        return captchaParamName;
+        return properties.getCaptchaParamName();
     }
 
     @Override
@@ -100,8 +74,8 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
 
         Map<String, Object> generate = new LinkedHashMap<>();
 
-        generate.put("emailParamName", emailParamName);
-        generate.put("typeParamName", typeParamName);
+        generate.put("emailParamName", properties.getEmailParamName());
+        generate.put("typeParamName", properties.getTypeParamName());
 
         return generate;
     }

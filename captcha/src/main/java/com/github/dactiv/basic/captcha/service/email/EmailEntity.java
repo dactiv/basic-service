@@ -17,7 +17,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 public class EmailEntity extends SimpleMessageType implements Serializable {
 
-    private static final long serialVersionUID = -3429703228723485142L;
+    private static final long serialVersionUID = 3429703228723485142L;
     /**
      * 电子邮件
      */

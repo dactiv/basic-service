@@ -10,7 +10,7 @@ import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
 import com.github.dactiv.basic.authentication.dao.entity.ConsoleUser;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.dao.entity.MemberUserInitialization;
-import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
@@ -18,16 +18,17 @@ import com.github.dactiv.framework.spring.security.authentication.UserDetailsSer
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -55,7 +56,7 @@ import static com.github.dactiv.framework.spring.security.enumerate.ResourceSour
 public class UserService implements InitializingBean {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     /**
      * 超级管理登陆账户
@@ -206,10 +207,31 @@ public class UserService implements InitializingBean {
                 Console.toString()
         );
 
-        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(Console);
+        deleteRedisCache(Console, token);
 
-        redisTemplate.delete(userDetailsService.getAuthenticationCacheName(token));
-        redisTemplate.delete(userDetailsService.getAuthenticationCacheName(token));
+    }
+
+    private void deleteRedisCache(ResourceSource source, PrincipalAuthenticationToken token) {
+
+        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(source);
+
+        deleteRedisCache(userDetailsService, token);
+    }
+
+    public void deleteRedisCache(UserDetailsService userDetailsService,  PrincipalAuthenticationToken token) {
+        CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
+
+        if (Objects.nonNull(authenticationCache)) {
+
+            redissonClient.getBucket(authenticationCache.getName()).deleteAsync();
+        }
+
+        CacheProperties authorizationCache = userDetailsService.getAuthorizationCache(token);
+
+        if (Objects.nonNull(authorizationCache)) {
+
+            redissonClient.getBucket(authorizationCache.getName()).deleteAsync();
+        }
     }
 
     /**
@@ -256,7 +278,11 @@ public class UserService implements InitializingBean {
                 Console.toString()
         );
 
-        redisTemplate.delete(userDetailsService.getAuthenticationCacheName(token));
+        CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
+
+        if (Objects.nonNull(authenticationCache)) {
+            redissonClient.getBucket(authenticationCache.getName()).deleteAsync();
+        }
 
         expireUserSession(consoleUser.getUsername());
     }
@@ -314,10 +340,8 @@ public class UserService implements InitializingBean {
                 Console.toString()
         );
 
-        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(Console);
 
-        redisTemplate.delete(userDetailsService.getAuthenticationCacheName(token));
-        redisTemplate.delete(userDetailsService.getAuthorizationCacheName(token));
+        deleteRedisCache(Console, token);
 
         expireUserSession(token.getType() + ":" + token.getPrincipal().toString());
     }
@@ -522,7 +546,12 @@ public class UserService implements InitializingBean {
                         null,
                         t
                 );
-                redisTemplate.delete(s.getAuthenticationCacheName(token));
+                CacheProperties cache = s.getAuthenticationCache(token);
+
+                if (Objects.nonNull(cache)) {
+                    redissonClient.getBucket(cache.getName()).deleteAsync();
+                }
+
             });
         });
     }
@@ -655,7 +684,7 @@ public class UserService implements InitializingBean {
         memberUserInitializationDao.updateById(memberUserInitialization);
 
         String key = getMemberUserInitializationKey(memberUserInitialization.getUserId());
-        redisTemplate.delete(key);
+        redissonClient.getBucket(key).deleteAsync();
 
     }
 
@@ -670,10 +699,12 @@ public class UserService implements InitializingBean {
 
         String key = getMemberUserInitializationKey(userId);
 
-        Object value = redisTemplate.opsForValue().get(key);
+        RBucket<MemberUserInitialization> bucket = getMemberUserInitializationBucket(userId);
 
-        if (value != null) {
-            return Casts.cast(value);
+        MemberUserInitialization value = bucket.get();
+
+        if (Objects.nonNull(null)) {
+            return value;
         }
 
         MemberUserInitialization initialization = memberUserInitializationDao.selectOne(
@@ -683,7 +714,7 @@ public class UserService implements InitializingBean {
         );
 
         if (initialization != null) {
-            redisTemplate.opsForValue().set(key, initialization);
+            bucket.setAsync(initialization);
         }
 
         return initialization;
@@ -693,13 +724,16 @@ public class UserService implements InitializingBean {
         return memberUserInitializationKeyPrefix + userId;
     }
 
+    public RBucket<MemberUserInitialization> getMemberUserInitializationBucket(Integer userId) {
+        return redissonClient.getBucket(getMemberUserInitializationKey(userId));
+    }
+
     @Override
-    @Concurrent(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
     public void afterPropertiesSet() {
 
-        String key = getAnonymousUserKeyPrefix();
+        RBucket<AnonymousUser> bucket = getAnonymousUserBucket();
 
-        Object value = redisTemplate.opsForValue().get(key);
+        AnonymousUser value = bucket.get();
 
         if (value == null) {
 
@@ -711,7 +745,7 @@ public class UserService implements InitializingBean {
                     password
             );
 
-            redisTemplate.opsForValue().set(key, anonymousUser);
+            bucket.set(anonymousUser);
 
         }
     }
@@ -723,13 +757,12 @@ public class UserService implements InitializingBean {
      */
     public UserDetails getAnonymousUser() {
         String key = getAnonymousUserKeyPrefix();
-        return Casts.cast(redisTemplate.opsForValue().get(key));
+        return getAnonymousUserBucket().get();
     }
 
     /**
      * 更新匿名用户密码
      */
-    @Concurrent(value = "anonymousUser", exceptionMessage = "生成匿名用户遇到并发，不执行重试操作")
     @NacosCronScheduled(cron = "${spring.security.anonymous-user.update-password-cron-expression:0 0/30 * * * ?}", name = "更新匿名用户密码")
     public void updateAnonymousUserPassword() {
 
@@ -741,12 +774,14 @@ public class UserService implements InitializingBean {
                 password
         );
 
-        String key = getAnonymousUserKeyPrefix();
-
-        redisTemplate.opsForValue().set(key, anonymousUser);
+        getAnonymousUserBucket().set(anonymousUser);
     }
 
     private String getAnonymousUserKeyPrefix() {
-        return UserDetailsService.DEFAULT_AUTHENTICATION_KEY_NAME + "anonymousUser";
+        return UserDetailsService.DEFAULT_AUTHENTICATION_KEY_NAME + AnonymousUser.DEFAULT_ANONYMOUS_USERNAME;
+    }
+
+    public RBucket<AnonymousUser> getAnonymousUserBucket() {
+        return redissonClient.getBucket(getAnonymousUserKeyPrefix());
     }
 }

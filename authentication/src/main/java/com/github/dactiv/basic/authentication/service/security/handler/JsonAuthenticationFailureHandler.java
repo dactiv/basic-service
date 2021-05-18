@@ -11,8 +11,8 @@ import com.github.dactiv.framework.spring.security.authentication.RequestAuthent
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.core.AuthenticationException;
@@ -46,7 +46,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
     private CaptchaService captchaService;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request,
@@ -127,7 +127,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         String key = getAllowableFailureNumberKey(identified);
 
-        redisTemplate.delete(key);
+        redissonClient.getBucket(key).deleteAsync();
     }
 
     private void setAllowableFailureNumber(HttpServletRequest request, Integer number) {
@@ -137,7 +137,7 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         TimeProperties properties = authenticationProperties.getAllowableFailureNumberExpireTime();
 
-        redisTemplate.opsForValue().set(key, number, properties.getValue(), properties.getUnit());
+        redissonClient.getBucket(key).set(number, properties.getValue(), properties.getUnit());
     }
 
     public Integer getAllowableFailureNumber(HttpServletRequest request) {
@@ -145,13 +145,13 @@ public class JsonAuthenticationFailureHandler implements AuthenticationFailureHa
 
         String key = getAllowableFailureNumberKey(identified);
 
-        Object value = redisTemplate.opsForValue().get(key);
+        Integer value = redissonClient.<Integer>getBucket(key).get();
 
         if (value == null) {
             return 0;
         }
 
-        return Casts.cast(value);
+        return value;
     }
 
     private String getAllowableFailureNumberKey(String identified) {

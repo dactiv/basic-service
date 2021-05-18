@@ -43,5 +43,20 @@
         "matchStrategy": 1
       }
     ]
+  },
+  {
+    "id": 4,
+    "app": "gateway",
+    "ip": "localhost",
+    "port": 8080,
+    "gmtCreate": null,
+    "gmtModified": null,
+    "apiName": "message",
+    "predicateItems": [
+      {
+        "pattern": "/message/**",
+        "matchStrategy": 1
+      }
+    ]
   }
 ]

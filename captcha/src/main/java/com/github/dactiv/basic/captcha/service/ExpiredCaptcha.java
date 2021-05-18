@@ -1,10 +1,10 @@
 package com.github.dactiv.basic.captcha.service;
 
+import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -18,7 +18,7 @@ import java.util.Date;
 @NoArgsConstructor
 public class ExpiredCaptcha implements Expired, Serializable {
 
-    private static final long serialVersionUID = -2371567553401150929L;
+    private static final long serialVersionUID = 2371567553401150929L;
 
     /**
      * 创建时间
@@ -28,7 +28,7 @@ public class ExpiredCaptcha implements Expired, Serializable {
     /**
      * 过期时间（单位：秒）
      */
-    private Duration expireDuration;
+    private TimeProperties expireTime;
 
     /**
      * 验证码
@@ -42,10 +42,13 @@ public class ExpiredCaptcha implements Expired, Serializable {
     @Override
     public boolean isExpired() {
 
-        LocalDateTime expireTime = LocalDateTime.now().minus(expireDuration);
-        LocalDateTime creationTime = LocalDateTime.ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault());
+        LocalDateTime now = LocalDateTime.now();
 
-        return !expireDuration.isNegative() && expireTime.isAfter(creationTime);
+        LocalDateTime expire = LocalDateTime
+                .ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault())
+                .plus(expireTime.getValue(), expireTime.getUnit().toChronoUnit());
+
+        return now.isAfter(expire);
     }
 
 }

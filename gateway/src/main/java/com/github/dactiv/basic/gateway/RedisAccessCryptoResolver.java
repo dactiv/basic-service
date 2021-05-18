@@ -1,18 +1,28 @@
 package com.github.dactiv.basic.gateway;
 
-import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.ExpirationToken;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RFuture;
+import org.redisson.api.RList;
+import org.redisson.api.RedissonClient;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 
+import java.text.MessageFormat;
 import java.time.LocalDateTime;
-import java.util.LinkedList;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * redis 访问加解密解析器实现
@@ -21,7 +31,9 @@ import java.util.List;
  */
 @Component
 @RefreshScope
-public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver {
+public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver implements InitializingBean {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(RedisAccessCryptoResolver.class);
 
     /**
      * 存储在 redis 的访问加解密集合 key 名称
@@ -36,17 +48,26 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver {
     private String accessTokenKey;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
+
+    private List<AccessCrypto> cache = new ArrayList<>();
 
     @Override
     protected AccessToken getAccessToken(String accessToken) {
-        String key = getAccessTokenKey(accessToken);
-        AccessToken token = Casts.cast(redisTemplate.opsForValue().get(key));
+
+        RBucket<AccessToken> bucket = getAccessTokenBucket(accessToken);
+
+        AccessToken token = bucket.get();
 
         if (token != null && ExpirationToken.class.isAssignableFrom(token.getClass())) {
+
             ExpirationToken es = (ExpirationToken) token;
             es.setLastAccessedTime(LocalDateTime.now());
-            redisTemplate.opsForValue().set(key, es, es.getMaxInactiveInterval());
+
+            if (Objects.nonNull(es.getMaxInactiveInterval())) {
+                bucket.set(es, es.getMaxInactiveInterval().getValue(), es.getMaxInactiveInterval().getUnit());
+            }
+
         }
 
         return token;
@@ -62,10 +83,53 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver {
         return accessTokenKey + accessToken;
     }
 
+    public RBucket<AccessToken> getAccessTokenBucket(String accessToken) {
+        return redissonClient.getBucket(getAccessTokenKey(accessToken));
+    }
+
     @Override
     public List<AccessCrypto> getAccessCryptoList() {
-        List<AccessCrypto> result = Casts.cast(redisTemplate.opsForValue().get(accessCryptoListKey));
-        return result == null ? new LinkedList<>() : result;
+        return cache;
+    }
+
+    @Override
+    public void afterPropertiesSet()  {
+        syncRedisAccessCryptoList();
+    }
+
+    @NacosCronScheduled(cron = "${spring.application.crypto.access.redis.sync-cron:0 0/3 * * * ?}")
+    public void syncRedisAccessCryptoList() {
+        RList<AccessCrypto> list = redissonClient.getList(accessCryptoListKey);
+        RFuture<List<AccessCrypto>> future = list.rangeAsync(0, list.size());
+
+        future.onComplete((accessCryptos, throwable) -> {
+            if (Objects.isNull(throwable)) {
+
+                LOGGER.info("同步 redis 访问加解密加载出" + accessCryptos.size() + "条记录:");
+
+                for (AccessCrypto accessCrypto : accessCryptos) {
+
+                    List<String> predicateString = accessCrypto
+                            .getPredicates()
+                            .stream()
+                            .map(p -> MessageFormat.format("name = {0}, value={1} ",p.getName(), p.getValue()))
+                            .collect(Collectors.toList());
+
+                    LOGGER.info(
+                            "[name={},type={}}]:{} = [{}]",
+                            accessCrypto.getName(),
+                            accessCrypto.getType(),
+                            accessCrypto.getValue(),
+                            StringUtils.join(predicateString, ",")
+                    );
+                }
+
+                cache = accessCryptos;
+                //cache.stream().filter(ac -> ac.getName())
+            } else {
+                LOGGER.warn("同步 redis 访问加解密加载出错", throwable);
+            }
+        });
     }
 
 }

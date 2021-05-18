@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
@@ -14,10 +14,11 @@ import com.github.dactiv.framework.spring.web.mobile.Device;
 import com.github.dactiv.framework.spring.web.mobile.DeviceResolver;
 import com.github.dactiv.framework.spring.web.mobile.LiteDeviceResolver;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -29,6 +30,7 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 移动端唤醒用户明细服务实现
@@ -41,10 +43,10 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
     @Autowired
-    private AuthenticationProperties authenticationProperties;
+    private AuthenticationProperties properties;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -55,7 +57,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
             throws AuthenticationException {
 
-        MobileUserDetails value = getMobileUserDetails(token.getPrincipal().toString());
+        MobileUserDetails value = getMobileUserDetailsBucket(token.getPrincipal().toString()).get();
 
         // 如果没有信息，表示可能 token 已经超时，直接报错，让客户端可以通过 MemberUserDetailsService 登录一遍
         if (value == null) {
@@ -83,10 +85,15 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
         return getPasswordEncoder().matches(password, userDetails.getPassword());
     }
 
-    public MobileUserDetails getMobileUserDetails(String username) {
-        String key = getMobileAuthenticationTokenKey(username);
-        // 从 redis 中获取信息
-        return Casts.cast(redisTemplate.opsForValue().get(key));
+    /**
+     * 获取移动端用户明细桶
+     *
+     * @param username 登陆账户
+     *
+     * @return 移动端用户明细
+     */
+    public RBucket<MobileUserDetails> getMobileUserDetailsBucket(String username) {
+        return redissonClient.getBucket(getMobileAuthenticationTokenKey(username));
     }
 
     /**
@@ -97,7 +104,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
-        return authenticationProperties.getMobile().getCacheName() + username;
+        return properties.getMobile().getCache() + username;
     }
 
     /**
@@ -141,15 +148,15 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> createMobileAuthenticationResult(MobileUserDetails details) {
 
-        String authenticationKey = getMobileAuthenticationTokenKey(details.getUsername());
+        //String authenticationKey = getMobileAuthenticationTokenKey(details.getUsername());
 
-        details.setPassword(RandomStringUtils.randomAlphanumeric(authenticationProperties.getRegister().getRandomPasswordCount()));
+        details.setPassword(RandomStringUtils.randomAlphanumeric(properties.getRegister().getRandomPasswordCount()));
 
         Map<String, Object> result = Casts.convertValue(details, Map.class);
 
         String token = createReturnToken(details);
 
-        result.put(authenticationProperties.getMobile().getParamName(), token);
+        result.put(properties.getMobile().getParamName(), token);
 
         String password = DigestUtils.md5DigestAsHex(
                 (token + details.getUsername() + details.getDeviceIdentified()).getBytes()
@@ -164,13 +171,40 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
         details.setPassword(getPasswordEncoder().encode(password));
 
-        TimeProperties time = authenticationProperties.getMobile().getExpiresTime();
-
-        redisTemplate.opsForValue().set(authenticationKey, details, time.getValue(), time.getUnit());
+        saveMobileUserDetails(details);
 
         return result;
     }
 
+    /**
+     * 保存移动设备用户明细到缓存
+     *
+     * @param details 移动设备用户明细
+     */
+    private void saveMobileUserDetails(MobileUserDetails details) {
+        if (Objects.nonNull(properties.getMobile().getCache())) {
+
+            RBucket<MobileUserDetails> bucket = getMobileUserDetailsBucket(details.getUsername());
+
+            CacheProperties cache = properties.getMobile().getCache();
+
+            if (Objects.nonNull(cache.getExpiresTime())) {
+                bucket.setAsync(details, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
+            } else {
+                bucket.setAsync(details);
+            }
+
+        }
+    }
+
+    /**
+     * 追加密码字符串
+     *
+     * @param password 密码
+     * @param device 设备信息
+     *
+     * @return 新的字符串内容
+     */
     private String appendPasswordString(String password, Device device) {
         return password + device.toString() + device.getDevicePlatform().name();
     }
@@ -182,36 +216,28 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
     @Override
     public void onSuccessAuthentication(PrincipalAuthenticationToken result) {
-        String authenticationKey = getMobileAuthenticationTokenKey(result.getPrincipal().toString());
-        TimeProperties time = authenticationProperties.getMobile().getExpiresTime();
-        redisTemplate.opsForValue().set(authenticationKey, result.getDetails(), time.getValue(), time.getUnit());
+        saveMobileUserDetails(Casts.cast(result.getDetails()));
 
-        String authorizationKey = getAuthorizationCacheName(result);
-        redisTemplate.expire(authorizationKey, time.getValue(), time.getUnit());
+        CacheProperties authorizationCache = getAuthorizationCache(result);
+
+        if (Objects.nonNull(authorizationCache.getExpiresTime())) {
+            redissonClient.getBucket(authorizationCache.getName()).expire(
+                    authorizationCache.getExpiresTime().getValue(),
+                    authorizationCache.getExpiresTime().getUnit()
+            );
+        }
     }
 
     @Override
-    public String getAuthenticationCacheName(PrincipalAuthenticationToken token) {
-        return getMobileAuthenticationTokenKey(token.getPrincipal().toString());
+    public CacheProperties getAuthenticationCache(PrincipalAuthenticationToken token) {
+        return new CacheProperties(
+                getMobileAuthenticationTokenKey(token.getPrincipal().toString()),
+                properties.getMobile().getCache().getExpiresTime()
+        );
     }
 
     @Override
     public List<String> getType() {
         return Collections.singletonList(ResourceSource.Mobile.toString());
-    }
-
-    @Override
-    public TimeProperties getAuthorizationCacheExpiresTime() {
-        return authenticationProperties.getMobile().getExpiresTime();
-    }
-
-    /**
-     * 不启动认证缓存，因为本身就是用 {@link #getMobileAuthenticationTokenKey(String)} 来做认证缓存
-     *
-     * @return false
-     */
-    @Override
-    public boolean isEnabledAuthenticationCache() {
-        return false;
     }
 }

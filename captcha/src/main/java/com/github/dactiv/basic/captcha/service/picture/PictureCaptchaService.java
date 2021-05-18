@@ -5,11 +5,11 @@ import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.ExpiredCaptcha;
 import com.github.dactiv.basic.captcha.service.GenerateCaptchaResult;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -18,7 +18,6 @@ import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
 
 import java.io.ByteArrayOutputStream;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -41,21 +40,12 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
     @Autowired
     private List<PictureCaptchaGenerator> pictureCaptchaGeneratorList;
 
-    /**
-     * 提交验证码的参数名称
-     */
-    @Value("${spring.application.captcha.token.img.captcha-param-name:_pictureCaptcha}")
-    private String captchaParamName;
-
-    /**
-     * 验证码的超时时间
-     */
-    @Value("${spring.application.captcha.token.email.expire-time:900}")
-    private long captchaExpireTime;
+    @Autowired
+    private PictureCaptchaProperties properties;
 
     @Override
-    protected Duration getCaptchaExpireDuration() {
-        return Duration.ofSeconds(captchaExpireTime);
+    protected TimeProperties getCaptchaExpireTime() {
+        return properties.getCaptchaExpireTime();
     }
 
     @Override
@@ -109,6 +99,6 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
 
     @Override
     public String getCaptchaParamName() {
-        return captchaParamName;
+        return properties.getCaptchaParamName();
     }
 }

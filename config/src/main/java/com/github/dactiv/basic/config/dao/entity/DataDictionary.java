@@ -1,6 +1,9 @@
 package com.github.dactiv.basic.config.dao.entity;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -34,7 +37,7 @@ import java.util.Objects;
 @TableName("tb_data_dictionary")
 public class DataDictionary implements Tree<Integer, DataDictionary>, Serializable {
 
-    private static final long serialVersionUID = -4219144269288469584L;
+    private static final long serialVersionUID = 4219144269288469584L;
     /**
      * 主键
      */

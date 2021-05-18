@@ -1,11 +1,11 @@
 package com.github.dactiv.basic.captcha.service;
 
+import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 
@@ -19,12 +19,12 @@ import java.time.ZoneId;
 @EqualsAndHashCode(callSuper = true)
 public class ReusableCaptcha extends ExpiredCaptcha implements Serializable, Reusable {
 
-    private static final long serialVersionUID = -2295130548867148592L;
+    private static final long serialVersionUID = 2295130548867148592L;
 
     /**
      * 重试时间（单位：秒）
      */
-    private Duration retryDuration;
+    private TimeProperties retryTime;
 
     /**
      * 是否可重试
@@ -34,9 +34,14 @@ public class ReusableCaptcha extends ExpiredCaptcha implements Serializable, Reu
     @Override
     public boolean isRetry() {
 
-        LocalDateTime retryTime = LocalDateTime.now().minus(retryDuration);
-        LocalDateTime creationTime = LocalDateTime.ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault());
+        TimeProperties time = retryTime;
 
-        return !retryDuration.isNegative() && retryTime.isAfter(creationTime);
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime expireTime = LocalDateTime
+                .ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault())
+                .plus(time.getValue(), time.getUnit().toChronoUnit());
+
+        return now.isAfter(expireTime);
     }
 }

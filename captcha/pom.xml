@@ -9,11 +9,11 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>com.github.dactiv.basic</groupId>
     <artifactId>captcha</artifactId>
     <name>captcha</name>
     <description>captcha service</description>
     <packaging>jar</packaging>
-
 
     <dependencies>
 

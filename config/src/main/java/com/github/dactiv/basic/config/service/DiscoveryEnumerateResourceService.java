@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -50,9 +49,9 @@ public class DiscoveryEnumerateResourceService {
     private final List<String> notSyncServiceList = new ArrayList<>();
 
     /**
-     * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
+     * 同步插件枚举，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/10 * * * ?}")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/10 * * * ?}", name = "")
     public void syncEnumerate() {
         // 获取所有服务
         discoveryClient
@@ -179,7 +178,7 @@ public class DiscoveryEnumerateResourceService {
         try {
             return restTemplate.getForObject(getEnumerateInfoUrl(ip, port), Map.class);
         } catch (Exception e) {
-            LOGGER.warn("通过 url [" + getEnumerateInfoUrl(ip, port) + "] 获取信息出现异常");
+            LOGGER.warn("通过 url [" + getEnumerateInfoUrl(ip, port) + "] 获取信息出现异常", e);
         }
 
         return null;

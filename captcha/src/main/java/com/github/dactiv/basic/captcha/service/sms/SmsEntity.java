@@ -21,7 +21,7 @@ import java.io.Serializable;
 @EqualsAndHashCode(callSuper = true)
 public class SmsEntity extends SimpleMessageType implements Serializable {
 
-    private static final long serialVersionUID = -1235954873943241073L;
+    private static final long serialVersionUID = 1235954873943241073L;
     /**
      * 手机号码
      */

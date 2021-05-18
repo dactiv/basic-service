@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
+import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.DiscoveryEnumerateResourceService;
-import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
@@ -25,19 +25,15 @@ import com.github.dactiv.framework.crypto.algorithm.hash.HashAlgorithmMode;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.web.bind.annotation.*;
 
-import java.time.Duration;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * 配置管理控制器
@@ -60,50 +56,13 @@ public class ConfigController {
     private DiscoveryEnumerateResourceService discoveryEnumerateResourceService;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     @Autowired
     private CryptoAlgorithm accessTokenAlgorithm;
 
-    /**
-     * 存储在 redis 的私有 token 超时时间(单位:秒)
-     */
-    @Value("${spring.application.crypto.access.private-token-interval:30}")
-    private Integer privateTokenInterval;
-
-    /**
-     * 存储在 redis 的私有 token 超时时间(单位:秒)
-     */
-    @Value("${spring.application.crypto.access.access-token-interval:1800}")
-    private Integer accessTokenInterval;
-
-    /**
-     * 伪装访问加解密的成功信息
-     */
-    @Value("${spring.application.crypto.access.camouflage-access-crypto-name:success access crypto}")
-    private String camouflageAccessCryptoName;
-    /**
-     * 共有密钥
-     */
-    @Value("${spring.application.crypto.access.rsa.public-key}")
-    private String publicKey;
-    /**
-     * 私有密钥
-     */
-    @Value("${spring.application.crypto.access.rsa.private-key}")
-    private String privateKey;
-
-    /**
-     * 存储在 redis 的私有 token key 名称
-     */
-    @Value("${spring.application.crypto.access.redis.private-token-key:access:crypto:token:private:}")
-    private String privateTokenKey;
-
-    /**
-     * 存储在 redis 的访问 token key 名称
-     */
-    @Value("${spring.application.crypto.access.redis.access-token-key:access:crypto:token:}")
-    private String accessTokenKey;
+    @Autowired
+    private AccessCryptoProperties properties;
 
     /**
      * 获取数据字典
@@ -169,12 +128,14 @@ public class ConfigController {
 
         String token = new Hash(HashAlgorithmMode.SHA1.getName(), deviceIdentified).getHex();
 
-        redisTemplate.delete(getPrivateTokenKey(token));
+        RBucket<SimpleExpirationToken> bucket = getPrivateTokenBucket(token);
+
+        bucket.deleteAsync();
 
         // 获取当前访问加解密的公共密钥
-        ByteSource publicByteSource = new SimpleByteSource(Base64.decode(publicKey));
+        ByteSource publicByteSource = new SimpleByteSource(Base64.decode(properties.getPublicKey()));
         // 获取当前访问加解密的私有密钥
-        ByteSource privateByteSource = new SimpleByteSource(Base64.decode(privateKey));
+        ByteSource privateByteSource = new SimpleByteSource(Base64.decode(properties.getPrivateKey()));
 
         // 创建一个生成密钥类型 token，设置密钥为公共密钥，返回给客户端
         SimpleToken result = SimpleToken.generate(AccessToken.PUBLIC_TOKEN_KEY_NAME, publicByteSource);
@@ -188,12 +149,19 @@ public class ConfigController {
         // 将私有密钥 token 转换为私有 token
         SimpleExpirationToken privateToken = new SimpleExpirationToken(
                 temp,
-                Duration.ofSeconds(privateTokenInterval)
+                properties.getPrivateKeyCache().getExpiresTime()
         );
-        // 获取存储在缓存的 key 名称
-        String key = getPrivateTokenKey(privateToken.getToken());
+
         // 存储私有 token
-        redisTemplate.opsForValue().set(key, privateToken, privateToken.getMaxInactiveInterval());
+        if (Objects.nonNull(privateToken.getMaxInactiveInterval())) {
+            bucket.set(
+                    privateToken,
+                    privateToken.getMaxInactiveInterval().getValue(),
+                    privateToken.getMaxInactiveInterval().getUnit()
+            );
+        } else {
+            bucket.set(privateToken);
+        }
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("生成 public token, 当前 token 为:"
@@ -219,9 +187,9 @@ public class ConfigController {
             @RequestParam String token,
             @RequestParam String key) {
 
-        Object value = redisTemplate.opsForValue().get(getPrivateTokenKey(token));
+        RBucket<SimpleExpirationToken> bucket = getPrivateTokenBucket(token);
         // 根据客户端请求过来的 token 获取私有 token， 如果没有。表示存在问题，返回一个伪装成功的 token
-        SimpleExpirationToken privateToken = Casts.cast(value);
+        SimpleExpirationToken privateToken = bucket.get();
 
         String sha1Token = new Hash(HashAlgorithmMode.SHA1.getName(), deviceIdentified).getHex();
 
@@ -247,16 +215,25 @@ public class ConfigController {
         // 创建请求解密的 token 信息
         SimpleExpirationToken requestToken = new SimpleExpirationToken(
                 SimpleToken.generate(SimpleToken.ACCESS_TOKEN_KEY_NAME, requestAccessCryptoKey),
-                Duration.ofSeconds(accessTokenInterval)
+                properties.getAccessTokenKeyCache().getExpiresTime()
         );
 
         requestToken.setToken(token);
+
+        RBucket<SimpleExpirationToken> requestBucket = getAccessTokeBucket(requestToken.getToken());
+
+        requestBucket.set(requestToken);
         // 存储到缓存中
-        redisTemplate.opsForValue().set(
-                getAccessTokenKey(requestToken.getToken()),
-                requestToken,
-                requestToken.getMaxInactiveInterval()
-        );
+        if (Objects.nonNull(requestToken.getMaxInactiveInterval())) {
+            requestBucket.set(
+                    requestToken,
+                    requestToken.getMaxInactiveInterval().getValue(),
+                    requestToken.getMaxInactiveInterval().getUnit()
+            );
+        } else {
+            requestBucket.set(requestToken);
+        }
+
 
         // 创建带签名校验的请求解密 token，这个是为了让客户端可以通过签名校验是否正确
         SignToken requestSignToken = createSignToken(
@@ -266,7 +243,7 @@ public class ConfigController {
                 privateToken
         );
 
-        redisTemplate.delete(getPrivateTokenKey(token));
+        bucket.deleteAsync();
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("生成新的 access token, 给 [" + token + "] 客户端使用, 本次返回未加密信息为:" + requestSignToken + ", 原文的 AES 密钥为:" + requestAccessCryptoKey.getBase64());
@@ -308,7 +285,18 @@ public class ConfigController {
      * @return 缓存名称
      */
     private String getPrivateTokenKey(String token) {
-        return privateTokenKey + token;
+        return properties.getPrivateKeyCache().getName() + token;
+    }
+
+    /**
+     * 获取私有 token 的 redis 桶
+     *
+     * @param token token 值
+     *
+     * @return redis 桶
+     */
+    private RBucket<SimpleExpirationToken> getPrivateTokenBucket(String token) {
+        return redissonClient.getBucket(getPrivateTokenKey(token));
     }
 
     /**
@@ -318,7 +306,18 @@ public class ConfigController {
      * @return 缓存名称
      */
     private String getAccessTokenKey(String token) {
-        return accessTokenKey + token;
+        return properties.getAccessTokenKeyCache().getName() + token;
+    }
+
+    /**
+     * 获取访问 token 的 redis 桶
+     *
+     * @param token token 值
+     *
+     * @return redis 桶
+     */
+    private RBucket<SimpleExpirationToken> getAccessTokeBucket(String token) {
+        return redissonClient.getBucket(getAccessTokenKey(token));
     }
 
     /**
@@ -328,7 +327,7 @@ public class ConfigController {
      */
     private AccessToken createCamouflageToken() {
         ByteSource byteSource = new SimpleByteSource(String.valueOf(System.currentTimeMillis()));
-        return SimpleToken.generate(camouflageAccessCryptoName, byteSource);
+        return SimpleToken.generate(properties.getCamouflageAccessCryptoName(), byteSource);
     }
 
     /**

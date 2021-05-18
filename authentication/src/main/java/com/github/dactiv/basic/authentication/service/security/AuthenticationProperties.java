@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
@@ -130,19 +131,17 @@ public class AuthenticationProperties {
         private String usernameParamName = "phoneNumber";
 
         /**
-         * 移动端认证缓存 key 名称
-         */
-
-        private String cacheName = "spring:security:authentication:mobile:token:";
-        /**
          * token 名称
          */
         private String paramName = "token";
 
         /**
-         * 缓存超时时间
+         * 缓存配置
          */
-        private TimeProperties expiresTime = new TimeProperties(2592, TimeUnit.SECONDS);
+        private CacheProperties cache = new CacheProperties(
+                "spring:security:authentication:mobile:token:",
+                new TimeProperties(2592, TimeUnit.SECONDS)
+        );
 
     }
 

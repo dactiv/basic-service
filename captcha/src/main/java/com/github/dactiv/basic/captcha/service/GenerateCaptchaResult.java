@@ -15,7 +15,7 @@ import java.io.Serializable;
 @RequiredArgsConstructor
 public class GenerateCaptchaResult implements Serializable {
 
-    private static final long serialVersionUID = -1739665352581051182L;
+    private static final long serialVersionUID = 1739665352581051182L;
     /**
      * 结果集
      */

@@ -3,8 +3,6 @@ package com.github.dactiv.basic.config.dao.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +24,7 @@ import java.util.Date;
 @EqualsAndHashCode(callSuper = true)
 public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate {
 
-    private static final long serialVersionUID = -5764360440250914629L;
+    private static final long serialVersionUID = 5764360440250914629L;
     /**
      * 主键
      */

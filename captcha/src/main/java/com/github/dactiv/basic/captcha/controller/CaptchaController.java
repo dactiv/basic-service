@@ -4,6 +4,7 @@ import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.DelegateCaptchaService;
 import com.github.dactiv.basic.captcha.service.SimpleBuildToken;
 import com.github.dactiv.basic.captcha.service.intercept.Interceptor;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -50,7 +51,7 @@ public class CaptchaController {
 
         if (SimpleBuildToken.class.isAssignableFrom(buildToken.getClass())) {
 
-            SimpleBuildToken simpleBuildToken = (SimpleBuildToken) buildToken;
+            SimpleBuildToken simpleBuildToken = Casts.cast(buildToken);
 
             // 如果类型为 SimpleBuildToken 类型，id,paramName,token 不响应
             simpleBuildToken.setId(null);

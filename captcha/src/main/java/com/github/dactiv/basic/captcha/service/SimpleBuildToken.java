@@ -1,10 +1,11 @@
 package com.github.dactiv.basic.captcha.service;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.framework.commons.CacheProperties;
+import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
-import java.time.Duration;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.util.Date;
@@ -19,7 +20,7 @@ import java.util.Map;
 @NoArgsConstructor
 public class SimpleBuildToken implements BuildToken {
 
-    private static final long serialVersionUID = -3913898137626092376L;
+    private static final long serialVersionUID = 3913898137626092376L;
 
     /**
      * 唯一识别
@@ -34,7 +35,7 @@ public class SimpleBuildToken implements BuildToken {
     /**
      * 绑定 token 值
      */
-    private String token;
+    private CacheProperties token;
 
     /**
      * 验证码类型
@@ -45,12 +46,6 @@ public class SimpleBuildToken implements BuildToken {
      * 提交时的绑定 token 参数名称
      */
     private String paramName;
-
-    /**
-     * 活期时间
-     */
-    @JsonIgnore
-    private Duration expireDuration;
 
     /**
      * 构造验证码的参数信息
@@ -66,10 +61,15 @@ public class SimpleBuildToken implements BuildToken {
     @Override
     public boolean isExpired() {
 
-        LocalDateTime expireTime = LocalDateTime.now().minus(expireDuration);
-        LocalDateTime creationTime = LocalDateTime.ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault());
+        TimeProperties time = token.getExpiresTime();
 
-        return !expireDuration.isNegative() && expireTime.isAfter(creationTime);
+        LocalDateTime now = LocalDateTime.now();
+
+        LocalDateTime expireTime = LocalDateTime
+                .ofInstant(getCreationTime().toInstant(), ZoneId.systemDefault())
+                .plus(time.getValue(), time.getUnit().toChronoUnit());
+
+        return now.isAfter(expireTime);
     }
 
 }

@@ -29,7 +29,7 @@ import java.util.Date;
 @TableName("tb_sms_message")
 public class SmsMessage implements Retryable, ExecuteStatus.Body, Serializable {
 
-    private static final long serialVersionUID = -3229810529789017287L;
+    private static final long serialVersionUID = 3229810529789017287L;
     /**
      * 主键
      */

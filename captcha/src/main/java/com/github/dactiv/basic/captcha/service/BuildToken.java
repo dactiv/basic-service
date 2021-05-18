@@ -1,7 +1,8 @@
 package com.github.dactiv.basic.captcha.service;
 
+import com.github.dactiv.framework.commons.CacheProperties;
+
 import java.io.Serializable;
-import java.time.Duration;
 import java.util.Map;
 
 /**
@@ -24,7 +25,7 @@ public interface BuildToken extends Serializable, Expired {
      *
      * @return token
      */
-    String getToken();
+    CacheProperties getToken();
 
     /**
      * 获取验证码类型
@@ -39,20 +40,6 @@ public interface BuildToken extends Serializable, Expired {
      * @return 提交时的绑定 token 参数名称
      */
     String getParamName();
-
-    /**
-     * 获取过期时间
-     *
-     * @return 过期时间
-     */
-    Duration getExpireDuration();
-
-    /**
-     * 设置过期时间
-     *
-     * @param expireTime 过期时间
-     */
-    void setExpireDuration(Duration expireTime);
 
     /**
      * 设置拦截 token

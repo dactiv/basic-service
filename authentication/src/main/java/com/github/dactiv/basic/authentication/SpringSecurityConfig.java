@@ -11,10 +11,11 @@ import com.github.dactiv.framework.spring.security.authentication.RequestFormLog
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.AnonymousUserAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.provider.PrincipalAuthenticationProvider;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.data.redis.core.RedisTemplate;
+import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -62,11 +63,17 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
     @Autowired
     private SessionControlAuthenticationStrategy sessionControlAuthenticationStrategy;
 
+    @Autowired
+    private DaoAuthenticationProvider daoAuthenticationProvider;
+
     @Override
-    protected void configure(AuthenticationManagerBuilder auth) {
-        auth.authenticationProvider(anonymousUserAuthenticationProvider);
-        auth.authenticationProvider(principalAuthenticationProvider);
-        auth.parentAuthenticationManager(principalAuthenticationProvider);
+    protected void configure(AuthenticationManagerBuilder managerBuilder) {
+
+        managerBuilder
+                .authenticationProvider(daoAuthenticationProvider)
+                .authenticationProvider(anonymousUserAuthenticationProvider)
+                .authenticationProvider(principalAuthenticationProvider)
+                .parentAuthenticationManager(principalAuthenticationProvider);
     }
 
     @Override
@@ -79,14 +86,21 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
                 .loginPage("/login")
                 .successHandler(jsonAuthenticationSuccessHandler)
                 .failureHandler(jsonAuthenticationFailureHandler)
-                .and().logout()
+                .and()
+                .logout()
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(jsonLogoutSuccessHandler)
-                .and().formLogin().disable()
-                .httpBasic().and()
-                .cors().disable()
-                .csrf().disable()
-                .requestCache().disable()
+                .and()
+                .formLogin()
+                .disable()
+                .httpBasic()
+                .and()
+                .cors()
+                .disable()
+                .csrf()
+                .disable()
+                .requestCache()
+                .disable()
                 .securityContext()
                 .securityContextRepository(securityContextRepository)
                 .and()
@@ -114,8 +128,8 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
 
     @Bean
     PrincipalAuthenticationProvider principalAuthenticationProvider(List<UserDetailsService> userDetailsServices,
-                                                                    RedisTemplate<String, Object> redisTemplate) {
-        return new PrincipalAuthenticationProvider(userDetailsServices, redisTemplate);
+                                                                    RedissonClient redissonClient) {
+        return new PrincipalAuthenticationProvider(redissonClient, userDetailsServices);
     }
 
 }

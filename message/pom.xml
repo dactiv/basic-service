@@ -9,6 +9,7 @@
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
+    <groupId>com.github.dactiv.basic</groupId>
     <artifactId>message</artifactId>
     <name>message</name>
     <description>message service</description>

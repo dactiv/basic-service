@@ -81,9 +81,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             if (DEFAULT_MEMBER_TYPES.contains(userDetails.getType())) {
                 String token = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
-                String key = deviceIdentifiedSecurityContextRepository.getSpringSecurityContextKey(token);
-
-                deviceIdentifiedSecurityContextRepository.getRedisTemplate().delete(key);
+                deviceIdentifiedSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
             }
 
             clearCache(userDetails, authentication.getPrincipal().toString());
@@ -112,7 +110,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         userDetailsServices.forEach(uds -> uds.getType()
                 .stream()
                 .map(t -> new PrincipalAuthenticationToken(principal, null, t))
-                .forEach(p -> clearPrincipalCache(uds, p)));
+                .forEach(p -> userService.deleteRedisCache(uds, p)));
 
         Optional<UserDetailsService> userDetailsService = userDetailsServices.stream()
                 .filter(uds -> MobileUserDetailsService.class.isAssignableFrom(uds.getClass()))
@@ -122,16 +120,8 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             MobileUserDetailsService mobileUserDetails = Casts.cast(userDetailsService.get());
 
             String token = mobileUserDetails.getMobileAuthenticationTokenKey(principal);
-            deviceIdentifiedSecurityContextRepository.getRedisTemplate().delete(token);
+            deviceIdentifiedSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
         }
-    }
-
-    private void clearPrincipalCache(UserDetailsService uds, PrincipalAuthenticationToken token) {
-        String authenticationCacheName = uds.getAuthenticationCacheName(token);
-        deviceIdentifiedSecurityContextRepository.getRedisTemplate().delete(authenticationCacheName);
-
-        String authorizationCacheName = uds.getAuthorizationCacheName(token);
-        deviceIdentifiedSecurityContextRepository.getRedisTemplate().delete(authorizationCacheName);
     }
 
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {

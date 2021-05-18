@@ -1,17 +1,20 @@
 package com.github.dactiv.basic.captcha.service;
 
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.objenesis.instantiator.util.ClassUtils;
 import org.springframework.validation.BindException;
@@ -21,10 +24,10 @@ import org.springframework.web.bind.WebDataBinder;
 import javax.servlet.http.HttpServletRequest;
 import java.lang.reflect.ParameterizedType;
 import java.lang.reflect.Type;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.Objects;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 抽象的验证码服务实现
@@ -42,12 +45,12 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
     /**
      * 默认绑定 token 的过期时间
      */
-    private static final Duration DEFAULT_BUILD_TOKEN_EXPIRE_TIME = Duration.ofSeconds(600);
+    private static final TimeProperties DEFAULT_BUILD_TOKEN_EXPIRE_TIME = new TimeProperties(600, TimeUnit.SECONDS);
 
     /**
      * 默认验证码重试时间
      */
-    private static final Duration DEFAULT_CAPTCHA_RETRY_TIME = Duration.ofSeconds(60);
+    private static final TimeProperties DEFAULT_CAPTCHA_RETRY_TIME = new TimeProperties(60, TimeUnit.SECONDS);
 
     /**
      * 泛型实体class
@@ -60,7 +63,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
     private final Class<C> captchaClass;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     /**
      * 存储在 redis 的绑定 token key 名称
@@ -100,7 +103,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
         SimpleBuildToken token = new SimpleBuildToken();
 
         token.setId(deviceIdentified);
-        token.setToken(value);
+        token.setToken(new CacheProperties(value, getBuildTokenExpireTime()));
         token.setType(getType());
         token.setParamName(getTokenParamName());
         token.setArgs(args);
@@ -112,9 +115,8 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
     @Override
     public void saveBuildToken(BuildToken token) {
-        String key = getBuildTokenKey(token.getToken());
-        token.setExpireDuration(getBuildTokenExpireDuration());
-        redisTemplate.opsForValue().set(key, token, token.getExpireDuration());
+        RBucket<BuildToken> bucket = getBuildTokenBucket(token.getToken().getName());
+        bucket.setAsync(token, token.getToken().getExpiresTime().getValue(), token.getToken().getExpiresTime().getUnit());
     }
 
     /**
@@ -122,7 +124,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @return 过期时间
      */
-    private Duration getBuildTokenExpireDuration() {
+    private TimeProperties getBuildTokenExpireTime() {
         return DEFAULT_BUILD_TOKEN_EXPIRE_TIME;
     }
 
@@ -131,7 +133,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @return 过期时间（单位:秒）
      */
-    protected abstract Duration getCaptchaExpireDuration();
+    protected abstract TimeProperties getCaptchaExpireTime();
 
     @Override
     public String getTokenParamName() {
@@ -248,8 +250,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * @param buildToken 绑定 token
      */
     protected void deleteBuildToken(BuildToken buildToken) {
-        String key = getBuildTokenKey(buildToken.getToken());
-        redisTemplate.delete(key);
+        getBuildTokenBucket(buildToken.getToken().getName()).deleteAsync();
     }
 
     @Override
@@ -287,9 +288,6 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         saveBuildToken(buildToken);
 
-        String key = getBuildTokenKey(buildToken.getToken());
-        redisTemplate.opsForValue().set(key, buildToken, getBuildTokenExpireDuration());
-
         E entity = ClassUtils.newInstance(entityClass);
 
         WebDataBinder binder = new WebDataBinder(entity, entityClass.getSimpleName());
@@ -311,7 +309,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         C captcha = ClassUtils.newInstance(captchaClass);
 
-        captcha.setExpireDuration(getCaptchaExpireDuration());
+        captcha.setExpireTime(getCaptchaExpireTime());
         captcha.setCaptcha(result.getCaptchaValue());
 
         if (StringUtils.isNotEmpty(getUsernameParamName())) {
@@ -332,12 +330,10 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
 
         if (ReusableCaptcha.class.isAssignableFrom(captcha.getClass())) {
             ReusableCaptcha reusableCaptcha = Casts.cast(captcha);
-            reusableCaptcha.setRetryDuration(getRetryTime());
+            reusableCaptcha.setRetryTime(getRetryTime());
         }
 
-        String captchaKey = getCaptchaKey(buildToken);
-
-        redisTemplate.opsForValue().set(captchaKey, captcha, captcha.getExpireDuration());
+        getCaptchaBucket(buildToken).setAsync(captcha, captcha.getExpireTime().getValue(), captcha.getExpireTime().getUnit());
 
         return result.getResult();
     }
@@ -358,7 +354,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @return 重试时间（单位：秒）
      */
-    private Duration getRetryTime() {
+    private TimeProperties getRetryTime() {
         return DEFAULT_CAPTCHA_RETRY_TIME;
     }
 
@@ -369,7 +365,18 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * @return key 名称
      */
     private String getCaptchaKey(BuildToken buildToken) {
-        return buildTokenKeyPrefix + getType() + ":captcha:" + buildToken.getToken();
+        return buildTokenKeyPrefix + getType() + ":captcha:" + buildToken.getToken().getName();
+    }
+
+    /**
+     * 获取验证码桶
+     *
+     * @param token token 值
+     *
+     * @return 绑定 token 桶
+     */
+    public RBucket<C> getCaptchaBucket(BuildToken token) {
+        return redissonClient.getBucket(getCaptchaKey(token));
     }
 
     /**
@@ -379,8 +386,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * @return 验证码实体
      */
     protected C getCaptcha(BuildToken buildToken) {
-        String key = getCaptchaKey(buildToken);
-        return Casts.cast(redisTemplate.opsForValue().get(key));
+        return getCaptchaBucket(buildToken).get();
     }
 
     /**
@@ -389,8 +395,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * @param buildToken 绑定 token
      */
     protected void deleteCaptcha(BuildToken buildToken) {
-        String key = getCaptchaKey(buildToken);
-        redisTemplate.delete(key);
+        getCaptchaBucket(buildToken).deleteAsync();
     }
 
     /**
@@ -426,17 +431,28 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
         return buildTokenKeyPrefix + getType() + ":" + token;
     }
 
+    /**
+     * 获取绑定 token 桶
+     *
+     * @param token token 值
+     *
+     * @return 绑定 token 桶
+     */
+    public RBucket<BuildToken> getBuildTokenBucket(String token) {
+        return redissonClient.getBucket(getBuildTokenKey(token));
+    }
+
     @Override
     public BuildToken getBuildToken(String token) {
-        String key = getBuildTokenKey(token);
+        RBucket<BuildToken> bucket = getBuildTokenBucket(token);
 
-        Object value = redisTemplate.opsForValue().get(key);
+        BuildToken value = bucket.get();
 
         if (value == null) {
             throw new ServiceException("找不到 token 为[" + token + "]的记录");
         }
 
-        return Casts.cast(value);
+        return value;
     }
 
     /**

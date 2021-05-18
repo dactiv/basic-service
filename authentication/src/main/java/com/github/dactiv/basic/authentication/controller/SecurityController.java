@@ -137,7 +137,7 @@ public class SecurityController {
                                                     @RequestParam String username,
                                                     @RequestParam String password) {
 
-        MobileUserDetails mobileUserDetails = mobileUserDetailsService.getMobileUserDetails(username);
+        MobileUserDetails mobileUserDetails = mobileUserDetailsService.getMobileUserDetailsBucket(username).get();
 
         if (mobileUserDetails == null) {
             throw new ServiceException("找不到[" + username + "]的移动用户明细");

@@ -3,8 +3,6 @@ package com.github.dactiv.basic.authentication.dao.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +29,7 @@ public class AuthenticationInfo implements Serializable {
 
     public static final String DEFAULT_INDEX = "authentication-info";
 
-    private static final long serialVersionUID = -5548079224380108843L;
+    private static final long serialVersionUID = 5548079224380108843L;
     /**
      * 主键
      */

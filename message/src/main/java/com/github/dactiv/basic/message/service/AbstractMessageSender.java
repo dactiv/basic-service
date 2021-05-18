@@ -21,10 +21,7 @@ import java.util.Map;
  * @param <T> 消息泛型实体
  * @author maurice
  */
-@SuppressWarnings("unchecked")
 public abstract class AbstractMessageSender<T> implements MessageSender {
-
-    private static final int DEFAULT_POW_INTERVAL_TIME = 5000;
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 

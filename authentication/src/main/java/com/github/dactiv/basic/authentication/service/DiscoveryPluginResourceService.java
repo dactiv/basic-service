@@ -7,17 +7,18 @@ import com.github.dactiv.basic.authentication.dao.entity.Resource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import com.github.dactiv.framework.spring.security.concurrent.LockType;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
@@ -42,7 +43,7 @@ public class DiscoveryPluginResourceService {
     private static final String DEFAULT_PLUGIN_INFO_URL = "actuator/plugin";
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -66,7 +67,7 @@ public class DiscoveryPluginResourceService {
      */
     private final List<String> exceptionServices = new ArrayList<>();
 
-    @NacosCronScheduled(cron = "${spring.security.plugin.clean.cron-expression:0 0 0/2 * * ?}", name = "清除异常服务")
+    @NacosCronScheduled(cron = "${spring.security.plugin.clean-cron:0 0 0/2 * * ?}", name = "清除异常服务")
     public void cleanExceptionServices() {
         exceptionServices.clear();
     }
@@ -74,8 +75,8 @@ public class DiscoveryPluginResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${spring.security.plugin.sync.cron-expression:30 * * * * ?}", name = "同步服务插件")
-    @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作")
+    @NacosCronScheduled(cron = "${spring.security.plugin.sync-cron:30 * * * * ?}", name = "同步服务插件")
+    @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作", type = LockType.Lock)
     public void syncPluginResource() {
 
         // 获取所有服务
@@ -144,17 +145,20 @@ public class DiscoveryPluginResourceService {
      */
     private List<ServiceInfo> getCacheServiceInfos() {
 
+        Iterable<String> iterable = redissonClient.getKeys().getKeysByPattern(properties.getCache().getName() + "*");
 
-        Set<String> keys = redisTemplate.keys(properties.getCache().getName() + "*");
+        List<String> keys = new LinkedList<>();
 
-        if (keys == null) {
+        CollectionUtils.addAll(keys, iterable.iterator());
+
+        if (keys.isEmpty()) {
             return new ArrayList<>();
         }
 
         return keys
                 .stream()
                 .filter(k -> !this.getClass().getName().equals(k))
-                .map(k -> (ServiceInfo) redisTemplate.opsForValue().get(k))
+                .map(k -> redissonClient.<ServiceInfo>getBucket(k).get())
                 .collect(Collectors.toList());
 
     }
@@ -219,7 +223,7 @@ public class DiscoveryPluginResourceService {
 
         // 判断是否并发，如果并发直接响应处理中
         authorizationService.disabledApplicationResource(service);
-        redisTemplate.delete(getPluginResourceServiceKey(service));
+        redissonClient.getBucket(getPluginResourceServiceKey(service)).deleteAsync();
     }
 
     /**
@@ -249,8 +253,7 @@ public class DiscoveryPluginResourceService {
 
                 authorizationService.enabledApplicationResource(entity);
 
-                redisTemplate.opsForValue().set(
-                        getPluginResourceServiceKey(entity.getService()),
+                redissonClient.getBucket(getPluginResourceServiceKey(entity.getService())).setAsync(
                         entity,
                         properties.getCache().getExpiresTime().getValue(),
                         properties.getCache().getExpiresTime().getUnit()

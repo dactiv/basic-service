@@ -13,6 +13,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
+import com.github.dactiv.framework.spring.security.concurrent.LockType;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,6 @@ import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
 import org.springframework.data.elasticsearch.core.query.IndexQuery;
 import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.http.HttpStatus;
-import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -210,7 +210,7 @@ public class AuthenticationService {
     }
 
     @NacosCronScheduled(cron = "${spring.security.authentication.sync.auth-info-cron-expression:0 0/3 * * * ? }", name = "同步认真信息")
-    @Concurrent(value = "sync:authentication:info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作")
+    @Concurrent(value = "sync:authentication:info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作", type = LockType.Lock)
     public void syncAuthenticationInfo() {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(

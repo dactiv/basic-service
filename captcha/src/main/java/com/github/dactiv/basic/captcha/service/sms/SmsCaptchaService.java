@@ -2,15 +2,14 @@ package com.github.dactiv.basic.captcha.service.sms;
 
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
+import com.github.dactiv.framework.commons.TimeProperties;
 import org.apache.commons.lang3.RandomStringUtils;
-import org.springframework.beans.factory.annotation.Value;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
-import java.time.Duration;
 import java.util.LinkedHashMap;
 import java.util.Map;
-import java.util.concurrent.TimeUnit;
 
 /**
  * 短信验证码服务
@@ -25,33 +24,8 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
      */
     private static final String DEFAULT_TYPE = "sms";
 
-    /**
-     * 短信验证码的超时时间
-     */
-    @Value("${spring.application.captcha.token.sms.expire-time:300}")
-    private long captchaExpireTime;
-    /**
-     * 提交短信验证码的参数名称
-     */
-    @Value("${spring.application.captcha.token.sms.captcha-param-name:_smsCaptcha}")
-    private String captchaParamName;
-
-    /**
-     * 短信验证码的随机生成数量
-     */
-    @Value("${spring.application.captcha.token.sms.random-numeric-count:4}")
-    private Integer randomNumericCount;
-
-    /**
-     * 提交手机号码的参数名称
-     */
-    @Value("${spring.application.captcha.token.sms.phone-number-param-name:phoneNumber}")
-    private String phoneNumberParamName;
-    /**
-     * 提交消息类型的参数名称
-     */
-    @Value("${spring.application.captcha.token.sms.type-param-name:messageType}")
-    private String typeParamName;
+    @Autowired
+    private SmsCaptchaProperties properties;
 
     @Override
     protected Map<String, Object> createSendMessageParam(SmsEntity entity, Map<String, Object> entry, String captcha) {
@@ -63,7 +37,7 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
                 entry.get("value").toString(),
                 entry.get("name"),
                 captcha,
-                TimeUnit.SECONDS.toMinutes(captchaExpireTime)
+                properties.getCaptchaExpireTime().getValue()
         );
 
         // 构造参数，提交给消息服务发送信息
@@ -78,12 +52,12 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
 
     @Override
     protected String generateCaptcha() {
-        return RandomStringUtils.randomNumeric(randomNumericCount);
+        return RandomStringUtils.randomNumeric(properties.getRandomNumericCount());
     }
 
     @Override
-    protected Duration getCaptchaExpireDuration() {
-        return Duration.ofSeconds(captchaExpireTime);
+    protected TimeProperties getCaptchaExpireTime() {
+        return properties.getCaptchaExpireTime();
     }
 
     @Override
@@ -93,18 +67,18 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
 
     @Override
     public String getCaptchaParamName() {
-        return captchaParamName;
+        return properties.getCaptchaParamName();
     }
 
     @Override
     public String getUsernameParamName() {
-        return phoneNumberParamName;
+        return properties.getPhoneNumberParamName();
     }
 
     @Override
     protected Map<String, Object> createPostArgs() {
         Map<String, Object> post = super.createPostArgs();
-        post.put(phoneNumberParamName, getUsernameParamName());
+        post.put("phoneNumberParamName", getUsernameParamName());
         return post;
     }
 
@@ -114,7 +88,7 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
         Map<String, Object> generate = new LinkedHashMap<>();
 
         generate.put("phoneNumberParamName", getUsernameParamName());
-        generate.put("typeParamName", typeParamName);
+        generate.put("typeParamName", properties.getTypeParamName());
 
         return generate;
     }

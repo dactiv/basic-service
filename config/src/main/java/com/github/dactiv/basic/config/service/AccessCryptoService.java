@@ -13,6 +13,7 @@ import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
@@ -22,7 +23,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -49,7 +49,7 @@ public class AccessCryptoService implements InitializingBean {
     private AccessCryptoDao accessCryptoDao;
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     /**
      * 存储在 redis 的访问加解密集合 key 名称
@@ -249,7 +249,7 @@ public class AccessCryptoService implements InitializingBean {
             return accessCrypto;
         }).collect(Collectors.toList());
 
-        redisTemplate.opsForValue().set(accessCryptoListKey, result);
+        redissonClient.getList(accessCryptoListKey).addAll(result);
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("同步: " + data + " 到 redis [" + accessCryptoListKey + "] 中");

@@ -4,12 +4,12 @@ import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.CaptchaService;
 import com.github.dactiv.basic.captcha.service.DelegateCaptchaService;
 import com.github.dactiv.basic.captcha.service.intercept.Interceptor;
-import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -26,7 +26,7 @@ import java.util.Optional;
 public class RedisInterceptor implements Interceptor {
 
     @Autowired
-    private RedisTemplate<String, Object> redisTemplate;
+    private RedissonClient redissonClient;
 
     @Autowired
     private DelegateCaptchaService delegateCaptchaService;
@@ -88,8 +88,12 @@ public class RedisInterceptor implements Interceptor {
      * @param token 绑定 token
      */
     public void saveInterceptToken(BuildToken token) {
-        String key = getInterceptTokenKey(token.getType(), token.getToken());
-        redisTemplate.opsForValue().set(key, token, token.getExpireDuration());
+        getBuildTokenBucket(token.getType(), token.getToken().getName())
+                .setAsync(
+                        token,
+                        token.getToken().getExpiresTime().getValue(),
+                        token.getToken().getExpiresTime().getUnit()
+                );
     }
 
     /**
@@ -100,14 +104,20 @@ public class RedisInterceptor implements Interceptor {
      * @return 绑定 token
      */
     public BuildToken getInterceptToken(String type, String token) {
-        String key = getInterceptTokenKey(type, token);
-        Object value = redisTemplate.opsForValue().get(key);
+        RBucket<BuildToken> bucket = getBuildTokenBucket(type, token);
+        return bucket.get();
+    }
 
-        if (value == null) {
-            return null;
-        }
-
-        return Casts.cast(value);
+    /**
+     * 获取绑定 token 桶
+     *
+     * @param type 类型
+     * @param token token 值
+     *
+     * @return 绑定 token 桶
+     */
+    public RBucket<BuildToken> getBuildTokenBucket(String type, String token) {
+        return redissonClient.getBucket(getInterceptTokenKey(type, token));
     }
 
     /**
@@ -157,7 +167,6 @@ public class RedisInterceptor implements Interceptor {
      * @param token 绑定 token 值
      */
     private void deleteInterceptToken(String type, String token) {
-        String key = getInterceptTokenKey(type, token);
-        redisTemplate.delete(key);
+        getBuildTokenBucket(type, token).deleteAsync();
     }
 }
