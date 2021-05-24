@@ -7,7 +7,7 @@ import com.github.dactiv.basic.authentication.service.security.MobileUserDetails
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
-import com.github.dactiv.framework.spring.security.authentication.DeviceIdentifiedSecurityContextRepository;
+import com.github.dactiv.framework.spring.security.authentication.DeviceIdSecurityContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
@@ -62,7 +62,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private UserService userService;
 
     @Autowired
-    private DeviceIdentifiedSecurityContextRepository deviceIdentifiedSecurityContextRepository;
+    private DeviceIdSecurityContextRepository deviceIdSecurityContextRepository;
 
     @Autowired
     private List<UserDetailsService> userDetailsServices;
@@ -81,7 +81,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             if (DEFAULT_MEMBER_TYPES.contains(userDetails.getType())) {
                 String token = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
-                deviceIdentifiedSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
+                deviceIdSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
             }
 
             clearCache(userDetails, authentication.getPrincipal().toString());
@@ -120,7 +120,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             MobileUserDetailsService mobileUserDetails = Casts.cast(userDetailsService.get());
 
             String token = mobileUserDetails.getMobileAuthenticationTokenKey(principal);
-            deviceIdentifiedSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
+            deviceIdSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
         }
     }
 
