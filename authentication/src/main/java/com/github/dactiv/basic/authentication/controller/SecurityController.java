@@ -130,9 +130,9 @@ public class SecurityController {
      *
      * @return 移动端的用户明细实现
      */
-    @PreAuthorize("isAuthenticated()")
-    @PostMapping("validMobileUserDetails")
+    @PreAuthorize("hasRole('ORDINARY')")
     @Auditable(type = "验证移动用户明细信息")
+    @PostMapping("validMobileUserDetails")
     public MobileUserDetails validMobileUserDetails(@RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified,
                                                     @RequestParam String username,
                                                     @RequestParam String password) {
