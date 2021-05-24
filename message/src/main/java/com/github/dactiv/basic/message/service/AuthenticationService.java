@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.message.service;
 
-import com.github.dactiv.framework.spring.security.feign.BasicAuthFeignConfiguration;
+import com.github.dactiv.framework.spring.security.BasicAuthenticationConfiguration;
+
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -13,7 +14,7 @@ import java.util.Map;
  *
  * @author maurice
  */
-@FeignClient(value = "authentication", configuration = BasicAuthFeignConfiguration.class)
+@FeignClient(value = "authentication", configuration = BasicAuthenticationConfiguration.class)
 public interface AuthenticationService {
 
     /**

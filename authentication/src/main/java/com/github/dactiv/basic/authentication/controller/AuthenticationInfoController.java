@@ -10,10 +10,7 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
@@ -41,7 +38,7 @@ public class AuthenticationInfoController {
      *
      * @return 分页实体
      */
-    @RequestMapping("page")
+    @PostMapping("page")
     @Plugin(name = "获取认证信息表分页", source = ResourceSource.Console)
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
     public Page<AuthenticationInfo> page(@PageableDefault Pageable pageable, HttpServletRequest request) {
@@ -60,7 +57,8 @@ public class AuthenticationInfoController {
      *
      * @return 认证信息
      */
-    @PostMapping("lastInfo")
+    @GetMapping("lastInfo")
+    @PreAuthorize("hasRole('BASIC')")
     public AuthenticationInfo lastInfo(@RequestParam Integer userId, @RequestParam List<String> types) {
 
         return authenticationService.getLastAuthenticationInfo(userId, types);

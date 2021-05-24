@@ -126,8 +126,8 @@ public class ResourceController {
      *
      * @return 资源实体集合
      */
-    @GetMapping("getConsoleUserResources")
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("getConsoleUserResources")
     @Plugin(name = "获取用户资源", source = ResourceSource.Console)
     public List<Resource> getConsoleUserResources(@RequestParam Integer userId, @RequestParam(required = false) boolean mergeTree) {
         List<Resource> resourceList = authorizationService.getConsoleUserResources(userId);
