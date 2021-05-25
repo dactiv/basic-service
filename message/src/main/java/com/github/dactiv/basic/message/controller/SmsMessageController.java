@@ -5,7 +5,6 @@ import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -33,7 +32,7 @@ import java.util.stream.Collectors;
         id = "sms_message",
         parent = "message",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class SmsMessageController {
 
@@ -55,7 +54,7 @@ public class SmsMessageController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取短信消息分页", source = ResourceSource.Console)
+    @Plugin(name = "获取短信消息分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[sms_message:page]')")
     public Page<SmsMessage> page(Pageable pageable, HttpServletRequest request) {
         return messageService.findSmsMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -70,7 +69,7 @@ public class SmsMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[sms_message:get]')")
-    @Plugin(name = "获取短信消息实体信息", source = ResourceSource.Console)
+    @Plugin(name = "获取短信消息实体信息", sources = "Console")
     public SmsMessage get(@RequestParam Integer id) {
         return messageService.getSmsMessage(id);
     }
@@ -82,7 +81,7 @@ public class SmsMessageController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[sms_message:save]')")
-    @Plugin(name = "保存短信消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存短信消息实体", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid SmsMessage entity) {
         messageService.saveSmsMessage(entity);
         return RestResult.build("保存成功", entity.getId());
@@ -95,7 +94,7 @@ public class SmsMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[sms_message:delete]')")
-    @Plugin(name = "删除短信消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除短信消息实体", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSmsMessage(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");
@@ -107,7 +106,7 @@ public class SmsMessageController {
      * @return 余额实体集合
      */
     @GetMapping("balance")
-    @Plugin(name = "获取短信余额", source = ResourceSource.Console)
+    @Plugin(name = "获取短信余额", sources = "Console")
     @PreAuthorize("hasAuthority('perms[sms_message:balance]')")
     public List<SmsBalance> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());

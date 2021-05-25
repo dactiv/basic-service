@@ -6,7 +6,6 @@ import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -35,7 +34,7 @@ import java.util.List;
         id = "console_user",
         parent = "system",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class ConsoleUserController {
 
@@ -55,7 +54,7 @@ public class ConsoleUserController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
-    @Plugin(name = "查询分页", source = ResourceSource.Console)
+    @Plugin(name = "查询分页", sources = "Console")
     public Page<ConsoleUser> page(@PageableDefault Pageable pageable, HttpServletRequest request) {
         return userService.findConsoleUserPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -69,7 +68,7 @@ public class ConsoleUserController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[console_user:get]')")
-    @Plugin(name = "获取信息", source = ResourceSource.Console)
+    @Plugin(name = "获取信息", sources = "Console")
     public ConsoleUser get(@RequestParam Integer id) {
         return userService.getConsoleUser(id);
     }
@@ -85,7 +84,7 @@ public class ConsoleUserController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[console_user:save]')")
-    @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid ConsoleUser entity,
                                            @RequestParam(required = false) List<Integer> groupIds,
                                            @RequestParam(required = false) List<Integer> resourceIds) {
@@ -104,7 +103,7 @@ public class ConsoleUserController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[console_user:delete]')")
-    @Plugin(name = "删除", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
 
         userService.deleteConsoleUsers(ids);
@@ -121,7 +120,7 @@ public class ConsoleUserController {
      */
     @PostMapping("updatePassword")
     @PreAuthorize("hasAuthority('perms[console_user:updatePassword]')")
-    @Plugin(name = "修改密码", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "修改密码", sources = "Console", audit = true)
     public RestResult.Result<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                                @RequestParam String oldPassword,
                                                @RequestParam String newPassword) {
@@ -144,7 +143,7 @@ public class ConsoleUserController {
      */
     @PostMapping("updateUsername")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "修改登录账户", source = {ResourceSource.UserCenter, ResourceSource.Mobile}, audit = true)
+    @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
     public RestResult.Result<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
                                                @RequestParam String newUsername) {
 
@@ -164,7 +163,7 @@ public class ConsoleUserController {
      */
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断登录账户是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断登录账户是否唯一", sources = "Console")
     public boolean isUsernameUnique(@RequestParam String username) {
         return userService.getConsoleUserByUsername(username) == null;
     }
@@ -178,7 +177,7 @@ public class ConsoleUserController {
      */
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断邮件是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断邮件是否唯一", sources = "Console")
     public boolean isEmailUnique(@RequestParam String email) {
         return userService.findConsoleUsers(new LambdaQueryWrapper<ConsoleUser>().eq(ConsoleUser::getEmail, email)).isEmpty();
     }

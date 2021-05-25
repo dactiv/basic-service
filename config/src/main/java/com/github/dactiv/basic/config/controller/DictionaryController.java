@@ -5,7 +5,6 @@ import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -32,7 +31,7 @@ import java.util.Objects;
         id = "dictionary",
         parent = "config",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class DictionaryController {
 
@@ -54,7 +53,7 @@ public class DictionaryController {
      */
     @PostMapping("getDataDictionaryPage")
     @PreAuthorize("hasAuthority('perms[data-dictionary:page]')")
-    @Plugin(name = "获取数据字典分页", source = ResourceSource.Console)
+    @Plugin(name = "获取数据字典分页", sources = "Console")
     public Page<DataDictionary> getDataDictionaryPage(Pageable pageable, HttpServletRequest request) {
         return dictionaryService.findDataDictionariesPage(
                 pageable,
@@ -71,7 +70,7 @@ public class DictionaryController {
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionary")
-    @Plugin(name = "查询全部", source = ResourceSource.Console)
+    @Plugin(name = "查询全部", sources = "Console")
     @PreAuthorize("hasAuthority('perms[data-dictionary:find]')")
     public List<DataDictionary> findDataDictionary(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
@@ -96,7 +95,7 @@ public class DictionaryController {
      */
     @GetMapping("isDataDictionaryCodeUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断数据字典唯一识别值是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断数据字典唯一识别值是否唯一", sources = "Console")
     public boolean isDataDictionaryCodeUnique(@RequestParam String code) {
         return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
     }
@@ -110,7 +109,7 @@ public class DictionaryController {
      */
     @GetMapping("getDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:get]')")
-    @Plugin(name = "获取数据字典实体信息", source = ResourceSource.Console)
+    @Plugin(name = "获取数据字典实体信息", sources = "Console")
     public DataDictionary getDataDictionary(@RequestParam Integer id) {
         return dictionaryService.getDataDictionary(id);
     }
@@ -122,7 +121,7 @@ public class DictionaryController {
      */
     @PostMapping("saveDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:save]')")
-    @Plugin(name = "保存数据字典实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存数据字典实体", sources = "Console", audit = true)
     public RestResult.Result<Integer> saveDataDictionary(@Valid DataDictionary entity) {
         dictionaryService.saveDataDictionary(entity);
         return RestResult.build("保存成功", entity.getId());
@@ -135,7 +134,7 @@ public class DictionaryController {
      */
     @PostMapping("deleteDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:delete]')")
-    @Plugin(name = "删除数据字典实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除数据字典实体", sources = "Console", audit = true)
     public RestResult.Result<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDataDictionaries(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");
@@ -152,7 +151,7 @@ public class DictionaryController {
      * @return 字典类型集合
      */
     @PostMapping("findDictionaryType")
-    @Plugin(name = "查询全部", source = ResourceSource.Console)
+    @Plugin(name = "查询全部", sources = "Console")
     @PreAuthorize("hasAuthority('perms[dictionary-type:find]')")
     public List<DictionaryType> findDictionaryType(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
@@ -176,7 +175,7 @@ public class DictionaryController {
      * @return 字典类型实体
      */
     @GetMapping("getDictionaryType")
-    @Plugin(name = "获取信息", source = ResourceSource.Console)
+    @Plugin(name = "获取信息", sources = "Console")
     @PreAuthorize("hasAuthority('perms[dictionary-type:get]')")
     public DictionaryType getDictionaryType(@RequestParam Integer id) {
         return dictionaryService.getDictionaryType(id);
@@ -191,7 +190,7 @@ public class DictionaryController {
      */
     @GetMapping("isDictionaryTypeCodeUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断字类型典唯一识别值是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断字类型典唯一识别值是否唯一", sources = "Console")
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
 
         return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
@@ -204,7 +203,7 @@ public class DictionaryController {
      */
     @PostMapping("saveDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary-type:save]')")
-    @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult.Result<Integer> saveDictionaryType(@Valid DictionaryType entity) {
         dictionaryService.saveDictionaryType(entity);
         return RestResult.build("保存成功", entity.getId());
@@ -217,7 +216,7 @@ public class DictionaryController {
      */
     @PostMapping("deleteDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary-type:delete]')")
-    @Plugin(name = "删除", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult.Result<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDictionaryTypes(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");

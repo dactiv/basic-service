@@ -35,7 +35,7 @@ import java.util.List;
         id = "resource",
         parent = "system",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class ResourceController {
 
@@ -57,7 +57,7 @@ public class ResourceController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
-    @Plugin(name = "查找全部", source = ResourceSource.Console)
+    @Plugin(name = "查找全部", sources = "Console")
     public List<Resource> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
         List<Resource> resourceList = authorizationService.findResources(queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -78,7 +78,7 @@ public class ResourceController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
-    @Plugin(name = "获取信息", source = ResourceSource.Console)
+    @Plugin(name = "获取信息", sources = "Console")
     public Resource get(@RequestParam Integer id) {
         return authorizationService.getResource(id);
     }
@@ -92,7 +92,7 @@ public class ResourceController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[resource:save]')")
-    @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid Resource entity) {
 
         entity.setType(ResourceType.Menu.toString());
@@ -111,7 +111,7 @@ public class ResourceController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[resource:delete]')")
-    @Plugin(name = "删除", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
 
         authorizationService.deleteResources(ids);
@@ -128,7 +128,7 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsoleUserResources")
-    @Plugin(name = "获取用户资源", source = ResourceSource.Console)
+    @Plugin(name = "获取用户资源", sources = "Console")
     public List<Resource> getConsoleUserResources(@RequestParam Integer userId, @RequestParam(required = false) boolean mergeTree) {
         List<Resource> resourceList = authorizationService.getConsoleUserResources(userId);
 
@@ -149,7 +149,7 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
-    @Plugin(name = "获取当前用户资源", source = ResourceSource.Console)
+    @Plugin(name = "获取当前用户资源", sources = "Console")
     public List<Resource> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
                                                        @RequestParam(required = false) String type,
                                                        @RequestParam(required = false) boolean mergeTree) {
@@ -177,7 +177,7 @@ public class ResourceController {
      */
     @GetMapping("getGroupResource")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "根据组 id 获取资源", source = ResourceSource.Console)
+    @Plugin(name = "根据组 id 获取资源", sources = "Console")
     public List<Resource> getGroupResource(@RequestParam Integer groupId, @RequestParam(required = false) boolean mergeTree) {
         List<Resource> resourceList = authorizationService.getGroupResources(groupId);
 
@@ -197,7 +197,7 @@ public class ResourceController {
      */
     @GetMapping("isCodeUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断唯一识别值是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断唯一识别值是否唯一", sources = "Console")
     public boolean isCodeUnique(@RequestParam String code) {
 
         return authorizationService.findResources(Wrappers.<Resource>lambdaQuery().eq(Resource::getCode, code)).isEmpty();
@@ -210,7 +210,7 @@ public class ResourceController {
      */
     @PostMapping("syncPluginResource")
     @PreAuthorize("hasAuthority('perms[resource:syncPluginResource]')")
-    @Plugin(name = "同步插件资源", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "同步插件资源", sources = "Console", audit = true)
     public RestResult.Result<?> syncPluginResource() {
 
         discoveryPluginResourceService.cleanExceptionServices();

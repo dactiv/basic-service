@@ -5,7 +5,6 @@ import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -35,7 +34,7 @@ import java.util.Map;
         id = "site_message",
         parent = "message",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class SiteMessageController {
 
@@ -54,8 +53,8 @@ public class SiteMessageController {
      * @return 分页实体
      */
     @PostMapping("page")
+    @Plugin(name = "获取站内信消息分页")
     @PreAuthorize("hasAuthority('perms[site_message:page]')")
-    @Plugin(name = "获取站内信消息分页", source = ResourceSource.All)
     public Page<SiteMessage> page(Pageable pageable, HttpServletRequest request) {
         return messageService.findSiteMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -69,7 +68,7 @@ public class SiteMessageController {
      */
     @GetMapping("unreadQuantity")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "按类型分组获取站内信未读数量", source = {ResourceSource.Mobile, ResourceSource.UserCenter})
+    @Plugin(name = "按类型分组获取站内信未读数量", sources = {"Mobile", "UserCenter"})
     public List<Map<String, Object>> unreadQuantity(@CurrentSecurityContext SecurityContext securityContext) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -89,7 +88,7 @@ public class SiteMessageController {
      */
     @PostMapping("read")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "阅读站内信", source = {ResourceSource.Mobile, ResourceSource.UserCenter}, audit = true)
+    @Plugin(name = "阅读站内信", sources = {"Mobile", "UserCenter"}, audit = true)
     public RestResult.Result<Map<String, Object>> read(@RequestParam(required = false) List<String> types,
                                                        @CurrentSecurityContext SecurityContext securityContext) {
 
@@ -111,7 +110,7 @@ public class SiteMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[site_message:get]')")
-    @Plugin(name = "获取站内信消息实体信息", source = ResourceSource.Console)
+    @Plugin(name = "获取站内信消息实体信息", sources = "Console")
     public SiteMessage get(@RequestParam Integer id) {
         return messageService.getSiteMessage(id);
     }
@@ -125,7 +124,7 @@ public class SiteMessageController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[site_message:save]')")
-    @Plugin(name = "保存站内信消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存站内信消息实体", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid SiteMessage entity) {
         messageService.saveSiteMessage(entity);
         return RestResult.build("保存成功", entity.getId());
@@ -140,7 +139,7 @@ public class SiteMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[site_message:delete]')")
-    @Plugin(name = "删除站内信消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSiteMessage(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");

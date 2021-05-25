@@ -12,7 +12,6 @@ import com.github.dactiv.framework.spring.security.audit.PageAuditEventRepositor
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -69,7 +68,7 @@ public class SecurityController {
      * @return 审计事件
      */
     @PostMapping("audit")
-    @Plugin(name = "审计管理", id = "audit", parent = "system", type = ResourceType.Menu, source = ResourceSource.Console)
+    @Plugin(name = "审计管理", id = "audit", parent = "system", type = ResourceType.Menu, sources = "Console")
     public Page<AuditEvent> audit(@PageableDefault Pageable pageable,
                                   @RequestParam(required = false) String principal,
                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,

@@ -6,7 +6,6 @@ import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -33,7 +32,7 @@ import javax.servlet.http.HttpServletRequest;
         id = "member_user",
         parent = "system",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class MemberUserConsole {
 
@@ -53,7 +52,7 @@ public class MemberUserConsole {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
-    @Plugin(name = "查询分页", source = ResourceSource.Console)
+    @Plugin(name = "查询分页", sources = "Console")
     public Page<MemberUser> page(Pageable pageable, HttpServletRequest request) {
 
         return userService.findMemberUserPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -83,7 +82,7 @@ public class MemberUserConsole {
      */
     @PostMapping("updatePassword")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "修改密码", source = {ResourceSource.UserCenter, ResourceSource.Mobile}, audit = true)
+    @Plugin(name = "修改密码", sources= {"UserCenter", "Mobile"}, audit = true)
     public RestResult.Result<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                                @RequestParam(required = false) String oldPassword,
                                                @RequestParam String newPassword) {

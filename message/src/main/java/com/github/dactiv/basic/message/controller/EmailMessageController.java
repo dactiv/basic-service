@@ -3,7 +3,6 @@ package com.github.dactiv.basic.message.controller;
 import com.github.dactiv.basic.message.dao.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -31,7 +30,7 @@ import java.util.List;
         id = "email_message",
         parent = "message",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class EmailMessageController {
 
@@ -56,7 +55,7 @@ public class EmailMessageController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取邮件消息分页", source = ResourceSource.Console)
+    @Plugin(name = "获取邮件消息分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[email_message:page]')")
     public Page<EmailMessage> page(Pageable pageable, HttpServletRequest request) {
         return messageService.findEmailMessagePage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -71,7 +70,7 @@ public class EmailMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[email_message:get]')")
-    @Plugin(name = "获取邮件消息实体信息", source = ResourceSource.Console)
+    @Plugin(name = "获取邮件消息实体信息", sources = "Console")
     public EmailMessage get(@RequestParam Integer id) {
         return messageService.getEmailMessage(id);
     }
@@ -83,7 +82,7 @@ public class EmailMessageController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[email_message:save]')")
-    @Plugin(name = "保存邮件消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存邮件消息实体", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid EmailMessage entity) {
         entity.setFromUser(sendMailUsername);
         messageService.saveEmailMessage(entity);
@@ -97,7 +96,7 @@ public class EmailMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[email_message:delete]')")
-    @Plugin(name = "删除邮件消息实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除邮件消息实体", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteEmailMessage(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");

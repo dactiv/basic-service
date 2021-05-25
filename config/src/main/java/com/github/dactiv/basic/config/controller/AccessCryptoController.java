@@ -4,7 +4,6 @@ import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -30,7 +29,7 @@ import java.util.List;
         id = "access_crypto",
         parent = "config",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class AccessCryptoController {
 
@@ -50,7 +49,7 @@ public class AccessCryptoController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[access_crypto:page]')")
-    @Plugin(name = "获取访问加解密分页", source = ResourceSource.Console)
+    @Plugin(name = "获取访问加解密分页", sources = "Console")
     public Page<ConfigAccessCrypto> page(Pageable pageable, HttpServletRequest request) {
         return accessCryptoService.findAccessCryptoPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -64,7 +63,7 @@ public class AccessCryptoController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[access_crypto:get]')")
-    @Plugin(name = "获取访问加解密实体信息", source = ResourceSource.Console)
+    @Plugin(name = "获取访问加解密实体信息", sources = "Console")
     public AccessCrypto get(@RequestParam Integer id) {
         return accessCryptoService.getAccessCrypto(id);
     }
@@ -76,7 +75,7 @@ public class AccessCryptoController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[access_crypto:save]')")
-    @Plugin(name = "保存访问加解密实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
         accessCryptoService.saveAccessCrypto(entity);
         return RestResult.build("保存成功", entity.getId());
@@ -89,7 +88,7 @@ public class AccessCryptoController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[access_crypto:delete]')")
-    @Plugin(name = "删除访问加解密实体", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除访问加解密实体", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
         accessCryptoService.deleteAccessCrypto(ids);
         return RestResult.build("删除" + ids.size() + "条记录成功");

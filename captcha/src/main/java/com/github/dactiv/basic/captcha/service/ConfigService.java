@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.captcha.service;
 
 import com.github.dactiv.framework.spring.security.BasicAuthenticationConfiguration;
-
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

@@ -5,7 +5,6 @@ import com.github.dactiv.basic.authentication.dao.entity.Group;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -29,7 +28,7 @@ import java.util.List;
         id = "group",
         parent = "system",
         type = ResourceType.Menu,
-        source = ResourceSource.Console
+        sources = "Console"
 )
 public class GroupController {
 
@@ -44,7 +43,7 @@ public class GroupController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
-    @Plugin(name = "查询全部", source = ResourceSource.Console)
+    @Plugin(name = "查询全部", sources = "Console")
     public List<Group> find(HttpServletRequest request,
                             @RequestParam(required = false) boolean mergeTree) {
 
@@ -67,7 +66,7 @@ public class GroupController {
      */
     @GetMapping("getConsoleUserGroups")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取用户组信息", source = ResourceSource.Console)
+    @Plugin(name = "获取用户组信息", sources = "Console")
     public List<Group> getConsoleUserGroups(@RequestParam Integer userId,
                                             @RequestParam(required = false) boolean mergeTree) {
 
@@ -89,7 +88,7 @@ public class GroupController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[group:get]')")
-    @Plugin(name = "获取信息", source = ResourceSource.Console)
+    @Plugin(name = "获取信息", sources = "Console")
     public Group get(@RequestParam Integer id) {
         return authorizationService.getGroup(id);
     }
@@ -104,7 +103,7 @@ public class GroupController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[group:save]')")
-    @Plugin(name = "保存", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult.Result<Integer> save(@Valid Group entity,
                                            @RequestParam(required = false) List<Integer> resourceIds) {
 
@@ -122,7 +121,7 @@ public class GroupController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[group:delete]')")
-    @Plugin(name = "删除", source = ResourceSource.Console, audit = true)
+    @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
 
         authorizationService.deleteGroup(ids);
@@ -139,7 +138,7 @@ public class GroupController {
      */
     @GetMapping("isAuthorityUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断权限值是否唯一", source = ResourceSource.Console)
+    @Plugin(name = "判断权限值是否唯一", sources = "Console")
     public boolean isAuthorityUnique(@RequestParam String authority) {
 
         return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
