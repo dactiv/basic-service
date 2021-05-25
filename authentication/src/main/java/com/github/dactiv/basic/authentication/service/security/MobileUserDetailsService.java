@@ -104,7 +104,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
-        return properties.getMobile().getCache() + username;
+        return properties.getMobile().getCache().getName() + username;
     }
 
     /**
