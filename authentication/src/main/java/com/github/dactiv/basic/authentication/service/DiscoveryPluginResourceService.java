@@ -164,17 +164,6 @@ public class DiscoveryPluginResourceService {
     }
 
     /**
-     * 获取存储在 redis 的插件资源服务 key 名称
-     *
-     * @param service 服务名称
-     *
-     * @return 插件资源服务 key 名称
-     */
-    private String getPluginResourceServiceKey(String service) {
-        return properties.getCache().getName() + service;
-    }
-
-    /**
      * 判断是否服务为最大版本
      *
      * @param entity 同步插件实体
@@ -223,7 +212,7 @@ public class DiscoveryPluginResourceService {
 
         // 判断是否并发，如果并发直接响应处理中
         authorizationService.disabledApplicationResource(service);
-        redissonClient.getBucket(getPluginResourceServiceKey(service)).deleteAsync();
+        redissonClient.getBucket(properties.getCache().getName(service)).deleteAsync();
     }
 
     /**
@@ -253,7 +242,7 @@ public class DiscoveryPluginResourceService {
 
                 authorizationService.enabledApplicationResource(entity);
 
-                redissonClient.getBucket(getPluginResourceServiceKey(entity.getService())).setAsync(
+                redissonClient.getBucket(properties.getCache().getName(entity.getService())).setAsync(
                         entity,
                         properties.getCache().getExpiresTime().getValue(),
                         properties.getCache().getExpiresTime().getUnit()

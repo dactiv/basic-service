@@ -279,16 +279,6 @@ public class ConfigController {
     }
 
     /**
-     * 获取私有 token 的缓存名称
-     *
-     * @param token token 值
-     * @return 缓存名称
-     */
-    private String getPrivateTokenKey(String token) {
-        return properties.getPrivateKeyCache().getName() + token;
-    }
-
-    /**
      * 获取私有 token 的 redis 桶
      *
      * @param token token 值
@@ -296,17 +286,7 @@ public class ConfigController {
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getPrivateTokenBucket(String token) {
-        return redissonClient.getBucket(getPrivateTokenKey(token));
-    }
-
-    /**
-     * 获取访问加解密 token 的缓存名称
-     *
-     * @param token token 值
-     * @return 缓存名称
-     */
-    private String getAccessTokenKey(String token) {
-        return properties.getAccessTokenKeyCache().getName() + token;
+        return redissonClient.getBucket(properties.getPrivateKeyCache().getName(token));
     }
 
     /**
@@ -317,7 +297,7 @@ public class ConfigController {
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getAccessTokeBucket(String token) {
-        return redissonClient.getBucket(getAccessTokenKey(token));
+        return redissonClient.getBucket(properties.getAccessTokenKeyCache().getName(token));
     }
 
     /**

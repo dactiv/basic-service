@@ -140,7 +140,7 @@ public class AuthenticationProperties {
          */
         private CacheProperties cache = new CacheProperties(
                 "spring:security:authentication:mobile:token:",
-                new TimeProperties(2592, TimeUnit.SECONDS)
+                new TimeProperties(7, TimeUnit.DAYS)
         );
 
     }
