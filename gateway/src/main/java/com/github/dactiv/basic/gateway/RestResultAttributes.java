@@ -31,14 +31,16 @@ public class RestResultAttributes extends DefaultErrorAttributes {
     public Map<String, Object> getErrorAttributes(ServerRequest request, ErrorAttributeOptions options) {
         Throwable error = getError(request);
 
-        MergedAnnotation<ResponseStatus> responseStatusAnnotation = MergedAnnotations.from(
-                error.getClass(),
-                MergedAnnotations.SearchStrategy.TYPE_HIERARCHY
-        ).get(ResponseStatus.class);
+        MergedAnnotation<ResponseStatus> responseStatusAnnotation = MergedAnnotations
+                .from(
+                        error.getClass(),
+                        MergedAnnotations.SearchStrategy.TYPE_HIERARCHY
+                )
+                .get(ResponseStatus.class);
 
         HttpStatus status = determineHttpStatus(error, responseStatusAnnotation);
 
-        RestResult<Object> result = new RestResult<>(
+        RestResult<Object> result = RestResult.of(
                 status.getReasonPhrase(),
                 status.value(),
                 ErrorCodeException.DEFAULT_EXCEPTION_CODE,

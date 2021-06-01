@@ -64,12 +64,7 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
         Object details = Casts.cast(authentication.getDetails());
 
-        RestResult<Object> result = new RestResult<>(
-                "登陆成功",
-                response.getStatus(),
-                RestResult.SUCCESS_EXECUTE_CODE,
-                details
-        );
+        RestResult<Object> result = RestResult.ofSuccess("登陆成功", details);
 
         jsonAuthenticationFailureHandler.deleteAllowableFailureNumber(request);
 

@@ -142,12 +142,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
 
             amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
 
-            return new RestResult<>(
-                    "发送短信成功",
-                    HttpStatus.OK.value(),
-                    RestResult.SUCCESS_EXECUTE_CODE,
-                    new LinkedHashMap<>()
-            );
+            return RestResult.ofSuccess("发送短信成功");
 
         } catch (Exception e) {
             return new RestResult<>(ErrorCodeException.DEFAULT_EXCEPTION_CODE, e);

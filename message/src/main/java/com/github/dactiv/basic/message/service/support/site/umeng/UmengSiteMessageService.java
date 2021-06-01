@@ -94,7 +94,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         Map<String, Object> info = authenticationService.getLastAuthenticationInfo(message.getToUserId(), types);
 
         if (MapUtils.isEmpty(info)) {
-            return new RestResult<>(
+            return RestResult.of(
                     "id 为[" + message.getToUserId() + "]的用户找不到设备信息，无法发送站内信",
                     HttpStatus.UNPROCESSABLE_ENTITY.value(),
                     HttpStatus.UNPROCESSABLE_ENTITY.getReasonPhrase()
@@ -113,7 +113,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         }
 
         if (basicMessage == null) {
-            return new RestResult<>(
+            return RestResult.of(
                     device + "设备不需要发送消息推送",
                     HttpStatus.NOT_FOUND.value(),
                     HttpStatus.NOT_FOUND.getReasonPhrase()
@@ -144,7 +144,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
             if ("SUCCESS".equals(resultBody.get("ret"))) {
 
-                return new RestResult<>(
+                return RestResult.of(
                         "id 为[" + message.getId() + "] 记录推送消息给 [" + message.getToUserId() + "] 的用户成功",
                         result.getStatusCodeValue(),
                         result.getStatusCode().getReasonPhrase(),
@@ -152,7 +152,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
                 );
 
             } else {
-                return new RestResult<>(
+                return RestResult.of(
                         resultBody.get("ret").toString(),
                         result.getStatusCodeValue(),
                         ErrorCodeException.DEFAULT_EXCEPTION_CODE,

@@ -29,7 +29,7 @@ public class JsonSessionInformationExpiredStrategy implements SessionInformation
         HttpStatus httpStatus = HttpStatus.UNAUTHORIZED;
         response.setContentType(MediaType.APPLICATION_JSON_VALUE);
 
-        RestResult<Map<String, Object>> result = new RestResult<>(
+        RestResult<Map<String, Object>> result = RestResult.of(
                 httpStatus.getReasonPhrase(),
                 httpStatus.value(),
                 ErrorCodeException.DEFAULT_EXCEPTION_CODE,

@@ -148,8 +148,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> createMobileAuthenticationResult(MobileUserDetails details) {
 
-        //String authenticationKey = getMobileAuthenticationTokenKey(details.getUsername());
-
         details.setPassword(RandomStringUtils.randomAlphanumeric(properties.getRegister().getRandomPasswordCount()));
 
         Map<String, Object> result = Casts.convertValue(details, Map.class);

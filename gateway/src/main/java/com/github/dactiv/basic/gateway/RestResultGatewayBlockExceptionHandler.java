@@ -47,7 +47,7 @@ public class RestResultGatewayBlockExceptionHandler implements WebExceptionHandl
             ServerHttpResponse response = exchange.getResponse();
             HttpStatus status = response.getStatusCode();
 
-            RestResult<Object> result = new RestResult<>(
+            RestResult<Object> result = RestResult.of(
                     status.getReasonPhrase(),
                     status.value(),
                     ErrorCodeException.DEFAULT_EXCEPTION_CODE,

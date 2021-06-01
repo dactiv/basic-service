@@ -142,7 +142,7 @@ public class RedisInterceptor implements Interceptor {
         BuildToken interceptToken = getInterceptToken(captchaService.getType(), token);
         // 如果找不到 token 表示不需要拦截，可以直接生成验证码
         if (interceptToken == null) {
-            return new RestResult<>("token [" + token + "] 无拦截");
+            return RestResult.of("token [" + token + "] 无拦截");
         }
 
         // 如果不为空，获取要拦截的验证码服务

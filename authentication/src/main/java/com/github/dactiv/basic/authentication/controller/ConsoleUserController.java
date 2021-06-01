@@ -85,13 +85,13 @@ public class ConsoleUserController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[console_user:save]')")
     @Plugin(name = "保存", sources = "Console", audit = true)
-    public RestResult.Result<Integer> save(@Valid ConsoleUser entity,
-                                           @RequestParam(required = false) List<Integer> groupIds,
-                                           @RequestParam(required = false) List<Integer> resourceIds) {
+    public RestResult<Integer> save(@Valid ConsoleUser entity,
+                                    @RequestParam(required = false) List<Integer> groupIds,
+                                    @RequestParam(required = false) List<Integer> resourceIds) {
 
         userService.saveConsoleUser(entity, groupIds, resourceIds);
 
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -104,11 +104,11 @@ public class ConsoleUserController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[console_user:delete]')")
     @Plugin(name = "删除", sources = "Console", audit = true)
-    public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
+    public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
         userService.deleteConsoleUsers(ids);
 
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
     /**
@@ -121,16 +121,16 @@ public class ConsoleUserController {
     @PostMapping("updatePassword")
     @PreAuthorize("hasAuthority('perms[console_user:updatePassword]')")
     @Plugin(name = "修改密码", sources = "Console", audit = true)
-    public RestResult.Result<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
-                                               @RequestParam String oldPassword,
-                                               @RequestParam String newPassword) {
+    public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
+                                        @RequestParam String oldPassword,
+                                        @RequestParam String newPassword) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateConsoleUserPassword(userId, oldPassword, newPassword);
 
-        return RestResult.build("修改密码成功");
+        return RestResult.ofSuccess("修改密码成功");
     }
 
     /**
@@ -144,14 +144,14 @@ public class ConsoleUserController {
     @PostMapping("updateUsername")
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
-    public RestResult.Result<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
-                                               @RequestParam String newUsername) {
+    public RestResult<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
+                                        @RequestParam String newUsername) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateMemberUserUsername(userId, newUsername);
 
-        return RestResult.build("修改成功");
+        return RestResult.ofSuccess("修改成功");
     }
 
     /**

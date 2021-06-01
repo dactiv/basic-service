@@ -122,9 +122,9 @@ public class DictionaryController {
     @PostMapping("saveDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:save]')")
     @Plugin(name = "保存数据字典实体", sources = "Console", audit = true)
-    public RestResult.Result<Integer> saveDataDictionary(@Valid DataDictionary entity) {
+    public RestResult<Integer> saveDataDictionary(@Valid DataDictionary entity) {
         dictionaryService.saveDataDictionary(entity);
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**

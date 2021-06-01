@@ -99,7 +99,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
             if (r.getStatusCode() == HttpStatus.OK) {
 
                 if (r.getBody() == null) {
-                    return new RestResult<>(
+                    return RestResult.of(
                             "返回的数据为 null",
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
                             ErrorCodeException.DEFAULT_EXCEPTION_CODE);
@@ -112,7 +112,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                 Map<String, Object> data = Casts.readValue(r.getBody(), Map.class);
 
                 if (MapUtils.isEmpty(data)) {
-                    return new RestResult<>(
+                    return RestResult.of(
                             "返回的数据为 null",
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
                             ErrorCodeException.DEFAULT_EXCEPTION_CODE);
@@ -125,18 +125,20 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                             String.valueOf(r.getStatusCode().value()),
                             Casts.cast(data.get(responseDataField)));
                 } else {
-                    return new RestResult<>(
+                    return RestResult.of(
                             "执行返回的[" + successFieldName + "]值为:" + data.get(successFieldName) + "，不等于 " + successFieldValue,
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                            ErrorCodeException.DEFAULT_EXCEPTION_CODE);
+                            ErrorCodeException.DEFAULT_EXCEPTION_CODE
+                    );
                 }
 
             } else {
 
-                return new RestResult<>(
+                return RestResult.of(
                         r.getStatusCode().getReasonPhrase(),
                         r.getStatusCode().value(),
-                        String.valueOf(r.getStatusCode().value()));
+                        String.valueOf(r.getStatusCode().value())
+                );
 
             }
         } catch (Exception e) {

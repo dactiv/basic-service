@@ -177,14 +177,14 @@ public class SecurityController {
      */
     @PreAuthorize("hasRole('BASIC')")
     @PostMapping("updateMemberUserStatus")
-    public RestResult.Result<?> updateMemberUserStatus(@RequestParam Integer id, @RequestParam String status) {
+    public RestResult<?> updateMemberUserStatus(@RequestParam Integer id, @RequestParam String status) {
         MemberUser memberUser = userService.getMemberUser(id);
 
         memberUser.setStatus(UserStatus.valueOf(status).getValue());
 
         userService.updateMemberUser(memberUser);
 
-        return RestResult.build("修改成功");
+        return RestResult.ofSuccess("修改成功");
     }
 
 }

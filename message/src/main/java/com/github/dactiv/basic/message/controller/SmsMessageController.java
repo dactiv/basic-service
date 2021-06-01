@@ -82,9 +82,9 @@ public class SmsMessageController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[sms_message:save]')")
     @Plugin(name = "保存短信消息实体", sources = "Console", audit = true)
-    public RestResult.Result<Integer> save(@Valid SmsMessage entity) {
+    public RestResult<Integer> save(@Valid SmsMessage entity) {
         messageService.saveSmsMessage(entity);
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -95,9 +95,9 @@ public class SmsMessageController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[sms_message:delete]')")
     @Plugin(name = "删除短信消息实体", sources = "Console", audit = true)
-    public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
+    public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSmsMessage(ids);
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
     /**

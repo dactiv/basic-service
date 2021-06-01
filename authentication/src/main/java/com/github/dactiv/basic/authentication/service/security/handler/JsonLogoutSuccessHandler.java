@@ -84,7 +84,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 deviceIdSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
             }
 
-            clearCache(userDetails, authentication.getPrincipal().toString());
+            clearAllCache(userDetails, authentication.getPrincipal().toString());
         }
 
         RestResult<Map<String, Object>> result = new RestResult<>(
@@ -96,16 +96,29 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         response.getWriter().write(Casts.writeValueAsString(result));
     }
 
-    private void clearCache(SecurityUserDetails userDetails, String principal) {
+    /**
+     * 清除所有缓存
+     *
+     * @param userDetails 用户信息
+     * @param principal 当前登陆账户
+     */
+    private void clearAllCache(SecurityUserDetails userDetails, String principal) {
 
+        // 清除 username 的缓存，有可能是手机号码
         clearPrincipalCache(userDetails.getUsername());
 
+        // 如果两个不相等，在清除一次 principal 换粗，这个可能是登陆账户 username
         if (!principal.equals(userDetails.getUsername())) {
             clearPrincipalCache(principal);
         }
 
     }
 
+    /**
+     * 清除以登陆账户的缓存信息
+     *
+     * @param principal 登陆账户
+     */
     private void clearPrincipalCache(String principal) {
         userDetailsServices.forEach(uds -> uds.getType()
                 .stream()
@@ -124,6 +137,13 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         }
     }
 
+    /**
+     * 构造未授权 reset 结果集，目的为乱搞一通，让别人不知道这个是什么。
+     *
+     * @param request 请求对象
+     *
+     * @return rest 结果集
+     */
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
         Integer number = failureHandler.getAllowableFailureNumber(request);
 
