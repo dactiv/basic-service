@@ -50,6 +50,11 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     public static final String DEFAULT_USER_ALIAS_TYPE = "USER_ID";
 
     /**
+     * 默认成功消息字段名称
+     */
+    public static final String DEFAULT_SUCCESS_MESSAGE = "SUCCESS";
+
+    /**
      * 接口调用地址
      */
     private String url;
@@ -138,11 +143,11 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
             Map<String, Object> data = new LinkedHashMap<>();
 
-            if (resultBody.containsKey("data")) {
-                data = Casts.cast(resultBody.get("data"), Map.class);
+            if (resultBody.containsKey(RestResult.DEFAULT_DATA_NAME)) {
+                data = Casts.cast(resultBody.get(RestResult.DEFAULT_DATA_NAME), Map.class);
             }
 
-            if ("SUCCESS".equals(resultBody.get("ret"))) {
+            if (DEFAULT_SUCCESS_MESSAGE.equals(resultBody.get("ret"))) {
 
                 return RestResult.of(
                         "id 为[" + message.getId() + "] 记录推送消息给 [" + message.getToUserId() + "] 的用户成功",
@@ -161,7 +166,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
             }
         }
 
-        return new RestResult<>(
+        return RestResult.of(
                 result.getStatusCode().getReasonPhrase(),
                 result.getStatusCodeValue(),
                 ErrorCodeException.DEFAULT_EXCEPTION_CODE

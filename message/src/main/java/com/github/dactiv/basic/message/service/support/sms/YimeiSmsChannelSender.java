@@ -142,10 +142,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
 
             }
         } catch (Exception e) {
-            return new RestResult<>(
-                    "执行时候出现异常:" + e.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                    ErrorCodeException.DEFAULT_EXCEPTION_CODE);
+            return RestResult.ofException(e);
         }
     }
 
