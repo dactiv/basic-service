@@ -83,7 +83,7 @@ public class MemberUserConsole {
     @PostMapping("updatePassword")
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(name = "修改密码", sources= {"UserCenter", "Mobile"}, audit = true)
-    public RestResult.Result<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
+    public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                                @RequestParam(required = false) String oldPassword,
                                                @RequestParam String newPassword) {
 
@@ -92,7 +92,7 @@ public class MemberUserConsole {
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateMemberUserPassword(userId, oldPassword, newPassword);
 
-        return RestResult.build("修改成功");
+        return RestResult.ofSuccess("修改成功");
     }
 
     /**

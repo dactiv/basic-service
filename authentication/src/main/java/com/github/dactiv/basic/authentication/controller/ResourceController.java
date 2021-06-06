@@ -93,13 +93,13 @@ public class ResourceController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[resource:save]')")
     @Plugin(name = "保存", sources = "Console", audit = true)
-    public RestResult.Result<Integer> save(@Valid Resource entity) {
+    public RestResult<Integer> save(@Valid Resource entity) {
 
         entity.setType(ResourceType.Menu.toString());
 
         authorizationService.saveResource(entity);
 
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -112,11 +112,11 @@ public class ResourceController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[resource:delete]')")
     @Plugin(name = "删除", sources = "Console", audit = true)
-    public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
+    public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
         authorizationService.deleteResources(ids);
 
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
     /**
@@ -211,11 +211,11 @@ public class ResourceController {
     @PostMapping("syncPluginResource")
     @PreAuthorize("hasAuthority('perms[resource:syncPluginResource]')")
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
-    public RestResult.Result<?> syncPluginResource() {
+    public RestResult<?> syncPluginResource() {
 
         discoveryPluginResourceService.cleanExceptionServices();
         discoveryPluginResourceService.syncPluginResource();
 
-        return RestResult.build("同步数据完成");
+        return RestResult.ofSuccess("同步数据完成");
     }
 }
