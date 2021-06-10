@@ -76,9 +76,9 @@ public class AccessCryptoController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[access_crypto:save]')")
     @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
-    public RestResult.Result<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
+    public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
         accessCryptoService.saveAccessCrypto(entity);
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -89,8 +89,8 @@ public class AccessCryptoController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[access_crypto:delete]')")
     @Plugin(name = "删除访问加解密实体", sources = "Console", audit = true)
-    public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
+    public RestResult<?> delete(@RequestParam List<Integer> ids) {
         accessCryptoService.deleteAccessCrypto(ids);
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 }

@@ -89,7 +89,7 @@ public class SiteMessageController {
     @PostMapping("read")
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(name = "阅读站内信", sources = {"Mobile", "UserCenter"}, audit = true)
-    public RestResult.Result<Map<String, Object>> read(@RequestParam(required = false) List<String> types,
+    public RestResult<?> read(@RequestParam(required = false) List<String> types,
                                                        @CurrentSecurityContext SecurityContext securityContext) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -98,7 +98,7 @@ public class SiteMessageController {
 
         messageService.readSiteMessage(types, id);
 
-        return RestResult.build("阅读成功");
+        return RestResult.ofSuccess("阅读成功");
     }
 
     /**
@@ -125,9 +125,9 @@ public class SiteMessageController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[site_message:save]')")
     @Plugin(name = "保存站内信消息实体", sources = "Console", audit = true)
-    public RestResult.Result<Integer> save(@Valid SiteMessage entity) {
+    public RestResult<Integer> save(@Valid SiteMessage entity) {
         messageService.saveSiteMessage(entity);
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -140,9 +140,9 @@ public class SiteMessageController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[site_message:delete]')")
     @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
-    public RestResult.Result<?> delete(@RequestParam List<Integer> ids) {
+    public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSiteMessage(ids);
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
 }

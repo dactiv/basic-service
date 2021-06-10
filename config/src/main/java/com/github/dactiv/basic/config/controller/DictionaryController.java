@@ -135,9 +135,9 @@ public class DictionaryController {
     @PostMapping("deleteDataDictionary")
     @PreAuthorize("hasAuthority('perms[data-dictionary:delete]')")
     @Plugin(name = "删除数据字典实体", sources = "Console", audit = true)
-    public RestResult.Result<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
+    public RestResult<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDataDictionaries(ids);
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
     // ----------------------------------------------- 字典类型管理 ----------------------------------------------- //
@@ -204,9 +204,9 @@ public class DictionaryController {
     @PostMapping("saveDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary-type:save]')")
     @Plugin(name = "保存", sources = "Console", audit = true)
-    public RestResult.Result<Integer> saveDictionaryType(@Valid DictionaryType entity) {
+    public RestResult<Integer> saveDictionaryType(@Valid DictionaryType entity) {
         dictionaryService.saveDictionaryType(entity);
-        return RestResult.build("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
@@ -217,9 +217,9 @@ public class DictionaryController {
     @PostMapping("deleteDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary-type:delete]')")
     @Plugin(name = "删除", sources = "Console", audit = true)
-    public RestResult.Result<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
+    public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDictionaryTypes(ids);
-        return RestResult.build("删除" + ids.size() + "条记录成功");
+        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
     }
 
 
