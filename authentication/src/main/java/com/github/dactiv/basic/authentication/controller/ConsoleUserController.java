@@ -108,7 +108,7 @@ public class ConsoleUserController {
 
         userService.deleteConsoleUsers(ids);
 
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
     /**
@@ -130,7 +130,7 @@ public class ConsoleUserController {
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateConsoleUserPassword(userId, oldPassword, newPassword);
 
-        return RestResult.ofSuccess("修改密码成功");
+        return RestResult.of("修改密码成功");
     }
 
     /**
@@ -151,7 +151,7 @@ public class ConsoleUserController {
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateMemberUserUsername(userId, newUsername);
 
-        return RestResult.ofSuccess("修改成功");
+        return RestResult.of("修改成功");
     }
 
     /**

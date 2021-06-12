@@ -116,7 +116,7 @@ public class ResourceController {
 
         authorizationService.deleteResources(ids);
 
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
     /**
@@ -216,6 +216,6 @@ public class ResourceController {
         discoveryPluginResourceService.cleanExceptionServices();
         discoveryPluginResourceService.syncPluginResource();
 
-        return RestResult.ofSuccess("同步数据完成");
+        return RestResult.of("同步数据完成");
     }
 }

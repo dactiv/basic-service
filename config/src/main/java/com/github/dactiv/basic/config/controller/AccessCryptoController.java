@@ -78,7 +78,7 @@ public class AccessCryptoController {
     @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
         accessCryptoService.saveAccessCrypto(entity);
-        return RestResult.ofSuccess("保存成功", entity.getId());
+        return RestResult.of("保存成功", entity.getId());
     }
 
     /**
@@ -91,6 +91,6 @@ public class AccessCryptoController {
     @Plugin(name = "删除访问加解密实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         accessCryptoService.deleteAccessCrypto(ids);
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 }

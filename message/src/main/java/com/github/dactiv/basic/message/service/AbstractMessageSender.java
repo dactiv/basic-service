@@ -1,6 +1,8 @@
 package com.github.dactiv.basic.message.service;
 
+import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.MutablePropertyValues;
@@ -35,7 +37,7 @@ public abstract class AbstractMessageSender<T> implements MessageSender {
     private Validator validator;
 
     public AbstractMessageSender() {
-        this.entityClass = (Class<T>) ((ParameterizedType) this.getClass().getGenericSuperclass()).getActualTypeArguments()[0];
+        this.entityClass = ReflectionUtils.getGenericClass(this.getClass().getGenericSuperclass(), 0);
     }
 
     @Override
@@ -46,12 +48,12 @@ public abstract class AbstractMessageSender<T> implements MessageSender {
         if (request.containsKey(DEFAULT_BATCH_MESSAGE_KEY)) {
             List<Map<String, Object>> messages = Casts.cast(request.get(DEFAULT_BATCH_MESSAGE_KEY), List.class);
             for (Map<String, Object> m : messages) {
-                T entity = entityClass.newInstance();
+                T entity = ClassUtils.newInstance(entityClass);
                 bindAndValidate(entity, m);
                 result.add(entity);
             }
         } else {
-            T entity = entityClass.newInstance();
+            T entity = ClassUtils.newInstance(entityClass);
             bindAndValidate(entity, request);
             result.add(entity);
         }

@@ -184,7 +184,7 @@ public class SecurityController {
 
         userService.updateMemberUser(memberUser);
 
-        return RestResult.ofSuccess("修改成功");
+        return RestResult.of("修改成功");
     }
 
 }

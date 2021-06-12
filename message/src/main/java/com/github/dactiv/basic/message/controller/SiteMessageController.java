@@ -98,7 +98,7 @@ public class SiteMessageController {
 
         messageService.readSiteMessage(types, id);
 
-        return RestResult.ofSuccess("阅读成功");
+        return RestResult.of("阅读成功");
     }
 
     /**
@@ -142,7 +142,7 @@ public class SiteMessageController {
     @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSiteMessage(ids);
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
 }

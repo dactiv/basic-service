@@ -134,7 +134,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
 
         amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
 
-        return RestResult.ofSuccess("发送站内信成功");
+        return RestResult.of("发送站内信成功");
     }
 
     @Override

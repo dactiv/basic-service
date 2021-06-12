@@ -126,7 +126,7 @@ public class GroupController {
 
         authorizationService.deleteGroup(ids);
 
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
     /**

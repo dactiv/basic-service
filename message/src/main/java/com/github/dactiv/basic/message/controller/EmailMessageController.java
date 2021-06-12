@@ -99,7 +99,7 @@ public class EmailMessageController {
     @Plugin(name = "删除邮件消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteEmailMessage(ids);
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
 }

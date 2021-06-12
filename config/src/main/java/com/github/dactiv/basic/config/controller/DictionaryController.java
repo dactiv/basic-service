@@ -137,7 +137,7 @@ public class DictionaryController {
     @Plugin(name = "删除数据字典实体", sources = "Console", audit = true)
     public RestResult<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDataDictionaries(ids);
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
     // ----------------------------------------------- 字典类型管理 ----------------------------------------------- //
@@ -219,7 +219,7 @@ public class DictionaryController {
     @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDictionaryTypes(ids);
-        return RestResult.ofSuccess("删除" + ids.size() + "条记录成功");
+        return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
 

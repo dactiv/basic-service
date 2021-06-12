@@ -92,7 +92,7 @@ public class MemberUserConsole {
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateMemberUserPassword(userId, oldPassword, newPassword);
 
-        return RestResult.ofSuccess("修改成功");
+        return RestResult.of("修改成功");
     }
 
     /**
