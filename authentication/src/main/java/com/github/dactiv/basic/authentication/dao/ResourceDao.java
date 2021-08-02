@@ -113,7 +113,7 @@ public interface ResourceDao extends BaseMapper<Resource> {
             "   </foreach>" +
             "</if>" +
             "<if test='type != null'>" +
-            "    AND r.type = #{filter.typeEq} " +
+            "    AND r.type = #{type} " +
             "</if>" +
             "ORDER BY " +
             "   r.sort" +

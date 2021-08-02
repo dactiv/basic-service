@@ -191,6 +191,7 @@ public class Resource implements Serializable, Tree<Integer, Resource> {
         return Objects.equals(resource.getId(), this.getParent());
     }
 
+    @JsonIgnore
     public Wrapper<Resource> getUniqueWrapper() {
         LambdaQueryWrapper<Resource> wrapper = new QueryWrapper<>(this).lambda();
 

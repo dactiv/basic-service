@@ -1,0 +1,21 @@
+.float-right {
+  float: right;
+}
+
+.float-left {
+  float: left;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.align-items-center {
+  -webkit-box-align: center!important;
+  -ms-flex-align: center!important;
+  align-items: center!important;
+}
+
+.un-padding {
+  padding: 0!important;
+}
