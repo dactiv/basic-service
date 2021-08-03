@@ -1,16 +1,16 @@
 <template>
-  <template v-for="d of data" :key="d.id">
+  <template v-for="(d,idx) of data" :key="d.id">
     <el-menu-item :index="getPath(d.value)" v-if="!hasChildren(d)">
         <i :class="d.icon"></i>
         <span>{{d.name}}</span>
     </el-menu-item>
-    <el-submenu v-else index=””>
+    <el-submenu v-else :index="parent === undefined ? idx + '' : parent + '-' + idx">
       <template #title>
         <i :class="d.icon"></i>
         <span>{{ d.name }}</span>
       </template>
       <!-- 调用自身递归数据 -->
-      <recursion-menu :data="d.children" />
+      <recursion-menu :data="d.children" :parent="idx" />
     </el-submenu>
   </template>
 </template>
@@ -21,8 +21,8 @@
  * 递归菜单，
  */
 export default {
-  name: 'RecursionMenu',
-  props: ['data'],
+  name: "RecursionMenu",
+  props: ["data","parent"],
   methods: {
     /**
      * 判断是否存在子节点

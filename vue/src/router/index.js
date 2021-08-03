@@ -2,6 +2,8 @@ import { createRouter, createWebHistory} from 'vue-router';
 
 import Login from '@/views/Login'
 import Index from '@/views/Index'
+import NProgress from 'nprogress'
+import 'nprogress/nprogress.css';
 
 import recursionMenu from "@/components/RecursionMenu";
 import axios from "axios";
@@ -97,9 +99,9 @@ function getMenus(to, next) {
       })
       .then(function (response) {
 
-        addMenuRoute(response.data.data);
+        addMenuRoute(response);
 
-        localStorage.setItem(process.env.VUE_APP_MENU_NAME, JSON.stringify(response.data.data));
+        localStorage.setItem(process.env.VUE_APP_MENU_NAME, JSON.stringify(response));
 
         next({ ...to, replace: true });
 
@@ -110,19 +112,24 @@ function getMenus(to, next) {
  * 添加导航卫士
  */
 router.beforeEach((to, from, next) => {
+  NProgress.start();
+  let principal = JSON.parse(localStorage.getItem(process.env.VUE_APP_PRINCIPAL_NAME));
   // 如果路径为"登陆", 跳用服务器登出，并把所有的本地数据清除
   if (to.path === "/" + process.env.VUE_APP_LOGIN_PATH) {
-    axios.post("/authentication/logout").then(function () {
-      localStorage.removeItem(process.env.VUE_APP_PRINCIPAL_NAME);
-      localStorage.removeItem(process.env.VUE_APP_MENU_NAME);
-      next();
-    });
+
+    if (principal !== null) {
+      axios.post("/authentication/logout").then(function () {
+        localStorage.removeItem(process.env.VUE_APP_PRINCIPAL_NAME);
+        localStorage.removeItem(process.env.VUE_APP_MENU_NAME);
+      });
+    }
+    next();
   } else {
 
-    let principal = JSON.parse(localStorage.getItem(process.env.VUE_APP_PRINCIPAL_NAME));
     // 如果用户没登陆，记录当前的路径，跳转到登陆页面
     if (principal === null) {
       localStorage.setItem("requestPath", to.path);
+      localStorage.removeItem(process.env.VUE_APP_MENU_NAME);
       next("/" + process.env.VUE_APP_LOGIN_PATH);
     } else {
       // 如果已经登陆，获取菜单信息
@@ -146,5 +153,9 @@ router.beforeEach((to, from, next) => {
 
   }
 });
+
+router.afterEach(() => {
+  NProgress.done()
+})
 
 export default router

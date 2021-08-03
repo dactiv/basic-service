@@ -89,7 +89,7 @@ public class CaptchaController {
      * @return 验证码
      * @throws Exception 生成错误时抛出
      */
-    @PostMapping("generateCaptcha")
+    @GetMapping("generateCaptcha")
     public Object generateCaptcha(HttpServletRequest request) throws Exception {
 
         RestResult<Map<String, Object>> result = interceptor.verifyCaptcha(request);

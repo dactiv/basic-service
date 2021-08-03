@@ -45,7 +45,7 @@
                 <el-menu-item index="3-1"><i class="el-icon-user"></i> 用户信息</el-menu-item>
                 <el-menu-item index="3-2"><i class="el-icon-setting"></i> 系统设置</el-menu-item>
                 <el-menu-item index="3-3"><i class="el-icon-question"></i> 常见问题</el-menu-item>
-                <el-menu-item index="3-3"><i class="el-icon-key"></i> 注销账户</el-menu-item>
+                <el-menu-item index="3-3"><el-button type="text" icon="el-icon-key" @click="logout()"> 注销账户</el-button></el-menu-item>
               </el-submenu>
             </el-menu>
           </el-col>
@@ -69,6 +69,11 @@ import RecursionMenu from '../components/RecursionMenu.vue'
 export default {
   name: 'Index',
   components:{RecursionMenu},
+  methods:{
+    logout:function() {
+      this.$router.push('/' + process.env.VUE_APP_LOGIN_PATH);
+    }
+  },
   data() {
     return {
       principal: JSON.parse(localStorage.getItem(process.env.VUE_APP_PRINCIPAL_NAME)),
