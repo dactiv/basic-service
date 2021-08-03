@@ -42,7 +42,7 @@ export default {
      * @returns {*} 替换后的值
      */
     replaceValue:function(v) {
-      return v.replace('/**','');
+      return v.replace("/**","");
     },
     /**
      * 获取路由路径

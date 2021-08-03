@@ -84,42 +84,6 @@ public class ResourceController {
     }
 
     /**
-     * 保存资源
-     *
-     * @param entity 资源实体
-     *
-     * @return 消息结果集
-     */
-    @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[resource:save]')")
-    @Plugin(name = "保存", sources = "Console", audit = true)
-    public RestResult<Integer> save(@Valid Resource entity) {
-
-        entity.setType(ResourceType.Menu.toString());
-
-        authorizationService.saveResource(entity);
-
-        return RestResult.ofSuccess("保存成功", entity.getId());
-    }
-
-    /**
-     * 删除资源
-     *
-     * @param ids 主键值集合
-     *
-     * @return 消息结果集
-     */
-    @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[resource:delete]')")
-    @Plugin(name = "删除", sources = "Console", audit = true)
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
-
-        authorizationService.deleteResources(ids);
-
-        return RestResult.of("删除" + ids.size() + "条记录成功");
-    }
-
-    /**
      * 获取用户关联资源实体集合
      *
      * @param userId 用户主键值

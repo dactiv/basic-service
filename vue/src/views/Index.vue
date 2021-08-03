@@ -69,15 +69,35 @@ import RecursionMenu from '../components/RecursionMenu.vue'
 export default {
   name: 'Index',
   components:{RecursionMenu},
-  methods:{
+  created() {
+    this.getMenus();
+  },
+  methods: {
     logout:function() {
       this.$router.push('/' + process.env.VUE_APP_LOGIN_PATH);
+    },
+    getMenus:function() {
+
+      let _this = this;
+
+      _this.$http
+          .get("/authentication/resource/getConsolePrincipalResources",{
+            params: {
+              type:"Menu",
+              mergeTree:true
+            }
+          })
+          .then(function (response) {
+
+            localStorage.setItem(process.env.VUE_APP_MENU_NAME, JSON.stringify(response));
+            _this.menus = response;
+          });
     }
   },
   data() {
     return {
       principal: JSON.parse(localStorage.getItem(process.env.VUE_APP_PRINCIPAL_NAME)),
-      menus: JSON.parse(localStorage.getItem(process.env.VUE_APP_MENU_NAME))
+      menus: {}
     }
   }
 }

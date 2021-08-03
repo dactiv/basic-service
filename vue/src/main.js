@@ -15,7 +15,9 @@ import './element-variables.scss'
 import moment from "moment";
 
 const app = createApp(Application)
+
 moment.locale("zh-cn")
+
 app.config.globalProperties.$moment = moment;
 
 app.config.globalProperties.formUrlencoded = function(json) {
@@ -26,6 +28,10 @@ app.config.globalProperties.formUrlencoded = function(json) {
     }
 
     return param;
+}
+
+app.config.globalProperties.loadConfig = function(params, callback) {
+    this.$http.get("/config/getServiceEnumerate",{params: params}).then(callback);
 }
 
 app.use(VueAxios, axios).use(store).use(router).use(ElementPlus, { locale }).mount('#app')

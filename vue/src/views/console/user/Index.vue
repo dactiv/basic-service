@@ -8,10 +8,10 @@
 
   <el-card>
     <template #header>
-        <span>用户管理</span>
+        <span>后台用户管理</span>
     </template>
 
-    <el-table :data="page.content" ref="multipleTable" v-loading="loading">
+    <el-table :data="page.content" ref="table" v-loading="loading">
       <el-table-column type="selection"/>
       <el-table-column type="index" label="序号" width="60"/>
       <el-table-column prop="creationTime" width="180" :formatter="(callValue) => this.$moment(callValue).format('YYYY-MM-DD HH:mm:ss')" label="创建时间" />
@@ -21,9 +21,9 @@
       <el-table-column prop="statusName" label="状态" width="170"/>
       <el-table-column prop="remark" label="备注" width="170"/>
       <el-table-column fixed="right" label="操作" width="140">
-        <template #default>
-          <el-button type="text" size="small">编辑</el-button>
-          <el-button type="text" size="small">删除</el-button>
+        <template #default="scope">
+          <el-button type="text" size="small" icon="el-icon-edit" @click="edit(scope)">编辑</el-button>
+          <el-button type="text" size="small" icon="el-icon-delete" @click="remove(scope)">删除</el-button>
         </template>
       </el-table-column>
     </el-table>
@@ -33,7 +33,7 @@
       <el-button-group>
         <el-button icon="el-icon-search" @click="searchDialogVisible = true">查询</el-button>
         <el-button icon="el-icon-edit" type="success" @click="edit()">添加</el-button>
-        <el-button icon="el-icon-delete" type="danger" @click="deleteData()">删除</el-button>
+        <el-button icon="el-icon-delete" type="danger" @click="remove()">删除</el-button>
       </el-button-group>
 
       <el-button-group class="float-right">
@@ -96,7 +96,9 @@
 
 <script>
 
+
 export default {
+  name:"ConsoleUserIndex",
   data() {
     return {
       form:{
@@ -118,26 +120,25 @@ export default {
     }
   },
   created() {
-
     this.search();
-
-    this
-        .$http
-        .get("/config/getServiceEnumerate",{
-          params: {
-            service:"config",
-            enumerateName:"UserStatus"
-          }
-        }).then(r => {
-          this.statusOptions = r;
-        });
+    this.loadConfig({service:"config", enumerateName:"UserStatus"}, r=> this.statusOptions = r);
   },
   methods:{
-    edit:function () {
+    edit:function (scope) {
+
+      let to = {
+        name: "console_user_edit"
+      }
+
+      if (scope !== undefined) {
+        to["query"] = {id:scope.row.id};
+      }
+
+      this.$router.push(to);
 
     },
-    deleteData:function() {
-
+    remove:function(scope) {
+      console.log(scope);
     },
     previous:function () {
 
