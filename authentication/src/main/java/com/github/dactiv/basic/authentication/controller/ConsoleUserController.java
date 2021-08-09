@@ -30,7 +30,7 @@ import java.util.List;
 @RestController
 @RequestMapping("console/user")
 @Plugin(
-        name = "用户管理",
+        name = "系统用户管理",
         id = "console_user",
         parent = "system",
         type = ResourceType.Menu,

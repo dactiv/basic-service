@@ -25,6 +25,7 @@ spring:
               args:
                 pattern: "'/'+serviceId+'/**'"
           filters:
+            - name: PreserveHostHeader
             - name: RewritePath
               args:
                 regexp: "'/' + serviceId + '/(?<remaining>.*)'"

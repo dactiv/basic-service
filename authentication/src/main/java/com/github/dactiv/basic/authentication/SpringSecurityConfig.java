@@ -15,11 +15,15 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.builders.AuthenticationManagerBuilder;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.web.AuthenticationEntryPoint;
+import org.springframework.security.web.authentication.HttpStatusEntryPoint;
+import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.context.SecurityContextRepository;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
@@ -87,6 +91,9 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
                 .successHandler(jsonAuthenticationSuccessHandler)
                 .failureHandler(jsonAuthenticationFailureHandler)
                 .and()
+                .exceptionHandling()
+                .authenticationEntryPoint(new HttpStatusEntryPoint(HttpStatus.UNAUTHORIZED))
+                .and()
                 .logout()
                 .logoutUrl("/logout")
                 .logoutSuccessHandler(jsonLogoutSuccessHandler)
@@ -113,6 +120,13 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
         SpringSecuritySupportAutoConfiguration.addConsensusBasedToMethodSecurityInterceptor(http);
 
 
+    }
+
+    @Bean
+    public AuthenticationEntryPoint loginUrlAuthenticationEntryPoint() {
+        LoginUrlAuthenticationEntryPoint AuthenticationEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
+        AuthenticationEntryPoint.setUseForward(true);
+        return AuthenticationEntryPoint;
     }
 
     @Bean

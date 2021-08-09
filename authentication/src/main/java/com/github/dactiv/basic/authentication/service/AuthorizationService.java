@@ -561,6 +561,9 @@ public class AuthorizationService {
                 resource.setVersion(target.getVersion());
             }
 
+            // 设置该資源为启用状态
+            resource.setStatus(DisabledOrEnabled.Enabled.getValue());
+
             // 如果数据库存在记录，将resource数据替换一次数据获取出来的值
             BeanUtils.copyProperties(
                     resource,

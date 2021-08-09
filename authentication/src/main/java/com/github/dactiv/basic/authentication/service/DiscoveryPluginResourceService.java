@@ -242,11 +242,13 @@ public class DiscoveryPluginResourceService {
 
                 authorizationService.enabledApplicationResource(entity);
 
-                redissonClient.getBucket(properties.getCache().getName(entity.getService())).setAsync(
-                        entity,
-                        properties.getCache().getExpiresTime().getValue(),
-                        properties.getCache().getExpiresTime().getUnit()
-                );
+                redissonClient
+                        .getBucket(properties.getCache().getName(entity.getService()))
+                        .setAsync(
+                                entity,
+                                properties.getCache().getExpiresTime().getValue(),
+                                properties.getCache().getExpiresTime().getUnit()
+                        );
 
                 if (LOGGER.isDebugEnabled()) {
                     LOGGER.debug("对[" + entity.getService() + "]服务同步插件资源完成");

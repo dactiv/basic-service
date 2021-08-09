@@ -55,7 +55,7 @@ public class ResourceController {
      *
      * @return 资源实体集合
      */
-    @PostMapping("find")
+    @GetMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = "Console")
     public List<Resource> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {

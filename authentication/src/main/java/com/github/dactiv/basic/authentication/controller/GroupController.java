@@ -41,7 +41,7 @@ public class GroupController {
     /**
      * 获取所有用户组
      */
-    @PostMapping("find")
+    @GetMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
     @Plugin(name = "查询全部", sources = "Console")
     public List<Group> find(HttpServletRequest request,

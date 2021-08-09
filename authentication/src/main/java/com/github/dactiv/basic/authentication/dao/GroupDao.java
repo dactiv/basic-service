@@ -32,6 +32,7 @@ public interface GroupDao extends BaseMapper<Group> {
                     "   g.authority, " +
                     "   g.source, " +
                     "   g.parent_id, " +
+                    "   g.status, " +
                     "   g.removable, " +
                     "   g.modifiable, " +
                     "   g.remark " +

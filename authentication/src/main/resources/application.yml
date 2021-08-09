@@ -11,6 +11,7 @@ plugin:
   parent:
     system:
       name: '系统管理'
+      icon: 'icon-setting'
 
 info:
   version: @version@
