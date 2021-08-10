@@ -31,6 +31,7 @@ import java.util.stream.Collectors;
         name = "短信消息",
         id = "sms_message",
         parent = "message",
+        icon = "icon-sms",
         type = ResourceType.Menu,
         sources = "Console"
 )

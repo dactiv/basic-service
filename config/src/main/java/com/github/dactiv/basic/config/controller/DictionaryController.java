@@ -30,6 +30,7 @@ import java.util.Objects;
         name = "数据字典管理",
         id = "dictionary",
         parent = "config",
+        icon = "icon-dictionary",
         type = ResourceType.Menu,
         sources = "Console"
 )

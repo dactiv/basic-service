@@ -16,6 +16,7 @@ plugin:
   parent:
     config:
       name: '配置管理'
+      icon: 'icon-un-config-o'
 
 info:
   version: @version@

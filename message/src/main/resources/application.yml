@@ -12,7 +12,7 @@ plugin:
   parent:
     message:
       name: '消息管理'
-      icon: 'icon-notification'
+      icon: 'icon-message'
 
 info:
   version: @version@

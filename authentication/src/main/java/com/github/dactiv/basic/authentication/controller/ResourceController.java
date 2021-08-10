@@ -34,6 +34,7 @@ import java.util.List;
         name = "资源管理",
         id = "resource",
         parent = "system",
+        icon = "icon-attachment",
         type = ResourceType.Menu,
         sources = "Console"
 )

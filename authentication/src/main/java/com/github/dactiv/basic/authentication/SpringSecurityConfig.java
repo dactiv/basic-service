@@ -113,20 +113,13 @@ public class SpringSecurityConfig<S extends Session> extends WebSecurityConfigur
                 .and()
                 .sessionManagement()
                 .sessionAuthenticationStrategy(sessionControlAuthenticationStrategy)
-                .maximumSessions(2)
+                /*.maximumSessions(2) // 限制登陆次数
                 .sessionRegistry(springSessionBackedSessionRegistry)
-                .expiredSessionStrategy(jsonSessionInformationExpiredStrategy);
+                .expiredSessionStrategy(jsonSessionInformationExpiredStrategy)*/;
 
         SpringSecuritySupportAutoConfiguration.addConsensusBasedToMethodSecurityInterceptor(http);
 
 
-    }
-
-    @Bean
-    public AuthenticationEntryPoint loginUrlAuthenticationEntryPoint() {
-        LoginUrlAuthenticationEntryPoint AuthenticationEntryPoint = new LoginUrlAuthenticationEntryPoint("/login");
-        AuthenticationEntryPoint.setUseForward(true);
-        return AuthenticationEntryPoint;
     }
 
     @Bean

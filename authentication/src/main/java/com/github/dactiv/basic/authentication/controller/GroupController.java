@@ -27,6 +27,7 @@ import java.util.List;
         name = "组管理",
         id = "group",
         parent = "system",
+        icon = "icon-group",
         type = ResourceType.Menu,
         sources = "Console"
 )

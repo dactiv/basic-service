@@ -29,6 +29,7 @@ import java.util.List;
         name = "邮件消息",
         id = "email_message",
         parent = "message",
+        icon = "icon-email",
         type = ResourceType.Menu,
         sources = "Console"
 )

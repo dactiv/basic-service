@@ -31,6 +31,7 @@ import javax.servlet.http.HttpServletRequest;
         name = "会员用户管理",
         id = "member_user",
         parent = "system",
+        icon = "icon-user-groups",
         type = ResourceType.Menu,
         sources = "Console"
 )

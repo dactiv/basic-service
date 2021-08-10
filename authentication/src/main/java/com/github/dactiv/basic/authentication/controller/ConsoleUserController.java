@@ -33,6 +33,7 @@ import java.util.List;
         name = "系统用户管理",
         id = "console_user",
         parent = "system",
+        icon = "icon-system-user",
         type = ResourceType.Menu,
         sources = "Console"
 )

@@ -28,6 +28,7 @@ import java.util.List;
         name = "访问加解密",
         id = "access_crypto",
         parent = "config",
+        icon = "icon-crypto-currency-bitcoin-imac",
         type = ResourceType.Menu,
         sources = "Console"
 )

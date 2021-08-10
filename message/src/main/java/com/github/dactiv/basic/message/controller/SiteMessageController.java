@@ -33,6 +33,7 @@ import java.util.Map;
         name = "站内信消息",
         id = "site_message",
         parent = "message",
+        icon = "icon-notification",
         type = ResourceType.Menu,
         sources = "Console"
 )
