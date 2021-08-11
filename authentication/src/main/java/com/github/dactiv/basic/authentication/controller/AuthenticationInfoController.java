@@ -2,12 +2,11 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -32,7 +31,7 @@ public class AuthenticationInfoController {
     /**
      * 获取认证信息表分页信息
      *
-     * @param pageable 分页请求
+     * @param pageRequest 分页请求
      * @param request  http 请求
      *
      * @return 分页实体
@@ -40,10 +39,10 @@ public class AuthenticationInfoController {
     @PostMapping("page")
     @Plugin(name = "获取认证信息表分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
-    public Page<AuthenticationInfo> page(@PageableDefault Pageable pageable, HttpServletRequest request) {
+    public Page<AuthenticationInfo> page(PageRequest pageRequest, HttpServletRequest request) {
 
         return authenticationService.findAuthenticationInfoPage(
-                pageable,
+                pageRequest,
                 queryGenerator.getQueryWrapperByHttpRequest(request)
         );
     }

@@ -3,6 +3,8 @@ package com.github.dactiv.basic.message.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
 import com.github.dactiv.basic.message.dao.SiteMessageDao;
 import com.github.dactiv.basic.message.dao.SmsMessageDao;
@@ -11,11 +13,12 @@ import com.github.dactiv.basic.message.dao.entity.SiteMessage;
 import com.github.dactiv.basic.message.dao.entity.SmsMessage;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -105,7 +108,6 @@ public class MessageService {
      * 获取邮件消息
      *
      * @param id 主键 id
-     *
      * @return 邮件消息实体
      */
     public EmailMessage getEmailMessage(Integer id) {
@@ -115,17 +117,17 @@ public class MessageService {
     /**
      * 查找邮件消息分页数据
      *
-     * @param pageable 分页请求
-     * @param wrapper  过滤条件
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     过滤条件
      * @return 分页实体
      */
-    public Page<EmailMessage> findEmailMessagePage(Pageable pageable, Wrapper<EmailMessage> wrapper) {
+    public Page<EmailMessage> findEmailMessagePage(PageRequest pageRequest, Wrapper<EmailMessage> wrapper) {
 
-        IPage<EmailMessage> result = emailMessageDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<EmailMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<EmailMessage> result = emailMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -191,7 +193,6 @@ public class MessageService {
      * 获取站内信消息
      *
      * @param id 主键 id
-     *
      * @return 站内信消息实体
      */
     public SiteMessage getSiteMessage(Integer id) {
@@ -202,7 +203,6 @@ public class MessageService {
      * 根据过滤条件查找站内信消息数据
      *
      * @param wrapper 包装器
-     *
      * @return 站内信消息实体集合
      */
     public List<SiteMessage> findSiteMessageList(Wrapper<SiteMessage> wrapper) {
@@ -212,17 +212,16 @@ public class MessageService {
     /**
      * 查找站内信消息分页数据
      *
-     * @param pageable 分页请求
-     * @param wrapper  包装器
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     包装器
      * @return 分页实体
      */
-    public Page<SiteMessage> findSiteMessagePage(Pageable pageable, Wrapper<SiteMessage> wrapper) {
+    public Page<SiteMessage> findSiteMessagePage(PageRequest pageRequest, Wrapper<SiteMessage> wrapper) {
+        PageDto<SiteMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
-        IPage<SiteMessage> result = siteMessageDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<SiteMessage> result = siteMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -231,7 +230,6 @@ public class MessageService {
      * 计数站内信未读数量
      *
      * @param userId 用户 id
-     *
      * @return 按类型分组的未读数量
      */
     public List<Map<String, Object>> countSiteMessageUnreadQuantity(Integer userId) {
@@ -330,7 +328,6 @@ public class MessageService {
      * 获取短信消息
      *
      * @param id 主键 id
-     *
      * @return 短信消息实体
      */
     public SmsMessage getSmsMessage(Integer id) {
@@ -340,17 +337,16 @@ public class MessageService {
     /**
      * 查找短信消息分页数据
      *
-     * @param pageable 分页请求
-     * @param wrapper  包装器
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     包装器
      * @return 分页实体
      */
-    public Page<SmsMessage> findSmsMessagePage(Pageable pageable, Wrapper<SmsMessage> wrapper) {
+    public Page<SmsMessage> findSmsMessagePage(PageRequest pageRequest, Wrapper<SmsMessage> wrapper) {
+        PageDto<SmsMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
-        IPage<SmsMessage> result = smsMessageDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<SmsMessage> result = smsMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }

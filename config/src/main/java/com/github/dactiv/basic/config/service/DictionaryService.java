@@ -2,19 +2,22 @@ package com.github.dactiv.basic.config.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.config.dao.DataDictionaryDao;
 import com.github.dactiv.basic.config.dao.DictionaryTypeDao;
 import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -46,7 +49,6 @@ public class DictionaryService {
      * 获取数据字典
      *
      * @param id 数据字典 ID
-     *
      * @return 字典实体
      */
     public DataDictionary getDataDictionary(Integer id) {
@@ -57,7 +59,6 @@ public class DictionaryService {
      * 获取数据字典
      *
      * @param code 字典代码
-     *
      * @return 字典实体
      */
     public DataDictionary getDataDictionaryByCode(String code) {
@@ -68,7 +69,6 @@ public class DictionaryService {
      * 获取数据字典集合
      *
      * @param parentId 父类 id
-     *
      * @return 字典实体集合
      */
     public List<DataDictionary> getDataDictionariesByParentId(Integer parentId) {
@@ -83,7 +83,6 @@ public class DictionaryService {
      * 获取数据字典集合
      *
      * @param typeId 字典类型 id
-     *
      * @return 字典实体集合
      */
     public List<DataDictionary> getDataDictionariesByTypeId(Integer typeId) {
@@ -98,7 +97,6 @@ public class DictionaryService {
      * 查找数据字典
      *
      * @param wrapper 包装器
-     *
      * @return 数据字典集合
      */
     public List<DataDictionary> findDataDictionaries(Wrapper<DataDictionary> wrapper) {
@@ -108,17 +106,17 @@ public class DictionaryService {
     /**
      * 查找数据字典分页信息
      *
-     * @param pageable 分页请求
-     * @param wrapper  包装器
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     包装器
      * @return 分页实体
      */
-    public Page<DataDictionary> findDataDictionariesPage(Pageable pageable, Wrapper<DataDictionary> wrapper) {
+    public Page<DataDictionary> findDataDictionariesPage(PageRequest pageRequest, Wrapper<DataDictionary> wrapper) {
 
-        IPage<DataDictionary> result = dataDictionaryDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<DataDictionary> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<DataDictionary> result = dataDictionaryDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -257,7 +255,6 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param id 主键 ID
-     *
      * @return 字典类型实体
      */
     public DictionaryType getDictionaryType(Integer id) {
@@ -268,7 +265,6 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param code 代码
-     *
      * @return 字典类型实体
      */
     public DictionaryType getDictionaryTypeByCode(String code) {
@@ -279,7 +275,6 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param parentId 父类 id
-     *
      * @return 字典类型实体
      */
     public List<DictionaryType> getDictionaryTypesByParentId(Integer parentId) {
@@ -290,7 +285,6 @@ public class DictionaryService {
      * 查找字典类型
      *
      * @param wrapper 包装器
-     *
      * @return 字典类型集合
      */
     public List<DictionaryType> findDictionaryTypes(Wrapper<DictionaryType> wrapper) {

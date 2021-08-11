@@ -2,13 +2,18 @@ package com.github.dactiv.basic.config.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.config.dao.AccessCryptoDao;
 import com.github.dactiv.basic.config.dao.AccessCryptoPredicateDao;
 import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.dao.entity.ConfigAccessCryptoPredicate;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
@@ -21,8 +26,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -134,17 +137,18 @@ public class AccessCryptoService implements InitializingBean {
     /**
      * 查找访问加解密分页信息
      *
-     * @param pageable 分页请求
+     * @param pageRequest 分页请求
      * @param wrapper  包装器
      *
      * @return 分页实体
      */
-    public Page<ConfigAccessCrypto> findAccessCryptoPage(Pageable pageable, Wrapper<ConfigAccessCrypto> wrapper) {
+    public Page<ConfigAccessCrypto> findAccessCryptoPage(PageRequest pageRequest, Wrapper<ConfigAccessCrypto> wrapper) {
 
-        IPage<ConfigAccessCrypto> result = accessCryptoDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<ConfigAccessCrypto> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<ConfigAccessCrypto> result = accessCryptoDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }

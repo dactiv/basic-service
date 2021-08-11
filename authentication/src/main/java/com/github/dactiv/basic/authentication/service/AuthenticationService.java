@@ -2,7 +2,9 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.security.AuthenticationProperties;
@@ -11,6 +13,9 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import com.github.dactiv.framework.spring.security.concurrent.LockType;
@@ -21,10 +26,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.domain.Sort;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.IndexOperations;
 import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
@@ -119,7 +120,6 @@ public class AuthenticationService {
      * 获取认证信息表实体
      *
      * @param id 主键 id
-     *
      * @return 认证信息表实体
      */
     public AuthenticationInfo getAuthenticationInfo(Integer id) {
@@ -131,7 +131,6 @@ public class AuthenticationService {
      *
      * @param userId 用户 id
      * @param types  类型
-     *
      * @return 认证信息表实体
      */
     public AuthenticationInfo getLastAuthenticationInfo(Integer userId, List<String> types) {
@@ -145,17 +144,16 @@ public class AuthenticationService {
     /**
      * 查找认证信息表实体分页数据
      *
-     * @param pageable 分页请求
-     * @param wrapper  查询包装器
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     查询包装器
      * @return 分页实体
      */
-    public Page<AuthenticationInfo> findAuthenticationInfoPage(Pageable pageable, Wrapper<AuthenticationInfo> wrapper) {
+    public Page<AuthenticationInfo> findAuthenticationInfoPage(PageRequest pageRequest, Wrapper<AuthenticationInfo> wrapper) {
 
-        IPage<AuthenticationInfo> result = authenticationInfoDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<AuthenticationInfo> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<AuthenticationInfo> result = authenticationInfoDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -168,7 +166,7 @@ public class AuthenticationService {
     public void validAuthenticationInfo(AuthenticationInfo info) {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(
-                PageRequest.of(0,1, Sort.by(Sort.Order.asc("id"))),
+                new PageRequest(0, 1),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
                         .eq(AuthenticationInfo::getUserId, info.getUserId())
@@ -176,7 +174,7 @@ public class AuthenticationService {
                         .ne(AuthenticationInfo::getId, info.getId())
         );
 
-        Iterator<AuthenticationInfo> iterator = page.iterator();
+        Iterator<AuthenticationInfo> iterator = page.getContent().iterator();
 
         AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
@@ -214,7 +212,7 @@ public class AuthenticationService {
     public void syncAuthenticationInfo() {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(
-                PageRequest.of(1,100),
+                new PageRequest(1, 100),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
                         .le(AuthenticationInfo::getRetryCount, properties.getAbnormalArea().getMaxRetryCount())
@@ -223,7 +221,7 @@ public class AuthenticationService {
 
         LOGGER.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
 
-        page.forEach(this::onAuthenticationSuccess);
+        page.getContent().forEach(this::onAuthenticationSuccess);
 
     }
 

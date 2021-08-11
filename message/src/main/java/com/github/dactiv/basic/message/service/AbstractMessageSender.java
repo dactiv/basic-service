@@ -12,7 +12,6 @@ import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.WebDataBinder;
 
-import java.lang.reflect.ParameterizedType;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;

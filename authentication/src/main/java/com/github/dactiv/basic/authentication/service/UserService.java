@@ -3,7 +3,9 @@ package com.github.dactiv.basic.authentication.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
@@ -13,6 +15,9 @@ import com.github.dactiv.basic.authentication.dao.entity.MemberUserInitializatio
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -26,8 +31,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -217,7 +220,7 @@ public class UserService implements InitializingBean {
         deleteRedisCache(userDetailsService, token);
     }
 
-    public void deleteRedisCache(UserDetailsService userDetailsService,  PrincipalAuthenticationToken token) {
+    public void deleteRedisCache(UserDetailsService userDetailsService, PrincipalAuthenticationToken token) {
         CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
 
         if (Objects.nonNull(authenticationCache)) {
@@ -349,7 +352,6 @@ public class UserService implements InitializingBean {
      * 获取系统用户
      *
      * @param id 主键 id
-     *
      * @return 系统用户实体
      */
     public ConsoleUser getConsoleUser(Integer id) {
@@ -360,7 +362,6 @@ public class UserService implements InitializingBean {
      * 获取系统用户
      *
      * @param username 登陆账户
-     *
      * @return 系统用户实体
      */
     public ConsoleUser getConsoleUserByUsername(String username) {
@@ -371,7 +372,6 @@ public class UserService implements InitializingBean {
      * 获取后台用户集合
      *
      * @param wrapper 包装器
-     *
      * @return 后台用户集合
      */
     public List<ConsoleUser> findConsoleUsers(Wrapper<ConsoleUser> wrapper) {
@@ -381,17 +381,17 @@ public class UserService implements InitializingBean {
     /**
      * 查找系统用户分页信息
      *
-     * @param pageable 分页请求
-     * @param wrapper  过滤条件
-     *
+     * @param pageRequest 分页请求
+     * @param wrapper     过滤条件
      * @return 分页实体
      */
-    public Page<ConsoleUser> findConsoleUserPage(Pageable pageable, Wrapper<ConsoleUser> wrapper) {
+    public Page<ConsoleUser> findConsoleUserPage(PageRequest pageRequest, Wrapper<ConsoleUser> wrapper) {
 
-        IPage<ConsoleUser> result = consoleUserDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<ConsoleUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<ConsoleUser> result = consoleUserDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -602,7 +602,6 @@ public class UserService implements InitializingBean {
      * 获取会员用户
      *
      * @param id 主键 id
-     *
      * @return 会员用户实体
      */
     public MemberUser getMemberUser(Integer id) {
@@ -619,7 +618,6 @@ public class UserService implements InitializingBean {
      * 根据唯一识别获取会员用户
      *
      * @param identified 唯一识别
-     *
      * @return 会员用户
      */
     public MemberUser getMemberUserByIdentified(String identified) {
@@ -637,7 +635,6 @@ public class UserService implements InitializingBean {
      * 获取会员用户集合
      *
      * @param wrapper 包装器
-     *
      * @return 会员用户集合
      */
     public List<MemberUser> findMemberUsers(LambdaQueryWrapper<MemberUser> wrapper) {
@@ -647,17 +644,17 @@ public class UserService implements InitializingBean {
     /**
      * 查找会员用户分页信息
      *
-     * @param pageable    信息
-     * @param wrapper 条件
-     *
+     * @param pageRequest 分页信息信息
+     * @param wrapper  条件
      * @return 分页实体
      */
-    public Page<MemberUser> findMemberUserPage(Pageable pageable, Wrapper<MemberUser> wrapper) {
+    public Page<MemberUser> findMemberUserPage(PageRequest pageRequest, Wrapper<MemberUser> wrapper) {
 
-        IPage<MemberUser> result = memberUserDao.selectPage(
-                MybatisPlusQueryGenerator.createQueryPage(pageable),
-                wrapper
-        );
+        PageDto<MemberUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+
+        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
+
+        IPage<MemberUser> result = memberUserDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -691,7 +688,6 @@ public class UserService implements InitializingBean {
      * 获取用户初始化实体
      *
      * @param userId 用户 id
-     *
      * @return 用户初始化实体
      */
     public MemberUserInitialization getMemberUserInitialization(Integer userId) {

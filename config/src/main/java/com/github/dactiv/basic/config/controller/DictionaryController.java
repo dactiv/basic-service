@@ -4,13 +4,13 @@ import com.github.dactiv.basic.config.dao.entity.DataDictionary;
 import com.github.dactiv.basic.config.dao.entity.DictionaryType;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,17 +47,16 @@ public class DictionaryController {
     /**
      * 获取数据字典分页信息
      *
-     * @param pageable 分页信息
-     * @param request  http servlet request
-     *
+     * @param pageRequest 分页信息
+     * @param request     http servlet request
      * @return 分页实体
      */
     @PostMapping("getDataDictionaryPage")
     @PreAuthorize("hasAuthority('perms[data-dictionary:page]')")
     @Plugin(name = "获取数据字典分页", sources = "Console")
-    public Page<DataDictionary> getDataDictionaryPage(Pageable pageable, HttpServletRequest request) {
+    public Page<DataDictionary> getDataDictionaryPage(PageRequest pageRequest, HttpServletRequest request) {
         return dictionaryService.findDataDictionariesPage(
-                pageable,
+                pageRequest,
                 mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
         );
     }
@@ -67,7 +66,6 @@ public class DictionaryController {
      *
      * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
-     *
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionary")
@@ -91,7 +89,6 @@ public class DictionaryController {
      * 判断数据字典唯一识别值是否唯一
      *
      * @param code 唯一识别值
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isDataDictionaryCodeUnique")
@@ -105,7 +102,6 @@ public class DictionaryController {
      * 获取数据字典
      *
      * @param id 数据字典 ID
-     *
      * @return 数据字典实体
      */
     @GetMapping("getDataDictionary")
@@ -148,7 +144,6 @@ public class DictionaryController {
      *
      * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
-     *
      * @return 字典类型集合
      */
     @PostMapping("findDictionaryType")
@@ -172,7 +167,6 @@ public class DictionaryController {
      * 获取字典类型实体
      *
      * @param id 主键 ID
-     *
      * @return 字典类型实体
      */
     @GetMapping("getDictionaryType")
@@ -186,7 +180,6 @@ public class DictionaryController {
      * 判断字典类型唯一识别值是否唯一
      *
      * @param code 唯一识别值
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isDictionaryTypeCodeUnique")

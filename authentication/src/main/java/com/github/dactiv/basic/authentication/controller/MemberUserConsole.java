@@ -5,13 +5,13 @@ import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -46,7 +46,7 @@ public class MemberUserConsole {
     /**
      * 查找会员用户分页信息
      *
-     * @param pageable 分页请求
+     * @param pageRequest 分页请求
      * @param request  http 请求
      *
      * @return 分页实体
@@ -54,9 +54,9 @@ public class MemberUserConsole {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
     @Plugin(name = "查询分页", sources = "Console")
-    public Page<MemberUser> page(Pageable pageable, HttpServletRequest request) {
+    public Page<MemberUser> page(PageRequest pageRequest, HttpServletRequest request) {
 
-        return userService.findMemberUserPage(pageable, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return userService.findMemberUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
