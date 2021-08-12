@@ -8,6 +8,7 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -35,7 +36,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Alias("dataDictionary")
 @TableName("tb_data_dictionary")
-public class DataDictionary implements Tree<Integer, DataDictionary>, Serializable {
+public class DataDictionary implements Tree<Integer, DataDictionary>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 4219144269288469584L;
     /**

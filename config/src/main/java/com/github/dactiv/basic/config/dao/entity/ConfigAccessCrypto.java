@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import lombok.Data;
@@ -25,7 +26,7 @@ import java.util.List;
 @Alias("configAccessCrypto")
 @TableName("tb_access_crypto")
 @EqualsAndHashCode(callSuper = true)
-public class ConfigAccessCrypto extends AccessCrypto {
+public class ConfigAccessCrypto extends AccessCrypto implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 126959369778385198L;
     /**

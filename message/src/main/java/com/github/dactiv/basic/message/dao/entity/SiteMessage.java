@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +28,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Alias("siteMessage")
 @TableName("tb_site_message")
-public class SiteMessage implements Retryable, ExecuteStatus.Body, Serializable {
+public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer> {
 
 
     private static final long serialVersionUID = 2037280001998945900L;

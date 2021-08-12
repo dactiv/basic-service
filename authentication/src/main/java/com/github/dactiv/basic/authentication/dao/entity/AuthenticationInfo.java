@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -25,7 +26,7 @@ import java.util.Date;
 @EqualsAndHashCode
 @NoArgsConstructor
 @TableName("tb_authentication_info")
-public class AuthenticationInfo implements Serializable {
+public class AuthenticationInfo implements NumberIdEntity<Integer> {
 
     public static final String DEFAULT_INDEX = "authentication-info";
 

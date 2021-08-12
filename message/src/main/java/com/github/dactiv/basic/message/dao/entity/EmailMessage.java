@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -27,7 +28,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("emailMessage")
 @TableName("tb_email_message")
-public class EmailMessage implements Retryable, ExecuteStatus.Body, Serializable {
+public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 8360029094205090328L;
     /**

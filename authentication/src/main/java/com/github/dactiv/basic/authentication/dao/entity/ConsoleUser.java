@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -31,7 +32,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("consoleUser")
 @TableName("tb_console_user")
-public class ConsoleUser implements Serializable {
+public class ConsoleUser implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 542256170672538050L;
     /**

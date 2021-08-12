@@ -3,6 +3,7 @@ package com.github.dactiv.basic.config.dao.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -22,7 +23,7 @@ import java.util.Date;
 @Alias("configAccessCryptoPredicate")
 @TableName("tb_access_crypto_predicate")
 @EqualsAndHashCode(callSuper = true)
-public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate {
+public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5764360440250914629L;
     /**

@@ -10,6 +10,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
@@ -37,7 +38,7 @@ import java.util.*;
 @EqualsAndHashCode
 @NoArgsConstructor
 @TableName("tb_resource")
-public class Resource implements Serializable, Tree<Integer, Resource> {
+public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource> {
 
     private static final long serialVersionUID = 4709419291009298510L;
 

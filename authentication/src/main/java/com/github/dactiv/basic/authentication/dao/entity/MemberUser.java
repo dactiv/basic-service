@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
@@ -32,7 +33,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("memberUser")
 @TableName("tb_member_user")
-public class MemberUser implements Serializable {
+public class MemberUser implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 2708129983369081033L;
     /**

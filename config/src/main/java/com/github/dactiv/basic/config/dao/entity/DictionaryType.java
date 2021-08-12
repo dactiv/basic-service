@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,7 +31,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Alias("dictionaryType")
 @TableName("tb_dictionary_type")
-public class DictionaryType implements Tree<Integer, DictionaryType>, Serializable {
+public class DictionaryType implements Tree<Integer, DictionaryType>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 2211302874891670273L;
     /**

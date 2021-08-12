@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.controller;
 
+import com.fasterxml.jackson.annotation.JsonView;
 import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.framework.commons.page.Page;
@@ -37,6 +38,7 @@ public class AuthenticationInfoController {
      * @return 分页实体
      */
     @PostMapping("page")
+    @JsonView
     @Plugin(name = "获取认证信息表分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
     public Page<AuthenticationInfo> page(PageRequest pageRequest, HttpServletRequest request) {

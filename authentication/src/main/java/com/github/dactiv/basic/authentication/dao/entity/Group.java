@@ -9,6 +9,7 @@ import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
@@ -40,7 +41,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TableName("tb_group")
-public class Group implements Tree<Integer, Group>, Serializable {
+public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5357157352791368716L;
 
