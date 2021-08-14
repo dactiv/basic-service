@@ -48,6 +48,11 @@ public class MemberUser implements NumberIdEntity<Integer> {
     private Date creationTime = new Date();
 
     /**
+     * 注册时间
+     */
+    private Date registrationTime = new Date();
+
+    /**
      * 版本号
      */
     @Version

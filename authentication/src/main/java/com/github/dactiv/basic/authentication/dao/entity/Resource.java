@@ -10,6 +10,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
@@ -178,6 +180,15 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
      */
     public String getSourceName() {
         return NameEnumUtils.getName(this.source, ResourceSource.class);
+    }
+
+    /**
+     * 获取状态名称
+     *
+     * @return String
+     */
+    public String getStatusName() {
+        return NameValueEnumUtils.getName(this.status, DisabledOrEnabled.class);
     }
 
     @Override

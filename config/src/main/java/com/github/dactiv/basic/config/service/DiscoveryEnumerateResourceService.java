@@ -8,6 +8,7 @@ import com.github.dactiv.framework.spring.web.endpoint.EnumerateEndpoint;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
@@ -23,7 +24,7 @@ import java.util.*;
  */
 @Component
 @SuppressWarnings("unchecked")
-public class DiscoveryEnumerateResourceService {
+public class DiscoveryEnumerateResourceService implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(DiscoveryEnumerateResourceService.class);
 
@@ -203,5 +204,10 @@ public class DiscoveryEnumerateResourceService {
      */
     public Set<String> getServiceEnumerateName(String service) {
         return data.get(service).keySet();
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        syncEnumerate();
     }
 }

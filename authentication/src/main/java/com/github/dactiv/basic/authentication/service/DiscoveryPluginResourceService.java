@@ -75,7 +75,7 @@ public class DiscoveryPluginResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${spring.security.plugin.sync-cron:30 * * * * ?}", name = "同步服务插件")
+    @NacosCronScheduled(cron = "${spring.security.plugin.sync-cron:0 0/30 * * * ?}", name = "同步服务插件")
     @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作", type = LockType.Lock)
     public void syncPluginResource() {
 

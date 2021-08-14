@@ -47,8 +47,7 @@ public class MemberUserConsole {
      * 查找会员用户分页信息
      *
      * @param pageRequest 分页请求
-     * @param request  http 请求
-     *
+     * @param request     http 请求
      * @return 分页实体
      */
     @PostMapping("page")
@@ -63,11 +62,11 @@ public class MemberUserConsole {
      * 获取会员用户实体
      *
      * @param id 主键值
-     *
      * @return 用户实体
      */
     @GetMapping("get")
     @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "获取会员用户信息", sources = "ALL")
     public MemberUser get(@RequestParam Integer id) {
         return userService.getMemberUser(id);
     }
@@ -78,15 +77,14 @@ public class MemberUserConsole {
      * @param securityContext 安全上下文
      * @param oldPassword     旧密码
      * @param newPassword     新密码
-     *
      * @return 消息结果集
      */
     @PostMapping("updatePassword")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "修改密码", sources= {"UserCenter", "Mobile"}, audit = true)
+    @Plugin(name = "修改密码", sources = {"Console", "UserCenter", "Mobile"}, audit = true)
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
-                                               @RequestParam(required = false) String oldPassword,
-                                               @RequestParam String newPassword) {
+                                        @RequestParam(required = false) String oldPassword,
+                                        @RequestParam String newPassword) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -100,7 +98,6 @@ public class MemberUserConsole {
      * 判断登录账户是否唯一
      *
      * @param username 登录账户
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isUsernameUnique")
@@ -113,7 +110,6 @@ public class MemberUserConsole {
      * 判断邮件是否唯一
      *
      * @param email 电子邮件
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isEmailUnique")
@@ -126,7 +122,6 @@ public class MemberUserConsole {
      * 判断手机号码是否唯一
      *
      * @param phone 手机号码
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isPhoneUnique")

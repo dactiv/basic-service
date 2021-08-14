@@ -21,6 +21,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 资源控制器
@@ -55,7 +56,7 @@ public class ResourceController {
      *
      * @return 资源实体集合
      */
-    @GetMapping("find")
+    @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = "Console")
     public List<Resource> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
@@ -92,15 +93,11 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsoleUserResources")
-    @Plugin(name = "获取用户资源", sources = "Console")
-    public List<Resource> getConsoleUserResources(@RequestParam Integer userId, @RequestParam(required = false) boolean mergeTree) {
+    @Plugin(name = "获取用户资源 id 集合", sources = "Console")
+    public List<Integer> getConsoleUserResources(@RequestParam Integer userId) {
         List<Resource> resourceList = authorizationService.getConsoleUserResources(userId);
 
-        if (mergeTree) {
-            return TreeUtils.buildGenericTree(resourceList);
-        } else {
-            return resourceList;
-        }
+        return resourceList.stream().map(Resource::getId).collect(Collectors.toList());
     }
 
     /**
@@ -141,15 +138,10 @@ public class ResourceController {
      */
     @GetMapping("getGroupResource")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "根据组 id 获取资源", sources = "Console")
-    public List<Resource> getGroupResource(@RequestParam Integer groupId, @RequestParam(required = false) boolean mergeTree) {
+    @Plugin(name = "获取组资源 id 集合", sources = "Console")
+    public List<Integer> getGroupResource(@RequestParam Integer groupId) {
         List<Resource> resourceList = authorizationService.getGroupResources(groupId);
-
-        if (mergeTree) {
-            return TreeUtils.buildGenericTree(resourceList);
-        } else {
-            return resourceList;
-        }
+        return resourceList.stream().map(Resource::getId).collect(Collectors.toList());
     }
 
     /**

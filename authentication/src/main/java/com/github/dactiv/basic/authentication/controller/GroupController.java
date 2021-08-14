@@ -15,6 +15,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 用户用户组控制器
@@ -42,7 +43,7 @@ public class GroupController {
     /**
      * 获取所有用户组
      */
-    @GetMapping("find")
+    @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
     @Plugin(name = "查询全部", sources = "Console")
     public List<Group> find(HttpServletRequest request,
@@ -61,23 +62,17 @@ public class GroupController {
      * 获取用户的用户组集合
      *
      * @param userId    当前用户
-     * @param mergeTree 是否合并树形 true，是 否则 false
      *
      * @return 用户组实体集合
      */
     @GetMapping("getConsoleUserGroups")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "获取用户组信息", sources = "Console")
-    public List<Group> getConsoleUserGroups(@RequestParam Integer userId,
-                                            @RequestParam(required = false) boolean mergeTree) {
+    public List<Integer> getConsoleUserGroups(@RequestParam Integer userId) {
 
         List<Group> groupList = authorizationService.getConsoleUserGroups(userId);
 
-        if (mergeTree) {
-            return TreeUtils.buildGenericTree(groupList);
-        } else {
-            return groupList;
-        }
+        return groupList.stream().map(Group::getId).collect(Collectors.toList());
     }
 
     /**

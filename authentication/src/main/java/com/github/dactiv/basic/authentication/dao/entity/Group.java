@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
@@ -23,10 +24,7 @@ import org.hibernate.validator.constraints.Range;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Date;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -122,7 +120,8 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
 
     @Override
     public boolean isChildren(Tree<Integer, Group> parent) {
-        return false;
+        Group group = Casts.cast(parent);
+        return Objects.equals(group.getId(), this.getParent());
     }
 
     /**
