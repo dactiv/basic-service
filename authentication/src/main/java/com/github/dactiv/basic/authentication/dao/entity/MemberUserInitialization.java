@@ -65,16 +65,9 @@ public class MemberUserInitialization implements NumberIdEntity<Integer> {
     private Integer modifyPassword = YesOrNo.No.getValue();
 
     /**
-     * 是否客更新登录账户：1.是、0.否
+     * 是否可更新登录账户：1.是、0.否
      */
     @NotNull
     @Range(min = 0, max = 1)
     private Integer modifyUsername = YesOrNo.No.getValue();
-
-    /**
-     * 会否绑定邮箱：1.是，0.否
-     */
-    @NotNull
-    @Range(min = 0, max = 1)
-    private Integer buildEmail = YesOrNo.No.getValue();
 }

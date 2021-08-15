@@ -139,4 +139,11 @@ public class GroupController {
 
         return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
     }
+
+    @GetMapping("isNameUnique")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "判断组名称是否唯一", sources = "Console")
+    public boolean isNameUnique(@RequestParam String name) {
+        return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getName, name)).isEmpty();
+    }
 }

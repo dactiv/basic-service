@@ -692,13 +692,11 @@ public class UserService implements InitializingBean {
      */
     public MemberUserInitialization getMemberUserInitialization(Integer userId) {
 
-        String key = getMemberUserInitializationKey(userId);
-
         RBucket<MemberUserInitialization> bucket = getMemberUserInitializationBucket(userId);
 
         MemberUserInitialization value = bucket.get();
 
-        if (Objects.nonNull(null)) {
+        if (Objects.nonNull(value)) {
             return value;
         }
 

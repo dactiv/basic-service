@@ -66,7 +66,6 @@ public class MemberUserConsole {
      */
     @GetMapping("get")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取会员用户信息", sources = "ALL")
     public MemberUser get(@RequestParam Integer id) {
         return userService.getMemberUser(id);
     }
