@@ -192,7 +192,6 @@ CREATE TABLE `tb_member_user_initialization`
     `user_id`         int(11) NOT NULL COMMENT '用户 id',
     `modify_password` tinyint(4) NOT NULL COMMENT '是否可更新密码：1.是、0.否',
     `modify_username` tinyint(4) NOT NULL COMMENT '是否客更新登录账户：1.是、0.否',
-    `build_email`     tinyint(4) DEFAULT NULL COMMENT '会否绑定邮箱：1.是，0.否',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `ux_user_id` (`user_id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='会员用户初始化表';
