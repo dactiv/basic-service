@@ -89,7 +89,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
     /**
      * 创建断言条件
      *
-     * @param acp        访问加解密条件
+     * @param acp        访问加解密断言
      * @param predicates 路由条件集合
      * @return 断言条件
      */
@@ -106,7 +106,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      * 创建断言条件
      *
      * @param p   路由条件
-     * @param acp 访问加解密条件
+     * @param acp 访问加解密断言
      * @return 断言条件
      */
     private Predicate<ServerWebExchange> createPredicate(RoutePredicateFactory p, AccessCryptoPredicate acp) {

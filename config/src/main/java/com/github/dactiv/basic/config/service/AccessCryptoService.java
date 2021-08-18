@@ -9,6 +9,7 @@ import com.github.dactiv.basic.config.dao.AccessCryptoDao;
 import com.github.dactiv.basic.config.dao.AccessCryptoPredicateDao;
 import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.dao.entity.ConfigAccessCryptoPredicate;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -65,6 +66,19 @@ public class AccessCryptoService implements InitializingBean {
      */
     private final CipherAlgorithmService cipherAlgorithmService = new CipherAlgorithmService();
 
+    /**
+     * 保存访问加解密断言
+     *
+     * @param predicate 访问加解密断言
+     */
+    public void saveAccessCryptoPredicate(ConfigAccessCryptoPredicate predicate) {
+        if (Objects.isNull(predicate.getId())) {
+            accessCryptoPredicateDao.insert(predicate);
+        } else {
+            accessCryptoPredicateDao.updateById(predicate);
+        }
+    }
+
     // ----------------------------------------- 访问加解密管理 ----------------------------------------- //
 
     /**
@@ -89,11 +103,11 @@ public class AccessCryptoService implements InitializingBean {
     }
 
     /**
-     * 获取访问加解密条件扩展集合
+     * 获取访问加解密断言扩展集合
      *
      * @param accessCryptoId 访问加解 id
      *
-     * @return 访问加解密条件扩展集合
+     * @return 访问加解密断言扩展集合
      */
     public List<ConfigAccessCryptoPredicate> getConfigAccessCryptoPredicatesByAccessCryptoId(Integer accessCryptoId) {
 
@@ -120,7 +134,7 @@ public class AccessCryptoService implements InitializingBean {
      * 查找访问加解密
      *
      * @param wrapper        包装器
-     * @param loadPredicates 是否加载访问加解密条件
+     * @param loadPredicates 是否加载访问加解密断言
      *
      * @return 访问加解密集合
      */
@@ -162,13 +176,22 @@ public class AccessCryptoService implements InitializingBean {
 
         if (YesOrNo.No.getValue().equals(entity.getRequestDecrypt())
                 && YesOrNo.No.getValue().equals(entity.getResponseEncrypt())) {
-            throw new ServiceException("请求解密或响应解密，必须存在一个为 1 的状态");
+            throw new ServiceException("请求解密或响应解密，必须存在一个为'是'的状态");
         }
 
         if (Objects.nonNull(entity.getId())) {
             updateAccessCrypto(entity);
+            accessCryptoPredicateDao.deleteByAccessCryptoId(entity.getId());
         } else {
             insertAccessCrypto(entity);
+        }
+
+        if (!entity.getPredicates().isEmpty()) {
+            entity.getPredicates()
+                    .stream()
+                    .map(p -> Casts.of(p, ConfigAccessCryptoPredicate.class))
+                    .peek(p -> p.setAccessCryptoId(entity.getId()))
+                    .forEach(this::saveAccessCryptoPredicate);
         }
 
         syncRedisAccessCryptoList();
@@ -180,19 +203,7 @@ public class AccessCryptoService implements InitializingBean {
      * @param entity 访问加解密实体
      */
     public void updateAccessCrypto(ConfigAccessCrypto entity) {
-
         accessCryptoDao.updateById(entity);
-
-        accessCryptoPredicateDao.deleteByAccessCryptoId(entity.getId());
-
-        if (!entity.getPredicates().isEmpty()) {
-            entity.getPredicates()
-                    .stream()
-                    .map(ConfigAccessCryptoPredicate::new)
-                    .peek(p -> p.setAccessCryptoId(entity.getId()))
-                    .collect(Collectors.toList())
-                    .forEach(p -> accessCryptoPredicateDao.insert(p));
-        }
     }
 
     /**
@@ -201,18 +212,7 @@ public class AccessCryptoService implements InitializingBean {
      * @param entity 访问加解密实体
      */
     public void insertAccessCrypto(ConfigAccessCrypto entity) {
-
         accessCryptoDao.insert(entity);
-
-        if (!entity.getPredicates().isEmpty()) {
-            entity.getPredicates()
-                    .stream()
-                    .map(ConfigAccessCryptoPredicate::new)
-                    .peek(p -> p.setAccessCryptoId(entity.getId()))
-                    .collect(Collectors.toList())
-                    .forEach(p -> accessCryptoPredicateDao.insert(p));
-        }
-
     }
 
     /**

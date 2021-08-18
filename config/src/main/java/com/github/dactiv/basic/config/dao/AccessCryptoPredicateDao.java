@@ -8,7 +8,7 @@ import org.apache.ibatis.annotations.Param;
 import org.springframework.stereotype.Repository;
 
 /**
- * 访问加解密条件数据访问
+ * 访问加解密断言数据访问
  *
  * @author maurice.chen
  */
@@ -17,10 +17,10 @@ import org.springframework.stereotype.Repository;
 public interface AccessCryptoPredicateDao extends BaseMapper<ConfigAccessCryptoPredicate> {
 
     /**
-     * 删除访问加解密条件
+     * 删除访问加解密断言
      *
      * @param id 访问加解密 id
      */
-    @Delete("<script>DELETE FROM tb_crypto_predicate WHERE access_crypto_id = #{id}</script>")
+    @Delete("<script>DELETE FROM tb_access_crypto_predicate WHERE access_crypto_id = #{id}</script>")
     void deleteByAccessCryptoId(@Param("id") Integer id);
 }

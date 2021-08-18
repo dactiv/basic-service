@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * 系统用户控制器
@@ -165,7 +166,7 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断登录账户是否唯一", sources = "Console")
     public boolean isUsernameUnique(@RequestParam String username) {
-        return userService.getConsoleUserByUsername(username) == null;
+        return Objects.isNull(userService.getConsoleUserByUsername(username));
     }
 
     /**

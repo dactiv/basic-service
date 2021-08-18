@@ -71,11 +71,11 @@ public class DataDictionary implements Tree<Integer, DataDictionary>, NumberIdEn
     private String value;
 
     /**
-     * 状态:0.禁用,1.启用
+     * 是否启用:0.禁用,1.启用
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer status;
+    private Integer enabled;
 
     /**
      * 对应字典类型
@@ -117,8 +117,8 @@ public class DataDictionary implements Tree<Integer, DataDictionary>, NumberIdEn
      *
      * @return 状态名称
      */
-    public String getStatusName() {
-        return NameValueEnumUtils.getName(status, DisabledOrEnabled.class);
+    public String getEnabledName() {
+        return NameValueEnumUtils.getName(enabled, DisabledOrEnabled.class);
     }
 
     @Override

@@ -145,21 +145,6 @@ public class ResourceController {
     }
 
     /**
-     * 判断唯一识别值是否唯一
-     *
-     * @param code 唯一识别值
-     *
-     * @return true 是，否则 false
-     */
-    @GetMapping("isCodeUnique")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断唯一识别值是否唯一", sources = "Console")
-    public boolean isCodeUnique(@RequestParam String code) {
-
-        return authorizationService.findResources(Wrappers.<Resource>lambdaQuery().eq(Resource::getCode, code)).isEmpty();
-    }
-
-    /**
      * 同步插件資源
      *
      * @return reset 结果集
@@ -169,7 +154,7 @@ public class ResourceController {
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
     public RestResult<?> syncPluginResource() {
 
-        discoveryPluginResourceService.cleanExceptionServices();
+        discoveryPluginResourceService.cleanCurrentServices();
         discoveryPluginResourceService.syncPluginResource();
 
         return RestResult.of("同步数据完成");

@@ -14,7 +14,7 @@ import org.springframework.beans.BeanUtils;
 import java.util.Date;
 
 /**
- * 访问加解密条件扩展
+ * 访问加解密断言扩展
  *
  * @author maurice
  */
@@ -37,8 +37,4 @@ public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate implement
      */
     private Date creationTime = new Date();
 
-
-    public ConfigAccessCryptoPredicate(AccessCryptoPredicate accessCryptoPredicate) {
-        BeanUtils.copyProperties(accessCryptoPredicate, this);
-    }
 }

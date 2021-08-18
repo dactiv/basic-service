@@ -73,6 +73,15 @@ public class DiscoveryPluginResourceService {
     }
 
     /**
+     * 清楚当前所有插件记录缓存
+     */
+    public void cleanCurrentServices() {
+        List<String> services = discoveryClient.getServices();
+
+        services.forEach(s -> redissonClient.getBucket(properties.getCache().getName(s)).delete());
+    }
+
+    /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
     @NacosCronScheduled(cron = "${spring.security.plugin.sync-cron:0 0/30 * * * ?}", name = "同步服务插件")

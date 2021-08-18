@@ -187,7 +187,7 @@ public class DictionaryController {
     @Plugin(name = "判断字类型典唯一识别值是否唯一", sources = "Console")
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
 
-        return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
+        return Objects.isNull(dictionaryService.getDictionaryTypeByCode(code));
     }
 
     /**

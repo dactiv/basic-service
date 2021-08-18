@@ -23,15 +23,22 @@ import com.github.dactiv.framework.crypto.algorithm.cipher.RsaCipherService;
 import com.github.dactiv.framework.crypto.algorithm.hash.Hash;
 import com.github.dactiv.framework.crypto.algorithm.hash.HashAlgorithmMode;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.ServiceInstance;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 
@@ -40,11 +47,12 @@ import java.util.*;
  *
  * @author maurice.chen
  */
+@Slf4j
 @RefreshScope
 @RestController
 public class ConfigController {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(ConfigController.class);
+    public static final String DEFAULT_EVN_URI = "actuator/env";
 
     @Autowired
     private DictionaryService dictionaryService;
@@ -62,7 +70,13 @@ public class ConfigController {
     private CryptoAlgorithm accessTokenAlgorithm;
 
     @Autowired
+    private DiscoveryClient discoveryClient;
+
+    @Autowired
     private AccessCryptoProperties properties;
+
+    @Autowired
+    private RestTemplate restTemplate;
 
     /**
      * 获取数据字典
@@ -163,8 +177,8 @@ public class ConfigController {
             bucket.set(privateToken);
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("生成 public token, 当前 token 为:"
+        if (log.isDebugEnabled()) {
+            log.debug("生成 public token, 当前 token 为:"
                     + result.getToken() + ", 密钥为:" + publicByteSource.getBase64());
         }
 
@@ -197,8 +211,8 @@ public class ConfigController {
             return createCamouflageToken();
         }
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("正在生成 access token, 当前 token 为:" + token + ", 客户端密钥为:" + key);
+        if (log.isDebugEnabled()) {
+            log.debug("正在生成 access token, 当前 token 为:" + token + ", 客户端密钥为:" + key);
         }
 
         RsaCipherService rsa = accessCryptoService.getCipherAlgorithmService().getCipherService("RSA");
@@ -245,8 +259,8 @@ public class ConfigController {
 
         bucket.deleteAsync();
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("生成新的 access token, 给 [" + token + "] 客户端使用, 本次返回未加密信息为:" + requestSignToken + ", 原文的 AES 密钥为:" + requestAccessCryptoKey.getBase64());
+        if (log.isDebugEnabled()) {
+            log.debug("生成新的 access token, 给 [" + token + "] 客户端使用, 本次返回未加密信息为:" + requestSignToken + ", 原文的 AES 密钥为:" + requestAccessCryptoKey.getBase64());
         }
 
         return requestSignToken;
@@ -324,14 +338,49 @@ public class ConfigController {
     }
 
     /**
-     * 获取服务枚举名
+     * 获取服务枚举
      *
-     * @param service 服务名
      * @return 服务枚举信息
      */
-    @GetMapping("getServiceEnumerateName")
-    public Set<String> getServiceEnumerateName(@RequestParam String service) {
-        return discoveryEnumerateResourceService.getServiceEnumerateName(service);
+    @GetMapping("getAllServiceEnumerate")
+    @PreAuthorize("hasAuthority('perms[service_enumerate:*]')")
+    @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = "Console")
+    public Map<String, Map<String, Map<String, Object>>> getAllServiceEnumerate() {
+        return discoveryEnumerateResourceService.getServiceEnumerate();
+    }
+
+    /**
+     * 获取服务枚举
+     *
+     * @return 服务枚举信息
+     */
+    @GetMapping("getAllServiceVariable")
+    @PreAuthorize("hasAuthority('perms[service_variable:*]')")
+    @Plugin(name = "环境变量查询", id = "variable", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = "Console")
+    public Map<String,Object> getAllServiceVariable() {
+
+        Map<String,Object> result = new LinkedHashMap<>();
+
+        List<String> services = discoveryClient.getServices();
+
+        services.forEach(s -> {
+            List<ServiceInstance> instances = discoveryClient.getInstances(s);
+
+            ServiceInstance instance = instances.stream().findFirst().orElse(null);
+
+            if (Objects.nonNull(instance)) {
+                String url = "http://" + instance.getHost() + ":" + instance.getPort() + "/" + DEFAULT_EVN_URI;
+                try {
+                    //noinspection unchecked
+                    Map<String, Object> data = restTemplate.getForObject(url, Map.class);
+                    result.put(s, data);
+                } catch (Exception e) {
+                    log.warn("获取 [" + s + "] 服务环境变量出错", e);
+                }
+            }
+        });
+
+        return result;
     }
 
 }

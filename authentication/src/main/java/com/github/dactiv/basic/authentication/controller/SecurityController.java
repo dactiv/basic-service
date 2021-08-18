@@ -7,6 +7,8 @@ import com.github.dactiv.basic.authentication.service.security.handler.JsonLogou
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.security.audit.PageAuditEventRepository;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -20,9 +22,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
-import org.springframework.data.web.PageableDefault;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -33,6 +32,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -60,16 +60,16 @@ public class SecurityController {
     /**
      * 获取用户审计数据
      *
-     * @param pageable  分页请求
-     * @param principal 用户登陆账户
-     * @param after     数据发生时间
-     * @param type      审计类型
-     *
+     * @param pageRequest 分页请求
+     * @param principal   用户登陆账户
+     * @param after       数据发生时间
+     * @param type        审计类型
      * @return 审计事件
      */
     @PostMapping("audit")
-    @Plugin(name = "审计管理", id = "audit", parent = "system", type = ResourceType.Menu, sources = "Console")
-    public Page<AuditEvent> audit(@PageableDefault Pageable pageable,
+    @PreAuthorize("hasAuthority('perms[audit:page]')")
+    @Plugin(name = "操作审计", id = "audit", icon = "icon-audit", parent = "system", type = ResourceType.Menu, sources = "Console")
+    public Page<AuditEvent> audit(PageRequest pageRequest,
                                   @RequestParam(required = false) String principal,
                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
                                   @RequestParam(required = false) String type) {
@@ -82,14 +82,13 @@ public class SecurityController {
 
         Instant instant = Objects.nonNull(after) ? after.toInstant() : null;
 
-        return pageAuditEventRepository.findPage(pageable, principal, instant, type);
+        return pageAuditEventRepository.findPage(pageRequest, principal, instant, type);
     }
 
     /**
      * 登录预处理
      *
      * @param request http servlet request
-     *
      * @return rest 结果集
      */
     @GetMapping("prepare")
@@ -111,7 +110,6 @@ public class SecurityController {
      * 登陆成功后跳转的连接，直接获取当前用户
      *
      * @param securityContext 安全上下文
-     *
      * @return 当前用户
      */
     @GetMapping("getPrincipal")
@@ -126,7 +124,6 @@ public class SecurityController {
      * @param deviceIdentified 唯一识别
      * @param username         登录账户
      * @param password         登录密码
-     *
      * @return 移动端的用户明细实现
      */
     @PreAuthorize("hasRole('ORDINARY')")
@@ -172,7 +169,6 @@ public class SecurityController {
      *
      * @param id     用户 id
      * @param status 状态值
-     *
      * @return 消息结果集
      */
     @PreAuthorize("hasRole('BASIC')")

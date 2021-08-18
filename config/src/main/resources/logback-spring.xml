@@ -42,7 +42,7 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.dactiv.basiccom.github.dactiv.basic.config" level="DEBUG"/>
+    <logger name="com.github.dactiv.basic.config.dao" level="DEBUG"/>
 
     <root level="INFO">
         <appender-ref ref="CONSOLE-APPENDER"/>

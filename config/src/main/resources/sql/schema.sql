@@ -41,7 +41,7 @@ CREATE TABLE `tb_access_crypto_predicate`
     `access_crypto_id` int(11) NOT NULL COMMENT '访问加解密 id',
     PRIMARY KEY (`id`) USING BTREE,
     KEY                `ix_access_crypto_id` (`access_crypto_id`) USING BTREE
-) ENGINE=InnoDB COMMENT='访问加解密条件表';
+) ENGINE=InnoDB COMMENT='访问加解密断言表';
 
 -- ----------------------------
 -- Records of tb_access_crypto_predicate
@@ -64,7 +64,7 @@ CREATE TABLE `tb_data_dictionary`
     `name`           varchar(64) COLLATE utf8mb4_bin  NOT NULL COMMENT '名称',
     `level`          varchar(32) COLLATE utf8mb4_bin  DEFAULT NULL COMMENT '等级',
     `value`          text COLLATE utf8mb4_bin         NOT NULL COMMENT '值',
-    `status`         tinyint(4) DEFAULT '1' COMMENT '状态:0.禁用,1.启用',
+    `enabled`         tinyint(4) DEFAULT '1' COMMENT '是否启用:0.禁用,1.启用',
     `type_id`        int(11) NOT NULL COMMENT '对应字典类型',
     `parent_id`      int(11) DEFAULT NULL COMMENT '根节点为 null',
     `sort`           tinyint(4) DEFAULT NULL COMMENT '顺序值',

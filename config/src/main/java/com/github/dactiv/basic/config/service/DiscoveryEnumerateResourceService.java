@@ -197,13 +197,12 @@ public class DiscoveryEnumerateResourceService implements InitializingBean {
     }
 
     /**
-     * 获取服务枚举名称
+     * 获取服务枚举
      *
-     * @param service 服务名
      * @return 枚举名称集合
      */
-    public Set<String> getServiceEnumerateName(String service) {
-        return data.get(service).keySet();
+    public Map<String, Map<String, Map<String, Object>>> getServiceEnumerate() {
+        return data;
     }
 
     @Override
