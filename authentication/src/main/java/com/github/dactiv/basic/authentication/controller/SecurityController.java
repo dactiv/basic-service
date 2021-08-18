@@ -10,7 +10,8 @@ import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
-import com.github.dactiv.framework.spring.security.audit.PageAuditEventRepository;
+import com.github.dactiv.framework.spring.security.audit.PluginAuditEventRepository;
+import com.github.dactiv.framework.spring.security.audit.StringIdEntity;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -32,7 +33,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Date;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -74,15 +74,36 @@ public class SecurityController {
                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
                                   @RequestParam(required = false) String type) {
 
-        if (!PageAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
+        if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
             throw new ServiceException("当前审计不支持分页查询");
         }
 
-        PageAuditEventRepository pageAuditEventRepository = Casts.cast(auditEventRepository);
+        PluginAuditEventRepository pageAuditEventRepository = Casts.cast(auditEventRepository);
 
         Instant instant = Objects.nonNull(after) ? after.toInstant() : null;
 
         return pageAuditEventRepository.findPage(pageRequest, principal, instant, type);
+    }
+
+    /**
+     * 获取用户审计数据
+     *
+     * @param entity 审计查询实体
+     *
+     * @return 用户审计数据
+     */
+    @GetMapping("getAudit")
+    @PreAuthorize("hasAuthority('perms[audit:get]')")
+    @Plugin(name = "获取操作审计", parent = "audit", sources = "Console")
+    public AuditEvent getAudit(StringIdEntity entity) {
+
+        if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
+            throw new ServiceException("当前审计不支持分页查询");
+        }
+
+        PluginAuditEventRepository pluginAuditEventRepository = Casts.cast(auditEventRepository);
+
+        return pluginAuditEventRepository.get(entity);
     }
 
     /**
