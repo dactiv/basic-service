@@ -9,6 +9,7 @@ import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.DiscoveryEnumerateResourceService;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
@@ -342,11 +343,27 @@ public class ConfigController {
      *
      * @return 服务枚举信息
      */
-    @GetMapping("getAllServiceEnumerate")
-    @PreAuthorize("hasAuthority('perms[service_enumerate:*]')")
+    @GetMapping("enumerate")
+    @PreAuthorize("hasAuthority('perms[enumerate:*]')")
     @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = "Console")
-    public Map<String, Map<String, Map<String, Object>>> getAllServiceEnumerate() {
+    public Map<String, Map<String, Map<String, Object>>> enumerate() {
         return discoveryEnumerateResourceService.getServiceEnumerate();
+    }
+
+    /**
+     * 同步所有枚举
+     *
+     * @return 所有服务枚举信息
+     */
+    @GetMapping("syncEnumerate")
+    @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
+    @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
+    public Map<String, Map<String, Map<String, Object>>> syncEnumerate() {
+
+        discoveryEnumerateResourceService.syncEnumerate();
+
+        return discoveryEnumerateResourceService.getServiceEnumerate();
+
     }
 
     /**
@@ -354,10 +371,10 @@ public class ConfigController {
      *
      * @return 服务枚举信息
      */
-    @GetMapping("getAllServiceVariable")
-    @PreAuthorize("hasAuthority('perms[service_variable:*]')")
-    @Plugin(name = "环境变量查询", id = "variable", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = "Console")
-    public Map<String,Object> getAllServiceVariable() {
+    @GetMapping("environment")
+    @PreAuthorize("hasAuthority('perms[environment:*]')")
+    @Plugin(name = "环境变量查询", id = "environment", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = "Console")
+    public Map<String,Object> environment() {
 
         Map<String,Object> result = new LinkedHashMap<>();
 

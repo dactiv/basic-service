@@ -88,14 +88,15 @@ public class SecurityController {
     /**
      * 获取用户审计数据
      *
-     * @param entity 审计查询实体
-     *
+     * @param id    主键 id
+     * @param after 数据发生时间
      * @return 用户审计数据
      */
     @GetMapping("getAudit")
     @PreAuthorize("hasAuthority('perms[audit:get]')")
     @Plugin(name = "获取操作审计", parent = "audit", sources = "Console")
-    public AuditEvent getAudit(StringIdEntity entity) {
+    public AuditEvent getAudit(@RequestParam(required = false) String id,
+                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after) {
 
         if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
             throw new ServiceException("当前审计不支持分页查询");
@@ -103,7 +104,12 @@ public class SecurityController {
 
         PluginAuditEventRepository pluginAuditEventRepository = Casts.cast(auditEventRepository);
 
-        return pluginAuditEventRepository.get(entity);
+        StringIdEntity stringIdEntity = new StringIdEntity();
+
+        stringIdEntity.setId(id);
+        stringIdEntity.setTimestamp(after.toInstant());
+
+        return pluginAuditEventRepository.get(stringIdEntity);
     }
 
     /**
