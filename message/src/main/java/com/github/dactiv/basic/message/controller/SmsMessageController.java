@@ -26,10 +26,10 @@ import java.util.stream.Collectors;
  * @since 2020-04-06 10:16:10
  */
 @RestController
-@RequestMapping("sms/message")
+@RequestMapping("sms")
 @Plugin(
         name = "短信消息",
-        id = "sms_message",
+        id = "sms",
         parent = "message",
         icon = "icon-sms",
         type = ResourceType.Menu,
@@ -55,7 +55,7 @@ public class SmsMessageController {
      */
     @PostMapping("page")
     @Plugin(name = "获取短信消息分页", sources = "Console")
-    @PreAuthorize("hasAuthority('perms[sms_message:page]')")
+    @PreAuthorize("hasAuthority('perms[sms:page]')")
     public Page<SmsMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSmsMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -67,7 +67,7 @@ public class SmsMessageController {
      * @return 短信消息实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasAuthority('perms[sms_message:get]')")
+    @PreAuthorize("hasAuthority('perms[sms:get]')")
     @Plugin(name = "获取短信消息实体信息", sources = "Console")
     public SmsMessage get(@RequestParam Integer id) {
         return messageService.getSmsMessage(id);
@@ -79,7 +79,7 @@ public class SmsMessageController {
      * @param entity 短信消息实体
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[sms_message:save]')")
+    @PreAuthorize("hasAuthority('perms[sms:save]')")
     @Plugin(name = "保存短信消息实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid SmsMessage entity) {
         messageService.saveSmsMessage(entity);
@@ -92,7 +92,7 @@ public class SmsMessageController {
      * @param ids 短信消息主键 ID 值集合
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[sms_message:delete]')")
+    @PreAuthorize("hasAuthority('perms[sms:delete]')")
     @Plugin(name = "删除短信消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSmsMessage(ids);
@@ -106,7 +106,7 @@ public class SmsMessageController {
      */
     @GetMapping("balance")
     @Plugin(name = "获取短信余额", sources = "Console")
-    @PreAuthorize("hasAuthority('perms[sms_message:balance]')")
+    @PreAuthorize("hasAuthority('perms[sms:balance]')")
     public List<SmsBalance> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());
     }

@@ -28,10 +28,10 @@ import java.util.Map;
  * @since 2020-04-06 10:16:10
  */
 @RestController
-@RequestMapping("site/message")
+@RequestMapping("site")
 @Plugin(
         name = "站内信消息",
-        id = "site_message",
+        id = "site",
         parent = "message",
         icon = "icon-notification",
         type = ResourceType.Menu,
@@ -54,7 +54,7 @@ public class SiteMessageController {
      */
     @PostMapping("page")
     @Plugin(name = "获取站内信消息分页")
-    @PreAuthorize("hasAuthority('perms[site_message:page]')")
+    @PreAuthorize("hasAuthority('perms[site:page]')")
     public Page<SiteMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSiteMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -106,7 +106,7 @@ public class SiteMessageController {
      * @return 站内信消息实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasAuthority('perms[site_message:get]')")
+    @PreAuthorize("hasAuthority('perms[site:get]')")
     @Plugin(name = "获取站内信消息实体信息", sources = "Console")
     public SiteMessage get(@RequestParam Integer id) {
         return messageService.getSiteMessage(id);
@@ -119,7 +119,7 @@ public class SiteMessageController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[site_message:save]')")
+    @PreAuthorize("hasAuthority('perms[site:save]')")
     @Plugin(name = "保存站内信消息实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid SiteMessage entity) {
         messageService.saveSiteMessage(entity);
@@ -133,7 +133,7 @@ public class SiteMessageController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[site_message:delete]')")
+    @PreAuthorize("hasAuthority('perms[site:delete]')")
     @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSiteMessage(ids);

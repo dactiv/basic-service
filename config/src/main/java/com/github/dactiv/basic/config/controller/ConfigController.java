@@ -355,7 +355,7 @@ public class ConfigController {
      *
      * @return 所有服务枚举信息
      */
-    @GetMapping("syncEnumerate")
+    @PostMapping("syncEnumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
     @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
     public Map<String, Map<String, Map<String, Object>>> syncEnumerate() {

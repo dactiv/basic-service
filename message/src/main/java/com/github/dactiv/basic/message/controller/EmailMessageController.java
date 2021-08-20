@@ -24,10 +24,10 @@ import java.util.List;
  * @since 2020-04-06 10:16:10
  */
 @RestController
-@RequestMapping("email/message")
+@RequestMapping("email")
 @Plugin(
         name = "邮件消息",
-        id = "email_message",
+        id = "email",
         parent = "message",
         icon = "icon-email",
         type = ResourceType.Menu,
@@ -56,7 +56,7 @@ public class EmailMessageController {
      */
     @PostMapping("page")
     @Plugin(name = "获取邮件消息分页", sources = "Console")
-    @PreAuthorize("hasAuthority('perms[email_message:page]')")
+    @PreAuthorize("hasAuthority('perms[email:page]')")
     public Page<EmailMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findEmailMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -68,7 +68,7 @@ public class EmailMessageController {
      * @return 邮件消息实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasAuthority('perms[email_message:get]')")
+    @PreAuthorize("hasAuthority('perms[email:get]')")
     @Plugin(name = "获取邮件消息实体信息", sources = "Console")
     public EmailMessage get(@RequestParam Integer id) {
         return messageService.getEmailMessage(id);
@@ -80,7 +80,7 @@ public class EmailMessageController {
      * @param entity 邮件消息实体
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[email_message:save]')")
+    @PreAuthorize("hasAuthority('perms[email:save]')")
     @Plugin(name = "保存邮件消息实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid EmailMessage entity) {
         entity.setFromUser(sendMailUsername);
@@ -94,7 +94,7 @@ public class EmailMessageController {
      * @param ids 邮件消息主键 ID 值集合
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[email_message:delete]')")
+    @PreAuthorize("hasAuthority('perms[email:delete]')")
     @Plugin(name = "删除邮件消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteEmailMessage(ids);
