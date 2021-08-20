@@ -83,7 +83,7 @@ public class EmailMessageController {
     @PreAuthorize("hasAuthority('perms[email:save]')")
     @Plugin(name = "保存邮件消息实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid EmailMessage entity) {
-        entity.setFromUser(sendMailUsername);
+        entity.setFromEmail(sendMailUsername);
         messageService.saveEmailMessage(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }

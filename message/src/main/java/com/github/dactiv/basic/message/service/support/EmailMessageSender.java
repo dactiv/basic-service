@@ -95,8 +95,8 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
                 MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
-                helper.setFrom(entity.getFromUser());
-                helper.setTo(entity.getToUser());
+                helper.setFrom(entity.getFromEmail());
+                helper.setTo(entity.getToEmail());
                 helper.setSubject(entity.getTitle());
                 helper.setText(entity.getContent(), true);
 
@@ -133,7 +133,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
     @Override
     protected RestResult<Map<String, Object>> send(List<EmailMessage> entity) {
 
-        entity.forEach(x -> x.setFromUser(sendMailUsername));
+        entity.forEach(x -> x.setFromEmail(sendMailUsername));
 
         messageService.saveEmailMessages(entity);
 

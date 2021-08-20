@@ -55,14 +55,14 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
     private String type;
 
     /**
-     * 发送用户邮件
+     * 发送邮件
      */
-    private String fromUser;
+    private String fromEmail;
 
     /**
-     * 收取用户邮件
+     * 收取邮件
      */
-    private String toUser;
+    private String toEmail;
 
     /**
      * 标题
