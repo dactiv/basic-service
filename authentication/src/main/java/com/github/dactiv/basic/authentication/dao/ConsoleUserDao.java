@@ -2,7 +2,7 @@
 package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.authentication.dao.entity.ConsoleUser;
+import com.github.dactiv.basic.authentication.entity.ConsoleUser;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Insert;
 import org.apache.ibatis.annotations.Mapper;

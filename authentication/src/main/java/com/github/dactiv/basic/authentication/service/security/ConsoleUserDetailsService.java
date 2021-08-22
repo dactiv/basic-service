@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.authentication.service.security;
 
-import com.github.dactiv.basic.authentication.dao.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.dao.entity.Group;
-import com.github.dactiv.basic.authentication.dao.entity.Resource;
+import com.github.dactiv.basic.authentication.entity.ConsoleUser;
+import com.github.dactiv.basic.authentication.entity.Group;
+import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;

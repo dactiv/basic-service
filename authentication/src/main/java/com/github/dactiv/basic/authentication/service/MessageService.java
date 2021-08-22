@@ -27,7 +27,7 @@ public interface MessageService {
      *
      * @return rest 结果集
      */
-    @PostMapping("sendMessage")
-    RestResult<Map<String, Object>> sendMessage(@RequestBody Map<String, Object> request);
+    @PostMapping("send")
+    RestResult<Map<String, Object>> send(@RequestBody Map<String, Object> request);
 
 }

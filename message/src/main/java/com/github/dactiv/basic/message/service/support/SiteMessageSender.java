@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
-import com.github.dactiv.basic.message.dao.entity.SiteMessage;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;

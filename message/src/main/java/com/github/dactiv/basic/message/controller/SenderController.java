@@ -16,12 +16,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 消息控制器
+ * 消息发送控制器
  *
  * @author maurice
  */
 @RestController
-public class MessageController {
+public class SenderController {
 
     private static final String DEFAULT_TYPE_PARAM_NAME = "messageType";
 
@@ -37,10 +37,10 @@ public class MessageController {
      * @param request http servlet request
      * @return 消息结果集
      */
-    @PostMapping("sendMessage")
+    @PostMapping("send")
     @SuppressWarnings("unchecked")
     @PreAuthorize("hasRole('BASIC')")
-    public RestResult<Map<String, Object>> sendMessage(HttpServletRequest request) throws Exception {
+    public RestResult<Map<String, Object>> send(HttpServletRequest request) throws Exception {
 
         if (MediaType.APPLICATION_JSON_VALUE.equals(request.getContentType())) {
             Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);

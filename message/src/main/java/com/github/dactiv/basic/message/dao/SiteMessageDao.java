@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.message.dao.entity.SiteMessage;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

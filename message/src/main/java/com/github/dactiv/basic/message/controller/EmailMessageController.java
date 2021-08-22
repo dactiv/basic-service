@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.message.dao.entity.EmailMessage;
+import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;

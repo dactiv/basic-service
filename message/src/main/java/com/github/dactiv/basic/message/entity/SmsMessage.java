@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.dao.entity;
+package com.github.dactiv.basic.message.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -13,7 +13,6 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
-import java.io.Serializable;
 import java.util.Date;
 
 /**

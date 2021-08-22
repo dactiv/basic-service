@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.config.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.config.dao.entity.ConfigAccessCryptoPredicate;
+import com.github.dactiv.basic.config.entity.ConfigAccessCryptoPredicate;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;

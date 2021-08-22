@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
-import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
+import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;

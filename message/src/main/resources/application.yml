@@ -1,5 +1,5 @@
 mybatis-plus:
-  type-aliases-package: com.github.dactiv.basic.message.dao.entity
+  type-aliases-package: com.github.dactiv.basic.message.entity
   configuration:
     call-setters-on-nulls: on
   global-config:

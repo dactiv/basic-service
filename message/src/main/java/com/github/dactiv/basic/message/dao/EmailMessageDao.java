@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.message.dao.entity.EmailMessage;
+import com.github.dactiv.basic.message.entity.EmailMessage;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

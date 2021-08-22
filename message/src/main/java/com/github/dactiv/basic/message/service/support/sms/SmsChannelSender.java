@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
-import com.github.dactiv.basic.message.dao.entity.SmsMessage;
+import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;

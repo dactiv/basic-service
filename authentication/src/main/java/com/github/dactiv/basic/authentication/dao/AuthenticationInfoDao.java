@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

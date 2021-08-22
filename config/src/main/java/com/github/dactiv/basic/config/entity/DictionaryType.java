@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.config.dao.entity;
+package com.github.dactiv.basic.config.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -15,7 +15,6 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
-import java.io.Serializable;
 import java.util.Date;
 import java.util.LinkedList;
 import java.util.List;

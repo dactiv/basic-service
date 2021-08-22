@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.config.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.config.dao.entity.DictionaryType;
+import com.github.dactiv.basic.config.entity.DictionaryType;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

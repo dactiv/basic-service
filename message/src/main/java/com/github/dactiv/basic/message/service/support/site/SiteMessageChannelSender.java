@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support.site;
 
-import com.github.dactiv.basic.message.dao.entity.SiteMessage;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;

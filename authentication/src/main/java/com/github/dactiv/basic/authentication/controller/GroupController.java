@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.dactiv.basic.authentication.dao.entity.Group;
+import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;

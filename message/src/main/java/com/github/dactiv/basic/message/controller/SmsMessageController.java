@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.message.dao.entity.SmsMessage;
+import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;

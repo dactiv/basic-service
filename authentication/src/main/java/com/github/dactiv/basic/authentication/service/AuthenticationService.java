@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
-import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.security.AuthenticationProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -194,7 +194,7 @@ public class AuthenticationService {
 
             try {
 
-                RestResult<Map<String, Object>> result = messageService.sendMessage(param);
+                RestResult<Map<String, Object>> result = messageService.send(param);
 
                 if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
                     throw new ServiceException(result.getMessage());

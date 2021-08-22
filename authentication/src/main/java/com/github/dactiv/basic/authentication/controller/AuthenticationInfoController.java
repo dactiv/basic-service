@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.github.dactiv.basic.authentication.dao.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;

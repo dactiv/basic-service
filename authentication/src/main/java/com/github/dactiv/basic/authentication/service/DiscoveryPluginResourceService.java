@@ -2,8 +2,8 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.dactiv.basic.authentication.dao.entity.Group;
-import com.github.dactiv.basic.authentication.dao.entity.Resource;
+import com.github.dactiv.basic.authentication.entity.Group;
+import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;

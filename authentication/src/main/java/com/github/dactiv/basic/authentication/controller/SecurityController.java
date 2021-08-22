@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.github.dactiv.basic.authentication.dao.entity.MemberUser;
+import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;

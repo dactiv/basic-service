@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.config.controller;
 
-import com.github.dactiv.basic.config.dao.entity.ConfigAccessCrypto;
+import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;

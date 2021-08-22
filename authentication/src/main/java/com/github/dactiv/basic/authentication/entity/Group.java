@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.dao.entity;
+package com.github.dactiv.basic.authentication.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -23,7 +23,6 @@ import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
-import java.io.Serializable;
 import java.util.*;
 import java.util.stream.Collectors;
 
