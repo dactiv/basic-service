@@ -9,9 +9,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 用户组数据访问
+ * tb_group 用户组数据访问
  *
- * @author maurice.chen
+ * <p>Table: tb_group - 用户组</p>
+ *
+ * @see Group
+ *
+ * @author maurice
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

@@ -1,17 +1,16 @@
 package com.github.dactiv.basic.message.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.entity.Attachment;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
-
 /**
- * tb_email_message 邮件消息数据访问
+ * tb_attachment 的数据访问
  *
- * <p>Table: tb_email_message - 邮件消息</p>
+ * <p>Table: tb_attachment - 消息附件</p>
  *
- * @see EmailMessage
+ * @see Attachment
  *
  * @author maurice
  *
@@ -19,6 +18,5 @@ import org.springframework.stereotype.Repository;
  */
 @Mapper
 @Repository
-public interface EmailMessageDao extends BaseMapper<EmailMessage> {
-
+public interface AttachmentDao extends BaseMapper<Attachment> {
 }

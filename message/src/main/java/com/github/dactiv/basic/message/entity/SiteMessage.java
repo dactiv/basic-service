@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.entity;
 import com.baomidou.mybatisplus.annotation.*;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
@@ -27,7 +28,7 @@ import java.util.Map;
 @NoArgsConstructor
 @Alias("siteMessage")
 @TableName("tb_site_message")
-public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer> {
+public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
 
 
     private static final long serialVersionUID = 2037280001998945900L;
@@ -82,7 +83,7 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
     /**
      * 是否推送消息：0.否，1.是
      */
-    private Integer pushMessage;
+    private Integer isPush;
 
     /**
      * 是否已读：0.否，1.是
@@ -137,6 +138,11 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
     private Date successTime;
 
     /**
+     * 批量消息 id
+     */
+    private Integer batchId;
+
+    /**
      * 备注
      */
     private String remark;
@@ -144,5 +150,32 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
     @Override
     public void setExecuteStatus(ExecuteStatus status) {
         this.setStatus(status.getValue());
+    }
+
+    /**
+     * 获取状态名称
+     *
+     * @return 状态名称
+     */
+    public String getStatusName() {
+        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
+    }
+
+    /**
+     * 获取是否已读名称
+     *
+     * @return 是否已读名称
+     */
+    public String getIsReadName() {
+        return NameValueEnumUtils.getName(this.isRead, YesOrNo.class);
+    }
+
+    /**
+     * 获取是否推送名称
+     *
+     * @return 是否推送名称
+     */
+    public String getIsPushName() {
+        return NameValueEnumUtils.getName(this.isPush, YesOrNo.class);
     }
 }

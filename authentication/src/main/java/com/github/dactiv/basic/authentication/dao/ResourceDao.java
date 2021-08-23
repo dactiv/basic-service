@@ -2,6 +2,7 @@
 package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
+import com.github.dactiv.basic.authentication.entity.MemberUserInitialization;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
@@ -12,9 +13,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 用户组资源数据访问
+ * tb_resource 用户组资源数据访问
  *
- * @author maurice.chen
+ * <p>Table: tb_resource - 用户组资源</p>
+ *
+ * @see Resource
+ *
+ * @author maurice
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

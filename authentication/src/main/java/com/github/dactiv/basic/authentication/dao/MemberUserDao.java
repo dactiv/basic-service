@@ -11,9 +11,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 会员用户数据访问
+ * tb_member_user 会员用户数据访问
+ *
+ * <p>Table: tb_member_user - 会员用户</p>
+ *
+ * @see MemberUser
  *
  * @author maurice
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

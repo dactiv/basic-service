@@ -21,6 +21,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
 import java.util.Collections;
@@ -33,7 +35,8 @@ import java.util.Map;
  *
  * @author maurice
  */
-@Component
+@Service
+@Transactional(rollbackFor = Exception.class)
 public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.sms.queue";
@@ -63,6 +66,11 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
         entity.setMaxRetryCount(maxRetryCount);
     }
 
+    @Override
+    protected String getRetryMessageQueueName() {
+        return DEFAULT_QUEUE_NAME;
+    }
+
     /**
      * 发送短信
      *
@@ -82,50 +90,36 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
 
         channel.basicAck(tag, false);
 
-        data.forEach(entity -> {
+        data.forEach(this::send);
+    }
 
-            entity.setLastSendTime(new Date());
+    private void send(SmsMessage entity) {
 
-            SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
+        entity.setLastSendTime(new Date());
 
-            entity.setChannel(smsChannelSender.getType());
+        SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
-            try {
+        entity.setChannel(smsChannelSender.getType());
 
-                RestResult<Map<String, Object>> restResult = smsChannelSender.sendSms(entity);
+        try {
 
-                if (restResult.getStatus() == HttpStatus.OK.value()) {
-                    ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
-                } else {
-                    ExecuteStatus.failure(entity, restResult.getMessage());
-                }
+            RestResult<Map<String, Object>> restResult = smsChannelSender.sendSms(entity);
 
-            } catch (Exception e) {
-                ExecuteStatus.failure(entity, e.getMessage());
-            }
-
-            if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {
-
-                entity.setRetryCount(entity.getRetryCount() + 1);
-                messageService.saveSmsMessage(entity);
-
-                amqpTemplate.convertAndSend(
-                        RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
-                        DEFAULT_QUEUE_NAME,
-                        Collections.singletonList(entity),
-                        message -> {
-                            message.getMessageProperties().setDelay(entity.getNextIntervalTime());
-                            return message;
-                        }
-                );
-
+            if (restResult.getStatus() == HttpStatus.OK.value()) {
+                ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
             } else {
-
-                messageService.saveSmsMessage(entity);
-
+                ExecuteStatus.failure(entity, restResult.getMessage());
             }
 
-        });
+        } catch (Exception e) {
+            ExecuteStatus.failure(entity, e.getMessage());
+        }
+
+        retry(entity);
+
+        messageService.saveSmsMessage(entity);
+
+        updateBatchMessage(entity);
     }
 
     private SmsChannelSender getSmsChannelSender(String channel) {
@@ -137,20 +131,13 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<SmsMessage> entity) {
+    protected RestResult<Map<String, Object>> send(List<SmsMessage> entities) {
 
-        try {
+        entities.forEach(x -> messageService.saveSmsMessage(x));
 
-            messageService.saveSmsMessages(entity);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
 
-            amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
-
-            return RestResult.of("发送短信成功");
-
-        } catch (Exception e) {
-            return RestResult.ofException(ErrorCodeException.DEFAULT_EXCEPTION_CODE, e);
-        }
-
+        return RestResult.of("发送短信成功");
 
     }
 

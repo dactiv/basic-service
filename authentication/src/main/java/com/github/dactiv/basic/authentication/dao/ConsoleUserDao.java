@@ -12,9 +12,15 @@ import org.springframework.stereotype.Repository;
 import java.util.List;
 
 /**
- * 系统用户数据访问
+ * tb_console_user 系统用户数据访问
  *
- * @author maurice.chen
+ * <p>Table: tb_console_user - 系统用户</p>
+ *
+ * @see ConsoleUser
+ *
+ * @author maurice
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

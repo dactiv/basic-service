@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -36,7 +37,7 @@ import java.util.List;
 public class EmailMessageController {
 
     @Autowired
-    private MessageService messageService;
+    private AttachmentMessageService messageService;
 
     /**
      * 发送邮件用户名

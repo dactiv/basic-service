@@ -17,9 +17,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 访问加解密配置扩展
+ * <p>访问加解密配置扩展实体类</p>
+ * <p>Table: tb_access_crypto - 访问加解密</p>
  *
  * @author maurice
+ * @since 2021-05-06 11:59:41
  */
 @Data
 @NoArgsConstructor

@@ -20,8 +20,8 @@ import javax.validation.constraints.NotNull;
 import java.util.Date;
 
 /**
- * <p>后台用户实体类</p>
- * <p>Table: tb_console_user - 后台用户表</p>
+ * <p>系统用户实体类</p>
+ * <p>Table: tb_console_user - 系统用户表</p>
  *
  * @author maurice
  * @since 2020-04-13 10:14:46

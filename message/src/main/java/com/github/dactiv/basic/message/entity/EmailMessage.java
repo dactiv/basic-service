@@ -5,7 +5,10 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
@@ -27,7 +30,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("emailMessage")
 @TableName("tb_email_message")
-public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer> {
+public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
 
     private static final long serialVersionUID = 8360029094205090328L;
     /**
@@ -104,6 +107,16 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
     private String exception;
 
     /**
+     * 是否存在附件
+     */
+    private Integer hasAttachment = YesOrNo.No.getValue();
+
+    /**
+     * 批量消息 id
+     */
+    private Integer batchId;
+
+    /**
      * 备注
      */
     private String remark;
@@ -111,5 +124,23 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
     @Override
     public void setExecuteStatus(ExecuteStatus status) {
         this.setStatus(status.getValue());
+    }
+
+    /**
+     * 获取状态名称
+     *
+     * @return 状态名称
+     */
+    public String getStatusName() {
+        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
+    }
+
+    /**
+     * 获取是否存在附件名称
+     *
+     * @return 是否存在附件名称
+     */
+    public String getHasAttachmentName() {
+        return NameValueEnumUtils.getName(this.hasAttachment, YesOrNo.class);
     }
 }

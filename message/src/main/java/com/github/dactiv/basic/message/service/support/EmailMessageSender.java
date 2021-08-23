@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
+import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
@@ -45,7 +46,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
     private static final String DEFAULT_TYPE = "email";
 
     @Autowired
-    private MessageService messageService;
+    private AttachmentMessageService messageService;
 
     @Autowired
     private JavaMailSender mailSender;
@@ -67,6 +68,11 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
         entity.setMaxRetryCount(maxRetryCount);
     }
 
+    @Override
+    protected String getRetryMessageQueueName() {
+        return DEFAULT_QUEUE_NAME;
+    }
+
     /**
      * 发送邮件
      *
@@ -85,57 +91,43 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
         channel.basicAck(tag, false);
 
-        data.forEach(entity -> {
+        data.forEach(this::send);
+    }
 
-            entity.setLastSendTime(new Date());
+    private void send(EmailMessage entity) {
 
-            MimeMessage mimeMessage = mailSender.createMimeMessage();
+        entity.setLastSendTime(new Date());
 
-            try {
+        MimeMessage mimeMessage = mailSender.createMimeMessage();
 
-                MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
+        try {
 
-                helper.setFrom(entity.getFromEmail());
-                helper.setTo(entity.getToEmail());
-                helper.setSubject(entity.getTitle());
-                helper.setText(entity.getContent(), true);
+            MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
-                mailSender.send(mimeMessage);
+            helper.setFrom(entity.getFromEmail());
+            helper.setTo(entity.getToEmail());
+            helper.setSubject(entity.getTitle());
+            helper.setText(entity.getContent(), true);
 
-                ExecuteStatus.success(entity,"发送邮件成功");
-            } catch (Exception ex) {
-                LOGGER.error("发送邮件错误", ex);
-                ExecuteStatus.failure(entity,ex.getCause().getMessage());
-            }
+            mailSender.send(mimeMessage);
 
-            if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {
+            ExecuteStatus.success(entity,"发送邮件成功");
+        } catch (Exception ex) {
+            LOGGER.error("发送邮件错误", ex);
+            ExecuteStatus.failure(entity,ex.getCause().getMessage());
+        }
 
-                entity.setRetryCount(entity.getRetryCount() + 1);
-                messageService.saveEmailMessage(entity);
+        retry(entity);
 
-                amqpTemplate.convertAndSend(
-                        RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
-                        DEFAULT_QUEUE_NAME,
-                        Collections.singletonList(entity),
-                        message -> {
-                            message.getMessageProperties().setDelay(entity.getNextIntervalTime());
-                            return message;
-                        });
+        messageService.saveEmailMessage(entity);
 
-            } else {
-
-                messageService.saveEmailMessage(entity);
-
-            }
-        });
+        updateBatchMessage(entity);
     }
 
     @Override
     protected RestResult<Map<String, Object>> send(List<EmailMessage> entity) {
 
-        entity.forEach(x -> x.setFromEmail(sendMailUsername));
-
-        messageService.saveEmailMessages(entity);
+        entity.stream().peek(x -> x.setFromEmail(sendMailUsername)).forEach(x -> messageService.saveEmailMessage(x));
 
         amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
 

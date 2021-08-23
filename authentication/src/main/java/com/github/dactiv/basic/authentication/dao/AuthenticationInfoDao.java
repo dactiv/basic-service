@@ -6,10 +6,15 @@ import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
 /**
- * 认证信息数据访问
+ * tb_authentication_info 认证信息数据访问
+ *
+ * <p>Table: tb_authentication_info - 认证信息</p>
+ *
+ * @see AuthenticationInfo
  *
  * @author maurice
- * @since 2020-06-01 08:20:59
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

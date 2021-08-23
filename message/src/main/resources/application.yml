@@ -6,6 +6,8 @@ mybatis-plus:
     db-config:
       id-type: auto
 
+enumerate:
+  base-packages: com.github.dactiv.basic.message.enumerate
 
 plugin:
   base-packages: com.github.dactiv.basic.message.controller

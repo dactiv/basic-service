@@ -46,7 +46,7 @@ CREATE TABLE `tb_console_user`
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `ux_username` (`username`) USING BTREE,
     UNIQUE KEY `ux_email` (`email`) USING BTREE
-) ENGINE=InnoDB COMMENT='后台用户表';
+) ENGINE=InnoDB COMMENT='系统用户表';
 
 -- ----------------------------
 -- Records of tb_console_user
@@ -64,7 +64,7 @@ CREATE TABLE `tb_console_user_resource`
     `user_id`     int(11) NOT NULL COMMENT 'tb_console_user 外键',
     `resource_id` int(11) NOT NULL COMMENT 'tb_resource 外键',
     PRIMARY KEY (`user_id`, `resource_id`) USING BTREE
-) ENGINE=InnoDB COMMENT='后台用户与资源关联表';
+) ENGINE=InnoDB COMMENT='系统用户与资源关联表';
 
 -- ----------------------------
 -- Records of tb_console_user_resource
@@ -109,7 +109,7 @@ CREATE TABLE `tb_group_console_user`
     `group_id` int(11) NOT NULL COMMENT 'tb_group 表外键',
     `user_id`  int(11) NOT NULL COMMENT 'tb_console_user 表外键',
     PRIMARY KEY (`group_id`, `user_id`) USING BTREE
-) ENGINE=InnoDB COMMENT='后台用户与用户组关联表';
+) ENGINE=InnoDB COMMENT='系统用户与用户组关联表';
 
 -- ----------------------------
 -- Records of tb_group_console_user

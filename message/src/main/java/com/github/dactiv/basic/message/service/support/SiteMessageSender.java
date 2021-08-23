@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
+import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
@@ -42,7 +43,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
     private static final String DEFAULT_TYPE = "siteMessage";
 
     @Autowired
-    private MessageService messageService;
+    private AttachmentMessageService attachmentMessageService;
 
     @Autowired
     private List<SiteMessageChannelSender> siteMessageChannelSenderList;
@@ -64,6 +65,11 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
         entity.setMaxRetryCount(maxRetryCount);
     }
 
+    @Override
+    protected String getRetryMessageQueueName() {
+        return DEFAULT_QUEUE_NAME;
+    }
+
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
@@ -77,49 +83,37 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
 
         channel.basicAck(tag, false);
 
-        data.forEach(entity -> {
+        data.forEach(this::send);
 
-            entity.setLastSendTime(new Date());
+    }
 
-            SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
+    private void send(SiteMessage entity) {
 
-            entity.setChannel(siteMessageChannelSender.getType());
+        entity.setLastSendTime(new Date());
 
-            try {
+        SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
-                RestResult<Map<String, Object>> restResult = siteMessageChannelSender.sendSiteMessage(entity);
+        entity.setChannel(siteMessageChannelSender.getType());
 
-                if (restResult.getStatus() == HttpStatus.OK.value()) {
-                    ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
-                } else {
-                    ExecuteStatus.failure(entity, restResult.getMessage());
-                }
+        try {
 
-            } catch (Exception e) {
-                ExecuteStatus.failure(entity, e.getMessage());
-            }
+            RestResult<Map<String, Object>> restResult = siteMessageChannelSender.sendSiteMessage(entity);
 
-            if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.isRetry()) {
-
-                entity.setRetryCount(entity.getRetryCount() + 1);
-                messageService.saveSiteMessage(entity);
-
-                amqpTemplate.convertAndSend(
-                        RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
-                        DEFAULT_QUEUE_NAME,
-                        Collections.singletonList(entity),
-                        message -> {
-                            message.getMessageProperties().setDelay(entity.getNextIntervalTime());
-                            return message;
-                        });
-
+            if (restResult.getStatus() == HttpStatus.OK.value()) {
+                ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
             } else {
-
-                messageService.saveSiteMessage(entity);
-
+                ExecuteStatus.failure(entity, restResult.getMessage());
             }
-        });
 
+        } catch (Exception e) {
+            ExecuteStatus.failure(entity, e.getMessage());
+        }
+
+        retry(entity);
+
+        attachmentMessageService.saveSiteMessage(entity);
+
+        updateBatchMessage(entity);
     }
 
     private SiteMessageChannelSender getSiteMessageChannelSender(String channel) {
@@ -131,11 +125,11 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<SiteMessage> entity) {
+    protected RestResult<Map<String, Object>> send(List<SiteMessage> entities) {
 
-        messageService.saveSiteMessages(entity);
+        entities.forEach(x -> attachmentMessageService.saveSiteMessage(x));
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
 
         return RestResult.of("发送站内信成功");
     }

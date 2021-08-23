@@ -11,10 +11,15 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 站内信消息访问
+ * tb_site_message 站内信消息数据访问
+ *
+ * <p>Table: tb_site_message - 站内信消息</p>
+ *
+ * @see SiteMessage
  *
  * @author maurice
- * @since 2020-04-06 09:15:36
+ *
+ * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository

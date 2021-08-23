@@ -26,9 +26,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 数据字典
+ * <p>数据字典实体类</p>
+ * <p>Table: tb_data_dictionary - 数据字典</p>
  *
- * @author maurice.chen
+ * @author maurice
+ * @since 2021-05-06 11:59:41
  */
 @Data
 @EqualsAndHashCode

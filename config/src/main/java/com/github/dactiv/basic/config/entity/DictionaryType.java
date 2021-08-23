@@ -21,9 +21,11 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * 字典类型实体
+ * <p>字典类型实体</p>
+ * <p>Table: tb_dictionary_type - 字典类型</p>
  *
- * @author maurice.chen
+ * @author maurice
+ * @since 2021-05-06 11:59:41
  */
 @Data
 @EqualsAndHashCode

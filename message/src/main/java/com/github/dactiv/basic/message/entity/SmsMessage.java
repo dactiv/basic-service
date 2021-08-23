@@ -27,7 +27,7 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("smsMessage")
 @TableName("tb_sms_message")
-public class SmsMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer> {
+public class SmsMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
 
     private static final long serialVersionUID = 3229810529789017287L;
     /**
@@ -97,6 +97,11 @@ public class SmsMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity
      * 异常信息
      */
     private String exception;
+
+    /**
+     * 批量消息 id
+     */
+    private Integer batchId;
 
     /**
      * 备注

@@ -369,10 +369,10 @@ public class UserService implements InitializingBean {
     }
 
     /**
-     * 获取后台用户集合
+     * 获取系统用户集合
      *
      * @param wrapper 包装器
-     * @return 后台用户集合
+     * @return 系统用户集合
      */
     public List<ConsoleUser> findConsoleUsers(Wrapper<ConsoleUser> wrapper) {
         return consoleUserDao.selectList(wrapper);

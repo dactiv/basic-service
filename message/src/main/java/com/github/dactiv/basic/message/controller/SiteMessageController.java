@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -40,7 +41,7 @@ import java.util.Map;
 public class SiteMessageController {
 
     @Autowired
-    private MessageService messageService;
+    private AttachmentMessageService messageService;
 
     @Autowired
     private MybatisPlusQueryGenerator<SiteMessage> queryGenerator;
