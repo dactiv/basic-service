@@ -21,8 +21,8 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-@Alias("emailMessage")
-@TableName("tb_email_attachment")
+@Alias("attachment")
+@TableName("tb_attachment")
 public class Attachment implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 9190301660565089712L;

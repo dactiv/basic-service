@@ -14,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -141,6 +142,12 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
      * 批量消息 id
      */
     private Integer batchId;
+
+    /**
+     * 附件信息
+     */
+    @TableField(exist = false)
+    private List<Attachment> attachmentList;
 
     /**
      * 备注

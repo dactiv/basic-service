@@ -1,9 +1,6 @@
 package com.github.dactiv.basic.message.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -17,6 +14,7 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>邮件消息实体类</p>
@@ -115,6 +113,12 @@ public class EmailMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
      * 批量消息 id
      */
     private Integer batchId;
+
+    /**
+     * 附件信息
+     */
+    @TableField(exist = false)
+    private List<Attachment> attachmentList;
 
     /**
      * 备注
