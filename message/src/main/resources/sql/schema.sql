@@ -27,7 +27,7 @@ CREATE TABLE `tb_attachment` (
   `name` varchar(64) COLLATE utf8mb4_bin NOT NULL COMMENT '名称',
   `type` smallint NOT NULL COMMENT '类型:10.站内信，20:邮件',
   `link` varchar(256) COLLATE utf8mb4_bin NOT NULL COMMENT '连接地址',
-  `suffix` varchar(16) COLLATE utf8mb4_bin NOT NULL COMMENT '后缀名',
+  `content_type` varchar(32) COLLATE utf8mb4_bin NOT NULL COMMENT '媒体内容类型',
   `messageId` int NOT NULL COMMENT '消息 id',
   PRIMARY KEY (`id`),
   KEY `ix_message_id` (`messageId`)
@@ -86,7 +86,6 @@ CREATE TABLE `tb_site_message` (
   `update_version` int NOT NULL DEFAULT '1' COMMENT '更新版本号',
   `channel` varchar(32) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin DEFAULT NULL COMMENT '渠道名称',
   `type` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '类型',
-  `from_user_id` int NOT NULL COMMENT '发送的用户 id',
   `to_user_id` int NOT NULL COMMENT '收到的用户 id',
   `title` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '标题',
   `content` text CHARACTER SET utf8mb4 COLLATE utf8mb4_bin NOT NULL COMMENT '内容',

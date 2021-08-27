@@ -4,7 +4,8 @@ import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
-import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.rabbitmq.client.Channel;
@@ -23,10 +24,13 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 邮件消息发送者实现
@@ -34,7 +38,7 @@ import java.util.*;
  * @author maurice
  */
 @Component
-public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
+public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailMessageSender.class);
 
@@ -46,27 +50,16 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
     private static final String DEFAULT_TYPE = "email";
 
     @Autowired
-    private AttachmentMessageService messageService;
+    private AttachmentMessageService attachmentMessageService;
 
     @Autowired
     private JavaMailSender mailSender;
-
-    /**
-     * 发送邮件用户名
-     */
-    @Value("${spring.mail.username}")
-    private String sendMailUsername;
 
     /**
      * 最大重试次数
      */
     @Value("${spring.mail.max-retry-count:3}")
     private Integer maxRetryCount;
-
-    @Override
-    protected void afterBindValueSetting(EmailMessage entity, Map<String, Object> value) {
-        entity.setMaxRetryCount(maxRetryCount);
-    }
 
     @Override
     protected String getRetryMessageQueueName() {
@@ -119,24 +112,49 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessage> {
 
         retry(entity);
 
-        messageService.saveEmailMessage(entity);
+        attachmentMessageService.saveEmailMessage(entity);
 
         updateBatchMessage(entity);
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<EmailMessage> entity) {
+    @Transactional(rollbackFor = Exception.class)
+    protected RestResult<Map<String, Object>> send(List<EmailMessageBody> entities) {
 
-        entity.stream().peek(x -> x.setFromEmail(sendMailUsername)).forEach(x -> messageService.saveEmailMessage(x));
+        List<EmailMessage> messages = entities
+                .stream()
+                .flatMap(this::createAndSaveEmailMessageEntity)
+                .collect(Collectors.toList());
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entity);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, messages);
 
-        return new RestResult<>(
-                "发送邮件成功",
-                HttpStatus.OK.value(),
-                RestResult.SUCCESS_EXECUTE_CODE,
-                new LinkedHashMap<>()
-        );
+        return RestResult.ofSuccess("发送邮件成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, messages.size()));
+    }
+
+    /**
+     * 通过邮件消息 body 构造邮件消息并保存信息
+     *
+     * @param body 邮件消息 body
+     *
+     * @return 邮件消息流
+     */
+    private Stream<EmailMessage> createAndSaveEmailMessageEntity(EmailMessageBody body) {
+
+        List<EmailMessage> result = new LinkedList<>();
+
+        for (String toEmail : body.getToEmails()) {
+
+            EmailMessage entity = Casts.of(body, EmailMessage.class);
+
+            entity.setToEmail(toEmail);
+            entity.setMaxRetryCount(maxRetryCount);
+
+            attachmentMessageService.saveEmailMessage(entity);
+
+            result.add(entity);
+        }
+
+        return result.stream();
     }
 
     @Override

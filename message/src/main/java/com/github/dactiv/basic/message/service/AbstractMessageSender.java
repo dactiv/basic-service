@@ -30,6 +30,8 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 
+    public static final String DEFAULT_MESSAGE_COUNT_KEY = "count";
+
     @Autowired
     protected AmqpTemplate amqpTemplate;
 
@@ -52,20 +54,28 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
 
         List<T> result = new LinkedList<>();
 
+        // 如果存在批量消息构造数据集合，否则构造单个实体
         if (request.containsKey(DEFAULT_BATCH_MESSAGE_KEY)) {
+            //noinspection unchecked
             List<Map<String, Object>> messages = Casts.cast(request.get(DEFAULT_BATCH_MESSAGE_KEY), List.class);
+
             for (Map<String, Object> m : messages) {
                 T entity = ClassUtils.newInstance(entityClass);
                 bindAndValidate(entity, m);
                 result.add(entity);
             }
+
         } else {
             T entity = ClassUtils.newInstance(entityClass);
             bindAndValidate(entity, request);
             result.add(entity);
         }
 
-        if (result.size() > 1 && BatchMessage.Body.class.isAssignableFrom(entityClass)) {
+        RestResult<Map<String, Object>> restResult = send(result);
+
+        Integer count = Casts.cast(restResult.getData().get(DEFAULT_MESSAGE_COUNT_KEY));
+
+        if (count > 1 && BatchMessage.Body.class.isAssignableFrom(entityClass)) {
 
             BatchMessage batchMessage = new BatchMessage();
 
@@ -80,7 +90,7 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
             result.forEach(r -> r.setBatchId(batchMessage.getId()));
         }
 
-        return send(result);
+        return restResult;
     }
 
     private void bindAndValidate(T entity, Map<String, Object> value) throws BindException {

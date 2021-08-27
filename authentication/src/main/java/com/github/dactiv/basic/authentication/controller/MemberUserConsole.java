@@ -18,6 +18,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 
 
 /**
@@ -54,8 +55,19 @@ public class MemberUserConsole {
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
     @Plugin(name = "查询分页", sources = "Console")
     public Page<MemberUser> page(PageRequest pageRequest, HttpServletRequest request) {
-
         return userService.findMemberUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+    }
+
+    /**
+     * 查找会员用户信息
+     * @param request http 请求
+     * @return 会员用户信息集合
+     */
+    @PostMapping("find")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "查询分页", sources = "Console")
+    public List<MemberUser> find(HttpServletRequest request) {
+        return userService.findMemberUsers(queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**

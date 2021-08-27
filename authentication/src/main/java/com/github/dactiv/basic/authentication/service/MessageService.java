@@ -16,8 +16,14 @@ import java.util.Map;
 @FeignClient(value = "message", configuration = BasicAuthenticationConfiguration.class)
 public interface MessageService {
 
+    /**
+     * 默认的消息类型 key 名称
+     */
     String DEFAULT_MESSAGE_TYPE_KEY = "messageType";
 
+    /**
+     * 默认消息类型
+     */
     String DEFAULT_MESSAGE_TYPE_VALUE = "siteMessage";
 
     /**

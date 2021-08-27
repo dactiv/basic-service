@@ -9,6 +9,7 @@ import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.DiscoveryEnumerateResourceService;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
@@ -355,11 +356,11 @@ public class ConfigController {
     @PostMapping("syncEnumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
     @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
-    public Map<String, Map<String, Map<String, Object>>> syncEnumerate() {
+    public RestResult<Map<String, Map<String, Map<String, Object>>>> syncEnumerate() {
 
         discoveryEnumerateResourceService.syncEnumerate();
 
-        return discoveryEnumerateResourceService.getServiceEnumerate();
+        return RestResult.ofSuccess("同步系统枚举成功",discoveryEnumerateResourceService.getServiceEnumerate());
 
     }
 

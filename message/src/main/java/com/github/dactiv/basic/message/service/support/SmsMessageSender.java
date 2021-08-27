@@ -1,10 +1,14 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
+import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
@@ -25,10 +29,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 短信消息发送者实现
@@ -37,7 +40,7 @@ import java.util.Map;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
+public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.sms.queue";
 
@@ -60,11 +63,6 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
      */
     @Value("${spring.sms.max-retry-count:3}")
     private Integer maxRetryCount;
-
-    @Override
-    protected void afterBindValueSetting(SmsMessage entity, Map<String, Object> value) {
-        entity.setMaxRetryCount(maxRetryCount);
-    }
 
     @Override
     protected String getRetryMessageQueueName() {
@@ -131,14 +129,43 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessage> {
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<SmsMessage> entities) {
+    protected RestResult<Map<String, Object>> send(List<SmsMessageBody> entities) {
 
-        entities.forEach(x -> messageService.saveSmsMessage(x));
+        List<SmsMessage> messages = entities
+                .stream()
+                .flatMap(this::createAndSaveSmsMessageEntity)
+                .collect(Collectors.toList());
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, messages);
 
-        return RestResult.of("发送短信成功");
+        return RestResult.ofSuccess("发送短信成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, messages.size()));
 
+    }
+
+    /**
+     * 通过短信消息 body 构造短信消息并保存信息
+     *
+     * @param body 短信消息 body
+     *
+     * @return 短信消息流
+     */
+    private Stream<SmsMessage> createAndSaveSmsMessageEntity(SmsMessageBody body) {
+
+        List<SmsMessage> result = new LinkedList<>();
+
+        for (String phoneNumber : body.getPhoneNumbers()) {
+
+            SmsMessage entity = Casts.of(body, SmsMessage.class);
+
+            entity.setPhoneNumber(phoneNumber);
+            entity.setMaxRetryCount(maxRetryCount);
+
+             messageService.saveSmsMessage(entity);
+
+            result.add(entity);
+        }
+
+        return result.stream();
     }
 
     @Override

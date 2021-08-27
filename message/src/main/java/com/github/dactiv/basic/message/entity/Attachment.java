@@ -58,7 +58,7 @@ public class Attachment implements NumberIdEntity<Integer> {
     /**
      * 后缀
      */
-    private String suffix;
+    private String contentType;
 
     /**
      * 对应的消息主键

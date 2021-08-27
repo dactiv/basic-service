@@ -182,7 +182,7 @@ public class AuthenticationService {
 
             Map<String, Object> param = new LinkedHashMap<>();
 
-            param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, MessageService.DEFAULT_MESSAGE_TYPE_VALUE);
+            param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, properties.getAbnormalArea().getSendType());
 
             param.put("content", properties.getAbnormalArea().getSendContent());
             param.put("fromUserId", properties.getAbnormalArea().getFromUserId());

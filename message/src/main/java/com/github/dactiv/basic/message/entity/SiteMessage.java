@@ -25,36 +25,14 @@ import java.util.Map;
  * @since 2020-05-06 03:48:46
  */
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
 @Alias("siteMessage")
 @TableName("tb_site_message")
-public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
+@EqualsAndHashCode(callSuper = true)
+public class SiteMessage extends TitleMessage {
 
 
     private static final long serialVersionUID = 2037280001998945900L;
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
-
-    /**
-     * 创建时间
-     */
-    private Date creationTime = new Date();
-
-    /**
-     * 更新版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
-
-    /**
-     * 类型
-     */
-    private String type;
 
     /**
      * 渠道商
@@ -70,16 +48,6 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
      * 收到的用户 id
      */
     private Integer toUserId;
-
-    /**
-     * 标题
-     */
-    private String title;
-
-    /**
-     * 内容
-     */
-    private String content;
 
     /**
      * 是否推送消息：0.否，1.是
@@ -109,39 +77,9 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
     private Map<String, Object> data;
 
     /**
-     * 重试次数
+     * 是否存在附件
      */
-    private Integer retryCount = 0;
-
-    /**
-     * 最大重试次数
-     */
-    private Integer maxRetryCount = 0;
-
-    /**
-     * 最后发送时间
-     */
-    private Date lastSendTime;
-
-    /**
-     * 异常信息
-     */
-    private String exception;
-
-    /**
-     * 状态：0.执行中、1.执行成功，99.执行失败
-     */
-    private Integer status = ExecuteStatus.Processing.getValue();
-
-    /**
-     * 发送成功时间
-     */
-    private Date successTime;
-
-    /**
-     * 批量消息 id
-     */
-    private Integer batchId;
+    private Integer hasAttachment = YesOrNo.No.getValue();
 
     /**
      * 附件信息
@@ -150,31 +88,21 @@ public class SiteMessage implements Retryable, ExecuteStatus.Body, NumberIdEntit
     private List<Attachment> attachmentList;
 
     /**
-     * 备注
-     */
-    private String remark;
-
-    @Override
-    public void setExecuteStatus(ExecuteStatus status) {
-        this.setStatus(status.getValue());
-    }
-
-    /**
-     * 获取状态名称
-     *
-     * @return 状态名称
-     */
-    public String getStatusName() {
-        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
-    }
-
-    /**
      * 获取是否已读名称
      *
      * @return 是否已读名称
      */
     public String getIsReadName() {
         return NameValueEnumUtils.getName(this.isRead, YesOrNo.class);
+    }
+
+    /**
+     * 获取是否存在附件名称
+     *
+     * @return 是否存在附件名称
+     */
+    public String getHasAttachmentName() {
+        return NameValueEnumUtils.getName(this.hasAttachment, YesOrNo.class);
     }
 
     /**

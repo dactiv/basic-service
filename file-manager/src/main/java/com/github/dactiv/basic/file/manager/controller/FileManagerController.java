@@ -7,6 +7,7 @@ import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
@@ -53,9 +54,11 @@ public class FileManagerController {
      *
      * @throws Exception 删除错误时抛出
      */
-    public RestResult<?> remove(@RequestParam("bucketName") String bucketName,@RequestParam("filename") String filename) throws Exception {
-        fileManagerService.remove(bucketName, filename);
-
+    @PostMapping("delete")
+    @PreAuthorize("hasAuthority('perms[file_manager:delete]')")
+    @Plugin(name = "删除文件", parent = "file-manager", sources = "Console", audit = true)
+    public RestResult<?> delete(@RequestParam("bucketName") String bucketName,@RequestParam("filename") String filename) throws Exception {
+        fileManagerService.delete(bucketName, filename);
         return RestResult.of("删除 [" + filename + "] 成功");
     }
 
@@ -69,10 +72,10 @@ public class FileManagerController {
      *
      * @throws Exception 上传错误时抛出
      */
-    @PostMapping("upload")
+    @PostMapping("upload/{bucketName}")
     @PreAuthorize("hasAuthority('perms[file_manager:upload]')")
     @Plugin(name = "上传文件", parent = "file-manager", sources = "Console", audit = true)
-    public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @RequestParam("bucketName") String bucketName) throws Exception{
+    public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @PathVariable("bucketName") String bucketName) throws Exception{
 
         Map<String, Object> result = fileManagerService.upload(file, bucketName);
 

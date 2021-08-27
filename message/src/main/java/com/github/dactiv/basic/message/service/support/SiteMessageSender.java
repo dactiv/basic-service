@@ -1,11 +1,15 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
+import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -21,11 +25,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
-import java.util.Collections;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 /**
  * 站内信消息发送者
@@ -33,7 +37,7 @@ import java.util.Map;
  * @author maurice
  */
 @Component
-public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
+public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
 
@@ -59,11 +63,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
      */
     @Value("${spring.site.message.max-retry-count:3}")
     private Integer maxRetryCount;
-
-    @Override
-    protected void afterBindValueSetting(SiteMessage entity, Map<String, Object> value) {
-        entity.setMaxRetryCount(maxRetryCount);
-    }
 
     @Override
     protected String getRetryMessageQueueName() {
@@ -125,13 +124,43 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessage> {
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<SiteMessage> entities) {
+    @Transactional(rollbackFor = Exception.class)
+    protected RestResult<Map<String, Object>> send(List<SiteMessageBody> entities) {
 
-        entities.forEach(x -> attachmentMessageService.saveSiteMessage(x));
+        List<SiteMessage> messages = entities
+                .stream()
+                .flatMap(this::createAndSaveEmailMessageEntity)
+                .collect(Collectors.toList());
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, messages);
 
-        return RestResult.of("发送站内信成功");
+        return RestResult.ofSuccess("发送站内信成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, messages.size()));
+    }
+
+    /**
+     * 通过站内信消息 body 构造站内信消息并保存信息
+     *
+     * @param body 站内信消息 body
+     *
+     * @return 邮件消息流
+     */
+    private Stream<SiteMessage> createAndSaveEmailMessageEntity(SiteMessageBody body) {
+
+        List<SiteMessage> result = new LinkedList<>();
+
+        for (Integer userId : body.getToUserIds()) {
+
+            SiteMessage entity = Casts.of(body, SiteMessage.class);
+
+            entity.setFromUserId(userId);
+            entity.setMaxRetryCount(maxRetryCount);
+
+            attachmentMessageService.saveSiteMessage(entity);
+
+            result.add(entity);
+        }
+
+        return result.stream();
     }
 
     @Override

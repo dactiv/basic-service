@@ -23,35 +23,13 @@ import java.util.Date;
  * @since 2020-05-06 11:59:41
  */
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
 @Alias("smsMessage")
 @TableName("tb_sms_message")
-public class SmsMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
+@EqualsAndHashCode(callSuper = true)
+public class SmsMessage extends BasicMessage {
 
     private static final long serialVersionUID = 3229810529789017287L;
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
-
-    /**
-     * 创建时间
-     */
-    private Date creationTime = new Date();
-
-    /**
-     * 更新版本号
-     */
-    @Version
-    @JsonIgnore
-    private Integer updateVersion = 1;
-
-    /**
-     * 类型
-     */
-    private String type;
 
     /**
      * 渠道名称
@@ -62,54 +40,4 @@ public class SmsMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity
      * 手机号码
      */
     private String phoneNumber;
-
-    /**
-     * 内容
-     */
-    private String content;
-
-    /**
-     * 重试次数
-     */
-    private Integer retryCount = 0;
-
-    /**
-     * 最大重试次数
-     */
-    private Integer maxRetryCount = 0;
-
-    /**
-     * 最后发送时间
-     */
-    private Date lastSendTime;
-
-    /**
-     * 状态：0.执行中、1.执行成功，99.执行失败
-     */
-    private Integer status = ExecuteStatus.Processing.getValue();
-
-    /**
-     * 成功时间
-     */
-    private Date successTime;
-
-    /**
-     * 异常信息
-     */
-    private String exception;
-
-    /**
-     * 批量消息 id
-     */
-    private Integer batchId;
-
-    /**
-     * 备注
-     */
-    private String remark;
-
-    @Override
-    public void setExecuteStatus(ExecuteStatus status) {
-        this.setStatus(status.getValue());
-    }
 }

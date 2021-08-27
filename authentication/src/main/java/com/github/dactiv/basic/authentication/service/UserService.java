@@ -637,7 +637,7 @@ public class UserService implements InitializingBean {
      * @param wrapper 包装器
      * @return 会员用户集合
      */
-    public List<MemberUser> findMemberUsers(LambdaQueryWrapper<MemberUser> wrapper) {
+    public List<MemberUser> findMemberUsers(Wrapper<MemberUser> wrapper) {
         return memberUserDao.selectList(wrapper);
     }
 

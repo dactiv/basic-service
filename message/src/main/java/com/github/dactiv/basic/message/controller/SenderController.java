@@ -37,20 +37,15 @@ public class SenderController {
      * @param request http servlet request
      * @return 消息结果集
      */
-    @PostMapping("send")
     @SuppressWarnings("unchecked")
     @PreAuthorize("hasRole('BASIC')")
+    @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
     public RestResult<Map<String, Object>> send(HttpServletRequest request) throws Exception {
 
-        if (MediaType.APPLICATION_JSON_VALUE.equals(request.getContentType())) {
-            Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);
-            String type = parameter.get(DEFAULT_TYPE_PARAM_NAME).toString();
-            return getMessageService(type).send(parameter);
-        } else {
-            String type = request.getParameter(DEFAULT_TYPE_PARAM_NAME);
-            Map<String, Object> parameter = new LinkedHashMap<>(request.getParameterMap());
-            return getMessageService(type).send(parameter);
-        }
+        Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);
+        String type = parameter.get(DEFAULT_TYPE_PARAM_NAME).toString();
+
+        return getMessageService(type).send(parameter);
     }
 
     /**

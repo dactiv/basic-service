@@ -1,23 +1,23 @@
 package com.github.dactiv.basic.file.manager.service;
 
 import com.github.dactiv.basic.file.manager.MinioConfig;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
-import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.TimeProperties;
+import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import io.minio.*;
-import io.minio.errors.*;
+import io.minio.messages.Bucket;
 import io.minio.messages.Item;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.security.InvalidKeyException;
-import java.security.NoSuchAlgorithmException;
+import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -26,16 +26,96 @@ import java.util.stream.Collectors;
  *
  * @author maurice.chen
  */
+@Slf4j
 @Component
 public class FileManagerService {
 
-    public final static String DOWNLOAD_FIELD_KEY = "url";
+    public final static String URL_FIELD_KEY = "url";
 
     @Autowired
     private MinioConfig.MinioProperties minioProperties;
 
     @Autowired
     private MinioClient minioClient;
+
+    /**
+     * 自动关删除桶里的过期文件
+     *
+     * @throws Exception 获取桶信息出错时抛出
+     */
+    @NacosCronScheduled(cron = "${spring.minio.auto-delete.cron:0 1 * * * ?}", name = "自动清除过期文件服务")
+    public void autoDelete() throws Exception {
+
+        Set<String> bucketNameList = minioProperties.getAutoDelete().getExpiration().keySet();
+
+        if (log.isDebugEnabled()) {
+            log.debug("开始自动删除桶的过期对象");
+        }
+
+        List<Bucket> bucketList = minioClient
+                .listBuckets()
+                .stream()
+                .filter(b -> bucketNameList.contains(b.name()))
+                .collect(Collectors.toList());
+
+        if (log.isDebugEnabled()) {
+            log.debug("需要自动删除桶的数据为:" + bucketList);
+        }
+
+        for (Bucket bucket : bucketList) {
+            try {
+                deleteExpiredFiles(bucket);
+            } catch (Exception e) {
+                log.error("删除桶 [" + bucket.name() + "] 的过期对象失败", e);
+            }
+        }
+
+    }
+
+    /**
+     * 删除过期文件
+     *
+     * @param bucket 桶信息
+     */
+    public void deleteExpiredFiles(Bucket bucket)  {
+
+        Iterable<Result<Item>> iterable = minioClient
+                .listObjects(ListObjectsArgs.builder().bucket(bucket.name()).build());
+
+        TimeProperties time = minioProperties
+                .getAutoDelete()
+                .getExpiration()
+                .get(bucket.name());
+
+        if (Objects.isNull(time)) {
+            throw new SystemException("找不到 [" + bucket.name() + "] 桶的自动删除时间配置。");
+        }
+
+        LocalDateTime expirationTime = LocalDateTime
+                .now()
+                .minus(time.getValue(), time.getUnit().toChronoUnit());
+
+        for (Result<Item> result : iterable) {
+
+            try {
+
+                Item item = result.get();
+
+                if (item.isDeleteMarker()) {
+                    continue;
+                }
+
+                if (item.lastModified().toLocalDateTime().isAfter(expirationTime)) {
+                    delete(bucket.name(), item.objectName());
+                    log.info("删除桶的 [" + bucket.name() + "] 的 [" + item.objectName() + "] 对象");
+                }
+
+            } catch (Exception e) {
+                log.error("获取对象失败", e);
+            }
+
+        }
+    }
 
     /**
      * 桶管理
@@ -86,34 +166,26 @@ public class FileManagerService {
             objectWriteResponse = minioClient.putObject(args);
 
             Map<String, Object> result = convertFields(objectWriteResponse, objectWriteResponse.getClass(), "headers");
-            result.put(DOWNLOAD_FIELD_KEY, getDownloadUrl(bucketName, file.getOriginalFilename()));
+
+            Map<String, String> variableValue = new LinkedHashMap<>(2);
+
+            variableValue.put("bucketName", bucketName);
+            variableValue.put("filename", file.getOriginalFilename());
+
+            String url = Casts.setUrlPathVariableValue(minioProperties.getDownloadUrl(), variableValue);
+
+            result.put(URL_FIELD_KEY, url);
 
             return result;
         } catch (Exception e) {
 
             if (Objects.nonNull(objectWriteResponse)) {
-                remove(bucketName, file.getOriginalFilename());
+                delete(bucketName, file.getOriginalFilename());
             }
 
             throw e;
         }
 
-    }
-
-    /**
-     * 获取下载连接
-     *
-     * @param bucketName 桶名称
-     * @param filename 文件名称
-     *
-     * @return 下载连接完整路径
-     */
-    private String getDownloadUrl(String bucketName, String filename) {
-        String prefix = StringUtils.appendIfMissing(minioProperties.getDownloadPrefix(), "/");
-
-        return prefix
-                + StringUtils.appendIfMissing(StringUtils.removeStart(bucketName, "/"), "/")
-                + "objects/download?prefix="+ filename;
     }
 
     /**
@@ -124,7 +196,7 @@ public class FileManagerService {
      *
      * @throws Exception 删除错误时抛出
      */
-    public void remove(String bucketName, String filename) throws Exception {
+    public void delete(String bucketName, String filename) throws Exception {
         RemoveObjectArgs args = RemoveObjectArgs
                 .builder()
                 .bucket(bucketName)
