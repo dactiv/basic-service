@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.service;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
@@ -26,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -61,7 +61,7 @@ public class AuthorizationService {
     /**
      * 超级管理员组 id
      */
-    @NacosValue(value = "${spring.security.admin.group-id:1}",autoRefreshed = true)
+    @Value("${spring.security.admin.group-id:1}")
     private Integer adminGroupId;
 
 

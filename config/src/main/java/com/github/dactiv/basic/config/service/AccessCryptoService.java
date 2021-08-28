@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.config.service;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
@@ -26,6 +25,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -58,7 +58,7 @@ public class AccessCryptoService implements InitializingBean {
     /**
      * 存储在 redis 的访问加解密集合 key 名称
      */
-    @NacosValue(value = "${spring.application.crypto.access.redis.access-crypto-list-key:access:crypto:all}", autoRefreshed = true)
+    @Value("${spring.application.crypto.access.redis.access-crypto-list-key:access:crypto:all}")
     private String accessCryptoListKey;
 
     /**

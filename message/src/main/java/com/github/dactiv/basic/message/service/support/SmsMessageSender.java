@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
@@ -18,11 +17,12 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Transactional;
+import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 import java.util.Date;
@@ -37,8 +37,8 @@ import java.util.stream.Stream;
  *
  * @author maurice
  */
-@Service
-@Transactional(rollbackFor = Exception.class)
+@Component
+@RefreshScope
 public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.sms.queue";
@@ -54,13 +54,13 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     /**
      * 渠道商
      */
-    @NacosValue(value = "${spring.sms.channel}", autoRefreshed = true)
+    @Value("${spring.sms.channel}")
     private String channel;
 
     /**
      * 最大重试次数
      */
-    @NacosValue(value = "${spring.sms.max-retry-count:3}", autoRefreshed = true)
+    @Value("${spring.sms.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Override

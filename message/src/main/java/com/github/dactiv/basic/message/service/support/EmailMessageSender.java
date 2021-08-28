@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
@@ -20,6 +19,8 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.handler.annotation.Header;
@@ -41,6 +42,7 @@ import java.util.stream.Stream;
  * @author maurice
  */
 @Component
+@RefreshScope
 public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailMessageSender.class);
@@ -55,7 +57,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     /**
      * 最大重试次数
      */
-    @NacosValue(value = "${spring.mail.max-retry-count:3}", autoRefreshed = true)
+    @Value("${spring.mail.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Autowired

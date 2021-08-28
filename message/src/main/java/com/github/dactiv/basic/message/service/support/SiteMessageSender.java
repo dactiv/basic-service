@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
@@ -18,6 +17,8 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -36,6 +37,7 @@ import java.util.stream.Stream;
  * @author maurice
  */
 @Component
+@RefreshScope
 public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, SiteMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
@@ -54,13 +56,13 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     /**
      * 渠道商
      */
-    @NacosValue(value = "${spring.site.channel}", autoRefreshed = true)
+    @Value("${spring.site.channel}")
     private String channel;
 
     /**
      * 最大重试次数
      */
-    @NacosValue(value = "${spring.site.max-retry-count:3}",autoRefreshed = true)
+    @Value("${spring.site.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Override

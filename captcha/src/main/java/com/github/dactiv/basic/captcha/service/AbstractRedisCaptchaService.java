@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.captcha.service;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -15,6 +14,8 @@ import org.redisson.api.RedissonClient;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.objenesis.instantiator.util.ClassUtils;
 import org.springframework.validation.BindException;
@@ -34,6 +35,7 @@ import java.util.concurrent.TimeUnit;
  *
  * @author maurice
  */
+@RefreshScope
 @SuppressWarnings("unchecked")
 public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> implements CaptchaService {
 
@@ -68,13 +70,13 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
     /**
      * 存储在 redis 的绑定 token key 名称
      */
-    @NacosValue(value = "${spring.application.captcha.token.build.key-prefix:captcha:build:token:}", autoRefreshed = true)
+    @Value("${spring.application.captcha.token.build.key-prefix:captcha:build:token:}")
     private String buildTokenKeyPrefix;
 
     /**
      * 验证绑定 token 的参数后缀名
      */
-    @NacosValue(value = "${spring.application.captcha.token.build.param-name-suffix:captchaToken}", autoRefreshed = true)
+    @Value("${spring.application.captcha.token.build.param-name-suffix:captchaToken}")
     private String tokenParamNameSuffix;
 
     @Qualifier("mvcValidator")
