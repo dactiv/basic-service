@@ -14,7 +14,7 @@ import javax.validation.constraints.NotNull;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class TitleMessage extends BasicMessage{
+public class TitleMessage extends BasicMessage {
 
     private static final long serialVersionUID = 969466005283913384L;
 

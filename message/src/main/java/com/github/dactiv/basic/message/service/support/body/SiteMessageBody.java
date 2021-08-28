@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.message.service.support.body;
 
+import com.github.dactiv.basic.message.entity.Attachment;
+import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.TitleMessage;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class SiteMessageBody extends TitleMessage {
+public class SiteMessageBody extends TitleMessage implements AttachmentMessage {
 
     private static final long serialVersionUID = 4341146261560926962L;
 
@@ -23,4 +25,9 @@ public class SiteMessageBody extends TitleMessage {
      * 接收方用户 id 集合
      */
     private List<Integer> toUserIds;
+
+    /**
+     * 附件
+     */
+    private List<Attachment> attachmentList;
 }

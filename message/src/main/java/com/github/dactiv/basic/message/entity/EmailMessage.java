@@ -25,7 +25,7 @@ import java.util.List;
 @Alias("emailMessage")
 @TableName("tb_email_message")
 @EqualsAndHashCode(callSuper = true)
-public class EmailMessage extends TitleMessage {
+public class EmailMessage extends TitleMessage implements AttachmentMessage {
 
     private static final long serialVersionUID = 8360029094205090328L;
 

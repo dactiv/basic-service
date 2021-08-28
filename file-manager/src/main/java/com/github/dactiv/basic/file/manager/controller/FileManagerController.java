@@ -4,15 +4,19 @@ import com.github.dactiv.basic.file.manager.service.FileManagerService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.ByteArrayOutputStream;
+import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
 
@@ -81,6 +85,25 @@ public class FileManagerController {
 
         return RestResult.ofSuccess("上传完成", result);
 
+    }
+
+    /**
+     * 获取文件
+     *
+     * @param bucketName 桶名称
+     * @param filename 文件名
+     *
+     * @return 文件流字节
+     * @throws Exception 获取失败时抛出
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("get/{bucketName}/{filename}")
+    @Plugin(name = "获取文件", parent = "file-manager", sources = "Console", audit = true)
+    public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {
+        InputStream is = fileManagerService.get(bucketName, filename);
+        HttpHeaders headers = new HttpHeaders();
+        headers.setContentDispositionFormData(SpringMvcUtils.DEFAULT_ATTACHMENT_NAME, filename);
+        return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
     }
 
 }

@@ -1,17 +1,22 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.FileManagerService;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.mail.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.rabbitmq.client.Channel;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
@@ -28,6 +33,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.core.io.InputStreamSource;
+import org.springframework.http.ResponseEntity;
 import org.springframework.jndi.JndiLocatorDelegate;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
@@ -49,11 +57,10 @@ import java.util.stream.Stream;
  *
  * @author maurice
  */
+@Slf4j
 @Component
 @RefreshScope
 public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> implements InitializingBean {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(EmailMessageSender.class);
 
     public static final String DEFAULT_QUEUE_NAME = "message.email.queue";
 
@@ -101,7 +108,6 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
         channel.basicAck(tag, false);
-
         data.forEach(this::send);
     }
 
@@ -109,11 +115,11 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
 
         entity.setLastSendTime(new Date());
 
-        JavaMailSender mailSender = mailSenderMap.get(entity.getType());
-
-        MimeMessage mimeMessage = mailSender.createMimeMessage();
+        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
 
         try {
+
+            MimeMessage mimeMessage = mailSender.createMimeMessage();
 
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, true);
 
@@ -122,11 +128,35 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
             helper.setSubject(entity.getTitle());
             helper.setText(entity.getContent(), true);
 
+            if (YesOrNo.Yes.getValue().equals(entity.getHasAttachment())) {
+
+                for (Attachment a : entity.getAttachmentList()) {
+
+                    InputStreamSource iss;
+
+                    if (Objects.nonNull(entity.getBatchId())) {
+                        byte[] bytes = attachmentCache.get(entity.getBatchId()).get(a.getName());
+                        iss = new ByteArrayResource(bytes);
+                    } else {
+
+                        ResponseEntity<byte[]> response = fileManagerService.get(
+                                a.getMeta().get(FileManagerService.DEFAULT_BUCKET_NAME).toString(),
+                                a.getName()
+                        );
+
+                        iss = new ByteArrayResource(Objects.requireNonNull(response.getBody()));
+                    }
+
+                    helper.addAttachment(a.getName(), iss);
+                }
+
+            }
+
             mailSender.send(mimeMessage);
 
             ExecuteStatus.success(entity,"发送邮件成功");
         } catch (Exception ex) {
-            LOGGER.error("发送邮件错误", ex);
+            log.error("发送邮件错误", ex);
             ExecuteStatus.failure(entity,ex.getCause().getMessage());
         }
 
@@ -172,6 +202,13 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
 
             EmailMessage entity = Casts.of(body, EmailMessage.class);
 
+            JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
+
+            if (Objects.isNull(mailSender)) {
+                throw new SystemException("找不到类型为 [" + entity.getType() + "] 的邮件发送者");
+            }
+
+            entity.setFromEmail(mailSender.getUsername());
             entity.setToEmail(toEmail);
             entity.setMaxRetryCount(maxRetryCount);
 

@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.message.service.support.body;
 
+import com.github.dactiv.basic.message.entity.Attachment;
+import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.TitleMessage;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -16,17 +18,17 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class EmailMessageBody extends TitleMessage {
+public class EmailMessageBody extends TitleMessage implements AttachmentMessage {
 
     private static final long serialVersionUID = -1367698344075208239L;
-
-    /**
-     * 发件方
-     */
-    private String fromEmail;
 
     /**
      * 收件方集合
      */
     private List<String> toEmails = new LinkedList<>();
+
+    /**
+     * 附件
+     */
+    private List<Attachment> attachmentList;
 }

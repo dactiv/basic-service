@@ -26,7 +26,7 @@ import java.util.Map;
 @Alias("siteMessage")
 @TableName("tb_site_message")
 @EqualsAndHashCode(callSuper = true)
-public class SiteMessage extends TitleMessage {
+public class SiteMessage extends TitleMessage implements AttachmentMessage {
 
 
     private static final long serialVersionUID = 2037280001998945900L;

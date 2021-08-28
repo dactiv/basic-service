@@ -2,6 +2,8 @@ package com.github.dactiv.basic.message.service;
 
 import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.Attachment;
+import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.Casts;
@@ -13,6 +15,7 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;
@@ -40,6 +43,20 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
     @Autowired
     private MessageService messageService;
 
+    /**
+     * 批量消息对应的附件缓存 map
+     */
+    protected final Map<Integer, Map<String, byte[]>> attachmentCache = new LinkedHashMap<>();
+
+    /**
+     * 文件管理服务
+     */
+    @Autowired
+    protected FileManagerService fileManagerService;
+
+    /**
+     * 请求对象的数据实体类型
+     */
     private final Class<T> entityClass;
 
     @Qualifier("mvcValidator")
@@ -99,6 +116,8 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
             result.forEach(r -> r.setBatchId(batchMessage.getId()));
 
             batchId = batchMessage.getId();
+
+            onBatchMessageCreate(batchMessage, result, sendResult);
         }
 
         RestResult<Map<String, Object>> restResult = send(sendResult);
@@ -192,9 +211,41 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
         if (batchMessage.getCount().equals(batchMessage.getSuccessNumber() + batchMessage.getFailNumber())) {
             batchMessage.setStatus(ExecuteStatus.Success.getValue());
             batchMessage.setCompleteTime(new Date());
+
+            onBatchMessageComplete(batchMessage);
         }
 
         messageService.saveBatchMessage(batchMessage);
+
+    }
+
+    /**
+     * 当批量信息发送完成时，触发此方法。
+     *
+     * @param batchMessage 批量信息实体
+     */
+    protected void onBatchMessageComplete(BatchMessage batchMessage) {
+        attachmentCache.remove(batchMessage.getId());
+    }
+
+    /**
+     * 当批量信息创建完成后，触发此方法
+     *
+     * @param batchMessage 批量信息实体
+     * @param bodyList request 传过来的 body 参数集合
+     * @param sendList 通过 body 构造完成的待发送数据集合
+     */
+    protected void onBatchMessageCreate(BatchMessage batchMessage, List<T> bodyList,  List<S> sendList) {
+        Map<String, byte[]> map = attachmentCache.computeIfAbsent(batchMessage.getId(), k -> new LinkedHashMap<>());
+
+        bodyList
+                .stream()
+                .filter(t -> !AttachmentMessage.class.isAssignableFrom(t.getClass()))
+                .map(t -> Casts.cast(t, AttachmentMessage.class))
+                .flatMap(t -> t.getAttachmentList().stream())
+                .filter(a -> !map.containsKey(a.getName()))
+                .map(a -> fileManagerService.get(a.getMeta().get(FileManagerService.DEFAULT_BUCKET_NAME).toString(), a.getName()))
+                .forEach(r -> map.put(r.getHeaders().getContentDisposition().getFilename(), r.getBody()));
 
     }
 

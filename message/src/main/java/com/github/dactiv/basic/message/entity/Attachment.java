@@ -1,8 +1,10 @@
 package com.github.dactiv.basic.message.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +12,7 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * <p>消息附件实体类</p>
@@ -39,7 +42,7 @@ public class Attachment implements NumberIdEntity<Integer> {
     private Date creationTime = new Date();
 
     /**
-     * 类型
+     * 附件类型，所属什么消息使用的附件（10.站内信，20:邮件）
      *
      * @see com.github.dactiv.basic.message.enumerate.AttachmentType
      */
@@ -51,12 +54,7 @@ public class Attachment implements NumberIdEntity<Integer> {
     private String name;
 
     /**
-     * 连接
-     */
-    private String link;
-
-    /**
-     * 后缀
+     * 附件类型
      */
     private String contentType;
 
@@ -64,4 +62,10 @@ public class Attachment implements NumberIdEntity<Integer> {
      * 对应的消息主键
      */
     private Integer messageId;
+
+    /**
+     * 元数据信息
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, Object> meta;
 }

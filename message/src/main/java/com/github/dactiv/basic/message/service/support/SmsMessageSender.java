@@ -11,6 +11,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -37,6 +38,7 @@ import java.util.stream.Stream;
  *
  * @author maurice
  */
+@Slf4j
 @Component
 @RefreshScope
 public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsMessage> {
@@ -109,6 +111,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
             }
 
         } catch (Exception e) {
+            log.error("发送短信失败", e);
             ExecuteStatus.failure(entity, e.getMessage());
         }
 

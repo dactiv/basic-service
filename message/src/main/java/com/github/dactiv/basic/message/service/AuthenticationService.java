@@ -9,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 认证服务
+ * 认证服务 feign 客户端
  *
  * @author maurice
  */
