@@ -1,12 +1,10 @@
 package com.github.dactiv.basic.message.service.support;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.message.RabbitmqConfig;
-import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
-import com.github.dactiv.basic.message.service.MessageService;
-import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
@@ -20,14 +18,15 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -37,7 +36,7 @@ import java.util.stream.Stream;
  * @author maurice
  */
 @Component
-public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody> {
+public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, SiteMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
 
@@ -55,13 +54,13 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody> {
     /**
      * 渠道商
      */
-    @Value("${spring.site.message.channel}")
+    @NacosValue(value = "${spring.site.channel}", autoRefreshed = true)
     private String channel;
 
     /**
      * 最大重试次数
      */
-    @Value("${spring.site.message.max-retry-count:3}")
+    @NacosValue(value = "${spring.site.max-retry-count:3}",autoRefreshed = true)
     private Integer maxRetryCount;
 
     @Override
@@ -124,17 +123,18 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody> {
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    protected RestResult<Map<String, Object>> send(List<SiteMessageBody> entities) {
+    protected RestResult<Map<String, Object>> send(List<SiteMessage> entities) {
 
-        List<SiteMessage> messages = entities
-                .stream()
-                .flatMap(this::createAndSaveEmailMessageEntity)
-                .collect(Collectors.toList());
+        entities.forEach(e -> attachmentMessageService.saveSiteMessage(e));
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, messages);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
 
-        return RestResult.ofSuccess("发送站内信成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, messages.size()));
+        return RestResult.ofSuccess("发送站内信成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, entities.size()));
+    }
+
+    @Override
+    protected List<SiteMessage> createSendEntity(List<SiteMessageBody> result) {
+        return result.stream().flatMap(this::createAndSaveEmailMessageEntity).collect(Collectors.toList());
     }
 
     /**
@@ -154,8 +154,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody> {
 
             entity.setFromUserId(userId);
             entity.setMaxRetryCount(maxRetryCount);
-
-            attachmentMessageService.saveSiteMessage(entity);
 
             result.add(entity);
         }

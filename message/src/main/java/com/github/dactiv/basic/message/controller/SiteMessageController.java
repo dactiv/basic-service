@@ -2,7 +2,6 @@ package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
-import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -18,7 +17,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.util.List;
 import java.util.Map;
 
@@ -111,20 +109,6 @@ public class SiteMessageController {
     @Plugin(name = "获取站内信消息实体信息", sources = "Console")
     public SiteMessage get(@RequestParam Integer id) {
         return messageService.getSiteMessage(id);
-    }
-
-    /**
-     * 保存站内信消息
-     *
-     * @param entity 站内信消息实体
-     * @return 消息结果集
-     */
-    @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[site:save]')")
-    @Plugin(name = "保存站内信消息实体", sources = "Console", audit = true)
-    public RestResult<Integer> save(@Valid SiteMessage entity) {
-        messageService.saveSiteMessage(entity);
-        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**

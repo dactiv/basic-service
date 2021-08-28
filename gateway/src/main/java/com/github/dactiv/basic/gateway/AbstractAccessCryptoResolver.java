@@ -18,7 +18,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.expression.ExpressionParser;
 import org.springframework.expression.spel.standard.SpelExpressionParser;
@@ -47,23 +46,8 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractAccessCryptoResolver.class);
 
-    /**
-     * request 中的客户端密文参数名
-     */
-    @Value("${spring.application.access.crypto.request-cipher-text-param-name:cipherText}")
-    private String cipherTextParamName;
-
-    /**
-     * 访问 token header 名称
-     */
-    @Value("${spring.application.access.crypto.access-token-headers:X-ACCESS-TOKEN}")
-    private String accessTokenHeaders;
-
-    /**
-     * 参数与值的分隔符
-     */
-    @Value("${spring.application.access.crypto.param-name-value-delimiter:=}")
-    private String paramNameValueDelimiter;
+    @Autowired
+    private AccessCryptoProperties accessCryptoProperties;
 
     @Autowired
     private CryptoAlgorithm accessTokenAlgorithm;
@@ -119,13 +103,13 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
             String trimString = StringUtils.trim(v);
 
-            String fieldName = StringUtils.substringBefore(trimString, paramNameValueDelimiter);
+            String fieldName = StringUtils.substringBefore(trimString, accessCryptoProperties.getParamNameValueDelimiter());
 
             if (StringUtils.isEmpty(fieldName)) {
                 return;
             }
 
-            String fieldValue = StringUtils.substringAfter(trimString, paramNameValueDelimiter);
+            String fieldValue = StringUtils.substringAfter(trimString, accessCryptoProperties.getParamNameValueDelimiter());
 
             if (StringUtils.isEmpty(fieldValue)) {
                 return;
@@ -179,7 +163,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
         // 获取原始的请求 body map
         MultiValueMap<String, String> originalBody = Casts.castRequestBodyMap(body);
         // 删除密文阐述
-        originalBody.remove(cipherTextParamName);
+        originalBody.remove(accessCryptoProperties.getCipherTextParamName());
         // 将原始的请求 body 里还存在的参数添加到新的请求 body 里
         newRequestBody.putAll(originalBody);
 
@@ -203,7 +187,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     private String getAccessTokenValue(ServerWebExchange serverWebExchange) {
 
-        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(accessTokenHeaders);
+        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(accessCryptoProperties.getAccessTokenHeaders());
 
         if (CollectionUtils.isEmpty(accessToken)) {
             throw new CryptoException("key 值不能为 null");
@@ -220,7 +204,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     protected List<ByteSource> getRequestCipher(String body) {
         MultiValueMap<String, String> requestBody = decodeRequestBodyToMap(body);
-        List<String> values = requestBody.get(cipherTextParamName);
+        List<String> values = requestBody.get(accessCryptoProperties.getCipherTextParamName());
 
         return values.stream().map(value -> {
 

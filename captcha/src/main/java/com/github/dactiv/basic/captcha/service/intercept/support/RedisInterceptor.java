@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.captcha.service.intercept.support;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.CaptchaService;
 import com.github.dactiv.basic.captcha.service.DelegateCaptchaService;
@@ -9,7 +10,6 @@ import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
@@ -34,7 +34,7 @@ public class RedisInterceptor implements Interceptor {
     /**
      * 存储在 redis 的绑定 token key 名称
      */
-    @Value("${spring.application.captcha.token.interceptor.key-prefix:captcha:interceptor:token:}")
+    @NacosValue(value = "${spring.application.captcha.token.interceptor.key-prefix:captcha:interceptor:token:}", autoRefreshed = true)
     private String interceptorTokenKeyPrefix;
 
     @Override

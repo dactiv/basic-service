@@ -1,7 +1,40 @@
-spring:
+message:
+  sms:
+    channel: yimei
+    yimei:
+      id: appid
+      password: 密码
+      url: 接口地址
+  site:
+    channel: umeng
+    umeng:
+      url: 接口地址
+      production-mode: false
+      expire-time:
+        value: 7
+        unit: Days
+      ios:
+        app-key: app 密钥
+        secret-key: 安全密钥
+      android:
+        app-key: app 密钥
+        secret-key: 安全密钥
+        push: true
+        activity: 路径
   mail:
-    username: 用户名
-    password: 密码
+    accounts:
+      marketing:
+        username: 发送营销邮箱用户名
+        password: 发送营销邮箱密码
+      notice:
+        username: 发送通知邮箱用户名
+        password: 发送通知邮箱密码
+      warning:
+        username: 发送预警邮箱用户名
+        password: 发送预警邮箱密码
+      system:
+        username: 发送系统邮箱用户名
+        password: 发送系统邮箱密码
     host: smtp.exmail.qq.com
     protocol: smtp
     port: 465
@@ -14,27 +47,8 @@ spring:
             socketFactory:
               class: com.sun.mail.util.MailSSLSocketFactory
               fallback: false
-  sms:
-    channel: yimei
-    yimei:
-      id: appid
-      password: 密码
-      url: 接口地址
-  site:
-    message:
-      channel: umeng
-      umeng:
-        url: 接口地址
-        production-mode: false
-        expire-time-in-second: 86400000
-        ios:
-          app-key: app 密钥
-          secret-key: 安全密钥
-        android:
-          app-key: app 密钥
-          secret-key: 安全密钥
-          push: true
-          activity: 路径
+
+spring:
   datasource:
     url: jdbc:mysql://localhost:3306/message?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false
     driverClassName: com.mysql.jdbc.Driver

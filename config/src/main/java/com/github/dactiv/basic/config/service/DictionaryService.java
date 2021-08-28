@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.config.service;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
@@ -16,7 +17,6 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -40,7 +40,7 @@ public class DictionaryService {
     @Autowired
     private DictionaryTypeDao dictionaryTypeDao;
 
-    @Value("${spring.application.dictionary.separator:.}")
+    @NacosValue(value = "${spring.application.dictionary.separator:.}", autoRefreshed = true)
     public String dictionarySeparator;
 
     // ----------------------------------------- 数据字典管理 ----------------------------------------- //

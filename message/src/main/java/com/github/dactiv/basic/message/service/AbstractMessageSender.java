@@ -26,11 +26,13 @@ import java.util.*;
  * @param <T> 消息泛型实体
  * @author maurice
  */
-public abstract class AbstractMessageSender<T extends BatchMessage.Body> implements MessageSender {
+public abstract class AbstractMessageSender<T extends BatchMessage.Body, S extends BatchMessage.Body> implements MessageSender {
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 
     public static final String DEFAULT_MESSAGE_COUNT_KEY = "count";
+
+    public static final String DEFAULT_BATCH_MESSAGE_ID_KEY = "batchId";
 
     @Autowired
     protected AmqpTemplate amqpTemplate;
@@ -71,11 +73,18 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
             result.add(entity);
         }
 
-        RestResult<Map<String, Object>> restResult = send(result);
+        return sendMessage(result);
+    }
 
-        Integer count = Casts.cast(restResult.getData().get(DEFAULT_MESSAGE_COUNT_KEY));
+    @Transactional(rollbackFor = Exception.class)
+    protected RestResult<Map<String, Object>> sendMessage(List<T> result) {
+        // 构造发送消息结果集，用于 send 发送数据使用
+        List<S> sendResult = createSendEntity(result);
 
-        if (count > 1 && BatchMessage.Body.class.isAssignableFrom(entityClass)) {
+        Integer batchId = null;
+
+        // 如果发送消息的结果集大于 0，构造批量订单
+        if (sendResult.size() > 1 && BatchMessage.Body.class.isAssignableFrom(entityClass)) {
 
             BatchMessage batchMessage = new BatchMessage();
 
@@ -88,6 +97,14 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
             messageService.saveBatchMessage(batchMessage);
 
             result.forEach(r -> r.setBatchId(batchMessage.getId()));
+
+            batchId = batchMessage.getId();
+        }
+
+        RestResult<Map<String, Object>> restResult = send(sendResult);
+
+        if (Objects.nonNull(batchId)) {
+            restResult.getData().put(DEFAULT_BATCH_MESSAGE_ID_KEY, batchId);
         }
 
         return restResult;
@@ -141,13 +158,6 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
 
     }
 
-    /**
-     * 获取重试队列 MQ 名称
-     *
-     * @return 重试队列 MQ 名称
-     */
-    protected abstract String getRetryMessageQueueName();
-
     protected void updateBatchMessage(BatchMessage.Body body) {
 
         if (Objects.isNull(body.getBatchId())) {
@@ -194,6 +204,22 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body> impleme
      * @param entity 消息实体
      * @return rest 结果集
      */
-    protected abstract RestResult<Map<String, Object>> send(List<T> entity);
+    protected abstract RestResult<Map<String, Object>> send(List<S> entity);
+
+    /**
+     * 创建要发送的实体
+     *
+     * @param result request 请求构造的实体集合
+     *
+     * @return 要发送的实体集合
+     */
+    protected abstract List<S> createSendEntity(List<T> result);
+
+    /**
+     * 获取重试队列 MQ 名称
+     *
+     * @return 重试队列 MQ 名称
+     */
+    protected abstract String getRetryMessageQueueName();
 
 }

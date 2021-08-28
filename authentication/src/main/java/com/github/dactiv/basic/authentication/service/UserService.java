@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
@@ -29,7 +29,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -63,10 +62,10 @@ public class UserService implements InitializingBean {
     /**
      * 超级管理登陆账户
      */
-    @Value("${spring.security.admin.username:admin}")
+    @NacosValue(value = "${spring.security.admin.username:admin}", autoRefreshed = true)
     private String adminUsername;
 
-    @Value("${spring.application.member-user.initialization-key-prefix:member:user:initialization:}")
+    @NacosValue(value = "${spring.application.member-user.initialization-key-prefix:member:user:initialization:}", autoRefreshed = true)
     private String memberUserInitializationKeyPrefix;
 
     @Autowired

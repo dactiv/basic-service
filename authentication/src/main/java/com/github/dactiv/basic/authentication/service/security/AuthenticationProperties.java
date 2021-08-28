@@ -163,19 +163,14 @@ public class AuthenticationProperties {
         private String title = "异地登录通知";
 
         /**
-         * 发送消息类型
+         * 消息类型
          */
         private String messageType = "System";
 
         /**
-         * 发送类型
+         * 发送类型, siteMessage 为站内信
          */
         private String sendType = "siteMessage";
-
-        /**
-         * 使用哪个用户发送
-         */
-        private Integer fromUserId = 1;
 
         /**
          * 发送失败后的重试次数

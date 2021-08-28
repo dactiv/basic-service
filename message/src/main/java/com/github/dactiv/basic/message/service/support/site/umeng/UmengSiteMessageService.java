@@ -18,7 +18,6 @@ import com.github.dactiv.framework.spring.web.mobile.DevicePlatform;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
@@ -36,7 +35,6 @@ import java.util.*;
  */
 @Component
 @RefreshScope
-@ConfigurationProperties("spring.site.message.umeng")
 public class UmengSiteMessageService implements SiteMessageChannelSender {
 
     /**
@@ -54,26 +52,8 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      */
     public static final String DEFAULT_SUCCESS_MESSAGE = "SUCCESS";
 
-    /**
-     * 接口调用地址
-     */
-    private String url;
-    /**
-     * 环境配置
-     */
-    private boolean productionMode;
-    /**
-     * 消息超时时间
-     */
-    private long expireTimeInSecond;
-    /**
-     * 安卓配置项
-     */
-    private AndroidProperties android;
-    /**
-     * ios 配置项
-     */
-    private IosProperties ios;
+    @Autowired
+    private SiteProperties properties;
 
     @Autowired
     private RestTemplate restTemplate;
@@ -133,9 +113,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
-        String sign = DigestUtils.md5Hex(("POST" + url + requestJson + basicMessage.getSecretKey()).getBytes(StandardCharsets.UTF_8));
+        String sign = DigestUtils.md5Hex(("POST" + properties.getUrl() + requestJson + basicMessage.getSecretKey()).getBytes(StandardCharsets.UTF_8));
         // 发送消息
-        ResponseEntity<String> result = restTemplate.postForEntity(url + "?sign=" + sign, entity, String.class);
+        ResponseEntity<String> result = restTemplate.postForEntity(properties.getUrl() + "?sign=" + sign, entity, String.class);
         // OK 为成功，否则失败
         if (result.getStatusCode().equals(HttpStatus.OK)) {
 
@@ -183,9 +163,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     public BasicMessage getIosMessage(SiteMessage entity, MessageType type) {
         BasicMessage result = new BasicMessage();
 
-        result.setProductionMode(productionMode);
-        result.setAppkey(ios.getAppKey());
-        result.setSecretKey(ios.getSecretKey());
+        result.setProductionMode(properties.isProductionMode());
+        result.setAppkey(properties.getIos().getAppKey());
+        result.setSecretKey(properties.getIos().getSecretKey());
         result.setType(type.getName());
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
@@ -230,9 +210,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         AndroidMessage result = new AndroidMessage();
 
-        result.setProductionMode(productionMode);
-        result.setAppkey(android.getAppKey());
-        result.setSecretKey(android.getSecretKey());
+        result.setProductionMode(properties.isProductionMode());
+        result.setAppkey(properties.getAndroid().getAppKey());
+        result.setSecretKey(properties.getAndroid().getSecretKey());
         result.setType(type.getName());
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
@@ -267,9 +247,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         result.setDescription(entity.getType() + "-" + DevicePlatform.ANDROID.toString());
 
-        if (!android.getIgnoreActivityType().contains(entity.getType())) {
-            result.setMipush(android.isPush());
-            result.setMiActivity(android.getActivity());
+        if (!properties.getAndroid().getIgnoreActivityType().contains(entity.getType())) {
+            result.setMipush(properties.getAndroid().isPush());
+            result.setMiActivity(properties.getAndroid().getActivity());
         }
 
         return result;
@@ -278,48 +258,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     public Date getExpireTime(Date currentDate) {
 
         LocalDateTime localDateTime = LocalDateTime.ofInstant(currentDate.toInstant(), ZoneId.systemDefault());
-        localDateTime = localDateTime.plusSeconds(expireTimeInSecond);
+        localDateTime = localDateTime.plus(properties.getExpireTime().getValue(), properties.getExpireTime().getUnit().toChronoUnit());
 
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }
 
-    public String getUrl() {
-        return url;
-    }
-
-    public void setUrl(String url) {
-        this.url = url;
-    }
-
-    public boolean isProductionMode() {
-        return productionMode;
-    }
-
-    public void setProductionMode(boolean productionMode) {
-        this.productionMode = productionMode;
-    }
-
-    public long getExpireTimeInSecond() {
-        return expireTimeInSecond;
-    }
-
-    public void setExpireTimeInSecond(long expireTimeInSecond) {
-        this.expireTimeInSecond = expireTimeInSecond;
-    }
-
-    public AndroidProperties getAndroid() {
-        return android;
-    }
-
-    public void setAndroid(AndroidProperties android) {
-        this.android = android;
-    }
-
-    public IosProperties getIos() {
-        return ios;
-    }
-
-    public void setIos(IosProperties ios) {
-        this.ios = ios;
-    }
 }

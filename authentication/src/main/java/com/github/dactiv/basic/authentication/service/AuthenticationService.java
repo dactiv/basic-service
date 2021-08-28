@@ -185,8 +185,7 @@ public class AuthenticationService {
             param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, properties.getAbnormalArea().getSendType());
 
             param.put("content", properties.getAbnormalArea().getSendContent());
-            param.put("fromUserId", properties.getAbnormalArea().getFromUserId());
-            param.put("toUserId", info.getUserId());
+            param.put("toUserIds", Collections.singletonList(info.getUserId()));
             param.put("type", properties.getAbnormalArea().getMessageType());
             param.put("title", properties.getAbnormalArea().getTitle());
             param.put("data", Casts.convertValue(info, Map.class));

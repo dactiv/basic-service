@@ -1,10 +1,6 @@
 package com.github.dactiv.basic.message.enumerate;
 
-import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.framework.commons.enumerate.NameEnum;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
 import lombok.AccessLevel;
 import lombok.AllArgsConstructor;
 import lombok.Getter;

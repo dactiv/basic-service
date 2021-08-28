@@ -15,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
-import javax.validation.Valid;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -71,19 +70,6 @@ public class SmsMessageController {
     @Plugin(name = "获取短信消息实体信息", sources = "Console")
     public SmsMessage get(@RequestParam Integer id) {
         return messageService.getSmsMessage(id);
-    }
-
-    /**
-     * 保存短信消息
-     *
-     * @param entity 短信消息实体
-     */
-    @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[sms:save]')")
-    @Plugin(name = "保存短信消息实体", sources = "Console", audit = true)
-    public RestResult<Integer> save(@Valid SmsMessage entity) {
-        messageService.saveSmsMessage(entity);
-        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**

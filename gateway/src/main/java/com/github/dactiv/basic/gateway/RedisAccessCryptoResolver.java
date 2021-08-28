@@ -13,7 +13,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
@@ -35,17 +34,8 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
 
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisAccessCryptoResolver.class);
 
-    /**
-     * 存储在 redis 的访问加解密集合 key 名称
-     */
-    @Value("${spring.application.crypto.access.redis.access-crypto-list-key:access:crypto:all}")
-    private String accessCryptoListKey;
-
-    /**
-     * 存储在 redis 的访问 token key 名称
-     */
-    @Value("${spring.application.crypto.access.redis.access-token-key:access:crypto:token:}")
-    private String accessTokenKey;
+    @Autowired
+    private AccessCryptoProperties accessCryptoProperties;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -80,7 +70,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
      * @return 响应加密访问 token key
      */
     private String getAccessTokenKey(String accessToken) {
-        return accessTokenKey + accessToken;
+        return accessCryptoProperties.getAccessTokenKey() + accessToken;
     }
 
     public RBucket<AccessToken> getAccessTokenBucket(String accessToken) {
@@ -99,7 +89,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
 
     @NacosCronScheduled(cron = "${spring.application.crypto.access.redis.sync-cron:0 0/3 * * * ?}")
     public void syncRedisAccessCryptoList() {
-        RList<AccessCrypto> list = redissonClient.getList(accessCryptoListKey);
+        RList<AccessCrypto> list = redissonClient.getList(accessCryptoProperties.getAccessCryptoListKey());
         RFuture<List<AccessCrypto>> future = list.rangeAsync(0, list.size());
 
         future.onComplete((accessCryptos, throwable) -> {

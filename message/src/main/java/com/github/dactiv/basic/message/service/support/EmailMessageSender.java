@@ -1,6 +1,8 @@
 package com.github.dactiv.basic.message.service.support;
 
+import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
@@ -8,6 +10,7 @@ import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.rabbitmq.client.Channel;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,18 +20,18 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.http.HttpStatus;
 import org.springframework.mail.javamail.JavaMailSender;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
-import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
-import java.util.*;
+import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -38,7 +41,7 @@ import java.util.stream.Stream;
  * @author maurice
  */
 @Component
-public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody> {
+public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailMessageSender.class);
 
@@ -49,17 +52,17 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody> 
      */
     private static final String DEFAULT_TYPE = "email";
 
+    /**
+     * 最大重试次数
+     */
+    @NacosValue(value = "${spring.mail.max-retry-count:3}", autoRefreshed = true)
+    private Integer maxRetryCount;
+
     @Autowired
     private AttachmentMessageService attachmentMessageService;
 
     @Autowired
     private JavaMailSender mailSender;
-
-    /**
-     * 最大重试次数
-     */
-    @Value("${spring.mail.max-retry-count:3}")
-    private Integer maxRetryCount;
 
     @Override
     protected String getRetryMessageQueueName() {
@@ -118,17 +121,23 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody> 
     }
 
     @Override
-    @Transactional(rollbackFor = Exception.class)
-    protected RestResult<Map<String, Object>> send(List<EmailMessageBody> entities) {
+    protected RestResult<Map<String, Object>> send(List<EmailMessage> entities) {
 
-        List<EmailMessage> messages = entities
-                .stream()
-                .flatMap(this::createAndSaveEmailMessageEntity)
-                .collect(Collectors.toList());
+        entities.forEach(e -> attachmentMessageService.saveEmailMessage(e));
 
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, messages);
+        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
 
-        return RestResult.ofSuccess("发送邮件成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, messages.size()));
+        Map<String, Object> data = Map.of(
+                DEFAULT_MESSAGE_COUNT_KEY, entities.size(),
+                IdEntity.ID_FIELD_NAME, entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+        );
+
+        return RestResult.ofSuccess("发送邮件成功", data);
+    }
+
+    @Override
+    protected List<EmailMessage> createSendEntity(List<EmailMessageBody> result) {
+        return result.stream().flatMap(this::createAndSaveEmailMessageEntity).collect(Collectors.toList());
     }
 
     /**
@@ -148,8 +157,6 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody> 
 
             entity.setToEmail(toEmail);
             entity.setMaxRetryCount(maxRetryCount);
-
-            attachmentMessageService.saveEmailMessage(entity);
 
             result.add(entity);
         }

@@ -22,11 +22,6 @@ public interface MessageService {
     String DEFAULT_MESSAGE_TYPE_KEY = "messageType";
 
     /**
-     * 默认消息类型
-     */
-    String DEFAULT_MESSAGE_TYPE_VALUE = "siteMessage";
-
-    /**
      * 发送消息
      *
      * @param request 请求参数
