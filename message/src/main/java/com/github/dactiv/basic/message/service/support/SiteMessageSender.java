@@ -56,13 +56,13 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     /**
      * 渠道商
      */
-    @Value("${spring.site.channel}")
+    @Value("${message.site.channel}")
     private String channel;
 
     /**
      * 最大重试次数
      */
-    @Value("${spring.site.max-retry-count:3}")
+    @Value("${message.site.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Override

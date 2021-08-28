@@ -6,11 +6,16 @@ import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
+import com.github.dactiv.basic.message.service.support.mail.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.rabbitmq.client.Channel;
+import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.collections.MapUtils;
+import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -18,21 +23,24 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.jndi.JndiLocatorDelegate;
 import org.springframework.mail.javamail.JavaMailSender;
+import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
 import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.nio.charset.Charset;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -43,7 +51,7 @@ import java.util.stream.Stream;
  */
 @Component
 @RefreshScope
-public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> {
+public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(EmailMessageSender.class);
 
@@ -54,17 +62,22 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
      */
     private static final String DEFAULT_TYPE = "email";
 
+    private final Map<String, JavaMailSenderImpl> mailSenderMap = new LinkedHashMap<>();
+
     /**
      * 最大重试次数
      */
-    @Value("${spring.mail.max-retry-count:3}")
+    @Value("${message.mail.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Autowired
     private AttachmentMessageService attachmentMessageService;
 
     @Autowired
-    private JavaMailSender mailSender;
+    private MailConfig mailConfig;
+
+    public EmailMessageSender() {
+    }
 
     @Override
     protected String getRetryMessageQueueName() {
@@ -95,6 +108,8 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     private void send(EmailMessage entity) {
 
         entity.setLastSendTime(new Date());
+
+        JavaMailSender mailSender = mailSenderMap.get(entity.getType());
 
         MimeMessage mimeMessage = mailSender.createMimeMessage();
 
@@ -169,5 +184,59 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     @Override
     public String getMessageType() {
         return DEFAULT_TYPE;
+    }
+
+    @Override
+    public void afterPropertiesSet() {
+
+        mailConfig.getAccounts().entrySet().forEach(this::generateMailSender);
+
+    }
+
+    /**
+     * 生成邮件发送者
+     *
+     * @param entry 账户配置信息
+     */
+    private void generateMailSender(Map.Entry<String, MailProperties> entry) {
+
+        MailProperties mailProperties = entry.getValue();
+
+        JavaMailSenderImpl mailSender = mailSenderMap.computeIfAbsent(
+                StringUtils.capitalize(entry.getKey()),
+                k -> new JavaMailSenderImpl()
+        );
+
+        mailSender.setUsername(mailProperties.getUsername());
+        mailSender.setPassword(mailProperties.getPassword());
+
+        if (MapUtils.isNotEmpty(mailProperties.getProperties())) {
+            mailSender.getJavaMailProperties().putAll(mailProperties.getProperties());
+        }
+
+        if (MapUtils.isEmpty(mailSender.getJavaMailProperties()) && MapUtils.isNotEmpty(mailConfig.getProperties())) {
+            mailSender.getJavaMailProperties().putAll(mailConfig.getProperties());
+        }
+
+        mailSender.setHost(StringUtils.defaultIfEmpty(mailProperties.getHost(), mailConfig.getHost()));
+        mailSender.setPort(Objects.nonNull(mailProperties.getPort()) ? mailProperties.getPort() : mailConfig.getPort());
+        mailSender.setProtocol(StringUtils.defaultIfEmpty(mailProperties.getProtocol(), mailConfig.getProtocol()));
+
+        Charset encoding = Objects.nonNull(mailProperties.getDefaultEncoding()) ? mailProperties.getDefaultEncoding() : mailConfig.getDefaultEncoding();
+        if (Objects.nonNull(encoding)) {
+            mailSender.setDefaultEncoding(encoding.toString());
+        }
+
+        String jndiName = StringUtils.defaultIfEmpty(mailProperties.getJndiName(), mailConfig.getJndiName());
+
+        if (StringUtils.isNotEmpty(jndiName)) {
+            try {
+                Session session = JndiLocatorDelegate.createDefaultResourceRefLocator().lookup(jndiName, Session.class);
+                mailSender.setSession(session);
+            } catch (Exception e) {
+                throw new IllegalStateException(String.format("Unable to find Session in JNDI location %s", jndiName), e);
+            }
+        }
+
     }
 }

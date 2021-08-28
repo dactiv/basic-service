@@ -55,6 +55,7 @@ public enum AttachmentType implements NameValueEnum<Integer> {
      * @return 实际枚举只
      */
     public static AttachmentType valueOf(Class<? extends BatchMessage.Body> type) {
+
         for (AttachmentType t : AttachmentType.values()) {
             if (t.getType().equals(type)) {
                 return t;

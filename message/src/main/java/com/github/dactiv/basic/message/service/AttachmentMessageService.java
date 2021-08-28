@@ -159,10 +159,23 @@ public class AttachmentMessageService {
      * @param emailMessage 邮件消息实体
      */
     public void saveEmailMessage(EmailMessage emailMessage) {
+
+        if (CollectionUtils.isNotEmpty(emailMessage.getAttachmentList())) {
+            emailMessage.setHasAttachment(YesOrNo.Yes.getValue());
+        }
+
         if (Objects.isNull(emailMessage.getId())) {
             insertEmailMessage(emailMessage);
         } else {
             updateEmailMessage(emailMessage);
+        }
+
+        if (CollectionUtils.isNotEmpty(emailMessage.getAttachmentList())) {
+            emailMessage
+                    .getAttachmentList()
+                    .stream()
+                    .peek(a -> a.setMessageId(emailMessage.getId()))
+                    .forEach(this::saveAttachment);
         }
     }
 
@@ -244,10 +257,23 @@ public class AttachmentMessageService {
      * @param siteMessage 站内信消息实体
      */
     public void saveSiteMessage(SiteMessage siteMessage) {
+
+        if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
+            siteMessage.setHasAttachment(YesOrNo.Yes.getValue());
+        }
+
         if (Objects.isNull(siteMessage.getId())) {
             insertSiteMessage(siteMessage);
         } else {
             updateSiteMessage(siteMessage);
+        }
+
+        if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
+            siteMessage
+                    .getAttachmentList()
+                    .stream()
+                    .peek(a -> a.setMessageId(siteMessage.getId()))
+                    .forEach(this::saveAttachment);
         }
     }
 

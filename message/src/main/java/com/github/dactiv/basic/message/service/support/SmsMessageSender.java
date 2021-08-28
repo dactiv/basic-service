@@ -54,13 +54,13 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     /**
      * 渠道商
      */
-    @Value("${spring.sms.channel}")
+    @Value("${message.sms.channel}")
     private String channel;
 
     /**
      * 最大重试次数
      */
-    @Value("${spring.sms.max-retry-count:3}")
+    @Value("${message.sms.max-retry-count:3}")
     private Integer maxRetryCount;
 
     @Override
