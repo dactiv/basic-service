@@ -27,4 +27,4 @@ authentication:
           password: "feign"
           roles: "BASIC"
       cache:
-        name: "spring:security:user"
+        name: "spring:security:default:users:feign"

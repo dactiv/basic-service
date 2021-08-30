@@ -138,12 +138,25 @@ public class SecurityController {
      * 登陆成功后跳转的连接，直接获取当前用户
      *
      * @param securityContext 安全上下文
+     *
      * @return 当前用户
      */
     @GetMapping("getPrincipal")
     @PreAuthorize("isAuthenticated()")
     public SecurityUserDetails getPrincipal(@CurrentSecurityContext SecurityContext securityContext) {
         return Casts.cast(securityContext.getAuthentication().getDetails());
+    }
+
+    /**
+     * 查看当前用户是否认证
+     *
+     * @param securityContext 安全上下文
+     *
+     * @return true 是，否则 false
+     */
+    @GetMapping("isAuthenticated")
+    public boolean isAuthenticated(@CurrentSecurityContext SecurityContext securityContext) {
+        return securityContext.getAuthentication() != null && securityContext.getAuthentication().isAuthenticated();
     }
 
     /**
