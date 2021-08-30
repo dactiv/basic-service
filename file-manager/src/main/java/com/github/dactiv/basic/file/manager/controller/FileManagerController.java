@@ -15,7 +15,6 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Map;
@@ -96,9 +95,9 @@ public class FileManagerController {
      * @return 文件流字节
      * @throws Exception 获取失败时抛出
      */
-    @PreAuthorize("isAuthenticated()")
+    @PreAuthorize("hasAuthority('BASIC')")
     @GetMapping("get/{bucketName}/{filename}")
-    @Plugin(name = "获取文件", parent = "file-manager", sources = "Console", audit = true)
+    @Plugin(name = "获取文件", parent = "file-manager", sources = "all", audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {
         InputStream is = fileManagerService.get(bucketName, filename);
         HttpHeaders headers = new HttpHeaders();

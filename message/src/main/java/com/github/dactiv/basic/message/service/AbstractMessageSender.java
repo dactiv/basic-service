@@ -2,7 +2,6 @@ package com.github.dactiv.basic.message.service;
 
 import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.github.dactiv.basic.message.RabbitmqConfig;
-import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
@@ -15,7 +14,6 @@ import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
-import org.springframework.http.HttpEntity;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;

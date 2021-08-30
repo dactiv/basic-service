@@ -42,7 +42,7 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
     private MobileUserDetailsService mobileAuthenticationService;
 
     @Autowired
-    private JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
+    private CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
 
     private final LiteDeviceResolver deviceResolver = new LiteDeviceResolver();
 

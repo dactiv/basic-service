@@ -30,6 +30,7 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.session.SessionInformation;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -203,8 +204,7 @@ public class UserService implements InitializingBean {
         consoleUserDao.updateById(consoleUser);
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                consoleUser.getUsername(),
-                null,
+                new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
                 Console.toString()
         );
 
@@ -274,8 +274,7 @@ public class UserService implements InitializingBean {
         );
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                consoleUser.getUsername(),
-                null,
+                new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
                 Console.toString()
         );
 
@@ -336,8 +335,7 @@ public class UserService implements InitializingBean {
         consoleUserDao.deleteById(consoleUser.getId());
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                consoleUser.getUsername(),
-                null,
+                new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
                 Console.toString()
         );
 
@@ -540,8 +538,7 @@ public class UserService implements InitializingBean {
         authorizationService.getUserDetailsServices().forEach(s -> {
             s.getType().forEach(t -> {
                 PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                        memberUser.getUsername(),
-                        null,
+                        new UsernamePasswordAuthenticationToken(memberUser.getUsername(), null),
                         t
                 );
                 CacheProperties cache = s.getAuthenticationCache(token);

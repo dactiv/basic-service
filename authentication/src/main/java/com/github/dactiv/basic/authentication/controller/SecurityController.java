@@ -25,6 +25,7 @@ import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.util.DigestUtils;
@@ -178,9 +179,13 @@ public class SecurityController {
             throw new ServiceException("用户名密码错误");
         }
 
-        PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
+        UsernamePasswordAuthenticationToken usernamePasswordToken = new UsernamePasswordAuthenticationToken(
                 mobileUserDetails.getUsername(),
-                mobileUserDetails.getPassword(),
+                mobileUserDetails.getPassword()
+        );
+
+        PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
+                usernamePasswordToken,
                 mobileUserDetails.getType()
         );
 

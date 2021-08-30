@@ -1,6 +1,12 @@
 server:
   port: 8082
 
+authentication:
+  permit-uri-ant-matchers:
+    - "/generateToken/**"
+    - "/generateCaptcha/**"
+    - "/verifyCaptcha/**"
+
 spring:
   main:
     banner-mode: "off"

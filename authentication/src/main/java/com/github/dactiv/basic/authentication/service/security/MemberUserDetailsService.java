@@ -46,7 +46,7 @@ public class MemberUserDetailsService implements UserDetailsService {
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
     @Autowired
-    private AuthenticationProperties properties;
+    private AuthenticationExtendProperties properties;
 
     @Autowired
     private UserService userService;

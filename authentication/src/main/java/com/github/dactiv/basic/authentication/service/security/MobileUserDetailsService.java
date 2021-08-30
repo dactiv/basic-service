@@ -43,7 +43,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
     @Autowired
-    private AuthenticationProperties properties;
+    private AuthenticationExtendProperties properties;
 
     @Autowired
     private RedissonClient redissonClient;

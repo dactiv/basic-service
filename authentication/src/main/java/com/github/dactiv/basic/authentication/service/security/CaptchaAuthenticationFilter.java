@@ -1,8 +1,9 @@
 package com.github.dactiv.basic.authentication.service.security;
 
-import com.github.dactiv.basic.authentication.service.security.handler.JsonAuthenticationFailureHandler;
+import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
+import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,8 +27,13 @@ public class CaptchaAuthenticationFilter extends RequestAuthenticationFilter {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(CaptchaAuthenticationFilter.class);
 
-    @Autowired
-    private JsonAuthenticationFailureHandler handler;
+    private final CaptchaAuthenticationFailureResponse handler;
+
+    public CaptchaAuthenticationFilter(AuthenticationProperties properties,
+                                       CaptchaAuthenticationFailureResponse handler) {
+        super(properties);
+        this.handler = handler;
+    }
 
     @Override
     public Authentication attemptAuthentication(HttpServletRequest request,

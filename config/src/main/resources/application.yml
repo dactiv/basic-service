@@ -23,3 +23,12 @@ info:
   name: @name@
   artifact-id: ${spring.application.name}
   group-id: @groupId@
+
+authentication:
+  audit:
+    type: elasticsearch
+  permit-uri-ant-matchers:
+    - "/findDataDictionaries/**"
+    - "/findAccessCrypto/**"
+    - "/getPublicToken/**"
+    - "/getAccessToken/**"

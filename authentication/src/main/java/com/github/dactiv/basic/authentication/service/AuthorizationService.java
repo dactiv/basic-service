@@ -14,7 +14,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
-import com.github.dactiv.framework.spring.security.authentication.provider.PrincipalAuthenticationProvider;
+import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
@@ -27,6 +27,7 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -53,7 +54,7 @@ public class AuthorizationService {
     private ResourceDao resourceDao;
 
     @Autowired
-    private PrincipalAuthenticationProvider authenticationProvider;
+    private RequestAuthenticationProvider authenticationProvider;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -75,7 +76,6 @@ public class AuthorizationService {
     public UserDetailsService getUserDetailsService(ResourceSource source) {
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                null,
                 null,
                 source.toString()
         );
@@ -655,8 +655,7 @@ public class AuthorizationService {
      */
     private void deleteAuthorizationCache() {
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                "*",
-                null,
+                new UsernamePasswordAuthenticationToken("*", null),
                 ResourceSource.Console.toString()
         );
 

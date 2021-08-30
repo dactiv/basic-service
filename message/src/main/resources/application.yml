@@ -16,6 +16,10 @@ plugin:
       name: '消息管理'
       icon: 'icon-message'
 
+authentication:
+  audit:
+    type: elasticsearch
+
 info:
   version: @version@
   name: @name@

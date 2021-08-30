@@ -1,13 +1,13 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.github.dactiv.basic.authentication.service.UserService;
-import com.github.dactiv.basic.authentication.service.security.AuthenticationProperties;
+import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
-import com.github.dactiv.framework.spring.security.authentication.DeviceIdSecurityContextRepository;
+import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
@@ -19,6 +19,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.web.authentication.logout.LogoutSuccessHandler;
@@ -53,16 +54,16 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private final static String DEFAULT_TOKEN_NAME = "token";
 
     @Autowired
-    private AuthenticationProperties authenticationProperties;
+    private AuthenticationExtendProperties authenticationProperties;
 
     @Autowired
-    private JsonAuthenticationFailureHandler failureHandler;
+    private CaptchaAuthenticationFailureResponse failureHandler;
 
     @Autowired
     private UserService userService;
 
     @Autowired
-    private DeviceIdSecurityContextRepository deviceIdSecurityContextRepository;
+    private DeviceIdContextRepository deviceIdContextRepository;
 
     @Autowired
     private List<UserDetailsService> userDetailsServices;
@@ -81,7 +82,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             if (DEFAULT_MEMBER_TYPES.contains(userDetails.getType())) {
                 String token = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
-                deviceIdSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
+                deviceIdContextRepository.getSecurityContextBucket(token).deleteAsync();
             }
 
             clearAllCache(userDetails, authentication.getPrincipal().toString());
@@ -120,9 +121,12 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      * @param principal 登陆账户
      */
     private void clearPrincipalCache(String principal) {
+
+        UsernamePasswordAuthenticationToken token = new UsernamePasswordAuthenticationToken(principal, null);
+
         userDetailsServices.forEach(uds -> uds.getType()
                 .stream()
-                .map(t -> new PrincipalAuthenticationToken(principal, null, t))
+                .map(t -> new PrincipalAuthenticationToken(token, t))
                 .forEach(p -> userService.deleteRedisCache(uds, p)));
 
         Optional<UserDetailsService> userDetailsService = userDetailsServices.stream()
@@ -132,8 +136,8 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         if (userDetailsService.isPresent()) {
             MobileUserDetailsService mobileUserDetails = Casts.cast(userDetailsService.get());
 
-            String token = mobileUserDetails.getMobileAuthenticationTokenKey(principal);
-            deviceIdSecurityContextRepository.getSecurityContextBucket(token).deleteAsync();
+            String key = mobileUserDetails.getMobileAuthenticationTokenKey(principal);
+            deviceIdContextRepository.getSecurityContextBucket(key).deleteAsync();
         }
     }
 
@@ -157,7 +161,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             // 获取设备唯一识别
             String identified = SpringMvcUtils.getDeviceIdentified(request);
 
-            String type = request.getParameter(JsonAuthenticationFailureHandler.DEFAULT_TYPE_PARAM_NAME);
+            String type = request.getParameter(CaptchaAuthenticationFailureResponse.DEFAULT_TYPE_PARAM_NAME);
             // 如果登录类型为用户名密码登录的情况下，创建一个生成验证码 token 给客户端生成验证码，
             // 该验证码会通过 CaptchaAuthenticationFilter 进行验证码，详情查看 CaptchaAuthenticationFilter。
             // 如果登录类型为手机短信登录，创建一个生成短信发送验证码的拦截 token 给客户端，
@@ -167,7 +171,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 Map<String, Object> buildToken = failureHandler
                         .getCaptchaService()
                         .generateToken(
-                                JsonAuthenticationFailureHandler.DEFAULT_MOBILE_CAPTCHA_TYPE,
+                                CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE,
                                 identified
                         );
 
@@ -180,7 +184,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                         .createGenerateCaptchaIntercept(
                                 buildToken.get(DEFAULT_TOKEN_NAME).toString(),
                                 captchaType,
-                                JsonAuthenticationFailureHandler.DEFAULT_MOBILE_CAPTCHA_TYPE
+                                CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE
                         );
 
                 data.put(DEFAULT_TOKEN_NAME, token);
@@ -196,7 +200,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 data.putAll(buildToken);
             }
 
-            executeCode = JsonAuthenticationFailureHandler.CAPTCHA_EXECUTE_CODE;
+            executeCode = CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE;
         }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

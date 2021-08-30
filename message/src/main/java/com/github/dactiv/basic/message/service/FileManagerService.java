@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service;
 
-import com.github.dactiv.framework.spring.security.BasicAuthenticationConfiguration;
+import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -9,7 +9,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 /**
  * 文件管理服务 feign 客户端
  */
-@FeignClient(value = "file-manager", configuration = BasicAuthenticationConfiguration.class)
+@FeignClient(value = "file-manager", configuration = AuthenticationConfiguration.class)
 public interface FileManagerService {
 
     String DEFAULT_BUCKET_NAME = "bucketName";

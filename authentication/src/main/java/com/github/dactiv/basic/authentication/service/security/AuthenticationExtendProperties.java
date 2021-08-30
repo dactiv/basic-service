@@ -17,8 +17,10 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("spring.security.authentication")
-public class AuthenticationProperties {
+@ConfigurationProperties("authentication.extend")
+public class AuthenticationExtendProperties  {
+
+    public static final String DEFAULT_LOGOUT_URL = "/logout";
 
     /**
      * 允许认证错误次数，当达到峰值时，出现验证码
@@ -50,6 +52,11 @@ public class AuthenticationProperties {
      * 允许认证错误次数的 redis key 前缀
      */
     private String allowableFailureNumberKeyPrefix = "spring.security:authentication:failure:";
+
+    /**
+     * 登出连接
+     */
+    private String logoutUrl = DEFAULT_LOGOUT_URL;
 
     /**
      * 注册配置

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.captcha.service;
 
-import com.github.dactiv.framework.spring.security.BasicAuthenticationConfiguration;
+import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -13,7 +13,7 @@ import java.util.Map;
  *
  * @author maurice
  */
-@FeignClient(value = "config", configuration = BasicAuthenticationConfiguration.class)
+@FeignClient(value = "config", configuration = AuthenticationConfiguration.class)
 public interface ConfigService {
 
     /**

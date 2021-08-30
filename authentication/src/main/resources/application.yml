@@ -6,6 +6,12 @@ mybatis-plus:
     db-config:
       id-type: auto
 
+info:
+  version: @version@
+  name: @name@
+  artifact-id: ${spring.application.name}
+  group-id: @groupId@
+
 plugin:
   base-packages: com.github.dactiv.basic.authentication.controller
   parent:
@@ -13,8 +19,10 @@ plugin:
       name: '系统管理'
       icon: 'icon-setting'
 
-info:
-  version: @version@
-  name: @name@
-  artifact-id: ${spring.application.name}
-  group-id: @groupId@
+authentication:
+  audit:
+    type: elasticsearch
+  permit-uri-ant-matchers:
+    - "/prepare/**"
+    - "/login/**"
+    - "/logout/**"

@@ -6,11 +6,6 @@ spring:
     banner-mode: "off"
   application:
     name: @artifactId@
-  security:
-    support:
-      override-http-security: false
-      audit:
-        type: elasticsearch
   elasticsearch:
     rest:
       uris: http://localhost:9200
