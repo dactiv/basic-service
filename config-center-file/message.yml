@@ -51,7 +51,7 @@ message:
 spring:
   datasource:
     url: jdbc:mysql://localhost:3306/message?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false
-    driverClassName: com.mysql.jdbc.Driver
+    driverClassName: com.mysql.cj.jdbc.Driver
     username: 用户名
     password: 密码
     type: com.zaxxer.hikari.HikariDataSource

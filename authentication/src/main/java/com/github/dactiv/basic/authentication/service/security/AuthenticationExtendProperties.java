@@ -2,11 +2,15 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
+import com.github.dactiv.framework.spring.security.authentication.service.DefaultUserDetailsService;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
+import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -21,6 +25,8 @@ import java.util.concurrent.TimeUnit;
 public class AuthenticationExtendProperties  {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
+
+    public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(ResourceSource.Mobile.toString(), DefaultUserDetailsService.DEFAULT_TYPES);
 
     /**
      * 允许认证错误次数，当达到峰值时，出现验证码
@@ -57,6 +63,11 @@ public class AuthenticationExtendProperties  {
      * 登出连接
      */
     private String logoutUrl = DEFAULT_LOGOUT_URL;
+
+    /**
+     * 不需要验证码的认证类型
+     */
+    private List<String> captchaAuthenticationTypes = DEFAULT_CAPTCHA_AUTHENTICATION_TYPES;
 
     /**
      * 注册配置

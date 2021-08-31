@@ -4,14 +4,13 @@ import com.github.dactiv.basic.authentication.service.security.AuthenticationExt
 import com.github.dactiv.basic.authentication.service.security.CaptchaAuthenticationFilter;
 import com.github.dactiv.basic.authentication.service.security.JsonSessionInformationExpiredStrategy;
 import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
-import com.github.dactiv.basic.authentication.service.security.handler.JsonAuthenticationSuccessHandler;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.basic.authentication.service.security.session.SessionControlAuthenticationStrategy;
 import com.github.dactiv.framework.spring.security.SpringSecuritySupportAutoConfiguration;
 import com.github.dactiv.framework.spring.security.WebSecurityConfigurerAfterAdapter;
-import com.github.dactiv.framework.spring.security.authentication.JsonAuthenticationFailureHandler;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
+import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationFailureHandler;
+import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessHandler;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.ApplicationEventPublisher;

@@ -5,9 +5,8 @@ import com.github.dactiv.basic.authentication.service.security.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.TimeProperties;
-import com.github.dactiv.framework.spring.security.authentication.JsonAuthenticationFailureResponse;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
+import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationFailureResponse;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
@@ -53,7 +52,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
         String type = request.getHeader(properties.getTypeHeaderName());
 
-        if (!ResourceSource.Mobile.toString().equals(type)) {
+        if (extendProperties.getCaptchaAuthenticationTypes().contains(type)) {
             setAllowableFailureNumber(request, ++number);
         }
 
@@ -95,12 +94,24 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         result.setExecuteCode(CAPTCHA_EXECUTE_CODE);
     }
 
+    /**
+     * 是否需要验证码认证
+     *
+     * @param request 请求信息
+     *
+     * @return true 是，否则 false
+     */
     public boolean isCaptchaAuthentication(HttpServletRequest request) {
         Integer number = getAllowableFailureNumber(request);
         String type = request.getParameter(DEFAULT_TYPE_PARAM_NAME);
-        return number > extendProperties.getAllowableFailureNumber() && !LoginType.Mobile.toString().equals(type);
+        return number > extendProperties.getAllowableFailureNumber() && extendProperties.getCaptchaAuthenticationTypes().contains(type);
     }
 
+    /**
+     * 删除允许认证失败次数
+     *
+     * @param request 请求信息
+     */
     public void deleteAllowableFailureNumber(HttpServletRequest request) {
         String identified = SpringMvcUtils.getDeviceIdentified(request);
 
@@ -109,6 +120,12 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         redissonClient.getBucket(key).deleteAsync();
     }
 
+    /**
+     * 设置允许认证失败次数
+     *
+     * @param request 请求信息
+     * @param number 错误次数
+     */
     private void setAllowableFailureNumber(HttpServletRequest request, Integer number) {
         String identified = SpringMvcUtils.getDeviceIdentified(request);
 
@@ -119,6 +136,12 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         redissonClient.getBucket(key).set(number, properties.getValue(), properties.getUnit());
     }
 
+    /**
+     * 获取允许认证失败次数
+     *
+     * @param request 请求信息
+     * @return 允许认证失败次数
+     */
     public Integer getAllowableFailureNumber(HttpServletRequest request) {
         String identified = SpringMvcUtils.getDeviceIdentified(request);
 
@@ -133,6 +156,13 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         return value;
     }
 
+    /**
+     * 获取允许认证失败次数 key 名称
+     *
+     * @param identified 唯一识别
+     *
+     * @return 允许认证失败次数 key 名称
+     */
     private String getAllowableFailureNumberKey(String identified) {
         return extendProperties.getAllowableFailureNumberKeyPrefix() + identified;
     }

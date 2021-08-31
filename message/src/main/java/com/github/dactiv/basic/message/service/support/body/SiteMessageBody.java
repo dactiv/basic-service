@@ -3,11 +3,13 @@ package com.github.dactiv.basic.message.service.support.body;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.TitleMessage;
+import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 站内信消息 body
@@ -30,4 +32,14 @@ public class SiteMessageBody extends TitleMessage implements AttachmentMessage {
      * 附件
      */
     private List<Attachment> attachmentList;
+
+    /**
+     * 是否推送消息：0.否，1.是
+     */
+    private Integer isPush;
+
+    /**
+     * 数据
+     */
+    private Map<String, Object> data;
 }

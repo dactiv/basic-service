@@ -7,6 +7,7 @@ import com.github.dactiv.basic.authentication.service.security.MemberUserDetails
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessResponse;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
@@ -14,29 +15,21 @@ import com.github.dactiv.framework.spring.web.mobile.Device;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mobile.LiteDeviceResolver;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
-import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.MediaType;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.web.authentication.AuthenticationSuccessHandler;
 import org.springframework.stereotype.Component;
 
-import javax.servlet.FilterChain;
 import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpServletResponse;
-import java.io.IOException;
 import java.util.Map;
 import java.util.Objects;
 
 /**
- * json 形式的认证成功具柄实现
+ * json 形式的认证失败具柄实现
  *
  * @author maurice.chen
  */
-@Slf4j
 @Component
-public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHandler {
+public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationSuccessResponse {
 
     @Autowired
     private MobileUserDetailsService mobileAuthenticationService;
@@ -44,27 +37,15 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
     @Autowired
     private CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
 
-    private final LiteDeviceResolver deviceResolver = new LiteDeviceResolver();
-
     @Autowired
     private AuthenticationService authenticationService;
 
-    @Override
-    public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        FilterChain chain,
-                                        Authentication authentication) throws IOException {
-        onAuthenticationSuccess(request, response, authentication);
-    }
+    private final LiteDeviceResolver deviceResolver = new LiteDeviceResolver();
 
     @Override
-    public void onAuthenticationSuccess(HttpServletRequest request,
-                                        HttpServletResponse response,
-                                        Authentication authentication) throws IOException {
+    public void setting(RestResult<Object> result, HttpServletRequest request) {
 
-        Object details = Casts.cast(authentication.getDetails());
-
-        RestResult<Object> result = RestResult.ofSuccess("登陆成功", details);
+        Object details = result.getData();
 
         jsonAuthenticationFailureHandler.deleteAllowableFailureNumber(request);
 
@@ -129,9 +110,5 @@ public class JsonAuthenticationSuccessHandler implements AuthenticationSuccessHa
 
             result.setData(data);
         }
-
-        response.setContentType(MediaType.APPLICATION_JSON_VALUE);
-        response.getWriter().write(Casts.writeValueAsString(result));
-
     }
 }

@@ -9,16 +9,17 @@ mybatis-plus:
 enumerate:
   base-packages: com.github.dactiv.basic.message.enumerate
 
-plugin:
-  base-packages: com.github.dactiv.basic.message.controller
-  parent:
-    message:
-      name: '消息管理'
-      icon: 'icon-message'
-
 authentication:
+  plugin:
+    base-packages: com.github.dactiv.basic.message.controller
+    parent:
+      message:
+        name: '消息管理'
+        icon: 'icon-message'
   audit:
     type: elasticsearch
+  permit-uri-ant-matchers:
+    - "/actuator/**"
 
 info:
   version: @version@

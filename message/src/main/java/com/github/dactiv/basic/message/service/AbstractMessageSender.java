@@ -10,6 +10,7 @@ import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.retry.Retryable;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -27,6 +28,7 @@ import java.util.*;
  * @param <T> 消息泛型实体
  * @author maurice
  */
+@Slf4j
 public abstract class AbstractMessageSender<T extends BatchMessage.Body, S extends BatchMessage.Body> implements MessageSender {
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
@@ -62,7 +64,7 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
     private Validator validator;
 
     public AbstractMessageSender() {
-        this.entityClass = ReflectionUtils.getGenericClass(this.getClass().getGenericSuperclass(), 0);
+        this.entityClass = ReflectionUtils.getGenericClass(this, 0);
     }
 
     @Override
@@ -123,6 +125,8 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
         if (Objects.nonNull(batchId)) {
             restResult.getData().put(DEFAULT_BATCH_MESSAGE_ID_KEY, batchId);
         }
+
+        log.info("发送类型为: [" + getMessageType() + "] 的消息,响应信息为:" + Casts.convertValue(restResult, Map.class));
 
         return restResult;
     }

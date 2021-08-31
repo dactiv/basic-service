@@ -189,7 +189,7 @@ public class AuthenticationService {
             param.put("type", properties.getAbnormalArea().getMessageType());
             param.put("title", properties.getAbnormalArea().getTitle());
             param.put("data", Casts.convertValue(info, Map.class));
-            param.put("pushMessage", YesOrNo.Yes.getValue());
+            param.put("isPush", YesOrNo.Yes.getValue());
 
             try {
 

@@ -6,6 +6,7 @@ authentication:
     - "/generateToken/**"
     - "/generateCaptcha/**"
     - "/verifyCaptcha/**"
+    - "/actuator/**"
 
 spring:
   main:

@@ -32,13 +32,4 @@ public class RabbitmqConfig {
     public AsyncAmqpTemplate asyncAmqpTemplate(RabbitTemplate rabbitTemplate) {
         return new AsyncRabbitTemplate(rabbitTemplate);
     }
-
-    @Bean
-    public SimpleRabbitListenerContainerFactory rabbitListenerContainerFactory(ConnectionFactory connectionFactory) {
-        SimpleRabbitListenerContainerFactory factory = new SimpleRabbitListenerContainerFactory();
-        factory.setConnectionFactory(connectionFactory);
-        factory.setMessageConverter(new Jackson2JsonMessageConverter());
-        factory.setAcknowledgeMode(AcknowledgeMode.MANUAL);
-        return factory;
-    }
 }

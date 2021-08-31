@@ -46,7 +46,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     /**
      * 默认是否要跳转登录页面名称
      */
-    public final static String DEFAULT_TO_LOGIN_NAME = "login";
+    public final static String DEFAULT_IS_AUTHENTICATION_NAME = "authentication";
 
     /**
      * 默认的 token 名称
@@ -153,7 +153,11 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
         Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
 
-        String executeCode = ErrorCodeException.DEFAULT_EXCEPTION_CODE;
+        String executeCode = String.valueOf(HttpStatus.OK.value());
+
+        String message = HttpStatus.OK.getReasonPhrase();
+
+        int status = HttpStatus.OK.value();
 
         Map<String, Object> data = new LinkedHashMap<>();
 
@@ -205,23 +209,23 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
-        boolean flag = AnonymousAuthenticationToken.class.isAssignableFrom(authentication.getClass()) ||
-                AnonymousUser.class.isAssignableFrom(authentication.getDetails().getClass());
-
-        if (flag) {
-            data.put(DEFAULT_TO_LOGIN_NAME, true);
+        if (AnonymousAuthenticationToken.class.isAssignableFrom(authentication.getClass()) ||
+                AnonymousUser.class.isAssignableFrom(authentication.getDetails().getClass())) {
+            data.put(DEFAULT_IS_AUTHENTICATION_NAME, false);
+            message = HttpStatus.UNAUTHORIZED.getReasonPhrase();
             data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, userService.getAnonymousUser());
         } else {
-            data.put(DEFAULT_TO_LOGIN_NAME, !authentication.isAuthenticated());
+            data.put(DEFAULT_IS_AUTHENTICATION_NAME, authentication.isAuthenticated());
 
             if (!authentication.isAuthenticated()) {
+                message = HttpStatus.UNAUTHORIZED.getReasonPhrase();
                 data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, userService.getAnonymousUser());
             }
         }
 
         return new RestResult<>(
-                "未授权访问",
-                HttpStatus.UNAUTHORIZED.value(),
+                message,
+                status,
                 executeCode,
                 data
         );

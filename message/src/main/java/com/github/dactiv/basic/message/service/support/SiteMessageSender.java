@@ -76,8 +76,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
-            ),
-            containerFactory = "rabbitListenerContainerFactory"
+            )
     )
     public void sendSiteMessage(@Payload List<SiteMessage> data,
                                 Channel channel,
@@ -91,10 +90,9 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
 
     private void send(SiteMessage entity) {
 
-        entity.setLastSendTime(new Date());
-
         SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
+        entity.setLastSendTime(new Date());
         entity.setChannel(siteMessageChannelSender.getType());
 
         try {
@@ -157,7 +155,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
 
             SiteMessage entity = Casts.of(body, SiteMessage.class);
 
-            entity.setFromUserId(userId);
+            entity.setToUserId(userId);
             entity.setMaxRetryCount(maxRetryCount);
 
             result.add(entity);

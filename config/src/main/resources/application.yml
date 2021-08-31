@@ -11,13 +11,6 @@ enumerate:
     - com.github.dactiv.framework.commons.enumerate
     - com.github.dactiv.framework.spring.security
 
-plugin:
-  base-packages: com.github.dactiv.basic.config.controller
-  parent:
-    config:
-      name: '配置管理'
-      icon: 'icon-un-config-o'
-
 info:
   version: @version@
   name: @name@
@@ -27,8 +20,15 @@ info:
 authentication:
   audit:
     type: elasticsearch
+  plugin:
+    base-packages: com.github.dactiv.basic.config.controller
+    parent:
+      config:
+        name: '配置管理'
+        icon: 'icon-un-config-o'
   permit-uri-ant-matchers:
     - "/findDataDictionaries/**"
     - "/findAccessCrypto/**"
     - "/getPublicToken/**"
     - "/getAccessToken/**"
+    - "/actuator/**"

@@ -95,8 +95,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
-            ),
-            containerFactory = "rabbitListenerContainerFactory"
+            )
     )
     public void sendEmail(@Payload List<EmailMessage> data,
                           Channel channel,

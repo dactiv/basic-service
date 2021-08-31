@@ -37,11 +37,6 @@ public class SiteMessage extends TitleMessage implements AttachmentMessage {
     private String channel;
 
     /**
-     * 发送的用户 id
-     */
-    private Integer fromUserId;
-
-    /**
      * 收到的用户 id
      */
     private Integer toUserId;
@@ -49,7 +44,7 @@ public class SiteMessage extends TitleMessage implements AttachmentMessage {
     /**
      * 是否推送消息：0.否，1.是
      */
-    private Integer isPush;
+    private Integer isPush = YesOrNo.Yes.getValue();
 
     /**
      * 是否已读：0.否，1.是
