@@ -52,8 +52,8 @@ public class SiteMessageController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取站内信消息分页")
     @PreAuthorize("hasAuthority('perms[site:page]')")
+    @Plugin(name = "获取站内信消息分页", sources = "Console")
     public Page<SiteMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSiteMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }

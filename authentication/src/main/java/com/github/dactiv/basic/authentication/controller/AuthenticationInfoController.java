@@ -19,7 +19,7 @@ import java.util.List;
  * @author maurice
  */
 @RestController
-@RequestMapping("authentication/info")
+@RequestMapping("info")
 public class AuthenticationInfoController {
 
     @Autowired
@@ -55,9 +55,9 @@ public class AuthenticationInfoController {
      *
      * @return 认证信息
      */
-    @GetMapping("lastInfo")
+    @GetMapping("getLastAuthenticationInfo")
     @PreAuthorize("hasRole('BASIC')")
-    public AuthenticationInfo lastInfo(@RequestParam Integer userId, @RequestParam List<String> types) {
+    public AuthenticationInfo getLastAuthenticationInfo(@RequestParam Integer userId, @RequestParam List<String> types) {
 
         return authenticationService.getLastAuthenticationInfo(userId, types);
     }

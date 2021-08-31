@@ -14,9 +14,9 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
-import com.github.dactiv.framework.commons.id.IdEntity;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -38,9 +38,11 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
+import javax.validation.constraints.Email;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
@@ -72,6 +74,12 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     @Value("${message.mail.max-retry-count:3}")
     private Integer maxRetryCount;
 
+    /**
+     * 分配数量值（如果多消息时，多少个一批做消息发送）
+     */
+    @Value("${message.mail.number-of-batch:50}")
+    private Integer numberOfBatch;
+
     @Autowired
     private AttachmentMessageService attachmentMessageService;
 
@@ -82,7 +90,17 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     }
 
     @Override
+    protected int getNumberOfBatch() {
+        return numberOfBatch;
+    }
+
+    @Override
     protected String getRetryMessageQueueName() {
+        return DEFAULT_QUEUE_NAME;
+    }
+
+    @Override
+    protected String getMessageQueueName() {
         return DEFAULT_QUEUE_NAME;
     }
 
@@ -97,7 +115,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
             )
     )
-    public void sendEmail(@Payload List<EmailMessage> data,
+    public void sendEmail(@Payload List<Integer> data,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
@@ -105,7 +123,10 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
         data.forEach(this::send);
     }
 
-    private void send(EmailMessage entity) {
+    @Transactional(rollbackFor = Exception.class)
+    public void send(Integer  id) {
+
+        EmailMessage entity = attachmentMessageService.getEmailMessage(id);
 
         entity.setLastSendTime(new Date());
 
@@ -162,23 +183,15 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<EmailMessage> entities) {
+    protected void send(List<EmailMessage> entities) {
 
         entities.forEach(e -> attachmentMessageService.saveEmailMessage(e));
-
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
-
-        Map<String, Object> data = Map.of(
-                DEFAULT_MESSAGE_COUNT_KEY, entities.size(),
-                IdEntity.ID_FIELD_NAME, entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
-        );
-
-        return RestResult.ofSuccess("发送邮件成功", data);
+        super.send(entities);
     }
 
     @Override
     protected List<EmailMessage> createSendEntity(List<EmailMessageBody> result) {
-        return result.stream().flatMap(this::createAndSaveEmailMessageEntity).collect(Collectors.toList());
+        return result.stream().flatMap(this::createEmailMessageEntity).collect(Collectors.toList());
     }
 
     /**
@@ -188,28 +201,65 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
      *
      * @return 邮件消息流
      */
-    private Stream<EmailMessage> createAndSaveEmailMessageEntity(EmailMessageBody body) {
+    private Stream<EmailMessage> createEmailMessageEntity(EmailMessageBody body) {
 
         List<EmailMessage> result = new LinkedList<>();
 
-        for (String toEmail : body.getToEmails()) {
+        if (body.getToEmails().contains(DEFAULT_ALL_USER_KEY)) {
+            Map<String, Object> filter = new LinkedHashMap<>();
 
-            EmailMessage entity = Casts.of(body, EmailMessage.class);
+            filter.put("filter_[email_nen]", "true");
+            filter.put("filter_[status_eq]", "1");
 
-            JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
+            List<Map<String, Object>> users = authenticationService.findMemberUser(filter);
 
-            if (Objects.isNull(mailSender)) {
-                throw new SystemException("找不到类型为 [" + entity.getType() + "] 的邮件发送者");
+            for (Map<String, Object> user : users) {
+
+                EmailMessage entity = ofEntity(body);
+                entity.setToEmail(user.get("email").toString());
+
+                result.add(entity);
             }
 
-            entity.setFromEmail(mailSender.getUsername());
-            entity.setToEmail(toEmail);
-            entity.setMaxRetryCount(maxRetryCount);
+        } else {
 
-            result.add(entity);
+            for (String toEmail : body.getToEmails()) {
+
+                EmailMessage entity = ofEntity(body);
+                entity.setToEmail(toEmail);
+
+                result.add(entity);
+            }
         }
 
         return result.stream();
+    }
+
+    /**
+     * 创建邮件消息实体
+     *
+     * @param body 邮件消息 body
+     *
+     * @return 邮件消息实体
+     */
+    private EmailMessage ofEntity(EmailMessageBody body) {
+        EmailMessage entity = Casts.of(body, EmailMessage.class, "attachmentList");
+
+        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
+
+        if (Objects.isNull(mailSender)) {
+            throw new SystemException("找不到类型为 [" + entity.getType() + "] 的邮件发送者");
+        }
+
+        entity.setFromEmail(mailSender.getUsername());
+        entity.setMaxRetryCount(maxRetryCount);
+
+        if (CollectionUtils.isNotEmpty(body.getAttachmentList())) {
+            entity.setHasAttachment(YesOrNo.Yes.getValue());
+            body.getAttachmentList().forEach(a -> entity.getAttachmentList().add(Casts.of(a, Attachment.class)));
+        }
+
+        return entity;
     }
 
     @Override

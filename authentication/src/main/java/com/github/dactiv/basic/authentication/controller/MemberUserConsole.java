@@ -65,7 +65,7 @@ public class MemberUserConsole {
      */
     @PostMapping("find")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "查询分页", sources = "Console")
+    @Plugin(name = "查询分页", sources = "System")
     public List<MemberUser> find(HttpServletRequest request) {
         return userService.findMemberUsers(queryGenerator.getQueryWrapperByHttpRequest(request));
     }

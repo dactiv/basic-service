@@ -95,9 +95,9 @@ public class FileManagerController {
      * @return 文件流字节
      * @throws Exception 获取失败时抛出
      */
-    @PreAuthorize("hasAuthority('BASIC')")
+    @PreAuthorize("hasRole('BASIC')")
     @GetMapping("get/{bucketName}/{filename}")
-    @Plugin(name = "获取文件", parent = "file-manager", sources = "all", audit = true)
+    @Plugin(name = "获取文件", parent = "file-manager", sources = "System", audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {
         InputStream is = fileManagerService.get(bucketName, filename);
         HttpHeaders headers = new HttpHeaders();

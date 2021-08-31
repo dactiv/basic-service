@@ -160,22 +160,20 @@ public class AttachmentMessageService {
      */
     public void saveEmailMessage(EmailMessage emailMessage) {
 
-        if (CollectionUtils.isNotEmpty(emailMessage.getAttachmentList())) {
-            emailMessage.setHasAttachment(YesOrNo.Yes.getValue());
-        }
-
         if (Objects.isNull(emailMessage.getId())) {
+
             insertEmailMessage(emailMessage);
+
+            if (CollectionUtils.isNotEmpty(emailMessage.getAttachmentList())) {
+                emailMessage
+                        .getAttachmentList()
+                        .stream()
+                        .peek(a -> a.setMessageId(emailMessage.getId()))
+                        .forEach(this::saveAttachment);
+            }
+
         } else {
             updateEmailMessage(emailMessage);
-        }
-
-        if (CollectionUtils.isNotEmpty(emailMessage.getAttachmentList())) {
-            emailMessage
-                    .getAttachmentList()
-                    .stream()
-                    .peek(a -> a.setMessageId(emailMessage.getId()))
-                    .forEach(this::saveAttachment);
         }
     }
 
@@ -371,8 +369,6 @@ public class AttachmentMessageService {
     public void readSiteMessage(List<String> types, Integer userId) {
 
         LambdaQueryWrapper<SiteMessage> queryWrapper = new LambdaQueryWrapper<>();
-
-        Map<String, Object> filter = new LinkedHashMap<>();
 
         if (CollectionUtils.isNotEmpty(types)) {
             queryWrapper.in(SiteMessage::getType, types);

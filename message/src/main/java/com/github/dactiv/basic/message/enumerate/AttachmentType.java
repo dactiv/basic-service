@@ -4,6 +4,9 @@ import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
+import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
+import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import lombok.AccessLevel;
@@ -22,15 +25,15 @@ public enum AttachmentType implements NameValueEnum<Integer> {
     /**
      * 站内信
      */
-    Site("站内信",10, SiteMessage.class),
+    Site("站内信",10, SiteMessageBody.class),
     /**
      * 邮件
      */
-    Email("邮件", 20, EmailMessage.class),
+    Email("邮件", 20, EmailMessageBody.class),
     /**
      * 短信
      */
-    Sms("短信", 30, SmsMessage .class);
+    Sms("短信", 30, SmsMessageBody.class);
 
     /**
      * 名称

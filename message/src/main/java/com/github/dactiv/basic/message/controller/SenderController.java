@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -37,8 +38,9 @@ public class SenderController {
      * @return 消息结果集
      */
     @SuppressWarnings("unchecked")
-    @PreAuthorize("hasRole('BASIC')")
+    @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[message:send]')")
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
+    @Plugin(name = "发送消息", id = "send", parent = "message", sources = "System")
     public RestResult<Map<String, Object>> send(HttpServletRequest request) throws Exception {
 
         Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);

@@ -1,26 +1,33 @@
 package com.github.dactiv.basic.message.service;
 
-import com.baomidou.mybatisplus.core.toolkit.ClassUtils;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
+import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.MutablePropertyValues;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.validation.BindException;
 import org.springframework.validation.Validator;
 import org.springframework.web.bind.WebDataBinder;
 
 import java.util.*;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.stream.Collectors;
 
 /**
  * 抽象的消息发送者实现，主要是构建和验证发型实体得到真正的发送者实体而实现的一个抽象类
@@ -29,7 +36,7 @@ import java.util.*;
  * @author maurice
  */
 @Slf4j
-public abstract class AbstractMessageSender<T extends BatchMessage.Body, S extends BatchMessage.Body> implements MessageSender {
+public abstract class AbstractMessageSender<T extends BatchMessage.Body, S extends NumberIdEntity<Integer>> implements MessageSender {
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 
@@ -37,16 +44,17 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
 
     public static final String DEFAULT_BATCH_MESSAGE_ID_KEY = "batchId";
 
+    public static final String DEFAULT_ALL_USER_KEY = "ALL_USER";
+
     @Autowired
     protected AmqpTemplate amqpTemplate;
 
     @Autowired
     private MessageService messageService;
 
-    /**
-     * 批量消息对应的附件缓存 map
-     */
-    protected final Map<Integer, Map<String, byte[]>> attachmentCache = new LinkedHashMap<>();
+    @Qualifier("mvcValidator")
+    @Autowired(required = false)
+    private Validator validator;
 
     /**
      * 文件管理服务
@@ -55,16 +63,35 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
     protected FileManagerService fileManagerService;
 
     /**
+     * 会员用户服务
+     */
+    @Autowired
+    protected AuthenticationService authenticationService;
+
+    /**
+     * 线程池，用于批量发送消息时候异步使用。
+     */
+    @Autowired
+    private ThreadPoolTaskExecutor threadPoolTaskExecutor;
+
+    /**
      * 请求对象的数据实体类型
      */
-    private final Class<T> entityClass;
+    private final Class<T> bodyEntityClass;
 
-    @Qualifier("mvcValidator")
-    @Autowired(required = false)
-    private Validator validator;
+    /**
+     * 发送对象的数据实体类型
+     */
+    private final Class<S> sendEntityClass;
+
+    /**
+     * 批量消息对应的附件缓存 map
+     */
+    protected final Map<Integer, Map<String, byte[]>> attachmentCache = new LinkedHashMap<>();
 
     public AbstractMessageSender() {
-        this.entityClass = ReflectionUtils.getGenericClass(this, 0);
+        this.bodyEntityClass = ReflectionUtils.getGenericClass(this, 0);
+        this.sendEntityClass = ReflectionUtils.getGenericClass(this, 1);
     }
 
     @Override
@@ -79,14 +106,14 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
             List<Map<String, Object>> messages = Casts.cast(request.get(DEFAULT_BATCH_MESSAGE_KEY), List.class);
 
             for (Map<String, Object> m : messages) {
-                T entity = ClassUtils.newInstance(entityClass);
-                bindAndValidate(entity, m);
+                //T entity = ClassUtils.newInstance(entityClass);
+                T entity = bindAndValidate(m);
                 result.add(entity);
             }
 
         } else {
-            T entity = ClassUtils.newInstance(entityClass);
-            bindAndValidate(entity, request);
+            //T entity = ClassUtils.newInstance(entityClass);
+            T entity = bindAndValidate(request);
             result.add(entity);
         }
 
@@ -98,32 +125,50 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
         // 构造发送消息结果集，用于 send 发送数据使用
         List<S> sendResult = createSendEntity(result);
 
-        Integer batchId = null;
+        RestResult<Map<String, Object>> restResult;
 
         // 如果发送消息的结果集大于 0，构造批量订单
-        if (sendResult.size() > 1 && BatchMessage.Body.class.isAssignableFrom(entityClass)) {
+        if (sendResult.size() > 1 && BatchMessage.Body.class.isAssignableFrom(bodyEntityClass)) {
 
             BatchMessage batchMessage = new BatchMessage();
 
-            batchMessage.setCount(result.size());
+            batchMessage.setCount(sendResult.size());
             batchMessage.setSendingNumber(batchMessage.getCount());
 
-            AttachmentType attachmentType = AttachmentType.valueOf(entityClass);
+            AttachmentType attachmentType = AttachmentType.valueOf(bodyEntityClass);
             batchMessage.setType(attachmentType.getValue());
 
             messageService.saveBatchMessage(batchMessage);
 
             result.forEach(r -> r.setBatchId(batchMessage.getId()));
 
-            batchId = batchMessage.getId();
-
             onBatchMessageCreate(batchMessage, result, sendResult);
-        }
 
-        RestResult<Map<String, Object>> restResult = send(sendResult);
+            Map<String, Object> data = Map.of(
+                    DEFAULT_BATCH_MESSAGE_ID_KEY, batchMessage.getId(),
+                    DEFAULT_MESSAGE_COUNT_KEY, sendResult.size()
+            );
 
-        if (Objects.nonNull(batchId)) {
-            restResult.getData().put(DEFAULT_BATCH_MESSAGE_ID_KEY, batchId);
+            threadPoolTaskExecutor.execute(() -> send(sendResult));
+
+            restResult = RestResult.ofSuccess(
+                    "发送" + sendResult.size() + "条 [" + getMessageType() + "] 消息成功",
+                    data
+            );
+        } else {
+            send(sendResult);
+
+            Map<String, Object> data = Map.of(
+                    IdEntity.ID_FIELD_NAME,
+                    sendResult
+                            .stream()
+                            .map(s -> Casts.cast(s, sendEntityClass))
+                            .map(NumberIdEntity::getId)
+                            .findFirst()
+                            .orElseThrow(() -> new SystemException("找不到类型为 [" + sendEntityClass + "] 的 id 值"))
+            );
+
+            restResult = RestResult.ofSuccess("发送 [" + getMessageType() + "] 消息成功", data);
         }
 
         log.info("发送类型为: [" + getMessageType() + "] 的消息,响应信息为:" + Casts.convertValue(restResult, Map.class));
@@ -131,10 +176,11 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
         return restResult;
     }
 
-    private void bindAndValidate(T entity, Map<String, Object> value) throws BindException {
+    private T bindAndValidate(Map<String, Object> value) throws BindException {
+        T entity = Casts.convertValue(value, bodyEntityClass);
         WebDataBinder binder = new WebDataBinder(entity, entity.getClass().getSimpleName());
-        MutablePropertyValues values = new MutablePropertyValues(value);
-        binder.bind(values);
+        /*MutablePropertyValues values = new MutablePropertyValues(value);
+        binder.bind(values);*/
 
         if (validator != null) {
 
@@ -148,6 +194,8 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
         }
 
         afterBindValueSetting(entity, value);
+
+        return entity;
     }
 
     protected void afterBindValueSetting(T entity, Map<String, Object> value) {
@@ -251,13 +299,58 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
 
     }
 
+    protected Map<Integer,List<Integer>> getBatchMap(List<S> sendList) {
+
+        List<S> temps = new LinkedList<>(sendList);
+
+        Map<Integer, List<Integer>> result = new HashMap<>();
+
+        for (int offset = 0; temps.size() > getNumberOfBatch(); offset++) {
+            S entity = temps.iterator().next();
+
+            List<Integer> list;
+
+            if (offset % getNumberOfBatch() == 0) {
+                int number = result.keySet().size() + 1;
+                list = result.computeIfAbsent(number, k -> new LinkedList<>());
+            } else {
+                list = result.get(result.keySet().size());
+            }
+
+            list.add(entity.getId());
+
+            temps.remove(entity);
+        }
+
+        List<Integer> last = result.computeIfAbsent(
+                result.keySet().size() + 1,
+                k -> new LinkedList<>()
+        );
+
+        last.addAll(temps.stream().map(NumberIdEntity::getId).collect(Collectors.toList()));
+
+        return result;
+    }
+
+    protected abstract int getNumberOfBatch();
+
     /**
      * 发送消息
      *
-     * @param entity 消息实体
-     * @return rest 结果集
+     * @param entities 消息实体集合
      */
-    protected abstract RestResult<Map<String, Object>> send(List<S> entity);
+    protected void send(List<S> entities) {
+        getBatchMap(entities)
+                .forEach((key, value) ->
+                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, getMessageQueueName(), value));
+    }
+
+    /**
+     * 获取发送消息队列名称
+     *
+     * @return 发送消息队列名称
+     */
+    protected abstract String getMessageQueueName();
 
     /**
      * 创建要发送的实体
@@ -269,9 +362,9 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
     protected abstract List<S> createSendEntity(List<T> result);
 
     /**
-     * 获取重试队列 MQ 名称
+     * 获取重试消息队列名称
      *
-     * @return 重试队列 MQ 名称
+     * @return 重试消息队列名称
      */
     protected abstract String getRetryMessageQueueName();
 

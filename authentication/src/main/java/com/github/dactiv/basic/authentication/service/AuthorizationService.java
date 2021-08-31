@@ -12,13 +12,16 @@ import com.github.dactiv.framework.commons.ServiceInfo;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
+import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
@@ -422,7 +425,7 @@ public class AuthorizationService {
         // 遍历新资源，更新 serviceInfo 相关的资源信息
         List<Resource> newResourceList = pluginList
                 .stream()
-                .flatMap(p -> createResource(p, serviceInfo))
+                .flatMap(p -> createResourceStream(p, serviceInfo))
                 .flatMap(this::enabledApplicationResource)
                 .distinct()
                 .collect(Collectors.toList());
@@ -568,7 +571,7 @@ public class AuthorizationService {
             BeanUtils.copyProperties(
                     resource,
                     target,
-                    "id",
+                    IdEntity.ID_FIELD_NAME,
                     PluginInfo.DEFAULT_CHILDREN_NAME,
                     PluginInfo.DEFAULT_SOURCE_NAME
             );
@@ -585,44 +588,55 @@ public class AuthorizationService {
      *
      * @return 流集合
      */
-    private Stream<Resource> createResource(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
+    private Stream<Resource> createResourceStream(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
 
         PluginInfo plugin = Casts.cast(entry);
 
-        return Arrays.stream(StringUtils.split(plugin.getSource(), ",")).map(source -> {
+        return Arrays.stream(StringUtils.split(plugin.getSource(), SpringMvcUtils.COMMA_STRING))
+                .map(source -> createResource(source, plugin, serviceInfo));
+    }
 
-            Resource target = new Resource();
+    /**
+     * 创建資源
+     *
+     * @param source 資源来源
+     * @param plugin 插件信息
+     * @param serviceInfo 服务信息
+     *
+     * @return 新的資源
+     */
+    private Resource createResource(String source, PluginInfo plugin, ServiceInfo serviceInfo) {
+        Resource target = new Resource();
 
-            BeanUtils.copyProperties(plugin, target, PluginInfo.DEFAULT_CHILDREN_NAME);
+        BeanUtils.copyProperties(plugin, target, PluginInfo.DEFAULT_CHILDREN_NAME);
 
-            target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
+        target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
 
-            //List<Tree<String, PluginInfo>> children = plugin.getChildren();
-            //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
-            // 设置 target 变量的子节点
-            plugin.getChildren()
-                    .stream()
-                    .flatMap(c -> createResource(c, serviceInfo))
-                    .forEach(r -> target.getChildren().add(r));
+        //List<Tree<String, PluginInfo>> children = plugin.getChildren();
+        //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
+        // 设置 target 变量的子节点
+        plugin.getChildren()
+                .stream()
+                .flatMap(c -> createResourceStream(c, serviceInfo))
+                .forEach(r -> target.getChildren().add(r));
 
-            if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
-                target.setParentId(null);
-            }
+        if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
+            target.setParentId(null);
+        }
 
-            if (StringUtils.isEmpty(target.getApplicationName())) {
-                target.setApplicationName(serviceInfo.getService());
-            }
+        if (StringUtils.isEmpty(target.getApplicationName())) {
+            target.setApplicationName(serviceInfo.getService());
+        }
 
-            if (serviceInfo.getVersion() != null) {
-                target.setVersion(serviceInfo.getVersion().toString());
-            }
+        if (serviceInfo.getVersion() != null) {
+            target.setVersion(serviceInfo.getVersion().toString());
+        }
 
-            target.setCode(plugin.getId());
-            target.setStatus(DisabledOrEnabled.Enabled.getValue());
-            target.setId(null);
+        target.setCode(plugin.getId());
+        target.setStatus(DisabledOrEnabled.Enabled.getValue());
+        target.setId(null);
 
-            return target;
-        });
+        return target;
     }
 
     /**

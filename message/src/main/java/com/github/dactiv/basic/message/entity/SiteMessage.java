@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -77,7 +78,7 @@ public class SiteMessage extends TitleMessage implements AttachmentMessage {
      * 附件信息
      */
     @TableField(exist = false)
-    private List<Attachment> attachmentList;
+    private List<Attachment> attachmentList = new LinkedList<>();
 
     /**
      * 获取是否已读名称

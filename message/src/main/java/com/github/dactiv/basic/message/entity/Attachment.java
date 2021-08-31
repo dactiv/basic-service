@@ -11,6 +11,7 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
+import javax.validation.constraints.NotNull;
 import java.util.Date;
 import java.util.Map;
 
@@ -46,16 +47,19 @@ public class Attachment implements NumberIdEntity<Integer> {
      *
      * @see com.github.dactiv.basic.message.enumerate.AttachmentType
      */
+    @NotNull
     private String type;
 
     /**
      * 名称
      */
+    @NotNull
     private String name;
 
     /**
      * 附件类型
      */
+    @NotNull
     private String contentType;
 
     /**

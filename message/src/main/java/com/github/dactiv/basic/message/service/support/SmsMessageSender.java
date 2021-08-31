@@ -1,9 +1,12 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.Casts;
@@ -24,12 +27,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.io.IOException;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -65,6 +66,12 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     @Value("${message.sms.max-retry-count:3}")
     private Integer maxRetryCount;
 
+    /**
+     * 分配数量值（如果多消息时，多少个一批做消息发送）
+     */
+    @Value("${message.sms.number-of-batch:50}")
+    private Integer numberOfBatch;
+
     @Override
     protected String getRetryMessageQueueName() {
         return DEFAULT_QUEUE_NAME;
@@ -91,7 +98,8 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
         data.forEach(this::send);
     }
 
-    private void send(SmsMessage entity) {
+    @Transactional(rollbackFor = Exception.class)
+    public void send(SmsMessage entity) {
 
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
@@ -129,19 +137,27 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     }
 
     @Override
-    protected RestResult<Map<String, Object>> send(List<SmsMessage> entities) {
+    protected int getNumberOfBatch() {
+        return numberOfBatch;
+    }
+
+    @Override
+    protected void send(List<SmsMessage> entities) {
 
         entities.forEach(e -> messageService.saveSmsMessage(e));
 
         amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
 
-        return RestResult.ofSuccess("发送短信成功", Map.of(DEFAULT_MESSAGE_COUNT_KEY, entities.size()));
+    }
 
+    @Override
+    protected String getMessageQueueName() {
+        return DEFAULT_QUEUE_NAME;
     }
 
     @Override
     protected List<SmsMessage> createSendEntity(List<SmsMessageBody> result) {
-        return result.stream().flatMap(this::createAndSaveSmsMessageEntity).collect(Collectors.toList());
+        return result.stream().flatMap(this::createSmsMessageEntity).collect(Collectors.toList());
     }
 
     /**
@@ -151,21 +167,52 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
      *
      * @return 短信消息流
      */
-    private Stream<SmsMessage> createAndSaveSmsMessageEntity(SmsMessageBody body) {
+    private Stream<SmsMessage> createSmsMessageEntity(SmsMessageBody body) {
 
         List<SmsMessage> result = new LinkedList<>();
 
-        for (String phoneNumber : body.getPhoneNumbers()) {
+        if (body.getPhoneNumbers().contains(DEFAULT_ALL_USER_KEY)) {
+            Map<String, Object> filter = new LinkedHashMap<>();
 
-            SmsMessage entity = Casts.of(body, SmsMessage.class);
+            filter.put("filter_[phone_nen]", "true");
+            filter.put("filter_[status_eq]", "1");
 
-            entity.setPhoneNumber(phoneNumber);
-            entity.setMaxRetryCount(maxRetryCount);
+            List<Map<String, Object>> users = authenticationService.findMemberUser(filter);
 
-            result.add(entity);
+            for (Map<String, Object> user : users) {
+
+                SmsMessage entity = ofEntity(body);
+                entity.setPhoneNumber(user.get("phone").toString());
+
+                result.add(entity);
+            }
+
+        } else {
+            for (String phoneNumber : body.getPhoneNumbers()) {
+
+                SmsMessage entity = ofEntity(body);
+                entity.setPhoneNumber(phoneNumber);
+
+                result.add(entity);
+            }
         }
 
         return result.stream();
+    }
+
+    /**
+     * 创建站内信消息实体
+     *
+     * @param body 站内信消息 body
+     *
+     * @return 站内信消息实体
+     */
+    private SmsMessage ofEntity(SmsMessageBody body) {
+        SmsMessage entity = Casts.of(body, SmsMessage.class);
+
+        entity.setMaxRetryCount(maxRetryCount);
+
+        return entity;
     }
 
     @Override

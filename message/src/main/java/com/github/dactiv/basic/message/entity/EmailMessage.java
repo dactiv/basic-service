@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 
 import javax.validation.constraints.NotNull;
+import java.util.LinkedList;
 import java.util.List;
 
 /**
@@ -54,7 +55,7 @@ public class EmailMessage extends TitleMessage implements AttachmentMessage {
      * 附件信息
      */
     @TableField(exist = false)
-    private List<Attachment> attachmentList;
+    private List<Attachment> attachmentList = new LinkedList<>();
 
     @Override
     public void setExecuteStatus(ExecuteStatus status) {
