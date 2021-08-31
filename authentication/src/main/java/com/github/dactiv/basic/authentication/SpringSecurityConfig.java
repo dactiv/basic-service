@@ -11,6 +11,7 @@ import com.github.dactiv.framework.spring.security.SpringSecuritySupportAutoConf
 import com.github.dactiv.framework.spring.security.WebSecurityConfigurerAfterAdapter;
 import com.github.dactiv.framework.spring.security.authentication.JsonAuthenticationFailureHandler;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
+import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.ApplicationEventPublisher;
@@ -68,7 +69,7 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
     private AuthenticationManager authenticationManager;
 
     @Override
-    public void configure(HttpSecurity http) throws Exception {
+    public void configure(HttpSecurity httpSecurity) throws Exception {
 
         CaptchaAuthenticationFilter filter = new CaptchaAuthenticationFilter(
                 properties,
@@ -80,11 +81,12 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
         filter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler);
         filter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler);
 
-        http.addFilter(filter)
+        httpSecurity
                 .logout()
                 .logoutUrl(extendProperties.getLogoutUrl())
                 .logoutSuccessHandler(jsonLogoutSuccessHandler)
                 .and()
+                .addFilter(filter)
                 .sessionManagement()
                 .sessionAuthenticationStrategy(sessionControlAuthenticationStrategy)
                 .maximumSessions(Integer.MAX_VALUE)

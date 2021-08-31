@@ -32,7 +32,7 @@ public class AccessCryptoProperties {
     /**
      * 存储在 redis 的访问加解密集合 key 名称
      */
-    private String accessCryptoListKey = "access:crypto:all";
+    private String accessCryptoListKey = "access:cryptos";
 
     /**
      * 存储在 redis 的访问 token key 名称

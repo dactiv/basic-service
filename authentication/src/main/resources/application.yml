@@ -26,3 +26,4 @@ authentication:
     - "/prepare/**"
     - "/login/**"
     - "/logout/**"
+    - "/isAuthenticated/**"

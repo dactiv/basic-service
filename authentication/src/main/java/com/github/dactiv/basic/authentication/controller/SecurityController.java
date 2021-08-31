@@ -148,18 +148,6 @@ public class SecurityController {
     }
 
     /**
-     * 查看当前用户是否认证
-     *
-     * @param securityContext 安全上下文
-     *
-     * @return true 是，否则 false
-     */
-    @GetMapping("isAuthenticated")
-    public boolean isAuthenticated(@CurrentSecurityContext SecurityContext securityContext) {
-        return securityContext.getAuthentication() != null && securityContext.getAuthentication().isAuthenticated();
-    }
-
-    /**
      * 验证移动用户明细信息
      *
      * @param deviceIdentified 唯一识别

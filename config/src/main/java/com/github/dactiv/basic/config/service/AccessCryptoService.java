@@ -19,6 +19,8 @@ import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import org.redisson.api.RFuture;
+import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 
 /**
@@ -58,7 +61,7 @@ public class AccessCryptoService implements InitializingBean {
     /**
      * 存储在 redis 的访问加解密集合 key 名称
      */
-    @Value("${spring.application.crypto.access.redis.access-crypto-list-key:access:crypto:all}")
+    @Value("${spring.application.crypto.access.redis.access-crypto-list-key:access:cryptos}")
     private String accessCryptoListKey;
 
     /**
@@ -233,6 +236,10 @@ public class AccessCryptoService implements InitializingBean {
      */
     public void syncRedisAccessCryptoList() {
 
+        RList<AccessCrypto> accessCryptos = redissonClient.getList(accessCryptoListKey);
+
+        RFuture<Boolean> booleanRFuture = accessCryptos.removeAllAsync(accessCryptos.readAll());
+
         List<ConfigAccessCrypto> data = findAccessCryptoList(
                 Wrappers
                         .<ConfigAccessCrypto>lambdaQuery()
@@ -240,20 +247,36 @@ public class AccessCryptoService implements InitializingBean {
                 true
         );
 
-        List<AccessCrypto> result = data.stream().map(c -> {
-            AccessCrypto accessCrypto = new AccessCrypto();
-            BeanUtils.copyProperties(c, accessCrypto, "predicates");
+        List<AccessCrypto> result = data
+                .stream()
+                .map(configAccessCrypto -> {
 
-            c.getPredicates().forEach(p -> {
-                AccessCryptoPredicate accessCryptoPredicate = new AccessCryptoPredicate();
-                BeanUtils.copyProperties(p, accessCryptoPredicate);
-                accessCrypto.getPredicates().add(accessCryptoPredicate);
-            });
+                    AccessCrypto accessCrypto = Casts.of(
+                            configAccessCrypto,
+                            AccessCrypto.class,
+                            "predicates"
+                    );
 
-            return accessCrypto;
-        }).collect(Collectors.toList());
+                    accessCrypto.getPredicates()
+                            .stream()
+                            .map(p -> Casts.of(p, AccessCryptoPredicate.class))
+                            .forEach(p -> accessCrypto.getPredicates().add(p));
 
-        redissonClient.getList(accessCryptoListKey).addAll(result);
+                    return accessCrypto;
+                })
+                .collect(Collectors.toList());
+
+
+
+        booleanRFuture.onComplete((success, throwable) -> {
+
+            if (!success) {
+                return ;
+            }
+
+            accessCryptos.addAllAsync(result);
+
+        });
 
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("同步: " + data + " 到 redis [" + accessCryptoListKey + "] 中");
