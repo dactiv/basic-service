@@ -95,7 +95,7 @@ public class FileManagerController {
      * @return 文件流字节
      * @throws Exception 获取失败时抛出
      */
-    @PreAuthorize("hasRole('BASIC')")
+    @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[file_manager:get]')")
     @GetMapping("get/{bucketName}/{filename}")
     @Plugin(name = "获取文件", parent = "file-manager", sources = "System", audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {

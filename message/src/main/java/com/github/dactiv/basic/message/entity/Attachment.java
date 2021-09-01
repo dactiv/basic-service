@@ -26,7 +26,7 @@ import java.util.Map;
 @EqualsAndHashCode
 @NoArgsConstructor
 @Alias("attachment")
-@TableName("tb_attachment")
+@TableName(value = "tb_attachment", autoResultMap = true)
 public class Attachment implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 9190301660565089712L;
@@ -48,7 +48,7 @@ public class Attachment implements NumberIdEntity<Integer> {
      * @see com.github.dactiv.basic.message.enumerate.AttachmentType
      */
     @NotNull
-    private String type;
+    private Integer type;
 
     /**
      * 名称

@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.message.dao.AttachmentDao;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
@@ -11,6 +12,7 @@ import com.github.dactiv.basic.message.dao.SiteMessageDao;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -171,6 +173,7 @@ public class AttachmentMessageService {
                 emailMessage
                         .getAttachmentList()
                         .stream()
+                        .peek(a -> a.setType(AttachmentType.Email.getValue()))
                         .peek(a -> a.setMessageId(emailMessage.getId()))
                         .forEach(this::saveAttachment);
             }
@@ -229,7 +232,19 @@ public class AttachmentMessageService {
      * @return 邮件消息实体
      */
     public EmailMessage getEmailMessage(Integer id) {
-        return emailMessageDao.selectById(id);
+        EmailMessage result = emailMessageDao.selectById(id);
+
+        if (YesOrNo.Yes.getValue().equals(result.getHasAttachment())) {
+            List<Attachment> attachmentList = findAttachmentList(
+                    Wrappers
+                            .<Attachment>lambdaQuery()
+                            .eq(Attachment::getMessageId, result.getId())
+                            .eq(Attachment::getType, AttachmentType.Email.getValue())
+            );
+            result.setAttachmentList(attachmentList);
+        }
+
+        return result;
     }
 
     /**
@@ -258,24 +273,20 @@ public class AttachmentMessageService {
      * @param siteMessage 站内信消息实体
      */
     public void saveSiteMessage(SiteMessage siteMessage) {
-
-        if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
-            siteMessage.setHasAttachment(YesOrNo.Yes.getValue());
-        }
-
         if (Objects.isNull(siteMessage.getId())) {
             insertSiteMessage(siteMessage);
+            if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
+                siteMessage
+                        .getAttachmentList()
+                        .stream()
+                        .peek(a -> a.setType(AttachmentType.Site.getValue()))
+                        .peek(a -> a.setMessageId(siteMessage.getId()))
+                        .forEach(this::saveAttachment);
+            }
         } else {
             updateSiteMessage(siteMessage);
         }
 
-        if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
-            siteMessage
-                    .getAttachmentList()
-                    .stream()
-                    .peek(a -> a.setMessageId(siteMessage.getId()))
-                    .forEach(this::saveAttachment);
-        }
     }
 
     /**
@@ -323,7 +334,19 @@ public class AttachmentMessageService {
      * @return 站内信消息实体
      */
     public SiteMessage getSiteMessage(Integer id) {
-        return siteMessageDao.selectById(id);
+        SiteMessage result = siteMessageDao.selectById(id);
+
+        if (YesOrNo.Yes.getValue().equals(result.getHasAttachment())) {
+            List<Attachment> attachmentList = findAttachmentList(
+                    Wrappers
+                            .<Attachment>lambdaQuery()
+                            .eq(Attachment::getMessageId, result.getId())
+                            .eq(Attachment::getType, AttachmentType.Site.getValue())
+            );
+            result.setAttachmentList(attachmentList);
+        }
+
+        return result;
     }
 
     /**

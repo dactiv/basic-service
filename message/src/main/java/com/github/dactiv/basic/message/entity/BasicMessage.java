@@ -4,6 +4,8 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.basic.message.enumerate.MessageType;
+import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
@@ -111,5 +113,14 @@ public class BasicMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
      */
     public String getStatusName() {
         return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
+    }
+
+    /**
+     * 获取类型名称
+     *
+     * @return 类型名称
+     */
+    public String getTypeName() {
+        return NameEnumUtils.getName(this.type, MessageType.class);
     }
 }

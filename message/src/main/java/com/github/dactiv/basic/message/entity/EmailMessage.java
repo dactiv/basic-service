@@ -70,4 +70,5 @@ public class EmailMessage extends TitleMessage implements AttachmentMessage {
     public String getHasAttachmentName() {
         return NameValueEnumUtils.getName(this.hasAttachment, YesOrNo.class);
     }
+
 }

@@ -125,6 +125,13 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
         updateBatchMessage(entity);
     }
 
+    /**
+     * 获取发送短信的渠道发送者
+     *
+     * @param channel 渠道类型
+     *
+     * @return 短信渠道发送者
+     */
     private SmsChannelSender getSmsChannelSender(String channel) {
         return smsChannelSenderList
                 .stream()

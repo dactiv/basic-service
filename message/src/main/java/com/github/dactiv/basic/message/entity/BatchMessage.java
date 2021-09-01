@@ -54,22 +54,22 @@ public class BatchMessage {
     /**
      * 总数
      */
-    private Integer count;
+    private Integer count = 0;
 
     /**
      * 成功发送数量
      */
-    private Integer successNumber;
+    private Integer successNumber = 0;
 
     /**
      * 失败发送数量
      */
-    private Integer failNumber;
+    private Integer failNumber = 0;
 
     /**
      * 发送中的数量
      */
-    private Integer sendingNumber;
+    private Integer sendingNumber = 0;
 
     /**
      * 类型:10.站内信,20.邮件,30.短信

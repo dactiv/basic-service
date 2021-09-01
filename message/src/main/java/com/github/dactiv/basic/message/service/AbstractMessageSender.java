@@ -29,7 +29,8 @@ import java.util.stream.Collectors;
 /**
  * 抽象的消息发送者实现，主要是构建和验证发型实体得到真正的发送者实体而实现的一个抽象类
  *
- * @param <T> 消息泛型实体
+ * @param <T> 消息的请求数据泛型实体类型
+ * @param <S> 消息的发送数据泛型实体类型
  *
  * @author maurice
  */
@@ -104,13 +105,11 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
             List<Map<String, Object>> messages = Casts.cast(request.get(DEFAULT_BATCH_MESSAGE_KEY), List.class);
 
             for (Map<String, Object> m : messages) {
-                //T entity = ClassUtils.newInstance(entityClass);
                 T entity = bindAndValidate(m);
                 result.add(entity);
             }
 
         } else {
-            //T entity = ClassUtils.newInstance(entityClass);
             T entity = bindAndValidate(request);
             result.add(entity);
         }
@@ -118,18 +117,25 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
         return sendMessage(result);
     }
 
+    /**
+     * 发送消息
+     *
+     * @param result body 集合
+     *
+     * @return reset 结果集
+     */
     @Transactional(rollbackFor = Exception.class)
     protected RestResult<Map<String, Object>> sendMessage(List<T> result) {
         // 构造发送消息结果集，用于 send 发送数据使用
         List<S> sendResult = createSendEntity(result);
-
-        RestResult<Map<String, Object>> restResult;
 
         List<BatchMessage.Body> bodyList = sendResult
                 .stream()
                 .filter(s -> BatchMessage.Body.class.isAssignableFrom(s.getClass()))
                 .map(s -> Casts.cast(s, BatchMessage.Body.class))
                 .collect(Collectors.toList());
+
+        RestResult<Map<String, Object>> restResult;
 
         // 如果发送消息的结果集大于 0，构造批量订单
         if (bodyList.size() > 1) {
@@ -180,6 +186,15 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
         return restResult;
     }
 
+    /**
+     * 绑定并验证请求数据
+     *
+     * @param value 请求参数
+     *
+     * @return body
+     *
+     * @throws BindException 验证数据错误时抛出
+     */
     private T bindAndValidate(Map<String, Object> value) throws BindException {
         T entity = Casts.convertValue(value, bodyEntityClass);
         WebDataBinder binder = new WebDataBinder(entity, entity.getClass().getSimpleName());
@@ -195,15 +210,26 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
 
         }
 
-        afterBindValueSetting(entity, value);
+        postBindValue(entity, value);
 
         return entity;
     }
 
-    protected void afterBindValueSetting(T entity, Map<String, Object> value) {
+    /**
+     * 绑定值后的处理
+     *
+     * @param entity 消息的请求数据泛型实体
+     * @param value 被绑定的数据值（请求参数）
+     */
+    protected void postBindValue(T entity, Map<String, Object> value) {
 
     }
 
+    /**
+     * 重试
+     *
+     * @param entity 批量消息接口实现类
+     */
     public void retry(BatchMessage.Body entity) {
 
         if (!Retryable.class.isAssignableFrom(entity.getClass())) {
@@ -229,6 +255,11 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
 
     }
 
+    /**
+     * 更新批量消息
+     *
+     * @param body 批量消息接口实现类
+     */
     protected void updateBatchMessage(BatchMessage.Body body) {
 
         if (Objects.isNull(body.getBatchId())) {
@@ -301,6 +332,13 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
 
     }
 
+    /**
+     * 获取分批 map
+     *
+     * @param sendList 要发送的数据泛型实体
+     *
+     * @return 分批 map
+     */
     protected Map<Integer,List<Integer>> getBatchMap(List<S> sendList) {
 
         List<S> temps = new LinkedList<>(sendList);
@@ -334,6 +372,11 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
         return result;
     }
 
+    /**
+     * 获取分配总数，每一批多少个消息
+     *
+     * @return 分配总数
+     */
     protected abstract int getNumberOfBatch();
 
     /**

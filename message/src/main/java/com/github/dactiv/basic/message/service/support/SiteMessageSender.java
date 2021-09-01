@@ -50,7 +50,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     /**
      * 默认的消息类型
      */
-    private static final String DEFAULT_TYPE = "siteMessage";
+    private static final String DEFAULT_TYPE = "site";
 
     @Autowired
     private AttachmentMessageService attachmentMessageService;
@@ -127,6 +127,13 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
         updateBatchMessage(entity);
     }
 
+    /**
+     * 获取站内信消息渠道发送者
+     *
+     * @param channel 渠道类型
+     *
+     * @return 站内信消息渠道发送者
+     */
     private SiteMessageChannelSender getSiteMessageChannelSender(String channel) {
         return siteMessageChannelSenderList
                 .stream()
@@ -206,7 +213,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
      * @return 站内信消息实体
      */
     private SiteMessage ofEntity(SiteMessageBody body) {
-        SiteMessage entity = Casts.of(body, SiteMessage.class);
+        SiteMessage entity = Casts.of(body, SiteMessage.class,"attachmentList");
 
         entity.setMaxRetryCount(maxRetryCount);
 

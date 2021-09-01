@@ -10,6 +10,7 @@ import lombok.NoArgsConstructor;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -36,7 +37,7 @@ public class SiteMessageBody extends TitleMessage implements AttachmentMessage {
      * 附件
      */
     @JsonIgnoreProperties(ignoreUnknown = true)
-    private List<Attachment> attachmentList;
+    private List<Attachment> attachmentList = new ArrayList<>();
 
     /**
      * 是否推送消息：0.否，1.是
