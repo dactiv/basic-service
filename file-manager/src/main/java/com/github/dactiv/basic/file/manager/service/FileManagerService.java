@@ -119,24 +119,6 @@ public class FileManagerService {
     }
 
     /**
-     * 桶管理
-     *
-     * @param bucketName 同名称查询
-     *
-     * @return 桶列表
-     *
-     * @throws Exception 获取桶出错时抛出
-     */
-    public List<Map<String, Object>> bucketList(String bucketName) throws Exception {
-        return minioClient
-                .listBuckets()
-                .stream()
-                .filter(b -> StringUtils.startsWith(b.name(), bucketName))
-                .map(b -> convertFields(b, b.getClass(), "headers"))
-                .collect(Collectors.toList());
-    }
-
-    /**
      * 上传文件
      *
      * @param file 文件

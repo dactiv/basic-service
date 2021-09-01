@@ -4,3 +4,12 @@ spring:
     access-key: 访问密钥
     secret-key: 安全密钥
     download-prefix: 下载地址前缀
+    auto-delete:
+      cron: "0 0/30 * * * ?"
+      expiration:
+        email-attachment:
+          value: 1
+          unit: Days
+        site-attachment:
+          value: 1
+          unit: Days

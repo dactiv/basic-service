@@ -26,33 +26,10 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
-@Plugin(
-        name = "文件管理",
-        id = "file",
-        icon = "icon-file",
-        type = ResourceType.Menu,
-        sources = "Console"
-)
 public class FileManagerController {
 
     @Autowired
     private FileManagerService fileManagerService;
-
-    /**
-     * 桶管理
-     *
-     * @param bucketName 同名称查询
-     *
-     * @return 桶列表
-     *
-     * @throws Exception 获取桶出错时抛出
-     */
-    @PostMapping("bucket")
-    @PreAuthorize("hasAuthority('perms[file_manager:bucket]')")
-    @Plugin(name = "桶管理", id="list", sources = "Console",icon = "icon-database", type = ResourceType.Menu)
-    public List<Map<String, Object>> bucket(String bucketName) throws Exception {
-        return fileManagerService.bucketList(bucketName);
-    }
 
     /**
      * 删除文件
