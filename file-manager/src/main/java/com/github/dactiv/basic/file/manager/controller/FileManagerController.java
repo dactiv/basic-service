@@ -26,6 +26,13 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@Plugin(
+        name = "文件管理",
+        id = "file",
+        icon = "icon-file",
+        type = ResourceType.Menu,
+        sources = "Console"
+)
 public class FileManagerController {
 
     @Autowired
@@ -40,10 +47,10 @@ public class FileManagerController {
      *
      * @throws Exception 获取桶出错时抛出
      */
-    @PostMapping("bucketList")
-    @PreAuthorize("hasAuthority('perms[file_manager:bucket_list]')")
-    @Plugin(name = "桶管理", id="list", sources = "Console", parent = "file-manager", icon = "icon-database", type = ResourceType.Menu)
-    public List<Map<String, Object>> bucketList(String bucketName) throws Exception {
+    @PostMapping("bucket")
+    @PreAuthorize("hasAuthority('perms[file_manager:bucket]')")
+    @Plugin(name = "桶管理", id="list", sources = "Console",icon = "icon-database", type = ResourceType.Menu)
+    public List<Map<String, Object>> bucket(String bucketName) throws Exception {
         return fileManagerService.bucketList(bucketName);
     }
 

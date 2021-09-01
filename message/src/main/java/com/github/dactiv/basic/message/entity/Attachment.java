@@ -47,7 +47,6 @@ public class Attachment implements NumberIdEntity<Integer> {
      *
      * @see com.github.dactiv.basic.message.enumerate.AttachmentType
      */
-    @NotNull
     private Integer type;
 
     /**

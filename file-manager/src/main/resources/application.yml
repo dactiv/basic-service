@@ -9,9 +9,5 @@ authentication:
     type: elasticsearch
   plugin:
     base-packages: com.github.dactiv.basic.file.manager.controller
-    parent:
-      file-manager:
-        name: '文件管理'
-        icon: 'icon-file'
   permit-uri-ant-matchers:
     - "/actuator/**"

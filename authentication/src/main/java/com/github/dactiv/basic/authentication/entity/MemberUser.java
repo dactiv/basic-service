@@ -85,7 +85,6 @@ public class MemberUser implements NumberIdEntity<Integer> {
             regexp = "/^[1](([3][0-9])|([4][5-9])|([5][0-3,5-9])|([6][5,6])|([7][0-8])|([8][0-9])|([9][1,8,9]))[0-9]{8}$/"
     )
     @Length(max = 24)
-    @JsonSerialize(using = JacksonDesensitize.class)
     private String phone;
 
     /**
@@ -108,5 +107,15 @@ public class MemberUser implements NumberIdEntity<Integer> {
      */
     public String getStatusName() {
         return NameValueEnumUtils.getName(status, UserStatus.class);
+    }
+
+    /**
+     * 获取加敏手机号码
+     *
+     * @return 加敏手机号码
+     */
+    @JsonSerialize(using = JacksonDesensitize.class)
+    public String getDesensitizePhone() {
+        return phone;
     }
 }

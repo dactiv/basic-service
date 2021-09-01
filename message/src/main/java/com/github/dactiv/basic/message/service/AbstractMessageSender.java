@@ -323,7 +323,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
 
         bodyList
                 .stream()
-                .filter(t -> !AttachmentMessage.class.isAssignableFrom(t.getClass()))
+                .filter(t -> AttachmentMessage.class.isAssignableFrom(t.getClass()))
                 .map(t -> Casts.cast(t, AttachmentMessage.class))
                 .flatMap(t -> t.getAttachmentList().stream())
                 .filter(a -> !map.containsKey(a.getName()))

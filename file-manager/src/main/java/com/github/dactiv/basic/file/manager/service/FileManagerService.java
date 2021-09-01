@@ -10,6 +10,7 @@ import io.minio.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -129,7 +130,9 @@ public class FileManagerService {
     public List<Map<String, Object>> bucketList(String bucketName) throws Exception {
         return minioClient
                 .listBuckets()
-                .stream().map(b -> convertFields(b, b.getClass(), "headers"))
+                .stream()
+                .filter(b -> StringUtils.startsWith(b.name(), bucketName))
+                .map(b -> convertFields(b, b.getClass(), "headers"))
                 .collect(Collectors.toList());
     }
 
