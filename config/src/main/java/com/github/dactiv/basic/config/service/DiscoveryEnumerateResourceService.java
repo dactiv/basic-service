@@ -67,7 +67,7 @@ public class DiscoveryEnumerateResourceService implements InitializingBean {
     /**
      * 清除不同步的服务
      */
-    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/30 * * * ?}", name = "清除不同步的服务")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/25 * * * ?}", name = "清除不同步的服务")
     public void cleanNotSyncServiceList() {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("开始清除不同步的服务[" + notSyncServiceList + "]");

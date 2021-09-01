@@ -2,6 +2,7 @@ package com.github.dactiv.basic.message.service;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.Casts;
@@ -29,10 +30,11 @@ import java.util.stream.Collectors;
  * 抽象的消息发送者实现，主要是构建和验证发型实体得到真正的发送者实体而实现的一个抽象类
  *
  * @param <T> 消息泛型实体
+ *
  * @author maurice
  */
 @Slf4j
-public abstract class AbstractMessageSender<T extends BatchMessage.Body, S extends NumberIdEntity<Integer>> implements MessageSender {
+public abstract class AbstractMessageSender<T extends BasicMessage, S extends NumberIdEntity<Integer>> implements MessageSender {
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 
@@ -123,8 +125,14 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
 
         RestResult<Map<String, Object>> restResult;
 
+        List<BatchMessage.Body> bodyList = sendResult
+                .stream()
+                .filter(s -> BatchMessage.Body.class.isAssignableFrom(s.getClass()))
+                .map(s -> Casts.cast(s, BatchMessage.Body.class))
+                .collect(Collectors.toList());
+
         // 如果发送消息的结果集大于 0，构造批量订单
-        if (sendResult.size() > 1 && BatchMessage.Body.class.isAssignableFrom(bodyEntityClass)) {
+        if (bodyList.size() > 1) {
 
             BatchMessage batchMessage = new BatchMessage();
 
@@ -136,7 +144,7 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
 
             messageService.saveBatchMessage(batchMessage);
 
-            result.forEach(r -> r.setBatchId(batchMessage.getId()));
+            bodyList.forEach(r -> r.setBatchId(batchMessage.getId()));
 
             onBatchMessageCreate(batchMessage, result, sendResult);
 
@@ -175,8 +183,6 @@ public abstract class AbstractMessageSender<T extends BatchMessage.Body, S exten
     private T bindAndValidate(Map<String, Object> value) throws BindException {
         T entity = Casts.convertValue(value, bodyEntityClass);
         WebDataBinder binder = new WebDataBinder(entity, entity.getClass().getSimpleName());
-        /*MutablePropertyValues values = new MutablePropertyValues(value);
-        binder.bind(values);*/
 
         if (validator != null) {
 

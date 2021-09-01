@@ -3,7 +3,10 @@ package com.github.dactiv.basic.message.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.basic.message.enumerate.AttachmentType;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
+import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -72,6 +75,24 @@ public class BatchMessage {
      * 类型:10.站内信,20.邮件,30.短信
      */
     private Integer type;
+
+    /**
+     * 获取类型名称
+     *
+     * @return 类型名称
+     */
+    public String getTypeName() {
+        return NameValueEnumUtils.getName(this.type, AttachmentType.class);
+    }
+
+    /**
+     * 获取状态名称
+     *
+     * @return 状态名称
+     */
+    public String getStatusName() {
+        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
+    }
 
     /**
      * 批量消息接口，用于统一规范使用
