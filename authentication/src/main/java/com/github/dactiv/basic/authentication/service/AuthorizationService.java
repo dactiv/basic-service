@@ -18,7 +18,6 @@ import com.github.dactiv.framework.spring.security.authentication.UserDetailsSer
 import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;

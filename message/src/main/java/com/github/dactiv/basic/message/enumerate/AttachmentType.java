@@ -1,9 +1,6 @@
 package com.github.dactiv.basic.message.enumerate;
 
 import com.github.dactiv.basic.message.entity.BatchMessage;
-import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;

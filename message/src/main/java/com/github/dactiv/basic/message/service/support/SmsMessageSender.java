@@ -1,12 +1,9 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
-import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
-import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.Casts;

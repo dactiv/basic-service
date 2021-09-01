@@ -2,9 +2,7 @@ package com.github.dactiv.basic.message.service;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
-import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
-import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
@@ -12,7 +10,6 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.extern.slf4j.Slf4j;
@@ -26,7 +23,6 @@ import org.springframework.validation.Validator;
 import org.springframework.web.bind.WebDataBinder;
 
 import java.util.*;
-import java.util.concurrent.ThreadPoolExecutor;
 import java.util.stream.Collectors;
 
 /**

@@ -2,7 +2,6 @@ package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
-import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
@@ -10,7 +9,6 @@ import com.github.dactiv.basic.message.service.FileManagerService;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.mail.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -42,7 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
-import javax.validation.constraints.Email;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
