@@ -90,6 +90,38 @@ public class AuthenticationExtendProperties  {
     private AbnormalArea abnormalArea = new AbnormalArea();
 
     /**
+     * 记住我配置
+     */
+    private RememberMe rememberMe = new RememberMe();
+
+    /**
+     * 记住我配置
+     */
+    @Data
+    @NoArgsConstructor
+    public static class RememberMe {
+
+        public static final String DEFAULT_PARAM_NAME = "rememberMe";
+
+        /**
+         * token 验证时间
+         */
+        private TimeProperties tokenValidityTime = new TimeProperties(7,TimeUnit.DAYS);
+
+        /**
+         * 提交记住我的参数名称
+         */
+        private String paramName = DEFAULT_PARAM_NAME;
+
+        private String cookieDomain;
+
+        private String cookieName;
+
+        private boolean useSecureCookie;
+
+    }
+
+    /**
      * 注册配置
      *
      * @author maurice.chen

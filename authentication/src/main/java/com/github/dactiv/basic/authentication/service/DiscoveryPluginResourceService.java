@@ -67,7 +67,7 @@ public class DiscoveryPluginResourceService {
      */
     private final List<String> exceptionServices = new ArrayList<>();
 
-    @NacosCronScheduled(cron = "${spring.security.plugin.clean-cron:30 0 0/1 * * ?}", name = "清除异常服务")
+    @NacosCronScheduled(cron = "${authentication.plugin.clean-cron:30 0 0/1 * * ?}", name = "清除异常服务")
     public void cleanExceptionServices() {
         exceptionServices.clear();
     }
@@ -84,7 +84,7 @@ public class DiscoveryPluginResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${spring.security.plugin.sync-cron:0 0/30 * * * ?}", name = "同步服务插件")
+    @NacosCronScheduled(cron = "${authentication.plugin.sync-cron:0 0/30 * * * ?}", name = "同步服务插件")
     @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作", type = LockType.Lock)
     public void syncPluginResource() {
 

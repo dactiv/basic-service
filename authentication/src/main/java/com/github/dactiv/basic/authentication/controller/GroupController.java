@@ -46,8 +46,7 @@ public class GroupController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
     @Plugin(name = "查询全部", sources = "Console")
-    public List<Group> find(HttpServletRequest request,
-                            @RequestParam(required = false) boolean mergeTree) {
+    public List<Group> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
         List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperByHttpRequest(request));
 
@@ -98,7 +97,7 @@ public class GroupController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[group:save]')")
+    @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid Group entity,
                                     @RequestParam(required = false) List<Integer> resourceIds) {
@@ -116,7 +115,7 @@ public class GroupController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[group:delete]')")
+    @PreAuthorize("hasAuthority('perms[group:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
@@ -140,6 +139,13 @@ public class GroupController {
         return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
     }
 
+    /**
+     * 判断组名称是否唯一
+     *
+     * @param name 组名称
+     *
+     * @return true 唯一，否则 false
+     */
     @GetMapping("isNameUnique")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断组名称是否唯一", sources = "Console")

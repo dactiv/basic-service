@@ -84,7 +84,7 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[console_user:save]')")
+    @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult<Integer> save(@Valid ConsoleUser entity,
                                     @RequestParam(required = false) List<Integer> groupIds,
@@ -103,7 +103,7 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[console_user:delete]')")
+    @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
@@ -120,7 +120,7 @@ public class ConsoleUserController {
      * @param newPassword     新密码
      */
     @PostMapping("updatePassword")
-    @PreAuthorize("hasAuthority('perms[console_user:updatePassword]')")
+    @PreAuthorize("hasAuthority('perms[console_user:updatePassword]') and isFullyAuthenticated()")
     @Plugin(name = "修改密码", sources = "Console", audit = true)
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam String oldPassword,
@@ -132,27 +132,6 @@ public class ConsoleUserController {
         userService.updateConsoleUserPassword(userId, oldPassword, newPassword);
 
         return RestResult.of("修改密码成功");
-    }
-
-    /**
-     * 更新会员用户登陆账户
-     *
-     * @param securityContext 安全上下文
-     * @param newUsername     新登录账户
-     *
-     * @return 消息结果集
-     */
-    @PostMapping("updateUsername")
-    @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
-    public RestResult<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
-                                        @RequestParam String newUsername) {
-
-        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
-        Integer userId = Casts.cast(userDetails.getId());
-        userService.updateMemberUserUsername(userId, newUsername);
-
-        return RestResult.of("修改成功");
     }
 
     /**

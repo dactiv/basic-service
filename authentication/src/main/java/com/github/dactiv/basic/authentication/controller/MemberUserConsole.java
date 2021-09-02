@@ -91,7 +91,7 @@ public class MemberUserConsole {
      * @return 消息结果集
      */
     @PostMapping("updatePassword")
-    @PreAuthorize("hasRole('ORDINARY')")
+    @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(name = "修改密码", sources = {"Console", "UserCenter", "Mobile"}, audit = true)
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam(required = false) String oldPassword,
@@ -101,6 +101,28 @@ public class MemberUserConsole {
 
         Integer userId = Casts.cast(userDetails.getId());
         userService.updateMemberUserPassword(userId, oldPassword, newPassword);
+
+        return RestResult.of("修改成功");
+    }
+
+
+    /**
+     * 更新会员用户登陆账户
+     *
+     * @param securityContext 安全上下文
+     * @param newUsername     新登录账户
+     *
+     * @return 消息结果集
+     */
+    @PostMapping("updateUsername")
+    @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
+    @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
+    public RestResult<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
+                                        @RequestParam String newUsername) {
+
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+        userService.updateMemberUserUsername(userId, newUsername);
 
         return RestResult.of("修改成功");
     }

@@ -149,7 +149,7 @@ public class ResourceController {
      * @return reset 结果集
      */
     @PostMapping("syncPluginResource")
-    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]')")
+    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
     public RestResult<?> syncPluginResource() {
 

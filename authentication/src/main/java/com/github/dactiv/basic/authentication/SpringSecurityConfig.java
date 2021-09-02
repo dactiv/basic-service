@@ -19,10 +19,17 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.provisioning.InMemoryUserDetailsManager;
+import org.springframework.security.web.authentication.rememberme.InMemoryTokenRepositoryImpl;
+import org.springframework.security.web.authentication.rememberme.PersistentTokenBasedRememberMeServices;
+import org.springframework.security.web.authentication.rememberme.TokenBasedRememberMeServices;
 import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
+import org.springframework.session.security.web.authentication.SpringSessionRememberMeServices;
+
+import java.util.UUID;
 
 /**
  * 自定义 spring security 的配置
@@ -80,10 +87,24 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
         filter.setAuthenticationSuccessHandler(jsonAuthenticationSuccessHandler);
         filter.setAuthenticationFailureHandler(jsonAuthenticationFailureHandler);
 
+        PersistentTokenBasedRememberMeServices rememberMeServices = new PersistentTokenBasedRememberMeServices(
+                UUID.randomUUID().toString(),
+                new InMemoryUserDetailsManager(),
+                new InMemoryTokenRepositoryImpl()
+        );
+
+        rememberMeServices.setParameter(extendProperties.getRememberMe().getParamName());
+        rememberMeServices.setTokenValiditySeconds((int)extendProperties.getRememberMe().getTokenValidityTime().toSeconds());
+
+        filter.setRememberMeServices(rememberMeServices);
+
         httpSecurity
                 .logout()
                 .logoutUrl(extendProperties.getLogoutUrl())
                 .logoutSuccessHandler(jsonLogoutSuccessHandler)
+                .and()
+                .rememberMe()
+                .rememberMeServices(rememberMeServices)
                 .and()
                 .addFilter(filter)
                 .sessionManagement()
