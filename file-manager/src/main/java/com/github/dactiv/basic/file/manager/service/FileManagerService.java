@@ -92,10 +92,6 @@ public class FileManagerService {
             throw new SystemException("找不到 [" + bucket.name() + "] 桶的自动删除时间配置。");
         }
 
-        LocalDateTime expirationTime = LocalDateTime
-                .now()
-                .minus(time.getValue(), time.getUnit().toChronoUnit());
-
         for (Result<Item> result : iterable) {
 
             try {
@@ -106,7 +102,12 @@ public class FileManagerService {
                     continue;
                 }
 
-                if (item.lastModified().toLocalDateTime().isAfter(expirationTime)) {
+                LocalDateTime expirationTime = item
+                        .lastModified()
+                        .toLocalDateTime()
+                        .plus(time.getValue(), time.getUnit().toChronoUnit());
+
+                if (LocalDateTime.now().isAfter(expirationTime)) {
                     delete(bucket.name(), item.objectName());
                     log.info("删除桶的 [" + bucket.name() + "] 的 [" + item.objectName() + "] 对象");
                 }

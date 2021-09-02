@@ -67,7 +67,7 @@ public class DiscoveryPluginResourceService {
      */
     private final List<String> exceptionServices = new ArrayList<>();
 
-    @NacosCronScheduled(cron = "${spring.security.plugin.clean-cron:0 0 0/2 * * ?}", name = "清除异常服务")
+    @NacosCronScheduled(cron = "${spring.security.plugin.clean-cron:30 0 0/1 * * ?}", name = "清除异常服务")
     public void cleanExceptionServices() {
         exceptionServices.clear();
     }

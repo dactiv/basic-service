@@ -26,6 +26,12 @@ import java.util.Map;
  */
 @Slf4j
 @RestController
+@Plugin(
+        name = "文件管理",
+        id = "file-manager",
+        type = ResourceType.Security,
+        sources = "Console"
+)
 public class FileManagerController {
 
     @Autowired

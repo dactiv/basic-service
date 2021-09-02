@@ -52,7 +52,7 @@ public class DiscoveryEnumerateResourceService implements InitializingBean {
     /**
      * 同步插件枚举，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/10 * * * ?}", name = "")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:30 0 0/1 * * ?}", name = "")
     public void syncEnumerate() {
         // 获取所有服务
         discoveryClient
@@ -67,7 +67,7 @@ public class DiscoveryEnumerateResourceService implements InitializingBean {
     /**
      * 清除不同步的服务
      */
-    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/25 * * * ?}", name = "清除不同步的服务")
+    @NacosCronScheduled(cron = "${spring.application.enum.sync.cron-expression:0 0/30 * * * ?}", name = "清除不同步的服务")
     public void cleanNotSyncServiceList() {
         if (LOGGER.isDebugEnabled()) {
             LOGGER.debug("开始清除不同步的服务[" + notSyncServiceList + "]");
