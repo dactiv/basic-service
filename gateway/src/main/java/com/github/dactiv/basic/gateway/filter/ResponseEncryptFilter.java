@@ -59,17 +59,11 @@ public class ResponseEncryptFilter implements GlobalFilter, Ordered {
             @Override
             public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
 
-                //String originalResponseContentType = exchange.getAttribute(ORIGINAL_RESPONSE_CONTENT_TYPE_ATTR);
                 HttpHeaders httpHeaders = new HttpHeaders();
-                // explicitly add it in this way instead of
-                // 'httpHeaders.setContentType(originalResponseContentType)'
-                // this will prevent exception in case of using non-standard media
-                // types like "Content-Type: image"
                 httpHeaders.add(HttpHeaders.CONTENT_TYPE, MediaType.TEXT_PLAIN_VALUE);
 
                 ClientResponse clientResponse = prepareClientResponse(body, httpHeaders);
 
-                // TODO: flux or mono
                 Mono<String> modifiedBody = clientResponse.bodyToMono(String.class)
                         .flatMap(originalBody ->
                                 accessCryptoResolver.encryptResponseBody(exchange, accessCrypto, originalBody))
@@ -87,7 +81,6 @@ public class ResponseEncryptFilter implements GlobalFilter, Ordered {
                                 messageBody = messageBody.doOnNext(data -> headers
                                         .setContentLength(data.readableByteCount()));
                             }
-                            // TODO: fail if isStreamingMediaType?
                             return getDelegate().writeWith(messageBody);
                         }));
             }

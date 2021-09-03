@@ -37,7 +37,7 @@ public class AuthenticationInfoController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取认证信息表分页", sources = "Console")
+    @Plugin(name = "获取认证信息表分页", parent = "audit", sources = "Console")
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
     public Page<AuthenticationInfo> page(PageRequest pageRequest, HttpServletRequest request) {
 

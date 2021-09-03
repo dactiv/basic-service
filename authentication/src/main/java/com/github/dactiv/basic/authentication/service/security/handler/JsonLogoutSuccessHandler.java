@@ -8,6 +8,8 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
+import com.github.dactiv.framework.spring.security.authentication.config.RememberMeProperties;
+import com.github.dactiv.framework.spring.security.authentication.rememberme.CookieRememberService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -18,6 +20,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
+import org.springframework.security.authentication.RememberMeAuthenticationToken;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -43,7 +46,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     );
 
     /**
-     * 默认是否要跳转登录页面名称
+     * 默认是否认证字段名
      */
     public final static String DEFAULT_IS_AUTHENTICATION_NAME = "authentication";
 
@@ -67,6 +70,9 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     @Autowired
     private List<UserDetailsService> userDetailsServices;
 
+    @Autowired
+    private CookieRememberService cookieRememberService;
+
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
 
@@ -86,6 +92,8 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
             clearAllCache(userDetails, authentication.getPrincipal().toString());
         }
+
+        cookieRememberService.loginFail(request, response);
 
         RestResult<Map<String, Object>> result = new RestResult<>(
                 httpStatus.getReasonPhrase(),
@@ -148,9 +156,19 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      * @return rest 结果集
      */
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
-        Integer number = failureHandler.getAllowableFailureNumber(request);
 
-        Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
+        RestResult<Map<String, Object>> result = createRestResult();
+        postCaptchaData(result, request);
+
+        return result;
+    }
+
+    /**
+     * 创建 reset 结果集
+     *
+     * @return reset 结果集
+     */
+    private RestResult<Map<String, Object>> createRestResult() {
 
         String executeCode = String.valueOf(HttpStatus.OK.value());
 
@@ -159,52 +177,6 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         int status = HttpStatus.OK.value();
 
         Map<String, Object> data = new LinkedHashMap<>();
-
-        if (number >= allowableFailureNumber) {
-            // 获取设备唯一识别
-            String identified = SpringMvcUtils.getDeviceIdentified(request);
-
-            String type = request.getParameter(CaptchaAuthenticationFailureResponse.DEFAULT_TYPE_PARAM_NAME);
-            // 如果登录类型为用户名密码登录的情况下，创建一个生成验证码 token 给客户端生成验证码，
-            // 该验证码会通过 CaptchaAuthenticationFilter 进行验证码，详情查看 CaptchaAuthenticationFilter。
-            // 如果登录类型为手机短信登录，创建一个生成短信发送验证码的拦截 token 给客户端，
-            // 让客户端在页面生成一个验证码，该验证码为发送短信时需要验证的验证码，方式短信被刷行为。
-            if (LoginType.Mobile.toString().equals(type)) {
-
-                Map<String, Object> buildToken = failureHandler
-                        .getCaptchaService()
-                        .generateToken(
-                                CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE,
-                                identified
-                        );
-
-                String token = buildToken.get(DEFAULT_TOKEN_NAME).toString();
-
-                String captchaType = authenticationProperties.getMobileFailureCaptchaType();
-
-                Map<String, Object> interceptToken = failureHandler
-                        .getCaptchaService()
-                        .createGenerateCaptchaIntercept(
-                                buildToken.get(DEFAULT_TOKEN_NAME).toString(),
-                                captchaType,
-                                CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE
-                        );
-
-                data.put(DEFAULT_TOKEN_NAME, token);
-                data.putAll(interceptToken);
-
-            } else {
-                String captchaType = authenticationProperties.getUsernameFailureCaptchaType();
-
-                Map<String, Object> buildToken = failureHandler
-                        .getCaptchaService()
-                        .generateToken(captchaType, identified);
-
-                data.putAll(buildToken);
-            }
-
-            executeCode = CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE;
-        }
 
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
 
@@ -220,6 +192,13 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 message = HttpStatus.UNAUTHORIZED.getReasonPhrase();
                 data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, userService.getAnonymousUser());
             }
+
+            if (RememberMeAuthenticationToken.class.isAssignableFrom(authentication.getClass())) {
+                data.put(RememberMeProperties.DEFAULT_PARAM_NAME, true);
+                data.put(RememberMeProperties.DEFAULT_USER_DETAILS_NAME, authentication.getDetails());
+            } else {
+                data.put(RememberMeProperties.DEFAULT_PARAM_NAME, false);
+            }
         }
 
         return new RestResult<>(
@@ -228,5 +207,64 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 executeCode,
                 data
         );
+    }
+
+    /**
+     * 验证码数据处理
+     *
+     * @param result reset 结果集
+     * @param request http 请求信息
+     */
+    private void postCaptchaData(RestResult<Map<String, Object>> result, HttpServletRequest request) {
+        Integer number = failureHandler.getAllowableFailureNumber(request);
+
+        Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
+
+        if (number < allowableFailureNumber) {
+            return ;
+        }
+
+        // 获取设备唯一识别
+        String identified = SpringMvcUtils.getDeviceIdentified(request);
+
+        String type = request.getParameter(CaptchaAuthenticationFailureResponse.DEFAULT_TYPE_PARAM_NAME);
+        // 如果登录类型为用户名密码登录的情况下，创建一个生成验证码 token 给客户端生成验证码，
+        // 该验证码会通过 CaptchaAuthenticationFilter 进行验证码，详情查看 CaptchaAuthenticationFilter。
+        // 如果登录类型为手机短信登录，创建一个生成短信发送验证码的拦截 token 给客户端，
+        // 让客户端在页面生成一个验证码，该验证码为发送短信时需要验证的验证码，方式短信被刷行为。
+        if (LoginType.Mobile.toString().equals(type)) {
+
+            Map<String, Object> buildToken = failureHandler
+                    .getCaptchaService()
+                    .generateToken(
+                            CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE,
+                            identified
+                    );
+
+            String token = buildToken.get(DEFAULT_TOKEN_NAME).toString();
+
+            String captchaType = authenticationProperties.getMobileFailureCaptchaType();
+
+            Map<String, Object> interceptToken = failureHandler
+                    .getCaptchaService()
+                    .createGenerateCaptchaIntercept(
+                            buildToken.get(DEFAULT_TOKEN_NAME).toString(),
+                            captchaType,
+                            CaptchaAuthenticationFailureResponse.DEFAULT_MOBILE_CAPTCHA_TYPE
+                    );
+
+            result.getData().put(DEFAULT_TOKEN_NAME, token);
+            result.getData().putAll(interceptToken);
+
+        } else {
+            String captchaType = authenticationProperties.getUsernameFailureCaptchaType();
+
+            Map<String, Object> buildToken = failureHandler
+                    .getCaptchaService()
+                    .generateToken(captchaType, identified);
+
+            result.getData().putAll(buildToken);
+        }
+        result.setExecuteCode(CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE);
     }
 }

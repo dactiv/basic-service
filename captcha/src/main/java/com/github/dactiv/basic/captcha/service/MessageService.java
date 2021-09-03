@@ -13,6 +13,7 @@ import java.util.Map;
  *
  * @author maurice
  */
+// FIXME 添加一个功能工模块，将这些feign 全部统一放到一起
 @FeignClient(value = "message", configuration = AuthenticationConfiguration.class)
 public interface MessageService {
 

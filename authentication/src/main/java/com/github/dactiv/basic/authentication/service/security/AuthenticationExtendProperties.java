@@ -87,39 +87,7 @@ public class AuthenticationExtendProperties  {
     /**
      * 异地区域配置
      */
-    private AbnormalArea abnormalArea = new AbnormalArea();
-
-    /**
-     * 记住我配置
-     */
-    private RememberMe rememberMe = new RememberMe();
-
-    /**
-     * 记住我配置
-     */
-    @Data
-    @NoArgsConstructor
-    public static class RememberMe {
-
-        public static final String DEFAULT_PARAM_NAME = "rememberMe";
-
-        /**
-         * token 验证时间
-         */
-        private TimeProperties tokenValidityTime = new TimeProperties(7,TimeUnit.DAYS);
-
-        /**
-         * 提交记住我的参数名称
-         */
-        private String paramName = DEFAULT_PARAM_NAME;
-
-        private String cookieDomain;
-
-        private String cookieName;
-
-        private boolean useSecureCookie;
-
-    }
+    private AbnormalArea abnormalArea = new AbnormalArea();;
 
     /**
      * 注册配置
@@ -220,7 +188,7 @@ public class AuthenticationExtendProperties  {
         /**
          * 发送类型, siteMessage 为站内信
          */
-        private String sendType = "siteMessage";
+        private String sendType = "site";
 
         /**
          * 发送失败后的重试次数

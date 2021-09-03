@@ -49,7 +49,6 @@ public class RequestDecryptFilter implements GlobalFilter, Ordered {
             ServerRequest serverRequest = ServerRequest
                     .create(exchange, HandlerStrategies.withDefaults().messageReaders());
 
-            // TODO: flux or mono
             Mono<String> modifiedBody = serverRequest
                     .bodyToMono(String.class)
                     .switchIfEmpty(Mono.just(Casts.castRequestBodyMapToString(serverRequest.queryParams())))
@@ -61,8 +60,6 @@ public class RequestDecryptFilter implements GlobalFilter, Ordered {
             HttpHeaders headers = new HttpHeaders();
             headers.putAll(exchange.getRequest().getHeaders());
 
-            // the new content type will be computed by bodyInserter
-            // and then set in the request decorator
             headers.remove(HttpHeaders.CONTENT_LENGTH);
 
             CachedBodyOutputMessage outputMessage = new CachedBodyOutputMessage(exchange, headers);
@@ -90,8 +87,6 @@ public class RequestDecryptFilter implements GlobalFilter, Ordered {
                 if (contentLength > 0) {
                     httpHeaders.setContentLength(contentLength);
                 } else {
-                    // TODO: this causes a 'HTTP/1.1 411 Length Required' // on
-                    // httpbin.org
                     httpHeaders.set(HttpHeaders.TRANSFER_ENCODING, "chunked");
                 }
 
