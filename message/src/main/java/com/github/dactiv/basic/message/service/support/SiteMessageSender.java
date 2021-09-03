@@ -87,7 +87,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
             )
     )
-    public void sendSiteMessage(@Payload List<SiteMessage> data,
+    public void sendSiteMessage(@Payload List<Integer> data,
                                 Channel channel,
                                 @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
@@ -98,7 +98,9 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(SiteMessage entity) {
+    public void send(Integer id) {
+
+        SiteMessage entity = attachmentMessageService.getSiteMessage(id);
 
         SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
@@ -151,8 +153,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     protected void send(List<SiteMessage> entities) {
 
         entities.forEach(e -> attachmentMessageService.saveSiteMessage(e));
-
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
+        super.send(entities);
     }
 
     @Override

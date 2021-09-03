@@ -10,10 +10,6 @@ spring:
     banner-mode: "off"
   application:
     name: @artifactId@
-  security:
-    support:
-      audit:
-        type: elasticsearch
   elasticsearch:
     rest:
       uris: http://localhost:9200
@@ -21,6 +17,12 @@ spring:
     nacos:
       discovery:
         server-addr: localhost:8848
+        metadata:
+          plugin: "true"
+          version: ${info.version}
+          name: ${info.name}
+          artifact-id: ${info.artifact-id}
+          group-id: ${info.group-id}
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml

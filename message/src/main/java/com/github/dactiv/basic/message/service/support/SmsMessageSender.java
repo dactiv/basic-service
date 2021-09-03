@@ -86,18 +86,20 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
                     key = DEFAULT_QUEUE_NAME
             )
     )
-    public void sendSms(@Payload List<SmsMessage> data,
+    public void sendSms(@Payload List<Integer> data,
                         Channel channel,
                         @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
         channel.basicAck(tag, false);
 
         data.forEach(this::send);
+
+
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(SmsMessage entity) {
-
+    public void send(Integer id) {
+        SmsMessage entity = messageService.getSmsMessage(id);
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
         entity.setLastSendTime(new Date());
@@ -149,8 +151,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     protected void send(List<SmsMessage> entities) {
 
         entities.forEach(e -> messageService.saveSmsMessage(e));
-
-        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, entities);
+        super.send(entities);
 
     }
 

@@ -230,6 +230,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      *
      * @param entity 批量消息接口实现类
      */
+    // FIXME 这里应该支持批量重试
     public void retry(BatchMessage.Body entity) {
 
         if (!Retryable.class.isAssignableFrom(entity.getClass())) {

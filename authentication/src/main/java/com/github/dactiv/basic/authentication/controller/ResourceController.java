@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.controller;
 
+import com.alibaba.nacos.api.exception.NacosException;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.DiscoveryPluginResourceService;
@@ -151,7 +152,7 @@ public class ResourceController {
     @PostMapping("syncPluginResource")
     @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
-    public RestResult<?> syncPluginResource() {
+    public RestResult<?> syncPluginResource() throws NacosException {
 
         discoveryPluginResourceService.cleanCurrentServices();
         discoveryPluginResourceService.syncPluginResource();

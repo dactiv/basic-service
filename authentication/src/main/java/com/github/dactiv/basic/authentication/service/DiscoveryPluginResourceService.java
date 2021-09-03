@@ -1,5 +1,11 @@
 package com.github.dactiv.basic.authentication.service;
 
+import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
+import com.alibaba.cloud.nacos.NacosServiceManager;
+import com.alibaba.nacos.api.exception.NacosException;
+import com.alibaba.nacos.api.naming.NamingMaintainService;
+import com.alibaba.nacos.api.naming.NamingService;
+import com.alibaba.nacos.api.naming.pojo.Service;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.entity.Group;
@@ -52,6 +58,12 @@ public class DiscoveryPluginResourceService {
     private DiscoveryClient discoveryClient;
 
     @Autowired
+    private NacosDiscoveryProperties discoveryProperties;
+
+    @Autowired
+    private NacosServiceManager nacosServiceManager;
+
+    @Autowired
     private AuthorizationService authorizationService;
 
     @Autowired
@@ -84,14 +96,24 @@ public class DiscoveryPluginResourceService {
     /**
      * 同步插件资源，默认每三十秒扫描一次 discovery 的 服务信息
      */
-    @NacosCronScheduled(cron = "${authentication.plugin.sync-cron:0 0/30 * * * ?}", name = "同步服务插件")
+    @NacosCronScheduled(cron = "${authentication.plugin.sync-cron:0 0/3 * * * ?}", name = "同步服务插件")
     @Concurrent(value = "sync:plugin:resource", exceptionMessage = "同步插件信息遇到并发，不执行重试操作", type = LockType.Lock)
-    public void syncPluginResource() {
+    public void syncPluginResource() throws NacosException {
 
         // 获取所有服务
-        List<String> services = discoveryClient.getServices();
+        List<String> serviceNames = discoveryClient.getServices();
 
-        List<ServiceInfo> syncService = services.stream()
+        NamingService naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
+        NamingMaintainService namingMaintainService = nacosServiceManager.getNamingMaintainService(discoveryProperties.getNacosProperties());
+
+        List<Service> services = new LinkedList<>();
+
+        for (String s: serviceNames) {
+            Service service = namingMaintainService.queryService(s);
+            services.add(service);
+        }
+
+        /*List<ServiceInfo> syncService = services.stream()
                 .filter(s -> !exceptionServices.contains(s))
                 .map(this::getMaxVersionSyncPluginEntity)
                 .filter(Optional::isPresent)
@@ -100,7 +122,6 @@ public class DiscoveryPluginResourceService {
                 .map(this::enabledApplicationResource)
                 .filter(Objects::nonNull)
                 .collect(Collectors.toList());
-
 
         // 遍历完成后如果 discovery 服务列表里的信息比 缓存的记录少，表示有某些服务下架，
         // 应该将所有资源取消
@@ -140,7 +161,7 @@ public class DiscoveryPluginResourceService {
 
         }
 
-        currentServices = syncService;
+        currentServices = syncService;*/
     }
 
     private boolean isControllerResource(Resource r, String s) {
