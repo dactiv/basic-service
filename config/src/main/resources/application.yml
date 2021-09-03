@@ -28,6 +28,7 @@ authentication:
         icon: 'icon-un-config-o'
   permit-uri-ant-matchers:
     - "/findDataDictionaries/**"
+    - "/getServiceEnumerate/**"
     - "/findAccessCrypto/**"
     - "/getPublicToken/**"
     - "/getAccessToken/**"
