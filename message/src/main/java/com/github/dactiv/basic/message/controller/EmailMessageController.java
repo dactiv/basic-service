@@ -72,7 +72,7 @@ public class EmailMessageController {
      * @param ids 邮件消息主键 ID 值集合
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[email:delete]')")
+    @PreAuthorize("hasAuthority('perms[email:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除邮件消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteEmailMessage(ids);

@@ -48,7 +48,7 @@ public class FileManagerController {
      * @throws Exception 删除错误时抛出
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[file_manager:delete]')")
+    @PreAuthorize("hasAuthority('perms[file_manager:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除文件", parent = "file-manager", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam("bucketName") String bucketName,@RequestParam("filename") String filename) throws Exception {
         fileManagerService.delete(bucketName, filename);
@@ -66,7 +66,7 @@ public class FileManagerController {
      * @throws Exception 上传错误时抛出
      */
     @PostMapping("upload/{bucketName}")
-    @PreAuthorize("hasAuthority('perms[file_manager:upload]')")
+    @PreAuthorize("hasAuthority('perms[file_manager:upload]') and isFullyAuthenticated()")
     @Plugin(name = "上传文件", parent = "file-manager", sources = "Console", audit = true)
     public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @PathVariable("bucketName") String bucketName) throws Exception{
 

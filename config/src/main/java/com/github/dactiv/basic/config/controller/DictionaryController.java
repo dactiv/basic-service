@@ -117,7 +117,7 @@ public class DictionaryController {
      * @param entity 数据字典实体
      */
     @PostMapping("saveDataDictionary")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:save]')")
+    @PreAuthorize("hasAuthority('perms[data_dictionary:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存数据字典实体", sources = "Console", audit = true)
     public RestResult<Integer> saveDataDictionary(@Valid DataDictionary entity) {
         dictionaryService.saveDataDictionary(entity);
@@ -130,7 +130,7 @@ public class DictionaryController {
      * @param ids 主键值集合
      */
     @PostMapping("deleteDataDictionary")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:delete]')")
+    @PreAuthorize("hasAuthority('perms[data_dictionary:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除数据字典实体", sources = "Console", audit = true)
     public RestResult<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDataDictionaries(ids);
@@ -196,7 +196,7 @@ public class DictionaryController {
      * @param entity 数据字典类型实体
      */
     @PostMapping("saveDictionaryType")
-    @PreAuthorize("hasAuthority('perms[dictionary_type:save]')")
+    @PreAuthorize("hasAuthority('perms[dictionary_type:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
     public RestResult<Integer> saveDictionaryType(@Valid DictionaryType entity) {
         dictionaryService.saveDictionaryType(entity);
@@ -209,7 +209,7 @@ public class DictionaryController {
      * @param ids 主键值集合
      */
     @PostMapping("deleteDictionaryType")
-    @PreAuthorize("hasAuthority('perms[dictionary_type:delete]')")
+    @PreAuthorize("hasAuthority('perms[dictionary_type:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
     public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDictionaryTypes(ids);

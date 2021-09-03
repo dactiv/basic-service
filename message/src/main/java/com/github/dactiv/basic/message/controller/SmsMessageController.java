@@ -78,7 +78,7 @@ public class SmsMessageController {
      * @param ids 短信消息主键 ID 值集合
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[sms:delete]')")
+    @PreAuthorize("hasAuthority('perms[sms:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除短信消息实体", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSmsMessage(ids);
