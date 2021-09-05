@@ -58,12 +58,6 @@ public class DiscoveryPluginResourceService {
     private DiscoveryClient discoveryClient;
 
     @Autowired
-    private NacosDiscoveryProperties discoveryProperties;
-
-    @Autowired
-    private NacosServiceManager nacosServiceManager;
-
-    @Autowired
     private AuthorizationService authorizationService;
 
     @Autowired
@@ -101,19 +95,9 @@ public class DiscoveryPluginResourceService {
     public void syncPluginResource() throws NacosException {
 
         // 获取所有服务
-        List<String> serviceNames = discoveryClient.getServices();
+        List<String> services = discoveryClient.getServices();
 
-        NamingService naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
-        NamingMaintainService namingMaintainService = nacosServiceManager.getNamingMaintainService(discoveryProperties.getNacosProperties());
-
-        List<Service> services = new LinkedList<>();
-
-        for (String s: serviceNames) {
-            Service service = namingMaintainService.queryService(s);
-            services.add(service);
-        }
-
-        /*List<ServiceInfo> syncService = services.stream()
+        List<ServiceInfo> syncService = services.stream()
                 .filter(s -> !exceptionServices.contains(s))
                 .map(this::getMaxVersionSyncPluginEntity)
                 .filter(Optional::isPresent)
@@ -161,7 +145,7 @@ public class DiscoveryPluginResourceService {
 
         }
 
-        currentServices = syncService;*/
+        currentServices = syncService;
     }
 
     private boolean isControllerResource(Resource r, String s) {
