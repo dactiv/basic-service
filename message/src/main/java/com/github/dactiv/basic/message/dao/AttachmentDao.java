@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_attachment - 消息附件</p>
  *
- * @see Attachment
- *
  * @author maurice
- *
+ * @see Attachment
  * @since 2021-08-22 04:45:14
  */
 @Mapper

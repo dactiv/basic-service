@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_data_dictionary - 数据字典</p>
  *
- * @see DataDictionary
- *
  * @author maurice
- *
+ * @see DataDictionary
  * @since 2021-08-22 04:45:14
  */
 @Mapper

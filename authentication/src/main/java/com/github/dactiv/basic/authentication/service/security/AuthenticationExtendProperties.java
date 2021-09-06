@@ -22,11 +22,16 @@ import java.util.concurrent.TimeUnit;
 @Component
 @NoArgsConstructor
 @ConfigurationProperties("authentication.extend")
-public class AuthenticationExtendProperties  {
+public class AuthenticationExtendProperties {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
 
     public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(ResourceSource.Mobile.toString(), DefaultUserDetailsService.DEFAULT_TYPES);
+
+    /**
+     * 管理员组 id
+     */
+    private Integer adminGroupId = 1;
 
     /**
      * 允许认证错误次数，当达到峰值时，出现验证码
@@ -52,7 +57,7 @@ public class AuthenticationExtendProperties  {
     /**
      * 错误次数超时间
      */
-    private TimeProperties allowableFailureNumberExpireTime = new TimeProperties(1800, TimeUnit.SECONDS) ;
+    private TimeProperties allowableFailureNumberExpireTime = new TimeProperties(1800, TimeUnit.SECONDS);
 
     /**
      * 允许认证错误次数的 redis key 前缀
@@ -87,7 +92,8 @@ public class AuthenticationExtendProperties  {
     /**
      * 异地区域配置
      */
-    private AbnormalArea abnormalArea = new AbnormalArea();;
+    private AbnormalArea abnormalArea = new AbnormalArea();
+    ;
 
     /**
      * 注册配置

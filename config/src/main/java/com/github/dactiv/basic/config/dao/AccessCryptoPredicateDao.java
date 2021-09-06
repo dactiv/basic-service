@@ -12,10 +12,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_access_crypto_predicate - 访问加解密断言</p>
  *
- * @see ConfigAccessCryptoPredicate
- *
  * @author maurice
- *
+ * @see ConfigAccessCryptoPredicate
  * @since 2021-08-22 04:45:14
  */
 @Mapper

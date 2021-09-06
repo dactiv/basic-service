@@ -41,16 +41,14 @@ public class FileManagerController {
      * 删除文件
      *
      * @param bucketName 桶名称
-     * @param filename 文件名称
-     *
+     * @param filename   文件名称
      * @return reset 结果集
-     *
      * @throws Exception 删除错误时抛出
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[file_manager:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除文件", parent = "file-manager", sources = "Console", audit = true)
-    public RestResult<?> delete(@RequestParam("bucketName") String bucketName,@RequestParam("filename") String filename) throws Exception {
+    public RestResult<?> delete(@RequestParam("bucketName") String bucketName, @RequestParam("filename") String filename) throws Exception {
         fileManagerService.delete(bucketName, filename);
         return RestResult.of("删除 [" + filename + "] 成功");
     }
@@ -58,17 +56,15 @@ public class FileManagerController {
     /**
      * 上传文件
      *
-     * @param file 文件
+     * @param file       文件
      * @param bucketName 放置文件的桶名称
-     *
      * @return reset 结果集
-     *
      * @throws Exception 上传错误时抛出
      */
     @PostMapping("upload/{bucketName}")
     @PreAuthorize("hasAuthority('perms[file_manager:upload]') and isFullyAuthenticated()")
     @Plugin(name = "上传文件", parent = "file-manager", sources = "Console", audit = true)
-    public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @PathVariable("bucketName") String bucketName) throws Exception{
+    public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @PathVariable("bucketName") String bucketName) throws Exception {
 
         Map<String, Object> result = fileManagerService.upload(file, bucketName);
 
@@ -80,8 +76,7 @@ public class FileManagerController {
      * 获取文件
      *
      * @param bucketName 桶名称
-     * @param filename 文件名
-     *
+     * @param filename   文件名
      * @return 文件流字节
      * @throws Exception 获取失败时抛出
      */

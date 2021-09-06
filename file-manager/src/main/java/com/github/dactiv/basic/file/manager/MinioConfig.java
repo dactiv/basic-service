@@ -26,12 +26,11 @@ public class MinioConfig {
      * mini 模版
      *
      * @param minioProperties mini 模版
-     *
      * @return mini 模版
      */
     @Bean
     MinioClient minioTemplate(MinioConfig.MinioProperties minioProperties) {
-        return  MinioClient
+        return MinioClient
                 .builder()
                 .endpoint(minioProperties.getEndpoint())
                 .credentials(minioProperties.getAccessKey(), minioProperties.getSecretKey())

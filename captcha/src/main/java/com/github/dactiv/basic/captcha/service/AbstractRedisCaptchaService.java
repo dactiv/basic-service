@@ -374,7 +374,6 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取验证码桶
      *
      * @param token token 值
-     *
      * @return 绑定 token 桶
      */
     public RBucket<C> getCaptchaBucket(BuildToken token) {
@@ -437,7 +436,6 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取绑定 token 桶
      *
      * @param token token 值
-     *
      * @return 绑定 token 桶
      */
     public RBucket<BuildToken> getBuildTokenBucket(String token) {

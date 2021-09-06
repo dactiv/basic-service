@@ -6,6 +6,8 @@ import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.service.plugin.PluginInstance;
+import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ServiceInfo;
@@ -47,8 +49,6 @@ import java.util.stream.Stream;
 @Transactional(rollbackFor = Exception.class)
 public class AuthorizationService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthorizationService.class);
-
     @Autowired
     private GroupDao groupDao;
 
@@ -72,7 +72,6 @@ public class AuthorizationService {
      * 获取账户认证的用户明细服务
      *
      * @param source 资源累袁
-     *
      * @return 账户认证的用户明细服务
      */
     public UserDetailsService getUserDetailsService(ResourceSource source) {
@@ -121,7 +120,7 @@ public class AuthorizationService {
 
         List<ResourceSource> resourceSourceStream = Arrays.asList(ResourceSource.values());
 
-        if (Arrays.stream(StringUtils.split(group.getSource(), ","))
+        if (Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING))
                 .anyMatch(s -> !resourceSourceStream.contains(ResourceSource.valueOf(s)))) {
             throw new ServiceException("组来源[" + group.getSource() + "]不在 " + resourceSourceStream + " 范围内");
         }
@@ -133,7 +132,7 @@ public class AuthorizationService {
             boolean isNotAnyMatchResourceSource = resourceIds
                     .stream()
                     .map(this::getResource)
-                    .anyMatch(r -> Arrays.stream(StringUtils.split(group.getSource(), ","))
+                    .anyMatch(r -> Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING))
                             .map(StringUtils::trim)
                             .allMatch(s -> !s.equals(r.getSource())
                                     && !Resource.DEFAULT_CONTAIN_SOURCE_VALUES.contains(r.getSource())));
@@ -234,7 +233,6 @@ public class AuthorizationService {
      * 获取用户组
      *
      * @param id 主键 id
-     *
      * @return 用户组实体
      */
     public Group getGroup(Integer id) {
@@ -245,7 +243,6 @@ public class AuthorizationService {
      * 获取系统用户所关联用户组
      *
      * @param userId 系统用户主键 id
-     *
      * @return 用户组集合
      */
     public List<Group> getConsoleUserGroups(Integer userId) {
@@ -256,7 +253,6 @@ public class AuthorizationService {
      * 获取会员用户所关联用户组
      *
      * @param userId 会员用户主键 id
-     *
      * @return 用户组集合
      */
     public List<Group> getMemberUserGroups(Integer userId) {
@@ -267,7 +263,6 @@ public class AuthorizationService {
      * 根据过滤条件查找用户组
      *
      * @param wrapper 包装器
-     *
      * @return 用户组实体集合
      */
     public List<Group> findGroups(Wrapper<Group> wrapper) {
@@ -353,7 +348,6 @@ public class AuthorizationService {
      * 获取资源
      *
      * @param id 主键 id
-     *
      * @return 资源实体
      */
     public Resource getResource(Integer id) {
@@ -361,10 +355,19 @@ public class AuthorizationService {
     }
 
     /**
+     * 通过条件查询单个資源实体
+     *
+     * @param wrapper 查询条件
+     * @return 資源实体
+     */
+    public Resource fineOneResource(Wrapper<Resource> wrapper) {
+        return resourceDao.selectOne(wrapper);
+    }
+
+    /**
      * 获取资源
      *
      * @param groupId 组主键值
-     *
      * @return 资源实体集合
      */
     public List<Resource> getGroupResources(Integer groupId) {
@@ -375,7 +378,6 @@ public class AuthorizationService {
      * 获取系统用户关联资源
      *
      * @param userId 用户主键值
-     *
      * @return 资源实体集合
      */
     public List<Resource> getConsoleUserResources(Integer userId) {
@@ -386,7 +388,6 @@ public class AuthorizationService {
      * 获取系统用户关联(包含系统用户组关联，所有资源)资源实体集合
      *
      * @param userId 用户主键值
-     *
      * @return 资源实体集合
      */
     public List<Resource> getConsolePrincipalResources(Integer userId, List<String> sourceContains, String type) {
@@ -394,112 +395,9 @@ public class AuthorizationService {
     }
 
     /**
-     * 启用应用资源
-     *
-     * @param serviceInfo 应用信息
-     */
-    public void enabledApplicationResource(ServiceInfo serviceInfo) {
-
-        if (serviceInfo == null || serviceInfo.getVersion() == null) {
-            return;
-        }
-
-        // 应用名称
-        String applicationName = serviceInfo.getService();
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("开始绑定[" + applicationName + "]资源信息，当前版本为:" + serviceInfo.getVersion());
-        }
-
-        // 获取一次旧的资源，在递归完最新的资源后，把所有未匹配旧的资源全部删除掉
-        List<Resource> oldResourceList = resourceDao.selectList(
-                Wrappers
-                        .<Resource>lambdaQuery()
-                        .eq(Resource::getApplicationName, applicationName)
-                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
-        );
-
-        List<PluginInfo> pluginList = createPluginInfoListFromInfo(serviceInfo.getInfo());
-
-        // 遍历新资源，更新 serviceInfo 相关的资源信息
-        List<Resource> newResourceList = pluginList
-                .stream()
-                .flatMap(p -> createResourceStream(p, serviceInfo))
-                .flatMap(this::enabledApplicationResource)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 遍历旧资源，将没用的删除掉
-        oldResourceList
-                .stream()
-                .filter(resource -> !newResourceList.contains(resource))
-                .map(Resource::getId)
-                .forEach(this::deleteResource);
-
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("绑定[" + applicationName + "]资源信息完成");
-        }
-
-        deleteAuthorizationCache();
-
-    }
-
-    /**
-     * 通过 info 信息创建插件信息实体集合
-     *
-     * @param info info 信息
-     *
-     * @return 插件信息实体集合
-     */
-    private List<PluginInfo> createPluginInfoListFromInfo(Map<String, Object> info) {
-
-        List<PluginInfo> result = new LinkedList<>();
-
-        List<Map<String, Object>> pluginMapList = Casts.cast(info.get(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME));
-
-        for (Map<String, Object> pluginMap : pluginMapList) {
-            PluginInfo pluginInfo = createPluginInfoListFromPluginMap(pluginMap);
-            result.add(pluginInfo);
-        }
-
-        return result;
-    }
-
-    /**
-     * 通过插件 map 创建插件信息实体
-     *
-     * @param pluginMap 插件 map
-     *
-     * @return 插件信息实体
-     */
-    private PluginInfo createPluginInfoListFromPluginMap(Map<String, Object> pluginMap) {
-
-        List<Map<String, Object>> children = new LinkedList<>();
-
-        if (pluginMap.containsKey(PluginInfo.DEFAULT_CHILDREN_NAME)) {
-            children = Casts.cast(pluginMap.get(PluginInfo.DEFAULT_CHILDREN_NAME));
-            pluginMap.remove(PluginInfo.DEFAULT_CHILDREN_NAME);
-        }
-
-        PluginInfo pluginInfo = Casts.convertValue(pluginMap, PluginInfo.class);
-
-        List<Tree<String, PluginInfo>> childrenNode = new LinkedList<>();
-
-        pluginInfo.setChildren(childrenNode);
-
-        for (Map<String, Object> child : children) {
-            PluginInfo childNode = createPluginInfoListFromPluginMap(child);
-            childrenNode.add(childNode);
-        }
-
-        return pluginInfo;
-    }
-
-    /**
      * 获取資源集合
      *
      * @param wrapper 包装器
-     *
      * @return 資源集合
      */
     public List<Resource> findResources(Wrapper<Resource> wrapper) {
@@ -507,166 +405,9 @@ public class AuthorizationService {
     }
 
     /**
-     * 启用资源
-     *
-     * @param resource 资源信息
-     *
-     * @return 流集合
-     */
-    private Stream<Resource> enabledApplicationResource(Resource resource) {
-
-        // 获取目标资源
-        Resource target = getTargetResource(resource);
-        // 保存
-        saveResource(target);
-
-        List<Resource> result = resource.getChildren()
-                .stream()
-                .map(c -> Casts.cast(c, Resource.class))
-                .peek(c -> c.setParentId(target.getId()))
-                .flatMap(this::enabledApplicationResource)
-                .collect(Collectors.toList());
-
-        result.add(target);
-
-        return result.stream();
-    }
-
-    /**
-     * 获取目标资源，如果 resource 在数据库理存在数据，将获取数据库的记录，并用 resource 数据替换一次
-     *
-     * @param resource 当前资源
-     *
-     * @return 目标资源
-     */
-    private Resource getTargetResource(Resource resource) {
-        // 根据唯一条件查询目标资源
-        Resource target = resourceDao.selectOne(resource.getUniqueWrapper());
-
-        if (target == null) {
-            target = resource;
-        } else {
-            // TODO 这里写得有点啰嗦
-            if (StringUtils.isEmpty(resource.getName())) {
-                resource.setName(target.getName());
-            }
-
-            if (StringUtils.isEmpty(resource.getIcon())) {
-                resource.setIcon(target.getIcon());
-            }
-
-            if (StringUtils.isEmpty(resource.getApplicationName())) {
-                resource.setApplicationName(target.getApplicationName());
-            }
-
-            if (StringUtils.isEmpty(resource.getVersion())) {
-                resource.setVersion(target.getVersion());
-            }
-
-            // 设置该資源为启用状态
-            resource.setStatus(DisabledOrEnabled.Enabled.getValue());
-
-            // 如果数据库存在记录，将resource数据替换一次数据获取出来的值
-            BeanUtils.copyProperties(
-                    resource,
-                    target,
-                    IdEntity.ID_FIELD_NAME,
-                    PluginInfo.DEFAULT_CHILDREN_NAME,
-                    PluginInfo.DEFAULT_SOURCE_NAME
-            );
-        }
-
-        return target;
-    }
-
-    /**
-     * 创建资源
-     *
-     * @param entry       插件信息
-     * @param serviceInfo 服务系你想
-     *
-     * @return 流集合
-     */
-    private Stream<Resource> createResourceStream(Tree<String, PluginInfo> entry, ServiceInfo serviceInfo) {
-
-        PluginInfo plugin = Casts.cast(entry);
-
-        return Arrays.stream(StringUtils.split(plugin.getSource(), SpringMvcUtils.COMMA_STRING))
-                .map(source -> createResource(source, plugin, serviceInfo));
-    }
-
-    /**
-     * 创建資源
-     *
-     * @param source 資源来源
-     * @param plugin 插件信息
-     * @param serviceInfo 服务信息
-     *
-     * @return 新的資源
-     */
-    private Resource createResource(String source, PluginInfo plugin, ServiceInfo serviceInfo) {
-        Resource target = new Resource();
-
-        BeanUtils.copyProperties(plugin, target, PluginInfo.DEFAULT_CHILDREN_NAME);
-
-        target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
-
-        //List<Tree<String, PluginInfo>> children = plugin.getChildren();
-        //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
-        // 设置 target 变量的子节点
-        plugin.getChildren()
-                .stream()
-                .flatMap(c -> createResourceStream(c, serviceInfo))
-                .forEach(r -> target.getChildren().add(r));
-
-        if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
-            target.setParentId(null);
-        }
-
-        if (StringUtils.isEmpty(target.getApplicationName())) {
-            target.setApplicationName(serviceInfo.getService());
-        }
-
-        if (serviceInfo.getVersion() != null) {
-            target.setVersion(serviceInfo.getVersion().toString());
-        }
-
-        target.setCode(plugin.getId());
-        target.setStatus(DisabledOrEnabled.Enabled.getValue());
-        target.setId(null);
-
-        return target;
-    }
-
-    /**
-     * 禁用资源
-     *
-     * @param applicationName 资源名称
-     */
-    public void disabledApplicationResource(String applicationName) {
-
-        // 查询所有符合条件的资源,并设置为禁用状态
-        List<Resource> resources = resourceDao.selectList(
-                Wrappers
-                        .<Resource>lambdaQuery()
-                        .eq(Resource::getApplicationName, applicationName)
-                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
-                        .eq(Resource::getStatus, DisabledOrEnabled.Enabled.getValue())
-        );
-
-        resources
-                .stream()
-                .peek(resource -> resource.setStatus(DisabledOrEnabled.Disabled.getValue()))
-                .forEach(this::saveResource);
-
-        deleteAuthorizationCache();
-
-    }
-
-    /**
      * 所有删除认证缓存
      */
-    private void deleteAuthorizationCache() {
+    public void deleteAuthorizationCache() {
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 new UsernamePasswordAuthenticationToken("*", null),
                 ResourceSource.Console.toString()

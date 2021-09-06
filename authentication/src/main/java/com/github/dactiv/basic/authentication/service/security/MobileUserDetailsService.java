@@ -89,7 +89,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * 获取移动端用户明细桶
      *
      * @param username 登陆账户
-     *
      * @return 移动端用户明细
      */
     public RBucket<MobileUserDetails> getMobileUserDetailsBucket(String username) {
@@ -100,7 +99,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * 获取存储在 redis 中的移动端唤醒 token key 名称
      *
      * @param username 登录账户
-     *
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
@@ -113,7 +111,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @param user       会员用户
      * @param identified 设备的唯一识别
      * @param request    http servlet request
-     *
      * @return 移动端的用户明细实现
      */
     public MobileUserDetails createMobileUserDetails(MemberUser user,
@@ -129,7 +126,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * 创建返回的 token
      *
      * @param details spring security 用户实现
-     *
      * @return 密码
      */
     public String createReturnToken(MobileUserDetails details) {
@@ -142,7 +138,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * 创建移动端唤醒结果集
      *
      * @param details spring security 用户实现
-     *
      * @return map
      */
     @SuppressWarnings("unchecked")
@@ -199,8 +194,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * 追加密码字符串
      *
      * @param password 密码
-     * @param device 设备信息
-     *
+     * @param device   设备信息
      * @return 新的字符串内容
      */
     private String appendPasswordString(String password, Device device) {

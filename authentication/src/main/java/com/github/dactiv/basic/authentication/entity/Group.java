@@ -13,6 +13,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
+import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -156,7 +157,7 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * @return String
      */
     public List<String> getSourceName() {
-        return Arrays.stream(StringUtils.split(source, ","))
+        return Arrays.stream(StringUtils.split(source, SpringMvcUtils.COMMA_STRING))
                 .map(StringUtils::trim)
                 .map(s -> NameEnumUtils.getName(s, ResourceSource.class))
                 .collect(Collectors.toList());

@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_batch_message - 批量消息</p>
  *
- * @see BatchMessage
- *
  * @author maurice
- *
+ * @see BatchMessage
  * @since 2021-08-22 04:45:14
  */
 @Mapper

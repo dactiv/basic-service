@@ -49,8 +49,7 @@ public class ConsoleUserController {
      * 查找系统用户分页信息
      *
      * @param pageRequest 分页请求
-     * @param request  http 请求
-     *
+     * @param request     http 请求
      * @return 分页实体
      */
     @PostMapping("page")
@@ -64,7 +63,6 @@ public class ConsoleUserController {
      * 获取系统用户实体
      *
      * @param id 主键值
-     *
      * @return 用户实体
      */
     @GetMapping("get")
@@ -80,7 +78,6 @@ public class ConsoleUserController {
      * @param entity      系统用户实体
      * @param groupIds    用户组 ID 集合
      * @param resourceIds 用户组资源 ID 集合
-     *
      * @return 消息结果集
      */
     @PostMapping("save")
@@ -99,7 +96,6 @@ public class ConsoleUserController {
      * 删除系统用户
      *
      * @param ids 系统用户主键 ID 集合
-     *
      * @return 消息结果集
      */
     @PostMapping("delete")
@@ -138,7 +134,6 @@ public class ConsoleUserController {
      * 判断登录账户是否唯一
      *
      * @param username 登录账户
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isUsernameUnique")
@@ -152,7 +147,6 @@ public class ConsoleUserController {
      * 判断邮件是否唯一
      *
      * @param email 电子邮件
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isEmailUnique")

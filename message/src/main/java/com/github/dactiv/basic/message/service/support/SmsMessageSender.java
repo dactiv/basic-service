@@ -110,7 +110,7 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
             RestResult<Map<String, Object>> restResult = smsChannelSender.sendSms(entity);
 
             if (restResult.getStatus() == HttpStatus.OK.value()) {
-                ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
+                ExecuteStatus.success(entity, String.format("%s:%s", restResult.getMessage(), restResult.getData()));
             } else {
                 ExecuteStatus.failure(entity, restResult.getMessage());
             }
@@ -131,7 +131,6 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
      * 获取发送短信的渠道发送者
      *
      * @param channel 渠道类型
-     *
      * @return 短信渠道发送者
      */
     private SmsChannelSender getSmsChannelSender(String channel) {
@@ -169,7 +168,6 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
      * 通过短信消息 body 构造短信消息并保存信息
      *
      * @param body 短信消息 body
-     *
      * @return 短信消息流
      */
     private Stream<SmsMessage> createSmsMessageEntity(SmsMessageBody body) {
@@ -209,7 +207,6 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
      * 创建站内信消息实体
      *
      * @param body 站内信消息 body
-     *
      * @return 站内信消息实体
      */
     private SmsMessage ofEntity(SmsMessageBody body) {

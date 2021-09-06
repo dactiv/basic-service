@@ -19,26 +19,23 @@ import java.util.List;
 ;
 
 /**
- *
  * tb_batch_message 的控制器
  *
  * <p>Table: tb_batch_message - 批量消息</p>
  *
- * @see BatchMessage
- *
  * @author maurice
- *
+ * @see BatchMessage
  * @since 2021-08-22 04:45:14
  */
 @RestController
 @RequestMapping("batch")
 @Plugin(
-    name = "批量消息",
-    id = "batch",
-    parent = "message",
-    icon = "icon-batch",
-    type = ResourceType.Menu,
-    sources = "Console"
+        name = "批量消息",
+        id = "batch",
+        parent = "message",
+        icon = "icon-batch",
+        type = ResourceType.Menu,
+        sources = "Console"
 )
 public class BatchMessageController {
 
@@ -52,10 +49,8 @@ public class BatchMessageController {
      * 获取 table: tb_batch_message 分页信息
      *
      * @param pageRequest 分页信息
-     * @param request  http servlet request
-     *
+     * @param request     http servlet request
      * @return 分页实体
-     *
      * @see BatchMessage
      */
     @PostMapping("page")
@@ -72,9 +67,7 @@ public class BatchMessageController {
      * 获取 table: tb_batch_message 实体
      *
      * @param id 主键 ID
-     *
      * @return tb_batch_message 实体
-     *
      * @see BatchMessage
      */
     @GetMapping("get")
@@ -88,7 +81,6 @@ public class BatchMessageController {
      * 保存 table: tb_batch_message 实体
      *
      * @param entity tb_batch_message 实体
-     *
      * @see BatchMessage
      */
     @PostMapping("save")
@@ -103,7 +95,6 @@ public class BatchMessageController {
      * 删除 table: tb_batch_message 实体
      *
      * @param ids 主键 ID 值集合
-     *
      * @see BatchMessage
      */
     @PostMapping("delete")

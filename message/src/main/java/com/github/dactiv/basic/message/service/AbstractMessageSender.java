@@ -31,7 +31,6 @@ import java.util.stream.Collectors;
  *
  * @param <T> 消息的请求数据泛型实体类型
  * @param <S> 消息的发送数据泛型实体类型
- *
  * @author maurice
  */
 @Slf4j
@@ -121,7 +120,6 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 发送消息
      *
      * @param result body 集合
-     *
      * @return reset 结果集
      */
     @Transactional(rollbackFor = Exception.class)
@@ -190,9 +188,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 绑定并验证请求数据
      *
      * @param value 请求参数
-     *
      * @return body
-     *
      * @throws BindException 验证数据错误时抛出
      */
     private T bindAndValidate(Map<String, Object> value) throws BindException {
@@ -219,7 +215,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 绑定值后的处理
      *
      * @param entity 消息的请求数据泛型实体
-     * @param value 被绑定的数据值（请求参数）
+     * @param value  被绑定的数据值（请求参数）
      */
     protected void postBindValue(T entity, Map<String, Object> value) {
 
@@ -234,7 +230,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
     public void retry(BatchMessage.Body entity) {
 
         if (!Retryable.class.isAssignableFrom(entity.getClass())) {
-            return ;
+            return;
         }
 
         Retryable retryable = Casts.cast(entity);
@@ -264,7 +260,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
     protected void updateBatchMessage(BatchMessage.Body body) {
 
         if (Objects.isNull(body.getBatchId())) {
-            return ;
+            return;
         }
 
         BatchMessage batchMessage = messageService.getBatchMessage(body.getBatchId());
@@ -316,10 +312,10 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 当批量信息创建完成后，触发此方法
      *
      * @param batchMessage 批量信息实体
-     * @param bodyList request 传过来的 body 参数集合
-     * @param sendList 通过 body 构造完成的待发送数据集合
+     * @param bodyList     request 传过来的 body 参数集合
+     * @param sendList     通过 body 构造完成的待发送数据集合
      */
-    protected void onBatchMessageCreate(BatchMessage batchMessage, List<T> bodyList,  List<S> sendList) {
+    protected void onBatchMessageCreate(BatchMessage batchMessage, List<T> bodyList, List<S> sendList) {
         Map<String, byte[]> map = attachmentCache.computeIfAbsent(batchMessage.getId(), k -> new LinkedHashMap<>());
 
         bodyList
@@ -337,10 +333,9 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 获取分批 map
      *
      * @param sendList 要发送的数据泛型实体
-     *
      * @return 分批 map
      */
-    protected Map<Integer,List<Integer>> getBatchMap(List<S> sendList) {
+    protected Map<Integer, List<Integer>> getBatchMap(List<S> sendList) {
 
         List<S> temps = new LinkedList<>(sendList);
 
@@ -402,7 +397,6 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * 创建要发送的实体
      *
      * @param result request 请求构造的实体集合
-     *
      * @return 要发送的实体集合
      */
     protected abstract List<S> createSendEntity(List<T> result);

@@ -121,7 +121,7 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(Integer  id) {
+    public void send(Integer id) {
 
         EmailMessage entity = attachmentMessageService.getEmailMessage(id);
 
@@ -166,10 +166,10 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
 
             mailSender.send(mimeMessage);
 
-            ExecuteStatus.success(entity,"发送邮件成功");
+            ExecuteStatus.success(entity, "发送邮件成功");
         } catch (Exception ex) {
             log.error("发送邮件错误", ex);
-            ExecuteStatus.failure(entity,ex.getCause().getMessage());
+            ExecuteStatus.failure(entity, ex.getCause().getMessage());
         }
 
         retry(entity);
@@ -195,7 +195,6 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
      * 通过邮件消息 body 构造邮件消息并保存信息
      *
      * @param body 邮件消息 body
-     *
      * @return 邮件消息流
      */
     private Stream<EmailMessage> createEmailMessageEntity(EmailMessageBody body) {
@@ -236,7 +235,6 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
      * 创建邮件消息实体
      *
      * @param body 邮件消息 body
-     *
      * @return 邮件消息实体
      */
     private EmailMessage ofEntity(EmailMessageBody body) {

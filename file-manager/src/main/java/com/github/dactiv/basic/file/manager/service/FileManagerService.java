@@ -78,7 +78,7 @@ public class FileManagerService {
      *
      * @param bucket 桶信息
      */
-    public void deleteExpiredFiles(Bucket bucket)  {
+    public void deleteExpiredFiles(Bucket bucket) {
 
         Iterable<Result<Item>> iterable = minioClient
                 .listObjects(ListObjectsArgs.builder().bucket(bucket.name()).build());
@@ -122,11 +122,9 @@ public class FileManagerService {
     /**
      * 上传文件
      *
-     * @param file 文件
+     * @param file       文件
      * @param bucketName 放置文件的桶名称
-     *
      * @return reset 结果集
-     *
      * @throws Exception 上传错误时抛出
      */
     public Map<String, Object> upload(MultipartFile file, String bucketName) throws Exception {
@@ -178,8 +176,7 @@ public class FileManagerService {
      * 删除文件
      *
      * @param bucketName 同名称
-     * @param filename 文件名称
-     *
+     * @param filename   文件名称
      * @throws Exception 删除错误时抛出
      */
     public void delete(String bucketName, String filename) throws Exception {
@@ -203,10 +200,8 @@ public class FileManagerService {
      * 获取文件
      *
      * @param bucketName 桶名称
-     * @param filename 文件名称
-     *
+     * @param filename   文件名称
      * @return 输入流
-     *
      * @throws Exception 获取错误时抛出
      */
     public InputStream get(String bucketName, String filename) throws Exception {
@@ -216,10 +211,9 @@ public class FileManagerService {
     /**
      * 转换目标对象和目标类的字段为 map
      *
-     * @param target 目标对象
-     * @param targetClass 目标类
+     * @param target       目标对象
+     * @param targetClass  目标类
      * @param ignoreFields 要忽略的字段名
-     *
      * @return map 对象
      */
     private Map<String, Object> convertFields(Object target, Class<?> targetClass, String... ignoreFields) {
@@ -244,8 +238,7 @@ public class FileManagerService {
      * 获取字段的 toString 值
      *
      * @param target 目标对象
-     * @param field 字段
-     *
+     * @param field  字段
      * @return 值
      */
     private Object getFieldToStringValue(Object target, Field field) {

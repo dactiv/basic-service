@@ -11,10 +11,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_email_message - 邮件消息</p>
  *
- * @see EmailMessage
- *
  * @author maurice
- *
+ * @see EmailMessage
  * @since 2021-08-22 04:45:14
  */
 @Mapper

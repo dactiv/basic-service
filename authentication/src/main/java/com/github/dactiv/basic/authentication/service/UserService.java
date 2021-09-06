@@ -23,6 +23,7 @@ import com.github.dactiv.framework.spring.security.authentication.token.Principa
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -126,7 +127,7 @@ public class UserService implements InitializingBean {
             boolean isAllConsoleGroup = groupIds
                     .stream()
                     .map(authorizationService::getGroup)
-                    .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), ",")))
+                    .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), SpringMvcUtils.COMMA_STRING)))
                     .anyMatch(s -> !StringUtils.equals(s, Console.toString()));
 
             if (isAllConsoleGroup) {
@@ -421,7 +422,7 @@ public class UserService implements InitializingBean {
         boolean isAllMemberGroup = groupIds
                 .stream()
                 .map(authorizationService::getGroup)
-                .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), ",")))
+                .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), SpringMvcUtils.COMMA_STRING)))
                 .anyMatch(s -> !StringUtils.equals(s, UserCenter.toString()));
 
         if (isAllMemberGroup) {
@@ -641,7 +642,7 @@ public class UserService implements InitializingBean {
      * 查找会员用户分页信息
      *
      * @param pageRequest 分页信息信息
-     * @param wrapper  条件
+     * @param wrapper     条件
      * @return 分页实体
      */
     public Page<MemberUser> findMemberUserPage(PageRequest pageRequest, Wrapper<MemberUser> wrapper) {

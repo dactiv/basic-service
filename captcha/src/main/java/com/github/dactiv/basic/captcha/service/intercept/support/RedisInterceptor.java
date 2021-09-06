@@ -113,9 +113,8 @@ public class RedisInterceptor implements Interceptor {
     /**
      * 获取绑定 token 桶
      *
-     * @param type 类型
+     * @param type  类型
      * @param token token 值
-     *
      * @return 绑定 token 桶
      */
     public RBucket<BuildToken> getBuildTokenBucket(String type, String token) {

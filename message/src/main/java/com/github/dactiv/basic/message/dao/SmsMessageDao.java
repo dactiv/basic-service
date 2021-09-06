@@ -11,10 +11,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_sms_message - 站内信消息</p>
  *
- * @see SiteMessage
- *
  * @author maurice
- *
+ * @see SiteMessage
  * @since 2021-08-22 04:45:14
  */
 @Mapper

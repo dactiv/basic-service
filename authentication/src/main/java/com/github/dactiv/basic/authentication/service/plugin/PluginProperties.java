@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service;
+package com.github.dactiv.basic.authentication.service.plugin;
 
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -9,10 +9,15 @@ import org.springframework.stereotype.Component;
 
 import java.util.concurrent.TimeUnit;
 
+/**
+ * 插件配置类
+ *
+ * @author maurice.chen
+ */
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("spring.security.plugin")
+@ConfigurationProperties("authentication.plugin")
 public class PluginProperties {
 
     /**
@@ -21,11 +26,16 @@ public class PluginProperties {
     private Integer adminGroupId = 1;
 
     /**
+     * 超时时间
+     */
+    private TimeProperties expirationTime = new TimeProperties(1, TimeUnit.HOURS);
+
+    /**
      * 缓存配置
      */
+    @Deprecated
     private CacheProperties cache = new CacheProperties(
-            "plugin:resource:service:",
-            new TimeProperties(1800, TimeUnit.SECONDS)
+            "plugin:resource:service:"
     );
 
 }

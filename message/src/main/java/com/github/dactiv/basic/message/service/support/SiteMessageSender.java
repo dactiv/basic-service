@@ -112,7 +112,7 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
             RestResult<Map<String, Object>> restResult = siteMessageChannelSender.sendSiteMessage(entity);
 
             if (restResult.getStatus() == HttpStatus.OK.value()) {
-                ExecuteStatus.success(entity,String.format("%s:%s", restResult.getMessage(), restResult.getData()));
+                ExecuteStatus.success(entity, String.format("%s:%s", restResult.getMessage(), restResult.getData()));
             } else {
                 ExecuteStatus.failure(entity, restResult.getMessage());
             }
@@ -133,7 +133,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
      * 获取站内信消息渠道发送者
      *
      * @param channel 渠道类型
-     *
      * @return 站内信消息渠道发送者
      */
     private SiteMessageChannelSender getSiteMessageChannelSender(String channel) {
@@ -170,7 +169,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
      * 通过站内信消息 body 构造站内信消息并保存信息
      *
      * @param body 站内信消息 body
-     *
      * @return 邮件消息流
      */
     private Stream<SiteMessage> createSiteMessageEntity(SiteMessageBody body) {
@@ -210,11 +208,10 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
      * 创建站内信消息实体
      *
      * @param body 站内信消息 body
-     *
      * @return 站内信消息实体
      */
     private SiteMessage ofEntity(SiteMessageBody body) {
-        SiteMessage entity = Casts.of(body, SiteMessage.class,"attachmentList");
+        SiteMessage entity = Casts.of(body, SiteMessage.class, "attachmentList");
 
         entity.setMaxRetryCount(maxRetryCount);
 

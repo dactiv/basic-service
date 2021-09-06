@@ -108,7 +108,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      * 清除所有缓存
      *
      * @param userDetails 用户信息
-     * @param principal 当前登陆账户
+     * @param principal   当前登陆账户
      */
     private void clearAllCache(SecurityUserDetails userDetails, String principal) {
 
@@ -152,7 +152,6 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      * 构造未授权 reset 结果集，目的为乱搞一通，让别人不知道这个是什么。
      *
      * @param request 请求对象
-     *
      * @return rest 结果集
      */
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
@@ -212,7 +211,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     /**
      * 验证码数据处理
      *
-     * @param result reset 结果集
+     * @param result  reset 结果集
      * @param request http 请求信息
      */
     private void postCaptchaData(RestResult<Map<String, Object>> result, HttpServletRequest request) {
@@ -221,7 +220,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
 
         if (number < allowableFailureNumber) {
-            return ;
+            return;
         }
 
         // 获取设备唯一识别

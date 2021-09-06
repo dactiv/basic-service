@@ -60,6 +60,7 @@ public class MemberUserConsole {
 
     /**
      * 查找会员用户信息
+     *
      * @param request http 请求
      * @return 会员用户信息集合
      */
@@ -111,7 +112,6 @@ public class MemberUserConsole {
      *
      * @param securityContext 安全上下文
      * @param newUsername     新登录账户
-     *
      * @return 消息结果集
      */
     @PostMapping("updateUsername")

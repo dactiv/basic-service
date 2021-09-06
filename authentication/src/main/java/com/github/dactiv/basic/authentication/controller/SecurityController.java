@@ -138,7 +138,6 @@ public class SecurityController {
      * 登陆成功后跳转的连接，直接获取当前用户
      *
      * @param securityContext 安全上下文
-     *
      * @return 当前用户
      */
     @GetMapping("getPrincipal")

@@ -298,7 +298,6 @@ public class ConfigController {
      * 获取私有 token 的 redis 桶
      *
      * @param token token 值
-     *
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getPrivateTokenBucket(String token) {
@@ -309,7 +308,6 @@ public class ConfigController {
      * 获取访问 token 的 redis 桶
      *
      * @param token token 值
-     *
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getAccessTokeBucket(String token) {
@@ -363,7 +361,7 @@ public class ConfigController {
 
         discoveryEnumerateResourceService.syncEnumerate();
 
-        return RestResult.ofSuccess("同步系统枚举成功",discoveryEnumerateResourceService.getServiceEnumerate());
+        return RestResult.ofSuccess("同步系统枚举成功", discoveryEnumerateResourceService.getServiceEnumerate());
 
     }
 
@@ -375,9 +373,9 @@ public class ConfigController {
     @GetMapping("environment")
     @PreAuthorize("hasAuthority('perms[environment:*]')")
     @Plugin(name = "环境变量查询", id = "environment", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = "Console")
-    public Map<String,Object> environment() {
+    public Map<String, Object> environment() {
 
-        Map<String,Object> result = new LinkedHashMap<>();
+        Map<String, Object> result = new LinkedHashMap<>();
 
         List<String> services = discoveryClient.getServices();
 

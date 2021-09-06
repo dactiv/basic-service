@@ -86,7 +86,6 @@ public class AccessCryptoService implements InitializingBean {
      * 获取访问加解密
      *
      * @param id 访问加解密 ID
-     *
      * @return 字典实体
      */
     public ConfigAccessCrypto getAccessCrypto(Integer id) {
@@ -107,7 +106,6 @@ public class AccessCryptoService implements InitializingBean {
      * 获取访问加解密断言扩展集合
      *
      * @param accessCryptoId 访问加解 id
-     *
      * @return 访问加解密断言扩展集合
      */
     public List<ConfigAccessCryptoPredicate> getConfigAccessCryptoPredicatesByAccessCryptoId(Integer accessCryptoId) {
@@ -124,7 +122,6 @@ public class AccessCryptoService implements InitializingBean {
      * 查找访问加解密
      *
      * @param wrapper 包装器
-     *
      * @return 访问加解密集合
      */
     public List<ConfigAccessCrypto> findAccessCryptoList(Wrapper<ConfigAccessCrypto> wrapper) {
@@ -136,7 +133,6 @@ public class AccessCryptoService implements InitializingBean {
      *
      * @param wrapper        包装器
      * @param loadPredicates 是否加载访问加解密断言
-     *
      * @return 访问加解密集合
      */
     public List<ConfigAccessCrypto> findAccessCryptoList(Wrapper<ConfigAccessCrypto> wrapper, boolean loadPredicates) {
@@ -153,8 +149,7 @@ public class AccessCryptoService implements InitializingBean {
      * 查找访问加解密分页信息
      *
      * @param pageRequest 分页请求
-     * @param wrapper  包装器
-     *
+     * @param wrapper     包装器
      * @return 分页实体
      */
     public Page<ConfigAccessCrypto> findAccessCryptoPage(PageRequest pageRequest, Wrapper<ConfigAccessCrypto> wrapper) {
@@ -265,11 +260,10 @@ public class AccessCryptoService implements InitializingBean {
                 .collect(Collectors.toList());
 
 
-
         booleanRFuture.onComplete((success, throwable) -> {
 
             if (!success) {
-                return ;
+                return;
             }
 
             accessCryptos.addAllAsync(result);

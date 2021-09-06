@@ -20,7 +20,6 @@ import java.util.Date;
  * <p>Table: tb_batch_message - 批量消息</p>
  *
  * @author maurice
- *
  * @since 2021-08-22 04:45:14
  */
 @Data
@@ -31,14 +30,14 @@ import java.util.Date;
 public class BatchMessage {
 
     /**
-    * 主键
-    */
+     * 主键
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     /**
-    * 创建时间
-    */
+     * 创建时间
+     */
     private Date creationTime = new Date();
 
     /**

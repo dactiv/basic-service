@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.controller;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
-import com.github.dactiv.basic.authentication.service.DiscoveryPluginResourceService;
+import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
@@ -44,16 +44,15 @@ public class ResourceController {
     private AuthorizationService authorizationService;
 
     @Autowired
-    private DiscoveryPluginResourceService discoveryPluginResourceService;
+    private MybatisPlusQueryGenerator<Resource> queryGenerator;
 
     @Autowired
-    private MybatisPlusQueryGenerator<Resource> queryGenerator;
+    private PluginResourceService pluginResourceService;
 
     /**
      * 查找资源
      *
      * @param request http 请求
-     *
      * @return 资源实体集合
      */
     @PostMapping("find")
@@ -74,7 +73,6 @@ public class ResourceController {
      * 获取资源
      *
      * @param id 主键值
-     *
      * @return 资源实体
      */
     @GetMapping("get")
@@ -88,7 +86,6 @@ public class ResourceController {
      * 获取用户关联资源实体集合
      *
      * @param userId 用户主键值
-     *
      * @return 资源实体集合
      */
     @PreAuthorize("isAuthenticated()")
@@ -105,7 +102,6 @@ public class ResourceController {
      *
      * @param securityContext 安全上下文
      * @param mergeTree       是否合并树形 true，是 否则 false
-     *
      * @return 资源实体集合
      */
     @PreAuthorize("isAuthenticated()")
@@ -133,7 +129,6 @@ public class ResourceController {
      * 获取组资源集合
      *
      * @param groupId 组 id
-     *
      * @return 资源实体集合
      */
     @GetMapping("getGroupResource")
@@ -154,8 +149,7 @@ public class ResourceController {
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
     public RestResult<?> syncPluginResource() throws NacosException {
 
-        discoveryPluginResourceService.cleanCurrentServices();
-        discoveryPluginResourceService.syncPluginResource();
+        pluginResourceService.resubscribeAllService();
 
         return RestResult.of("同步数据完成");
     }

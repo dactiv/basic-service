@@ -177,7 +177,6 @@ public class MemberUserDetailsService implements UserDetailsService {
             }
 
 
-
         }
     }
 
@@ -186,7 +185,6 @@ public class MemberUserDetailsService implements UserDetailsService {
      *
      * @param token       认证 token
      * @param userDetails 用户信息
-     *
      * @return 新的会员用户
      */
     private MemberUser createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails) {
@@ -199,7 +197,6 @@ public class MemberUserDetailsService implements UserDetailsService {
      * @param token       认证 token
      * @param userDetails 用户信息
      * @param phone       手机号码
-     *
      * @return 新的会员用户
      */
     private MemberUser createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails, String phone) {

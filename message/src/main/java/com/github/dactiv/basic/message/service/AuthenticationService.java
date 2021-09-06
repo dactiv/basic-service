@@ -31,9 +31,8 @@ public interface AuthenticationService {
      * 查找用户信息
      *
      * @param filter 过滤条件
-     *
      * @return 用户信息集合
      */
     @PostMapping("member/user/find")
-    List<Map<String, Object>> findMemberUser(@RequestBody Map<String,Object> filter);
+    List<Map<String, Object>> findMemberUser(@RequestBody Map<String, Object> filter);
 }

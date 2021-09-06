@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.propertyeditors.StringArrayPropertyEditor;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
@@ -83,7 +84,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
     }
 
     @Override
-    public void afterPropertiesSet()  {
+    public void afterPropertiesSet() {
         syncRedisAccessCryptoList();
     }
 
@@ -102,7 +103,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
                     List<String> predicateString = accessCrypto
                             .getPredicates()
                             .stream()
-                            .map(p -> MessageFormat.format("name = {0}, value={1} ",p.getName(), p.getValue()))
+                            .map(p -> MessageFormat.format("name = {0}, value={1} ", p.getName(), p.getValue()))
                             .collect(Collectors.toList());
 
                     LOGGER.info(
@@ -110,7 +111,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
                             accessCrypto.getName(),
                             accessCrypto.getType(),
                             accessCrypto.getValue(),
-                            StringUtils.join(predicateString, ",")
+                            StringUtils.join(predicateString, StringArrayPropertyEditor.DEFAULT_SEPARATOR)
                     );
                 }
 

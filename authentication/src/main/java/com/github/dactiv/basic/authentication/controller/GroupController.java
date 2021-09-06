@@ -60,8 +60,7 @@ public class GroupController {
     /**
      * 获取用户的用户组集合
      *
-     * @param userId    当前用户
-     *
+     * @param userId 当前用户
      * @return 用户组实体集合
      */
     @GetMapping("getConsoleUserGroups")
@@ -78,7 +77,6 @@ public class GroupController {
      * 获取用户组
      *
      * @param id 主键值
-     *
      * @return 用户组实体
      */
     @GetMapping("get")
@@ -93,7 +91,6 @@ public class GroupController {
      *
      * @param entity      用户组实体
      * @param resourceIds 资源ids
-     *
      * @return 消息结果集
      */
     @PostMapping("save")
@@ -111,7 +108,6 @@ public class GroupController {
      * 删除用户组
      *
      * @param ids 主键值集合
-     *
      * @return 消息结果集
      */
     @PostMapping("delete")
@@ -128,7 +124,6 @@ public class GroupController {
      * 判断 spring security role 的 authority 值是否唯一
      *
      * @param authority spring security role 的 authority 值
-     *
      * @return true 是，否则 false
      */
     @GetMapping("isAuthorityUnique")
@@ -143,7 +138,6 @@ public class GroupController {
      * 判断组名称是否唯一
      *
      * @param name 组名称
-     *
      * @return true 唯一，否则 false
      */
     @GetMapping("isNameUnique")

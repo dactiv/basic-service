@@ -18,8 +18,7 @@ public interface FileManagerService {
      * 获取文件
      *
      * @param bucketName 同信息
-     * @param filename 文件名称
-     *
+     * @param filename   文件名称
      * @return 字节流
      */
     @GetMapping("get/{" + DEFAULT_BUCKET_NAME + "}/{filename}")

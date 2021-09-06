@@ -24,7 +24,6 @@ public interface CaptchaService {
      * 验证请求
      *
      * @param request http servlet 请求
-     *
      * @return 验证结果集
      */
     RestResult<Map<String, Object>> verify(HttpServletRequest request);

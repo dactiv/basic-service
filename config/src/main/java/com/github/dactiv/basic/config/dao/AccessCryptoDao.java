@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_access_crypto - 访问加解密</p>
  *
- * @see ConfigAccessCrypto
- *
  * @author maurice
- *
+ * @see ConfigAccessCrypto
  * @since 2021-08-22 04:45:14
  */
 @Mapper

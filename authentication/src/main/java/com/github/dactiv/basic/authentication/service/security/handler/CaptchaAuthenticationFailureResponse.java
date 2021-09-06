@@ -98,7 +98,6 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
      * 是否需要验证码认证
      *
      * @param request 请求信息
-     *
      * @return true 是，否则 false
      */
     public boolean isCaptchaAuthentication(HttpServletRequest request) {
@@ -124,7 +123,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
      * 设置允许认证失败次数
      *
      * @param request 请求信息
-     * @param number 错误次数
+     * @param number  错误次数
      */
     private void setAllowableFailureNumber(HttpServletRequest request, Integer number) {
         String identified = SpringMvcUtils.getDeviceIdentified(request);
@@ -160,7 +159,6 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
      * 获取允许认证失败次数 key 名称
      *
      * @param identified 唯一识别
-     *
      * @return 允许认证失败次数 key 名称
      */
     private String getAllowableFailureNumberKey(String identified) {
