@@ -1,26 +1,21 @@
 package com.github.dactiv.basic.authentication.service.plugin;
 
-import com.alibaba.cloud.nacos.NacosDiscoveryProperties;
-import com.alibaba.cloud.nacos.NacosServiceManager;
-import com.alibaba.cloud.nacos.registry.NacosAutoServiceRegistration;
-import com.alibaba.nacos.api.exception.NacosException;
-import com.alibaba.nacos.api.naming.NamingMaintainService;
-import com.alibaba.nacos.api.naming.NamingService;
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.alibaba.nacos.api.naming.pojo.ListView;
-import com.alibaba.nacos.api.naming.pojo.Service;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
+import com.github.dactiv.framework.nacos.event.NacosService;
+import com.github.dactiv.framework.nacos.event.NacosServiceSubscribeEvent;
+import com.github.dactiv.framework.nacos.event.NacosSpringEventManager;
 import com.github.dactiv.framework.spring.security.concurrent.LockType;
 import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
@@ -28,19 +23,16 @@ import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.BooleanUtils;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
-import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.client.discovery.event.InstanceRegisteredEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -52,18 +44,12 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @Transactional(rollbackFor = Exception.class)
-public class PluginResourceService implements DisposableBean {
+public class PluginResourceService {
 
     /**
      * 默认获取应用信息的后缀 uri
      */
     private static final String DEFAULT_PLUGIN_INFO_URL = "/actuator/plugin";
-
-    /**
-     * 默认是否插件字段名称
-     */
-    public static final String DEFAULT_PLUGIN_NAME = "plugin";
-
     /**
      * 默认版本号字段名称
      */
@@ -80,139 +66,18 @@ public class PluginResourceService implements DisposableBean {
     public static final String DEFAULT_GROUP_ID_NAME = "group-id";
 
     @Autowired
-    private NacosDiscoveryProperties discoveryProperties;
-
-    @Autowired
-    private NacosServiceManager nacosServiceManager;
-
-    @Autowired
     private RestTemplate restTemplate;
+
+    @Autowired
+    private NacosSpringEventManager nacosSpringEventManager;
 
     @Autowired
     private AuthorizationService authorizationService;
 
     @Autowired
-    private PluginProperties properties;
-
-    private final Map<String, List<ServiceEventListener>> listenerCache = new LinkedHashMap<>();
+    private AuthenticationExtendProperties properties;
 
     private final Map<String, List<PluginInstance>> instanceCache = new LinkedHashMap<>();
-
-    public PluginProperties getProperties() {
-        return properties;
-    }
-
-    /**
-     * 取消订阅超时服务插件
-     *
-     * @throws NacosException 执行 nacos 操作出错时抛出
-     */
-    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exceptionMessage = "取消订阅服务遇到并发，不执行重试操作", type = LockType.Lock)
-    @NacosCronScheduled(cron = "${authentication.plugin.unsubscribe-cron:0 0/5 * * * ?}", name = "取消订阅超时服务插件")
-    public void unsubscribeAllExpiredService() throws NacosException {
-
-        NamingService namingService = nacosServiceManager.getNamingService(
-                discoveryProperties.getNacosProperties()
-        );
-
-        List<ServiceEventListener> listeners = listenerCache
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
-        for (ServiceEventListener sel : listeners) {
-
-            if (!sel.isExpired()) {
-                continue;
-            }
-
-            namingService.unsubscribe(sel.getService().getName(), sel.getService().getGroupName(), sel);
-
-            List<ServiceEventListener> list = listenerCache.get(sel.getService().getGroupName());
-
-            list.remove(sel);
-        }
-
-    }
-
-    /**
-     * 订阅所有服务插件
-     *
-     * @throws NacosException 执行 nacos 操作出错时抛出
-     */
-    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exceptionMessage = "订阅服务遇到并发，不执行重试操作", type = LockType.Lock)
-    @NacosCronScheduled(cron = "${authentication.plugin.subscribe-cron:0 0/3 * * * ?}", name = "订阅所有服务插件")
-    public void subscribeAllService() throws NacosException {
-
-        NamingService namingService = nacosServiceManager.getNamingService(
-                discoveryProperties.getNacosProperties()
-        );
-
-        NamingMaintainService namingMaintainService = nacosServiceManager.getNamingMaintainService(
-                discoveryProperties.getNacosProperties()
-        );
-
-        ListView<String> view = namingService.getServicesOfServer(1, Integer.MAX_VALUE);
-
-        for (String s : view.getData()) {
-
-            Service service = namingMaintainService.queryService(s);
-
-            List<Instance> instanceList = namingService.getAllInstances(service.getName(), service.getGroupName());
-
-            List<Instance> pluginList = instanceList
-                    .stream()
-                    .filter(i -> i.containsMetadata(DEFAULT_PLUGIN_NAME))
-                    .collect(Collectors.toList());
-
-            if (pluginList.isEmpty()) {
-                continue;
-            }
-
-            if (!pluginList.stream().allMatch(i -> BooleanUtils.toBoolean(i.getMetadata().get(DEFAULT_PLUGIN_NAME)))) {
-                if (log.isDebugEnabled()) {
-                    log.debug("[" + s + "] 服务不是插件服务，不做订阅。");
-                }
-                continue;
-            }
-
-            List<ServiceEventListener> listeners = listenerCache.computeIfAbsent(
-                    service.getGroupName(),
-                    k -> new LinkedList<>()
-            );
-
-            Optional<ServiceEventListener> optional = listeners
-                    .stream()
-                    .filter(l -> l.getService().getName().equals(s))
-                    .findFirst();
-
-            if (optional.isPresent()) {
-
-                optional.get().setCreationTime(new Date());
-
-                if (log.isDebugEnabled()) {
-                    log.debug("[" + s + "] 服务已订阅，更新创建时间。");
-                }
-
-                continue;
-            }
-
-            ServiceEventListener listener = ServiceEventListener.of(
-                    properties.getExpirationTime(),
-                    service,
-                    this
-            );
-
-            listeners.add(listener);
-
-            log.info("订阅组为 [" + service.getGroupName() + "] 的 [" + s + "] 服务");
-
-            namingService.subscribe(service.getName(), service.getGroupName(), listener);
-            List<Instance> instances = namingService.getAllInstances(service.getName(), service.getGroupName());
-            syncPluginResource(service.getGroupName(), service.getName(), instances);
-        }
-    }
 
     /**
      * 获取实例 info
@@ -235,10 +100,25 @@ public class PluginResourceService implements DisposableBean {
         return null;
     }
 
+    /**
+     * 匹配最大版本实例
+     *
+     * @param target 目标实例
+     * @param source 原实例
+     *
+     * @return 0 相等，小于0 小于，大于0 大于
+     */
     private int comparingInstanceVersion(Instance target, Instance source) {
         return getInstanceVersion(target).compareTo(getInstanceVersion(source));
     }
 
+    /**
+     * 获取实例的版本信息
+     *
+     * @param instance 实例
+     *
+     * @return 版本信息
+     */
     public Version getInstanceVersion(Instance instance) {
 
         String version = instance.getMetadata().get(DEFAULT_VERSION_NAME);
@@ -348,7 +228,7 @@ public class PluginResourceService implements DisposableBean {
         authorizationService.deleteAuthorizationCache();
 
         Group group = authorizationService.getGroup(properties.getAdminGroupId());
-
+        // FIXME 这个要优化一下，线对比哪个是新的。在保存新的，不要每次都全量更新一次。
         // 如果配置了管理员组 线删除同步一次管理员資源
         if (Objects.isNull(group)) {
             return;
@@ -582,40 +462,41 @@ public class PluginResourceService implements DisposableBean {
     }
 
     /**
-     * 监听本服务注册完成事件，当注册完成时候，同步所有插件菜单。
+     * 监听 nacos 服务被订阅事件，自动同步插件資源
      *
-     * @param o 事件原型
-     * @throws NacosException 执行 nacos 操作出错时抛出
+     * @param event 事件原型
      */
     @EventListener
-    public void onInstanceRegisteredEvent(InstanceRegisteredEvent<NacosAutoServiceRegistration> o) throws NacosException {
-        subscribeAllService();
+    public void onNacosServiceSubscribeEvent(NacosServiceSubscribeEvent event) {
+        NacosService nacosService = Casts.cast(event.getSource());
+        syncPluginResource(nacosService.getGroupName(), nacosService.getName(), nacosService.getInstances());
+    }
+
+    /**
+     * 监听nasoc 服务变化事件
+     *
+     * @param event 事件原型
+     */
+    @EventListener
+    public void onNacosInstancesChangeEvent(NacosInstancesChangeEvent event) {
+        NacosService nacosService = Casts.cast(event.getSource());
+
+        if(CollectionUtils.isEmpty(nacosService.getInstances())) {
+            disabledApplicationResource(nacosService.getName());
+            return ;
+        }
+
+        syncPluginResource(nacosService.getGroupName(), nacosService.getName(), nacosService.getInstances());
     }
 
     /**
      * 重新订阅所有服务
      */
     @Concurrent(value = "subscribe_or_unsubscribe:plugin", exceptionMessage = "取消订阅服务遇到并发，不执行重试操作", type = LockType.Lock)
-    public void resubscribeAllService() throws NacosException {
-        listenerCache
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .forEach(v -> v.setExpirationTime(new TimeProperties(0, TimeUnit.MILLISECONDS)));
-
-        unsubscribeAllExpiredService();
-        subscribeAllService();
+    public void resubscribeAllService() {
+        nacosSpringEventManager.expiredAllListener();
+        nacosSpringEventManager.scanThenUnsubscribeService();
+        nacosSpringEventManager.scanThenSubscribeService();
     }
 
-    @Override
-    public void destroy() throws Exception {
-        log.info("解除所有服务监听");
-        listenerCache
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .forEach(v -> v.setExpirationTime(new TimeProperties(0, TimeUnit.MILLISECONDS)));
-
-        unsubscribeAllExpiredService();
-    }
 }

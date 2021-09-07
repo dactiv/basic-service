@@ -12,6 +12,8 @@ spring:
   cloud:
     nacos:
       discovery:
+        event:
+          enabled: true
         server-addr: localhost:8848
         metadata:
           plugin: "true"
