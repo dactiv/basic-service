@@ -67,6 +67,7 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
         } catch (Exception e) {
             log.warn("获取服务 [" + nacosService.getName() + "] 的枚举内容失败");
             exceptionServices.add(nacosService.getName());
+            return false;
         }
 
         return true;

@@ -77,13 +77,7 @@ public class PluginResourceService {
         String http = StringUtils.prependIfMissing(instance.toInetAddr(), "http://");
         String url = StringUtils.appendIfMissing(http, DEFAULT_PLUGIN_INFO_URL);
 
-        try {
-            return restTemplate.getForObject(url, Map.class);
-        } catch (Exception e) {
-            log.warn("通过 url [" + url + "] 获取服务 [" + instance.getServiceName() + "] 的插件信息出现异常", e);
-        }
-
-        return null;
+        return restTemplate.getForObject(url, Map.class);
     }
 
     /**
@@ -487,7 +481,11 @@ public class PluginResourceService {
     /**
      * 重新订阅所有服务
      */
-    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exceptionMessage = "取消订阅服务遇到并发，不执行重试操作", type = LockType.Lock)
+    @Concurrent(
+            value = "subscribe_or_unsubscribe:plugin",
+            exceptionMessage = "正在执行，请稍后在试。。",
+            type = LockType.Lock
+    )
     public void resubscribeAllService() {
         nacosSpringEventManager.expiredAllListener();
         nacosSpringEventManager.scanThenUnsubscribeService();

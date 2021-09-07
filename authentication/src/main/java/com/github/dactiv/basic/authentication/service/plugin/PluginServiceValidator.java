@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.service.plugin;
 
-import com.alibaba.nacos.api.config.annotation.NacosValue;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.common.utils.MapUtils;
 import com.github.dactiv.framework.nacos.event.NacosService;
@@ -64,10 +63,11 @@ public class PluginServiceValidator implements NacosServiceListenerValidator {
             if (!data.containsKey(PluginEndpoint.DEFAULT_PLUGIN_KEY_NAME)) {
                 return false;
             }
-            exceptionServices.clear();
+
         } catch (Exception e) {
             log.warn("获取服务 [" + nacosService.getName() + "] 的插件内容失败");
             exceptionServices.add(nacosService.getName());
+            return false;
         }
 
         return true;
