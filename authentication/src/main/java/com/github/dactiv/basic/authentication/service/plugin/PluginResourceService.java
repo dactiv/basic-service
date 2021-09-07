@@ -50,20 +50,6 @@ public class PluginResourceService {
      * 默认获取应用信息的后缀 uri
      */
     private static final String DEFAULT_PLUGIN_INFO_URL = "/actuator/plugin";
-    /**
-     * 默认版本号字段名称
-     */
-    public static final String DEFAULT_VERSION_NAME = "version";
-
-    /**
-     * 默认插件字段名称
-     */
-    public static final String DEFAULT_ARTIFACT_ID_NAME = "artifact-id";
-
-    /**
-     * 默认组字段名称
-     */
-    public static final String DEFAULT_GROUP_ID_NAME = "group-id";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -121,9 +107,9 @@ public class PluginResourceService {
      */
     public Version getInstanceVersion(Instance instance) {
 
-        String version = instance.getMetadata().get(DEFAULT_VERSION_NAME);
-        String groupId = instance.getMetadata().get(DEFAULT_GROUP_ID_NAME);
-        String artifactId = instance.getMetadata().get(DEFAULT_ARTIFACT_ID_NAME);
+        String version = instance.getMetadata().get(PluginInfo.DEFAULT_VERSION_NAME);
+        String groupId = instance.getMetadata().get(PluginInfo.DEFAULT_GROUP_ID_NAME);
+        String artifactId = instance.getMetadata().get(PluginInfo.DEFAULT_ARTIFACT_ID_NAME);
 
         return VersionUtil.parseVersion(version, groupId, artifactId);
     }
@@ -143,14 +129,12 @@ public class PluginResourceService {
         }
 
         Instance instance = optional.get();
-
+        // 获取实例版本信息
         Version version = getInstanceVersion(instance);
-        Map<String, Object> info = getInstanceInfo(instance);
 
         PluginInstance pluginInstance = Casts.of(instance, PluginInstance.class);
 
         pluginInstance.setVersion(version);
-        pluginInstance.setInfo(info);
 
         List<PluginInstance> cache = instanceCache.computeIfAbsent(groupName, k -> new LinkedList<>());
 
@@ -158,7 +142,7 @@ public class PluginResourceService {
                 .stream()
                 .filter(c -> c.getServiceName().equals(pluginInstance.getServiceName()))
                 .findFirst();
-
+        // 判断一下当前缓存是否存在同样的实例，如果存在，判断缓存的实例版本和当前的实例版本，如果当前实例版本较大，在覆盖一次資源内容
         if (exist.isPresent()) {
 
             PluginInstance existData = exist.get();
@@ -169,6 +153,9 @@ public class PluginResourceService {
 
             cache.remove(existData);
         }
+
+        Map<String, Object> info = getInstanceInfo(instance);
+        pluginInstance.setInfo(info);
 
         cache.add(pluginInstance);
 
@@ -188,7 +175,7 @@ public class PluginResourceService {
         }
 
         // 应用名称
-        String applicationName = instance.getMetadata().get(PluginResourceService.DEFAULT_ARTIFACT_ID_NAME);
+        String applicationName = instance.getMetadata().get(PluginInfo.DEFAULT_ARTIFACT_ID_NAME);
 
         if (log.isDebugEnabled()) {
             log.debug("开始绑定[" + applicationName + "]资源信息，当前版本为:" + instance.getVersion());
@@ -422,7 +409,7 @@ public class PluginResourceService {
         }
 
         if (StringUtils.isEmpty(target.getApplicationName())) {
-            target.setApplicationName(instance.getMetadata().get(PluginResourceService.DEFAULT_ARTIFACT_ID_NAME));
+            target.setApplicationName(instance.getMetadata().get(PluginInfo.DEFAULT_ARTIFACT_ID_NAME));
         }
 
         if (instance.getVersion() != null) {

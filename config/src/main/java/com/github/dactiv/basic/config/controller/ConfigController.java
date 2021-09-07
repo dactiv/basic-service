@@ -8,7 +8,7 @@ import com.github.dactiv.basic.config.entity.DataDictionary;
 import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
-import com.github.dactiv.basic.config.service.DiscoveryEnumerateResourceService;
+import com.github.dactiv.basic.config.enumerate.EnumerateResourceService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
@@ -63,7 +63,7 @@ public class ConfigController {
     private AccessCryptoService accessCryptoService;
 
     @Autowired
-    private DiscoveryEnumerateResourceService discoveryEnumerateResourceService;
+    private EnumerateResourceService enumerateResourceService;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -334,7 +334,7 @@ public class ConfigController {
     @GetMapping("getServiceEnumerate")
     public Map<String, Object> getServiceEnumerate(@RequestParam String service,
                                                    @RequestParam String enumerateName) {
-        return discoveryEnumerateResourceService.getServiceEnumerate(service, enumerateName);
+        return enumerateResourceService.getServiceEnumerate(service, enumerateName);
     }
 
     /**
@@ -346,7 +346,7 @@ public class ConfigController {
     @PreAuthorize("hasAuthority('perms[enumerate:*]')")
     @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = "Console")
     public Map<String, Map<String, Map<String, Object>>> enumerate() {
-        return discoveryEnumerateResourceService.getServiceEnumerate();
+        return enumerateResourceService.getServiceEnumerate();
     }
 
     /**
@@ -359,9 +359,9 @@ public class ConfigController {
     @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
     public RestResult<Map<String, Map<String, Map<String, Object>>>> syncEnumerate() {
 
-        discoveryEnumerateResourceService.syncEnumerate();
+        enumerateResourceService.syncEnumerate();
 
-        return RestResult.ofSuccess("同步系统枚举成功", discoveryEnumerateResourceService.getServiceEnumerate());
+        return RestResult.ofSuccess("同步系统枚举成功", enumerateResourceService.getServiceEnumerate());
 
     }
 
