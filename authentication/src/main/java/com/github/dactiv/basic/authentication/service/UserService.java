@@ -753,7 +753,7 @@ public class UserService implements InitializingBean {
     /**
      * 更新匿名用户密码
      */
-    @NacosCronScheduled(cron = "${authentication.anonymous-user.update-password-cron-expression:0 0/30 * * * ?}", name = "更新匿名用户密码")
+    @NacosCronScheduled(cron = "${authentication.anonymous-user.update-password-cron:0 0/30 * * * ?}", name = "更新匿名用户密码")
     public void updateAnonymousUserPassword() {
 
         String password = DigestUtils.md5DigestAsHex(String.valueOf(System.currentTimeMillis()).getBytes());

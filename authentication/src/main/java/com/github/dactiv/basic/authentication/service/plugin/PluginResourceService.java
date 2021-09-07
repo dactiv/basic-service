@@ -72,7 +72,7 @@ public class PluginResourceService {
      * @return 实例信息
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getInstanceInfo(Instance instance) {
+    public Map<String, Object> getInstanceInfo(Instance instance) {
 
         String http = StringUtils.prependIfMissing(instance.toInetAddr(), "http://");
         String url = StringUtils.appendIfMissing(http, DEFAULT_PLUGIN_INFO_URL);
@@ -94,7 +94,7 @@ public class PluginResourceService {
      *
      * @return 0 相等，小于0 小于，大于0 大于
      */
-    private int comparingInstanceVersion(Instance target, Instance source) {
+    public int comparingInstanceVersion(Instance target, Instance source) {
         return getInstanceVersion(target).compareTo(getInstanceVersion(source));
     }
 
@@ -133,7 +133,7 @@ public class PluginResourceService {
         Version version = getInstanceVersion(instance);
 
         PluginInstance pluginInstance = Casts.of(instance, PluginInstance.class);
-
+        pluginInstance.setServiceName(serviceName);
         pluginInstance.setVersion(version);
 
         List<PluginInstance> cache = instanceCache.computeIfAbsent(groupName, k -> new LinkedList<>());
@@ -175,7 +175,7 @@ public class PluginResourceService {
         }
 
         // 应用名称
-        String applicationName = instance.getMetadata().get(PluginInfo.DEFAULT_ARTIFACT_ID_NAME);
+        String applicationName = instance.getServiceName();
 
         if (log.isDebugEnabled()) {
             log.debug("开始绑定[" + applicationName + "]资源信息，当前版本为:" + instance.getVersion());
@@ -225,7 +225,7 @@ public class PluginResourceService {
         // 获取后台新資源 id
         List<Integer> newResourceIds = Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING))
                 .map(StringUtils::trim)
-                .flatMap(s -> newResourceList.stream().filter(r -> isControllerResource(r, s)))
+                .flatMap(s -> newResourceList.stream().filter(r -> isAdminResource(r, s)))
                 .map(Resource::getId)
                 .distinct()
                 .collect(Collectors.toList());
@@ -241,7 +241,15 @@ public class PluginResourceService {
         authorizationService.saveGroup(group, newGroupResourceIds);
     }
 
-    private boolean isControllerResource(Resource r, String s) {
+    /**
+     * 判断是否后台資源
+     *
+     * @param r 資源信息
+     * @param s 資源类远
+     *
+     * @return true 是，否则 false
+     */
+    private boolean isAdminResource(Resource r, String s) {
         return r.getSource().equals(s) || Resource.DEFAULT_CONTAIN_SOURCE_VALUES.contains(r.getSource());
     }
 
@@ -409,7 +417,7 @@ public class PluginResourceService {
         }
 
         if (StringUtils.isEmpty(target.getApplicationName())) {
-            target.setApplicationName(instance.getMetadata().get(PluginInfo.DEFAULT_ARTIFACT_ID_NAME));
+            target.setApplicationName(instance.getServiceName());
         }
 
         if (instance.getVersion() != null) {

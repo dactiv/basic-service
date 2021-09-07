@@ -1,14 +1,20 @@
 package com.github.dactiv.basic.config.enumerate;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
+import com.alibaba.nacos.common.utils.MapUtils;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceListenerValidator;
+import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import com.github.dactiv.framework.spring.web.endpoint.EnumerateEndpoint;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.lang3.BooleanUtils;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
 
+import java.util.LinkedList;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Map;
+import java.util.Optional;
 
 /**
  * 插件服务校验
@@ -19,11 +25,10 @@ import java.util.stream.Collectors;
 @Component
 public class EnumerateServiceValidator implements NacosServiceListenerValidator {
 
-    /**
-     * 默认是否插件字段名称
-     */
-    public static final String DEFAULT_PLUGIN_NAME = "plugin";
+    @Autowired
+    private EnumerateResourceService enumerateResourceService;
 
+    private final List<String> exceptionServices = new LinkedList<>();
 
     @Override
     public boolean isSupport(NacosService nacosService) {
@@ -32,16 +37,46 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
 
     @Override
     public boolean subscribeValid(NacosService nacosService) {
-        List<Instance> pluginList = nacosService
-                .getInstances()
-                .stream()
-                .filter(i -> i.containsMetadata(DEFAULT_PLUGIN_NAME))
-                .collect(Collectors.toList());
 
-        if (pluginList.isEmpty()) {
+        if (exceptionServices.contains(nacosService.getName())) {
             return false;
         }
 
+        Optional<Instance> optional = nacosService
+                .getInstances()
+                .stream()
+                .max((target,source) -> enumerateResourceService.comparingInstanceVersion(target, source));
+
+        if (optional.isEmpty()) {
+            return false;
+        }
+
+        try {
+
+            Instance instance = optional.get();
+
+            Map<String, Object> data = enumerateResourceService.getInstanceEnumerate(instance);
+
+            if (MapUtils.isEmpty(data)) {
+                return false;
+            }
+
+            if (!data.containsKey(EnumerateEndpoint.DEFAULT_ENUM_KEY_NAME)) {
+                return false;
+            }
+        } catch (Exception e) {
+            log.warn("获取服务 [" + nacosService.getName() + "] 的枚举内容失败");
+            exceptionServices.add(nacosService.getName());
+        }
+
         return true;
+    }
+
+    /**
+     * 清除异常服务内容
+     */
+    @NacosCronScheduled(cron = "${enumerate.clear.exception-services-cron:0 0/5 * * * ? }")
+    public void clearExceptionServices() {
+        exceptionServices.clear();
     }
 }

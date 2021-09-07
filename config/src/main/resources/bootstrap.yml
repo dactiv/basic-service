@@ -12,13 +12,9 @@ spring:
   cloud:
     nacos:
       discovery:
+        event:
+          enabled: true
         server-addr: localhost:8848
-        metadata:
-          plugin: "true"
-          version: ${info.version}
-          name: ${info.name}
-          artifact-id: ${info.artifact-id}
-          group-id: ${info.group-id}
       config:
         server-addr: ${spring.cloud.nacos.discovery.server-addr}
         file-extension: yml

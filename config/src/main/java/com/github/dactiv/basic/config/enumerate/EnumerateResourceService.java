@@ -22,10 +22,7 @@ import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * 枚举资源服务
@@ -42,7 +39,7 @@ public class EnumerateResourceService {
     /**
      * 默认获取应用信息的后缀 uri
      */
-    private static final String DEFAULT_ENUMERATE_INFO_URL = "actuator/enumerate";
+    private static final String DEFAULT_ENUMERATE_INFO_URL = "/actuator/enumerate";
 
     @Autowired
     private RestTemplate restTemplate;
@@ -65,7 +62,7 @@ public class EnumerateResourceService {
      *
      * @return 0 相等，小于0 小于，大于0 大于
      */
-    private int comparingInstanceVersion(Instance target, Instance source) {
+    public int comparingInstanceVersion(Instance target, Instance source) {
         return getInstanceVersion(target).compareTo(getInstanceVersion(source));
     }
 
@@ -192,18 +189,12 @@ public class EnumerateResourceService {
      * @return 实例信息
      */
     @SuppressWarnings("unchecked")
-    private Map<String, Object> getInstanceEnumerate(Instance instance) {
+    public Map<String, Object> getInstanceEnumerate(Instance instance) {
 
         String http = StringUtils.prependIfMissing(instance.toInetAddr(), "http://");
         String url = StringUtils.appendIfMissing(http, DEFAULT_ENUMERATE_INFO_URL);
 
-        try {
-            return restTemplate.getForObject(url, Map.class);
-        } catch (Exception e) {
-            log.warn("通过 url [" + url + "] 获取服务 [" + instance.getServiceName() + "] 的插件信息出现异常", e);
-        }
-
-        return null;
+        return restTemplate.getForObject(url, Map.class);
     }
 
     /**
@@ -214,6 +205,7 @@ public class EnumerateResourceService {
     public Map<String, Map<String, Map<String, Object>>> getServiceEnumerate() {
         return data;
     }
+
 
     /**
      * 同步所有枚举資源
