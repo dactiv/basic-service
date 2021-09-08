@@ -6,36 +6,27 @@ import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
-import com.github.dactiv.basic.authentication.service.plugin.PluginInstance;
-import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
 import com.github.dactiv.framework.commons.CacheProperties;
-import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.ServiceInfo;
-import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
-import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
-import java.util.*;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -132,10 +123,7 @@ public class AuthorizationService {
             boolean isNotAnyMatchResourceSource = resourceIds
                     .stream()
                     .map(this::getResource)
-                    .anyMatch(r -> Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING))
-                            .map(StringUtils::trim)
-                            .allMatch(s -> !s.equals(r.getSource())
-                                    && !Resource.DEFAULT_CONTAIN_SOURCE_VALUES.contains(r.getSource())));
+                    .allMatch(r -> !isAdminGroupSource(group, r.getSource()));
 
             if (isNotAnyMatchResourceSource) {
                 throw new ServiceException("当前存在关联着不属于[" + group.getSourceName() + "]的资源");
@@ -184,6 +172,61 @@ public class AuthorizationService {
 
         deleteAuthorizationCache();
 
+    }
+
+    /**
+     * 增加组資源
+     *
+     * @param group 组实体
+     * @param resourceList 新增的資源 id
+     */
+    public void addGroupResource(Group group, List<Resource> resourceList) {
+
+        if (CollectionUtils.isEmpty(resourceList)) {
+            return ;
+        }
+
+        boolean isNotAnyMatchResourceSource = resourceList
+                .stream()
+                .anyMatch(r -> !isAdminGroupSource(group, r.getSource()));
+
+        if (isNotAnyMatchResourceSource) {
+            throw new ServiceException("当前存在关联着不属于 " + group.getSourceName() + " 的资源");
+        }
+
+        groupDao.insertResourceAssociation(
+                group.getId(),
+                resourceList.stream().map(Resource::getId).collect(Collectors.toList())
+        );
+    }
+
+    /**
+     * 获取组来源
+     *
+     * @param group 组
+     *
+     * @return 组来源集合
+     */
+    public List<String> getGroupSources(Group group) {
+        Stream<String> sourceStream = Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING));
+
+        return sourceStream
+                .map(StringUtils::trimToEmpty)
+                .filter(StringUtils::isNotEmpty)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 是否管理后台来源
+     *
+     * @param group 组
+     * @param source 来源
+     * @return true 是，否则 false
+     */
+    public boolean isAdminGroupSource(Group group, String source) {
+        List<String> sources = getGroupSources(group);
+
+        return sources.contains(source) || Resource.DEFAULT_CONTAIN_SOURCE_VALUES.contains(source);
     }
 
     /**
@@ -364,14 +407,15 @@ public class AuthorizationService {
         return resourceDao.selectOne(wrapper);
     }
 
+
     /**
      * 获取资源
      *
      * @param groupId 组主键值
      * @return 资源实体集合
      */
-    public List<Resource> getGroupResources(Integer groupId) {
-        return resourceDao.getGroupResources(groupId);
+    public List<Resource> getGroupResources(Integer groupId, String applicationName) {
+        return resourceDao.getGroupResources(groupId, applicationName);
     }
 
     /**

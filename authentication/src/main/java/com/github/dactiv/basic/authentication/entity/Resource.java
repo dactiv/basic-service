@@ -7,6 +7,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
@@ -204,7 +205,7 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
 
     @JsonIgnore
     public Wrapper<Resource> getUniqueWrapper() {
-        LambdaQueryWrapper<Resource> wrapper = new QueryWrapper<>(this).lambda();
+        LambdaQueryWrapper<Resource> wrapper = Wrappers.lambdaQuery();
 
         if (Objects.nonNull(this.code) && !"".equals(this.code)) {
             wrapper.eq(Resource::getCode, this.code);
@@ -218,7 +219,7 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
         if (Objects.nonNull(this.source) && !"".equals(this.source)) {
             wrapper.eq(Resource::getSource, this.source);
         }
-        if (Objects.nonNull(this.parentId) && !"".equals(this.parentId.toString())) {
+        if (Objects.nonNull(this.parentId)) {
             wrapper.eq(Resource::getParentId, this.parentId);
         }
 

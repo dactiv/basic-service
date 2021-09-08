@@ -35,7 +35,7 @@ public interface ResourceDao extends BaseMapper<Resource> {
      */
     @Select(
             "<script>" +
-            "SELECT DISTINCT " +
+            "SELECT " +
             "   r.id, " +
             "   r.name, " +
             "   r.code, " +
@@ -59,9 +59,13 @@ public interface ResourceDao extends BaseMapper<Resource> {
             "   tb_group g ON gr.group_id = g.id " +
             "WHERE " +
             "   g.id = #{groupId}" +
+            "<if test=\"applicationName != null and !''.equals(applicationName)\"> " +
+            "   and r.application_name = #{applicationName}" +
+            "</if>" +
             "</script>"
     )
-    List<Resource> getGroupResources(@Param("groupId") Integer groupId);
+    List<Resource> getGroupResources(@Param("groupId") Integer groupId,
+                                     @Param("applicationName") String applicationName);
 
     /**
      * 获取系统用户关联(包含组关联，所有资源)资源实体集合

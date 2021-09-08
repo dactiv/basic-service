@@ -2,6 +2,8 @@ package com.github.dactiv.basic.config.enumerate;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.common.utils.MapUtils;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.retry.Retryable;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceListenerValidator;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
@@ -10,6 +12,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.parameters.P;
 import org.springframework.stereotype.Component;
+import org.springframework.web.client.HttpStatusCodeException;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -66,6 +69,15 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
             }
         } catch (Exception e) {
             log.warn("获取服务 [" + nacosService.getName() + "] 的枚举内容失败");
+
+            if (HttpStatusCodeException.class.isAssignableFrom(e.getClass())) {
+                HttpStatusCodeException exception = Casts.cast(e);
+
+                if (Retryable.DEFAULT_SUPPORT_HTTP_STATUS.contains(exception.getStatusCode().value())) {
+                    return false;
+                }
+            }
+
             exceptionServices.add(nacosService.getName());
             return false;
         }

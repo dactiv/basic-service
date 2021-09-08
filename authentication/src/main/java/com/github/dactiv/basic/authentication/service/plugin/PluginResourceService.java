@@ -11,6 +11,7 @@ import com.github.dactiv.basic.authentication.service.security.AuthenticationExt
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
@@ -184,20 +185,25 @@ public class PluginResourceService {
         );
 
         List<PluginInfo> pluginList = createPluginInfoListFromInfo(instance.getInfo());
-
-        // 遍历新资源，更新 serviceInfo 相关的资源信息
+        // 启用資源得到新的資源集合
         List<Resource> newResourceList = pluginList
                 .stream()
                 .flatMap(p -> createResourceStream(p, instance))
                 .flatMap(this::enabledApplicationResource)
+                .collect(Collectors.toList());
+
+        // 通过新的資源集合将 id 去重，得到新的資源 id
+        List<Integer> newResourceIds = newResourceList
+                .stream()
+                .map(Resource::getId)
                 .distinct()
                 .collect(Collectors.toList());
 
-        // 遍历旧资源，将没有的資源删除掉
+        // 将新資源和旧資源进行对比，把旧的資源删除。
         List<Integer> oldResourceIds = oldResourceList
                 .stream()
-                .filter(resource -> !newResourceList.contains(resource))
                 .map(Resource::getId)
+                .filter(id -> !newResourceIds.contains(id))
                 .collect(Collectors.toList());
 
         oldResourceIds.forEach(id -> authorizationService.deleteResource(id));
@@ -209,42 +215,28 @@ public class PluginResourceService {
         authorizationService.deleteAuthorizationCache();
 
         Group group = authorizationService.getGroup(properties.getAdminGroupId());
-        // FIXME 这个要优化一下，线对比哪个是新的。在保存新的，不要每次都全量更新一次。
+
         // 如果配置了管理员组 线删除同步一次管理员資源
         if (Objects.isNull(group)) {
             return;
         }
 
-        List<Resource> groupResources = authorizationService.getGroupResources(group.getId());
-        // 获取后台新資源 id
-        List<Integer> newResourceIds = Arrays.stream(StringUtils.split(group.getSource(), SpringMvcUtils.COMMA_STRING))
-                .map(StringUtils::trim)
-                .flatMap(s -> newResourceList.stream().filter(r -> isAdminResource(r, s)))
+        List<Resource> groupResources = authorizationService.getGroupResources(group.getId(), applicationName);
+        // 获取当前组对该应用持有的的資源 id
+        List<Integer> currentGroupResourceIds = groupResources
+                .stream()
                 .map(Resource::getId)
                 .distinct()
                 .collect(Collectors.toList());
-        // 删除旧資源的 id
-        List<Integer> newGroupResourceIds = groupResources
+        // 根据组来源去遍历所有新資源里匹配的记录，并去除当前组里存在的資源，得到新的组資源 id 集合
+        List<Resource> newGroupResource = newResourceList
                 .stream()
-                .map(Resource::getId)
-                .filter(id -> !oldResourceIds.contains(id))
+                .filter(r -> authorizationService.isAdminGroupSource(group, r.getSource()))
+                .filter(r -> !currentGroupResourceIds.contains(r.getId()))
                 .collect(Collectors.toList());
-        // 添加心資源 的 id
-        newGroupResourceIds.addAll(newResourceIds);
-        // 保存组
-        authorizationService.saveGroup(group, newGroupResourceIds);
-    }
 
-    /**
-     * 判断是否后台資源
-     *
-     * @param r 資源信息
-     * @param s 資源类远
-     *
-     * @return true 是，否则 false
-     */
-    private boolean isAdminResource(Resource r, String s) {
-        return r.getSource().equals(s) || Resource.DEFAULT_CONTAIN_SOURCE_VALUES.contains(r.getSource());
+        // 增加新資源
+        authorizationService.addGroupResource(group, newGroupResource);
     }
 
     /**
@@ -331,34 +323,16 @@ public class PluginResourceService {
         // 根据唯一条件查询目标资源
         Resource target = authorizationService.fineOneResource(resource.getUniqueWrapper());
 
-        if (target == null) {
+        if (Objects.isNull(target)) {
             target = resource;
         } else {
-            // TODO 这里写得有点啰嗦
-            if (StringUtils.isEmpty(resource.getName())) {
-                resource.setName(target.getName());
-            }
-
-            if (StringUtils.isEmpty(resource.getIcon())) {
-                resource.setIcon(target.getIcon());
-            }
-
-            if (StringUtils.isEmpty(resource.getApplicationName())) {
-                resource.setApplicationName(target.getApplicationName());
-            }
-
-            if (StringUtils.isEmpty(resource.getVersion())) {
-                resource.setVersion(target.getVersion());
-            }
-
-            // 设置该資源为启用状态
-            resource.setStatus(DisabledOrEnabled.Enabled.getValue());
 
             // 如果数据库存在记录，将resource数据替换一次数据获取出来的值
             BeanUtils.copyProperties(
                     resource,
                     target,
                     IdEntity.ID_FIELD_NAME,
+                    NumberIdEntity.CREATION_TIME_FIELD_NAME,
                     PluginInfo.DEFAULT_CHILDREN_NAME,
                     PluginInfo.DEFAULT_SOURCE_NAME
             );
@@ -392,14 +366,10 @@ public class PluginResourceService {
      * @return 新的資源
      */
     private Resource createResource(String source, PluginInfo plugin, PluginInstance instance) {
-        Resource target = new Resource();
-
-        BeanUtils.copyProperties(plugin, target, PluginInfo.DEFAULT_CHILDREN_NAME);
+        Resource target = Casts.of(plugin, Resource.class, PluginInfo.DEFAULT_CHILDREN_NAME);
 
         target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
 
-        //List<Tree<String, PluginInfo>> children = plugin.getChildren();
-        //List<Map<String, Object>> children = Casts.castIfNotNull(entry.get(PluginInfo.DEFAULT_CHILDREN_NAME));
         // 设置 target 变量的子节点
         plugin.getChildren()
                 .stream()

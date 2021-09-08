@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.alibaba.nacos.api.exception.NacosException;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
@@ -135,7 +134,7 @@ public class ResourceController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "获取组资源 id 集合", sources = "Console")
     public List<Integer> getGroupResource(@RequestParam Integer groupId) {
-        List<Resource> resourceList = authorizationService.getGroupResources(groupId);
+        List<Resource> resourceList = authorizationService.getGroupResources(groupId, null);
         return resourceList.stream().map(Resource::getId).collect(Collectors.toList());
     }
 
