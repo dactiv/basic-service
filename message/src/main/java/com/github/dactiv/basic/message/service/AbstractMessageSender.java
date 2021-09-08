@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.service;
 
+import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BasicMessage;
@@ -14,7 +15,10 @@ import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.amqp.AmqpException;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.amqp.core.Message;
+import org.springframework.amqp.core.MessagePostProcessor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
@@ -224,32 +228,20 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
     /**
      * 重试
      *
-     * @param entity 批量消息接口实现类
+     * @param entities 批量消息接口实现类
      */
-    // FIXME 这里应该支持批量重试
-    public void retry(BatchMessage.Body entity) {
+    public void retry(List<? extends BatchMessage.Body> entities) {
 
-        if (!Retryable.class.isAssignableFrom(entity.getClass())) {
-            return;
-        }
+        List<S> retryEntity = entities
+                .stream()
+                .filter(entity -> !Retryable.class.isAssignableFrom(entity.getClass()))
+                .filter(entity -> ExecuteStatus.Failure.getValue().equals(entity.getStatus()))
+                .map(entity -> Casts.cast(entity, Retryable.class))
+                .peek(retryable -> retryable.setRetryCount(retryable.getRetryCount() + 1))
+                .map(retryable -> Casts.cast(retryable, sendEntityClass))
+                .collect(Collectors.toList());
 
-        Retryable retryable = Casts.cast(entity);
-
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
-
-            retryable.setRetryCount(retryable.getRetryCount() + 1);
-
-            amqpTemplate.convertAndSend(
-                    RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
-                    getRetryMessageQueueName(),
-                    Collections.singletonList(retryable),
-                    message -> {
-                        message.getMessageProperties().setDelay(retryable.getNextIntervalTime());
-                        return message;
-                    });
-
-        }
-
+        send(retryEntity);
     }
 
     /**
@@ -330,40 +322,51 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
     }
 
     /**
-     * 获取分批 map
+     * 创建批量发送数据
      *
      * @param sendList 要发送的数据泛型实体
      * @return 分批 map
      */
-    protected Map<Integer, List<Integer>> getBatchMap(List<S> sendList) {
+    protected BatchSendData createBatchSendData(List<S> sendList) {
 
-        List<S> temps = new LinkedList<>(sendList);
+        BatchSendData result = new BatchSendData();
 
-        Map<Integer, List<Integer>> result = new HashMap<>();
+        for (S entity : sendList) {
 
-        for (int offset = 0; temps.size() > getNumberOfBatch(); offset++) {
-            S entity = temps.iterator().next();
+            if(Retryable.class.isAssignableFrom(entity.getClass())) {
 
-            List<Integer> list;
+                Retryable retryable = Casts.cast(entity);
 
-            if (offset % getNumberOfBatch() == 0) {
-                int number = result.keySet().size() + 1;
-                list = result.computeIfAbsent(number, k -> new LinkedList<>());
+                Integer interval = retryable.getNextIntervalTime();
+
+                Map<Integer, List<Integer>> intervalIdMap = result
+                        .getIntervalDataGroup()
+                        .computeIfAbsent(interval, k -> new LinkedHashMap<>());
+
+                Integer intervalIndex = result.getIntervalCountGroup().computeIfAbsent(interval, k -> 0);
+
+                List<Integer> ids = intervalIdMap.computeIfAbsent(intervalIndex, k -> new LinkedList<>());
+
+                ids.add(entity.getId());
+
+                if (ids.size() >= getNumberOfBatch()) {
+                    result.getIntervalCountGroup().put(interval, ++intervalIndex);
+                }
+
             } else {
-                list = result.get(result.keySet().size());
+
+                List<Integer> ids = result
+                        .getSimpleDataGroup()
+                        .computeIfAbsent(result.getSimpleCount(), k -> new LinkedList<>());
+
+                ids.add(entity.getId());
+
+                if (ids.size() >= getNumberOfBatch()) {
+                    result.setSimpleCount(result.getSimpleCount() + 1);
+                }
+
             }
-
-            list.add(entity.getId());
-
-            temps.remove(entity);
         }
-
-        List<Integer> last = result.computeIfAbsent(
-                result.keySet().size() + 1,
-                k -> new LinkedList<>()
-        );
-
-        last.addAll(temps.stream().map(NumberIdEntity::getId).collect(Collectors.toList()));
 
         return result;
     }
@@ -381,9 +384,43 @@ public abstract class AbstractMessageSender<T extends BasicMessage, S extends Nu
      * @param entities 消息实体集合
      */
     protected void send(List<S> entities) {
-        getBatchMap(entities)
-                .forEach((key, value) ->
-                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, getMessageQueueName(), value));
+
+        if (CollectionUtils.isEmpty(entities)) {
+            return ;
+        }
+
+        // 获取批量发送数据信息
+        BatchSendData batchSendData = createBatchSendData(entities);
+
+        // 发送不需要间隔时间的消息
+        batchSendData
+                .getSimpleDataGroup()
+                .forEach(
+                        (key, value) ->
+                                amqpTemplate.convertAndSend(
+                                        RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
+                                        getMessageQueueName(),
+                                        value
+                                )
+                );
+
+        // 发送需要间隔时间的消息
+        batchSendData
+                .getIntervalDataGroup()
+                .forEach(
+                        (key, value) ->
+                                value.forEach(
+                                        (k, v) ->
+                                                amqpTemplate.convertAndSend(
+                                                        RabbitmqConfig.DEFAULT_DELAY_EXCHANGE,
+                                                        getMessageQueueName(),
+                                                        v,
+                                                        message -> {
+                                                            message.getMessageProperties().setDelay(k);
+                                                            return message;
+                                                        }
+                                )
+                ));
     }
 
     /**

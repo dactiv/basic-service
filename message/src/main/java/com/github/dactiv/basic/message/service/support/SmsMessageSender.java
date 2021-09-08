@@ -12,6 +12,7 @@ import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -84,7 +85,8 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
-            )
+            ),
+            containerFactory = "rabbitListenerContainerFactory"
     )
     public void sendSms(@Payload List<Integer> data,
                         Channel channel,
@@ -92,13 +94,20 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
 
         channel.basicAck(tag, false);
 
-        data.forEach(this::send);
+        List<SmsMessage> failureData = data
+                .stream()
+                .map(id -> Casts.cast(id, Integer.class))
+                .map(this::send)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
 
-
+        if (CollectionUtils.isNotEmpty(failureData)) {
+            retry(failureData);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(Integer id) {
+    public SmsMessage send(Integer id) {
         SmsMessage entity = messageService.getSmsMessage(id);
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
@@ -120,11 +129,15 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
             ExecuteStatus.failure(entity, e.getMessage());
         }
 
-        retry(entity);
-
         messageService.saveSmsMessage(entity);
 
         updateBatchMessage(entity);
+
+        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
+            return entity;
+        } else {
+            return null;
+        }
     }
 
     /**

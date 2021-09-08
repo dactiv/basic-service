@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.FileManagerService;
@@ -109,19 +110,30 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
-            )
+                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
+                    key = DEFAULT_QUEUE_NAME
+            ),
+            containerFactory = "rabbitListenerContainerFactory"
     )
     public void sendEmail(@Payload List<Integer> data,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
         channel.basicAck(tag, false);
-        data.forEach(this::send);
+        List<EmailMessage> failureData = data
+                .stream()
+                .map(id -> Casts.cast(id, Integer.class))
+                .map(this::send)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(failureData)) {
+            retry(failureData);
+        }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(Integer id) {
+    public EmailMessage send(Integer id) {
 
         EmailMessage entity = attachmentMessageService.getEmailMessage(id);
 
@@ -172,11 +184,15 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
             ExecuteStatus.failure(entity, ex.getCause().getMessage());
         }
 
-        retry(entity);
-
         attachmentMessageService.saveEmailMessage(entity);
 
         updateBatchMessage(entity);
+
+        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
+            return entity;
+        } else {
+            return null;
+        }
     }
 
     @Override

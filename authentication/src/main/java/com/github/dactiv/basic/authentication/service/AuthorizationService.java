@@ -123,7 +123,7 @@ public class AuthorizationService {
             boolean isNotAnyMatchResourceSource = resourceIds
                     .stream()
                     .map(this::getResource)
-                    .allMatch(r -> !isAdminGroupSource(group, r.getSource()));
+                    .noneMatch(r -> isAdminGroupSource(group, r.getSource()));
 
             if (isNotAnyMatchResourceSource) {
                 throw new ServiceException("当前存在关联着不属于[" + group.getSourceName() + "]的资源");

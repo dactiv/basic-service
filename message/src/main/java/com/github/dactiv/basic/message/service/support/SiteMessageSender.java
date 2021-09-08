@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
@@ -84,8 +85,10 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true")
-            )
+                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
+                    key = DEFAULT_QUEUE_NAME
+            ),
+            containerFactory = "rabbitListenerContainerFactory"
     )
     public void sendSiteMessage(@Payload List<Integer> data,
                                 Channel channel,
@@ -93,12 +96,21 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
 
         channel.basicAck(tag, false);
 
-        data.forEach(this::send);
+        List<SiteMessage> failureData = data
+                .stream()
+                .map(id -> Casts.cast(id, Integer.class))
+                .map(this::send)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isNotEmpty(failureData)) {
+            retry(failureData);
+        }
 
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public void send(Integer id) {
+    public SiteMessage send(Integer id) {
 
         SiteMessage entity = attachmentMessageService.getSiteMessage(id);
 
@@ -122,11 +134,15 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
             ExecuteStatus.failure(entity, e.getMessage());
         }
 
-        retry(entity);
-
         attachmentMessageService.saveSiteMessage(entity);
 
         updateBatchMessage(entity);
+
+        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
+            return entity;
+        } else {
+            return null;
+        }
     }
 
     /**

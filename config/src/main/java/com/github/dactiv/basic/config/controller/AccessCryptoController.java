@@ -77,7 +77,7 @@ public class AccessCryptoController {
     @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
     public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity) {
         accessCryptoService.saveAccessCrypto(entity);
-        return RestResult.of("保存成功", entity.getId());
+        return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
     /**
