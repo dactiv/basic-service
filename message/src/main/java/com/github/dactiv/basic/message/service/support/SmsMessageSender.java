@@ -92,7 +92,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public SmsMessage sendSms(SmsMessage entity) {
+    public void sendSms(SmsMessage entity) {
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
         entity.setLastSendTime(new Date());
@@ -116,12 +116,6 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
         messageService.saveSmsMessage(entity);
 
         updateBatchMessage(entity);
-
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
-            return entity;
-        } else {
-            return null;
-        }
     }
 
     /**
