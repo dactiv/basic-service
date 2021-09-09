@@ -62,6 +62,13 @@ public class BasicMessage implements NumberIdEntity<Integer> {
     private String content;
 
     /**
+     * 状态：0.执行中、1.执行成功，2.重试中，99.执行失败
+     *
+     * @see ExecuteStatus
+     */
+    private Integer status = ExecuteStatus.Processing.getValue();
+
+    /**
      * 备注
      */
     private String remark;
@@ -73,5 +80,14 @@ public class BasicMessage implements NumberIdEntity<Integer> {
      */
     public String getTypeName() {
         return NameEnumUtils.getName(this.type, MessageType.class);
+    }
+
+    /**
+     * 获取状态名称
+     *
+     * @return 状态名称
+     */
+    public String getStatusName() {
+        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
     }
 }

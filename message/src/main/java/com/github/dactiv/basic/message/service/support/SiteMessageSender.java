@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
+import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
@@ -13,7 +14,9 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -75,6 +78,15 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @Value("${message.site.max-retry-count:3}")
     private Integer maxRetryCount;
 
+    /**
+     * 发送站内信
+     *
+     * @param id 站内信实体 id
+     * @param channel 频道信息
+     * @param tag ack 值
+     *
+     * @throws Exception 发送失败或确认 ack 错误时抛出。
+     */
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
@@ -83,18 +95,30 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendSiteMessage(@Payload SiteMessage entity,
+    @Concurrent(value = "message:rabbitmq:email:[#id]")
+    public void sendSiteMessage(@Payload Integer id,
                                 Channel channel,
                                 @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        this.sendSiteMessage(entity);
+        SiteMessage entity = sendSiteMessage(id);
+
+        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.getRetryCount() <= maxRetryCount) {
+            throw new SystemException(entity.getException());
+        }
+
         channel.basicAck(tag, false);
 
     }
 
+    /**
+     * 发送站内信
+     *
+     * @param id 站内信实体 id
+     */
     @Transactional(rollbackFor = Exception.class)
-    public void sendSiteMessage(SiteMessage entity) {
+    public SiteMessage sendSiteMessage(Integer id) {
 
+        SiteMessage entity = attachmentMessageService.getSiteMessage(id);
 
         SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
@@ -106,7 +130,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
             RestResult<Map<String, Object>> restResult = siteMessageChannelSender.sendSiteMessage(entity);
 
             if (restResult.getStatus() == HttpStatus.OK.value()) {
-                ExecuteStatus.success(entity, String.format("%s:%s", restResult.getMessage(), restResult.getData()));
+                ExecuteStatus.success(entity);
             } else {
                 ExecuteStatus.failure(entity, restResult.getMessage());
             }
@@ -120,6 +144,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         updateBatchMessage(entity);
 
+        return entity;
     }
 
     /**
@@ -200,10 +225,22 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
+    protected boolean preSend(List<SiteMessage> content) {
+        content.forEach(e -> attachmentMessageService.saveSiteMessage(e));
+        return true;
+    }
+
+    @Override
     protected RestResult<Object> send(List<SiteMessage> entities) {
-        entities.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+        entities
+                .stream()
+                .map(BasicMessage::getId)
+                .forEach(id ->
+                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+
         return RestResult.ofSuccess(
-                "发送 " + entities.size() + " 条邮件消息完成",
+                "发送 " + entities.size() + " 条站内信消息完成",
                 entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
         );
     }

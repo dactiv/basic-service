@@ -57,11 +57,6 @@ public class SmsMessage extends BasicMessage implements Retryable, ExecuteStatus
     private String exception;
 
     /**
-     * 状态：0.执行中、1.执行成功，99.执行失败
-     */
-    private Integer status = ExecuteStatus.Processing.getValue();
-
-    /**
      * 发送成功时间
      */
     private Date successTime;

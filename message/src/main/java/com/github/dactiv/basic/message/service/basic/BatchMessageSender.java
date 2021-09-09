@@ -3,6 +3,7 @@ package com.github.dactiv.basic.message.service.basic;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
+import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.basic.message.service.AuthenticationService;
 import com.github.dactiv.basic.message.service.FileManagerService;
@@ -76,7 +77,6 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
             BatchMessage batchMessage = new BatchMessage();
 
             batchMessage.setCount(content.size());
-            batchMessage.setSendingNumber(batchMessage.getCount());
 
             AttachmentType attachmentType = AttachmentType.valueOf(entityClass);
             batchMessage.setType(attachmentType.getValue());
@@ -94,7 +94,7 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
                 batchMessageCreated(batchMessage, result, content);
                 boolean send = preSend(content);
 
-                if (!send) {
+                if (send) {
                     send(content);
                 }
 
@@ -107,7 +107,7 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
         } else {
             boolean send = preSend(content);
 
-            if (!send) {
+            if (send) {
                 restResult = send(content);
             }
         }
@@ -156,7 +156,7 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
         BatchMessage batchMessage = messageService.getBatchMessage(body.getBatchId());
 
         if (ExecuteStatus.Success.getValue().equals(body.getStatus())) {
-            batchMessage.setSendingNumber(batchMessage.getSendingNumber() - 1);
+            batchMessage.setSuccessNumber(batchMessage.getSuccessNumber() - 1);
         } else if (ExecuteStatus.Failure.getValue().equals(body.getStatus())) {
             batchMessage.setFailNumber(batchMessage.getFailNumber() + 1);
         }

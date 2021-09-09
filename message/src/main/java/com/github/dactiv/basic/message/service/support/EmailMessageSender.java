@@ -15,6 +15,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -88,11 +89,16 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     }
 
     @Override
-    protected RestResult<Object> send(List<EmailMessage> result) {
-        result.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+    protected RestResult<Object> send(List<EmailMessage> entities) {
+        entities
+                .stream()
+                .map(BasicMessage::getId)
+                .forEach(id ->
+                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+
         return RestResult.ofSuccess(
-                "发送 " + result.size() + " 条邮件消息完成",
-                result.stream().map(BasicMessage::getId).collect(Collectors.toList())
+                "发送 " + entities.size() + " 条邮件消息完成",
+                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
         );
     }
 
@@ -104,7 +110,10 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     /**
      * 发送邮件
      *
-     * @param entity 邮件实体
+     * @param id      邮件实体 id
+     * @param channel 频道信息
+     * @param tag     ack 值
+     * @throws Exception 发送失败或确认 ack 错误时抛出。
      */
     @RabbitListener(
             bindings = @QueueBinding(
@@ -114,16 +123,29 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendEmail(@Payload EmailMessage entity,
+    @Concurrent(value = "message:rabbitmq:email:[#id]")
+    public void sendEmail(@Payload Integer id,
                           Channel channel,
-                          @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+                          @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        this.sendEmail(entity);
+        EmailMessage entity = sendEmail(id);
+
+        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.getRetryCount() <= maxRetryCount) {
+            throw new SystemException(entity.getException());
+        }
+
         channel.basicAck(tag, false);
     }
 
+    /**
+     * 发送邮件
+     *
+     * @param id 邮件实体 id
+     */
     @Transactional(rollbackFor = Exception.class)
-    public void sendEmail(EmailMessage entity) {
+    public EmailMessage sendEmail(Integer id) {
+
+        EmailMessage entity = attachmentMessageService.getEmailMessage(id);
 
         entity.setLastSendTime(new Date());
 
@@ -166,7 +188,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
             mailSender.send(mimeMessage);
 
-            ExecuteStatus.success(entity, "发送邮件成功");
+            ExecuteStatus.success(entity);
         } catch (Exception ex) {
             log.error("发送邮件错误", ex);
             ExecuteStatus.failure(entity, ex.getCause().getMessage());
@@ -175,6 +197,8 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         attachmentMessageService.saveEmailMessage(entity);
 
         updateBatchMessage(entity);
+
+        return entity;
     }
 
     @Override

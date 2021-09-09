@@ -3,7 +3,6 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
-import com.github.dactiv.basic.message.service.basic.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
@@ -12,9 +11,10 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.apache.commons.collections.CollectionUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -30,7 +30,6 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.IOException;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -73,7 +72,11 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     /**
      * 发送短信
      *
-     * @param entity 短信实体集合
+     * @param id 短信实体 id
+     * @param channel 频道信息
+     * @param tag ack 值
+     *
+     * @throws Exception 发送失败或确认 ack 错误时抛出。
      */
     @RabbitListener(
             bindings = @QueueBinding(
@@ -83,39 +86,61 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendSms(@Payload SmsMessage entity,
+    public void sendSms(@Payload Integer id,
                         Channel channel,
-                        @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+                        @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        this.sendSms(entity);
+        SmsMessage entity = sendSms(id);
+
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus())) {
+            throw new SystemException(entity.getException());
+        }
+
         channel.basicAck(tag, false);
     }
 
+    /**
+     * 发送短信
+     *
+     * @param id 短信实体 id
+     */
     @Transactional(rollbackFor = Exception.class)
-    public void sendSms(SmsMessage entity) {
+    public SmsMessage sendSms(Integer id) {
+
+        SmsMessage entity = messageService.getSmsMessage(id);
+
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
         entity.setLastSendTime(new Date());
         entity.setChannel(smsChannelSender.getType());
+        entity.setRetryCount(entity.getRetryCount() + 1);
 
         try {
 
             RestResult<Map<String, Object>> restResult = smsChannelSender.sendSms(entity);
 
             if (restResult.getStatus() == HttpStatus.OK.value()) {
-                ExecuteStatus.success(entity, String.format("%s:%s", restResult.getMessage(), restResult.getData()));
-            } else {
+                ExecuteStatus.success(entity);
+            } else if (!entity.isRetry()){
                 ExecuteStatus.failure(entity, restResult.getMessage());
+            } else {
+                entity.setStatus(ExecuteStatus.Retrying.getValue());
             }
 
         } catch (Exception e) {
             log.error("发送短信失败", e);
-            ExecuteStatus.failure(entity, e.getMessage());
+            if (!entity.isRetry()){
+                ExecuteStatus.failure(entity, e.getMessage());
+            } else {
+                entity.setStatus(ExecuteStatus.Retrying.getValue());
+            }
         }
+
+        updateBatchMessage(entity);
 
         messageService.saveSmsMessage(entity);
 
-        updateBatchMessage(entity);
+        return entity;
     }
 
     /**
@@ -133,16 +158,22 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     }
 
     @Override
-    protected boolean preSend(List<SmsMessage> entities) {
-        entities.forEach(e -> messageService.saveSmsMessage(e));
+    @Transactional(rollbackFor = Exception.class)
+    protected boolean preSend(List<SmsMessage> content) {
+        content.forEach(e -> messageService.saveSmsMessage(e));
         return true;
     }
 
     @Override
     protected RestResult<Object> send(List<SmsMessage> entities) {
-        entities.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+        entities
+                .stream()
+                .map(BasicMessage::getId)
+                .forEach(id ->
+                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+
         return RestResult.ofSuccess(
-                "发送 " + entities.size() + " 条邮件消息完成",
+                "发送 " + entities.size() + " 条短信消息完成",
                 entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
         );
     }

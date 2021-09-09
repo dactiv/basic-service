@@ -69,11 +69,6 @@ public class BatchMessage implements NumberIdEntity<Integer> {
     private Integer failNumber = 0;
 
     /**
-     * 发送中的数量
-     */
-    private Integer sendingNumber = 0;
-
-    /**
      * 类型:10.站内信,20.邮件,30.短信
      */
     private Integer type;
