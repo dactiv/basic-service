@@ -7,6 +7,7 @@ import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,7 +28,9 @@ import java.util.Date;
 @EqualsAndHashCode
 @Alias("batchMessage")
 @TableName("tb_batch_message")
-public class BatchMessage {
+public class BatchMessage implements NumberIdEntity<Integer> {
+
+    private static final long serialVersionUID = 3580346090724641812L;
 
     /**
      * 主键
@@ -74,6 +77,15 @@ public class BatchMessage {
      * 类型:10.站内信,20.邮件,30.短信
      */
     private Integer type;
+
+    /**
+     * 获取发送重的数量
+     *
+     * @return 数量
+     */
+    public Integer getSendingNumber() {
+        return count - successNumber - failNumber;
+    }
 
     /**
      * 获取类型名称

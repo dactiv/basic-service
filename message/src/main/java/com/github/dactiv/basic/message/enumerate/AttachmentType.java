@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.enumerate;
 
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
@@ -45,7 +46,7 @@ public enum AttachmentType implements NameValueEnum<Integer> {
     /**
      * 类类型
      */
-    private Class<? extends BatchMessage.Body> type;
+    private Class<? extends BasicMessage> type;
 
     /**
      * 通过类类型获取枚举内容
@@ -53,7 +54,7 @@ public enum AttachmentType implements NameValueEnum<Integer> {
      * @param type 类类型
      * @return 实际枚举只
      */
-    public static AttachmentType valueOf(Class<? extends BatchMessage.Body> type) {
+    public static AttachmentType valueOf(Class<? extends BasicMessage> type) {
 
         for (AttachmentType t : AttachmentType.values()) {
             if (t.getType().equals(type)) {

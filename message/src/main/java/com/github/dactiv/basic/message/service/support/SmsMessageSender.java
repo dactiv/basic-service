@@ -1,9 +1,11 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.SmsMessage;
-import com.github.dactiv.basic.message.service.AbstractMessageSender;
+import com.github.dactiv.basic.message.service.basic.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.Casts;
@@ -13,6 +15,7 @@ import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -40,7 +43,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsMessage> {
+public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.sms.queue";
 
@@ -51,6 +54,9 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
 
     @Autowired
     private List<SmsChannelSender> smsChannelSenderList;
+
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     /**
      * 渠道商
@@ -65,20 +71,9 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     private Integer maxRetryCount;
 
     /**
-     * 分配数量值（如果多消息时，多少个一批做消息发送）
-     */
-    @Value("${message.sms.number-of-batch:50}")
-    private Integer numberOfBatch;
-
-    @Override
-    protected String getRetryMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
-    }
-
-    /**
      * 发送短信
      *
-     * @param data 短信实体集合
+     * @param entity 短信实体集合
      */
     @RabbitListener(
             bindings = @QueueBinding(
@@ -88,27 +83,16 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendSms(@Payload List<Integer> data,
+    public void sendSms(@Payload SmsMessage entity,
                         Channel channel,
                         @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
+        this.sendSms(entity);
         channel.basicAck(tag, false);
-
-        List<SmsMessage> failureData = data
-                .stream()
-                .map(id -> Casts.cast(id, Integer.class))
-                .map(this::send)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (CollectionUtils.isNotEmpty(failureData)) {
-            retry(failureData);
-        }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public SmsMessage send(Integer id) {
-        SmsMessage entity = messageService.getSmsMessage(id);
+    public SmsMessage sendSms(SmsMessage entity) {
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 
         entity.setLastSendTime(new Date());
@@ -155,25 +139,22 @@ public class SmsMessageSender extends AbstractMessageSender<SmsMessageBody, SmsM
     }
 
     @Override
-    protected int getNumberOfBatch() {
-        return numberOfBatch;
-    }
-
-    @Override
-    protected void send(List<SmsMessage> entities) {
-
+    protected boolean preSend(List<SmsMessage> entities) {
         entities.forEach(e -> messageService.saveSmsMessage(e));
-        super.send(entities);
-
+        return true;
     }
 
     @Override
-    protected String getMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
+    protected RestResult<Object> send(List<SmsMessage> entities) {
+        entities.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+        return RestResult.ofSuccess(
+                "发送 " + entities.size() + " 条邮件消息完成",
+                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+        );
     }
 
     @Override
-    protected List<SmsMessage> createSendEntity(List<SmsMessageBody> result) {
+    protected List<SmsMessage> getBatchMessageBodyContent(List<SmsMessageBody> result) {
         return result.stream().flatMap(this::createSmsMessageEntity).collect(Collectors.toList());
     }
 

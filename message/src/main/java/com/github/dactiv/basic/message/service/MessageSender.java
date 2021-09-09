@@ -18,7 +18,7 @@ public interface MessageSender {
      * @return rest 结果集
      * @throws Exception 发送错误时抛出
      */
-    RestResult<Map<String, Object>> send(Map<String, Object> request) throws Exception;
+    RestResult<Object> send(Map<String, Object> request) throws Exception;
 
     /**
      * 获取类型

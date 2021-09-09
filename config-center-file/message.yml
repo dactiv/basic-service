@@ -70,10 +70,6 @@ spring:
         acknowledge-mode: manual
       simple:
         acknowledge-mode: manual
-        retry:
-          initial-interval: 45000
-          max-interval: 80000
-          enabled: true
     cache:
       channel:
         size: 100

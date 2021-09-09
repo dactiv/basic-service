@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,11 +29,14 @@ import java.util.Map;
 @Alias("siteMessage")
 @TableName("tb_site_message")
 @EqualsAndHashCode(callSuper = true)
-public class SiteMessage extends TitleMessage implements AttachmentMessage {
-
+public class SiteMessage extends BasicMessage implements AttachmentMessage, Retryable, ExecuteStatus.Body, BatchMessage.Body {
 
     private static final long serialVersionUID = 2037280001998945900L;
 
+    /**
+     * 标题
+     */
+    private String title;
     /**
      * 渠道商
      */
@@ -68,6 +73,40 @@ public class SiteMessage extends TitleMessage implements AttachmentMessage {
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, Object> data;
+    /**
+     * 重试次数
+     */
+    private Integer retryCount = 0;
+
+    /**
+     * 最大重试次数
+     */
+    private Integer maxRetryCount = 0;
+
+    /**
+     * 最后发送时间
+     */
+    private Date lastSendTime;
+
+    /**
+     * 异常信息
+     */
+    private String exception;
+
+    /**
+     * 状态：0.执行中、1.执行成功，99.执行失败
+     */
+    private Integer status = ExecuteStatus.Processing.getValue();
+
+    /**
+     * 发送成功时间
+     */
+    private Date successTime;
+
+    /**
+     * 批量消息 id
+     */
+    private Integer batchId;
 
     /**
      * 是否存在附件
@@ -79,6 +118,11 @@ public class SiteMessage extends TitleMessage implements AttachmentMessage {
      */
     @TableField(exist = false)
     private List<Attachment> attachmentList = new LinkedList<>();
+
+    @Override
+    public void setExecuteStatus(ExecuteStatus status) {
+        this.setStatus(status.getValue());
+    }
 
     /**
      * 获取是否已读名称

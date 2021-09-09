@@ -25,7 +25,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class BasicMessage implements Retryable, ExecuteStatus.Body, NumberIdEntity<Integer>, BatchMessage.Body {
+public class BasicMessage implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = -1167940666968537341L;
 
@@ -62,58 +62,9 @@ public class BasicMessage implements Retryable, ExecuteStatus.Body, NumberIdEnti
     private String content;
 
     /**
-     * 重试次数
-     */
-    private Integer retryCount = 0;
-
-    /**
-     * 最大重试次数
-     */
-    private Integer maxRetryCount = 0;
-
-    /**
-     * 最后发送时间
-     */
-    private Date lastSendTime;
-
-    /**
-     * 异常信息
-     */
-    private String exception;
-
-    /**
-     * 状态：0.执行中、1.执行成功，99.执行失败
-     */
-    private Integer status = ExecuteStatus.Processing.getValue();
-
-    /**
-     * 发送成功时间
-     */
-    private Date successTime;
-
-    /**
-     * 批量消息 id
-     */
-    private Integer batchId;
-
-    /**
      * 备注
      */
     private String remark;
-
-    @Override
-    public void setExecuteStatus(ExecuteStatus status) {
-        this.setStatus(status.getValue());
-    }
-
-    /**
-     * 获取状态名称
-     *
-     * @return 状态名称
-     */
-    public String getStatusName() {
-        return NameValueEnumUtils.getName(this.status, ExecuteStatus.class);
-    }
 
     /**
      * 获取类型名称

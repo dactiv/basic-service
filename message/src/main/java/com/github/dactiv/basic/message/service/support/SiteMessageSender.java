@@ -2,10 +2,10 @@ package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.entity.SmsMessage;
-import com.github.dactiv.basic.message.service.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
@@ -18,6 +18,7 @@ import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.math.NumberUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -44,7 +45,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, SiteMessage> {
+public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessage> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
 
@@ -59,6 +60,9 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     @Autowired
     private List<SiteMessageChannelSender> siteMessageChannelSenderList;
 
+    @Autowired
+    private AmqpTemplate amqpTemplate;
+
     /**
      * 渠道商
      */
@@ -71,17 +75,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
     @Value("${message.site.max-retry-count:3}")
     private Integer maxRetryCount;
 
-    /**
-     * 分配数量值（如果多消息时，多少个一批做消息发送）
-     */
-    @Value("${message.site.number-of-batch:50}")
-    private Integer numberOfBatch;
-
-    @Override
-    protected String getRetryMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
-    }
-
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
@@ -90,29 +83,18 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendSiteMessage(@Payload List<Integer> data,
+    public void sendSiteMessage(@Payload SiteMessage entity,
                                 Channel channel,
                                 @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
+        this.sendSiteMessage(entity);
         channel.basicAck(tag, false);
-
-        List<SiteMessage> failureData = data
-                .stream()
-                .map(id -> Casts.cast(id, Integer.class))
-                .map(this::send)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (CollectionUtils.isNotEmpty(failureData)) {
-            retry(failureData);
-        }
 
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public SiteMessage send(Integer id) {
+    public void sendSiteMessage(SiteMessage entity) {
 
-        SiteMessage entity = attachmentMessageService.getSiteMessage(id);
 
         SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
@@ -138,11 +120,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
 
         updateBatchMessage(entity);
 
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
-            return entity;
-        } else {
-            return null;
-        }
     }
 
     /**
@@ -157,28 +134,6 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
                 .filter(s -> channel.equals(s.getType()))
                 .findFirst()
                 .orElseThrow(() -> new ServiceException("找不到渠道为[" + channel + "]的消息推送渠道支持"));
-    }
-
-    @Override
-    protected int getNumberOfBatch() {
-        return numberOfBatch;
-    }
-
-    @Override
-    protected void send(List<SiteMessage> entities) {
-
-        entities.forEach(e -> attachmentMessageService.saveSiteMessage(e));
-        super.send(entities);
-    }
-
-    @Override
-    protected String getMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
-    }
-
-    @Override
-    protected List<SiteMessage> createSendEntity(List<SiteMessageBody> result) {
-        return result.stream().flatMap(this::createSiteMessageEntity).collect(Collectors.toList());
     }
 
     /**
@@ -244,4 +199,17 @@ public class SiteMessageSender extends AbstractMessageSender<SiteMessageBody, Si
         return DEFAULT_TYPE;
     }
 
+    @Override
+    protected RestResult<Object> send(List<SiteMessage> entities) {
+        entities.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+        return RestResult.ofSuccess(
+                "发送 " + entities.size() + " 条邮件消息完成",
+                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+        );
+    }
+
+    @Override
+    protected List<SiteMessage> getBatchMessageBodyContent(List<SiteMessageBody> result) {
+        return result.stream().flatMap(this::createSiteMessageEntity).collect(Collectors.toList());
+    }
 }

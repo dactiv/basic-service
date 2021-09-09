@@ -2,14 +2,16 @@ package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
+import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.service.AbstractMessageSender;
+import com.github.dactiv.basic.message.service.basic.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.FileManagerService;
+import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.mail.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -18,6 +20,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.lang.StringUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -55,7 +58,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, EmailMessage> implements InitializingBean {
+public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, EmailMessage> implements InitializingBean {
 
     public static final String DEFAULT_QUEUE_NAME = "message.email.queue";
 
@@ -72,11 +75,8 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     @Value("${message.mail.max-retry-count:3}")
     private Integer maxRetryCount;
 
-    /**
-     * 分配数量值（如果多消息时，多少个一批做消息发送）
-     */
-    @Value("${message.mail.number-of-batch:50}")
-    private Integer numberOfBatch;
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     @Autowired
     private AttachmentMessageService attachmentMessageService;
@@ -88,24 +88,23 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
     }
 
     @Override
-    protected int getNumberOfBatch() {
-        return numberOfBatch;
+    protected RestResult<Object> send(List<EmailMessage> result) {
+        result.forEach(e -> amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, e));
+        return RestResult.ofSuccess(
+                "发送 " + result.size() + " 条邮件消息完成",
+                result.stream().map(BasicMessage::getId).collect(Collectors.toList())
+        );
     }
 
     @Override
-    protected String getRetryMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
-    }
-
-    @Override
-    protected String getMessageQueueName() {
-        return DEFAULT_QUEUE_NAME;
+    protected List<EmailMessage> getBatchMessageBodyContent(List<EmailMessageBody> result) {
+        return result.stream().flatMap(this::createEmailMessageEntity).collect(Collectors.toList());
     }
 
     /**
      * 发送邮件
      *
-     * @param data 邮件实体
+     * @param entity 邮件实体
      */
     @RabbitListener(
             bindings = @QueueBinding(
@@ -115,27 +114,16 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    public void sendEmail(@Payload List<Integer> data,
+    public void sendEmail(@Payload EmailMessage entity,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
 
+        this.sendEmail(entity);
         channel.basicAck(tag, false);
-        List<EmailMessage> failureData = data
-                .stream()
-                .map(id -> Casts.cast(id, Integer.class))
-                .map(this::send)
-                .filter(Objects::nonNull)
-                .collect(Collectors.toList());
-
-        if (CollectionUtils.isNotEmpty(failureData)) {
-            retry(failureData);
-        }
     }
 
     @Transactional(rollbackFor = Exception.class)
-    public EmailMessage send(Integer id) {
-
-        EmailMessage entity = attachmentMessageService.getEmailMessage(id);
+    public void sendEmail(EmailMessage entity) {
 
         entity.setLastSendTime(new Date());
 
@@ -187,25 +175,15 @@ public class EmailMessageSender extends AbstractMessageSender<EmailMessageBody, 
         attachmentMessageService.saveEmailMessage(entity);
 
         updateBatchMessage(entity);
-
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus())) {
-            return entity;
-        } else {
-            return null;
-        }
     }
 
     @Override
-    protected void send(List<EmailMessage> entities) {
-
-        entities.forEach(e -> attachmentMessageService.saveEmailMessage(e));
-        super.send(entities);
+    @Transactional(rollbackFor = Exception.class)
+    protected boolean preSend(List<EmailMessage> content) {
+        content.forEach(e -> attachmentMessageService.saveEmailMessage(e));
+        return true;
     }
 
-    @Override
-    protected List<EmailMessage> createSendEntity(List<EmailMessageBody> result) {
-        return result.stream().flatMap(this::createEmailMessageEntity).collect(Collectors.toList());
-    }
 
     /**
      * 通过邮件消息 body 构造邮件消息并保存信息

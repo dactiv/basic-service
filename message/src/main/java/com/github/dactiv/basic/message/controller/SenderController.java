@@ -41,7 +41,7 @@ public class SenderController {
     @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Plugin(name = "发送消息", id = "send", parent = "message", sources = "System")
-    public RestResult<Map<String, Object>> send(HttpServletRequest request) throws Exception {
+    public RestResult<Object> send(HttpServletRequest request) throws Exception {
 
         Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);
         String type = parameter.get(DEFAULT_TYPE_PARAM_NAME).toString();
