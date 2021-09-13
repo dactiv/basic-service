@@ -20,6 +20,7 @@ public interface ConfigService {
      * 获取数据字典
      *
      * @param name 字典名称
+     *
      * @return 数据字典集合
      */
     @GetMapping(value = "findDataDictionaries/{name}")

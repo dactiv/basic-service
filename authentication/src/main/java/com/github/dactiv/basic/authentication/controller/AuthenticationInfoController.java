@@ -33,6 +33,7 @@ public class AuthenticationInfoController {
      *
      * @param pageRequest 分页请求
      * @param request     http 请求
+     *
      * @return 分页实体
      */
     @PostMapping("page")
@@ -51,6 +52,7 @@ public class AuthenticationInfoController {
      *
      * @param userId 用户 id
      * @param types  认证类型
+     *
      * @return 认证信息
      */
     @GetMapping("getLastAuthenticationInfo")

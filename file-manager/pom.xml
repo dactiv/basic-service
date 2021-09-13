@@ -25,6 +25,12 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.dactiv.framework</groupId>
+            <artifactId>idempotent</artifactId>
+            <version>1.0.0-SNAPSHOT</version>
+        </dependency>
+
+        <dependency>
             <groupId>io.minio</groupId>
             <artifactId>minio</artifactId>
             <version>8.3.0</version>

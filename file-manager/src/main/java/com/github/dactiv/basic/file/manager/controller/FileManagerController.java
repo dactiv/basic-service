@@ -42,7 +42,9 @@ public class FileManagerController {
      *
      * @param bucketName 桶名称
      * @param filename   文件名称
+     *
      * @return reset 结果集
+     *
      * @throws Exception 删除错误时抛出
      */
     @PostMapping("delete")
@@ -58,7 +60,9 @@ public class FileManagerController {
      *
      * @param file       文件
      * @param bucketName 放置文件的桶名称
+     *
      * @return reset 结果集
+     *
      * @throws Exception 上传错误时抛出
      */
     @PostMapping("upload/{bucketName}")
@@ -77,7 +81,9 @@ public class FileManagerController {
      *
      * @param bucketName 桶名称
      * @param filename   文件名
+     *
      * @return 文件流字节
+     *
      * @throws Exception 获取失败时抛出
      */
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[file_manager:get]')")

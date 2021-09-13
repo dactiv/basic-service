@@ -350,6 +350,7 @@ public class UserService implements InitializingBean {
      * 获取系统用户
      *
      * @param id 主键 id
+     *
      * @return 系统用户实体
      */
     public ConsoleUser getConsoleUser(Integer id) {
@@ -360,6 +361,7 @@ public class UserService implements InitializingBean {
      * 获取系统用户
      *
      * @param username 登陆账户
+     *
      * @return 系统用户实体
      */
     public ConsoleUser getConsoleUserByUsername(String username) {
@@ -370,6 +372,7 @@ public class UserService implements InitializingBean {
      * 获取系统用户集合
      *
      * @param wrapper 包装器
+     *
      * @return 系统用户集合
      */
     public List<ConsoleUser> findConsoleUsers(Wrapper<ConsoleUser> wrapper) {
@@ -381,6 +384,7 @@ public class UserService implements InitializingBean {
      *
      * @param pageRequest 分页请求
      * @param wrapper     过滤条件
+     *
      * @return 分页实体
      */
     public Page<ConsoleUser> findConsoleUserPage(PageRequest pageRequest, Wrapper<ConsoleUser> wrapper) {
@@ -599,6 +603,7 @@ public class UserService implements InitializingBean {
      * 获取会员用户
      *
      * @param id 主键 id
+     *
      * @return 会员用户实体
      */
     public MemberUser getMemberUser(Integer id) {
@@ -615,6 +620,7 @@ public class UserService implements InitializingBean {
      * 根据唯一识别获取会员用户
      *
      * @param identified 唯一识别
+     *
      * @return 会员用户
      */
     public MemberUser getMemberUserByIdentified(String identified) {
@@ -632,6 +638,7 @@ public class UserService implements InitializingBean {
      * 获取会员用户集合
      *
      * @param wrapper 包装器
+     *
      * @return 会员用户集合
      */
     public List<MemberUser> findMemberUsers(Wrapper<MemberUser> wrapper) {
@@ -643,6 +650,7 @@ public class UserService implements InitializingBean {
      *
      * @param pageRequest 分页信息信息
      * @param wrapper     条件
+     *
      * @return 分页实体
      */
     public Page<MemberUser> findMemberUserPage(PageRequest pageRequest, Wrapper<MemberUser> wrapper) {
@@ -685,6 +693,7 @@ public class UserService implements InitializingBean {
      * 获取用户初始化实体
      *
      * @param userId 用户 id
+     *
      * @return 用户初始化实体
      */
     public MemberUserInitialization getMemberUserInitialization(Integer userId) {

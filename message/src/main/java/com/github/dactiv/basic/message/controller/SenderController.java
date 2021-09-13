@@ -4,11 +4,15 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
 import javax.servlet.http.HttpServletRequest;
@@ -28,25 +32,26 @@ public class SenderController {
     @Autowired
     private List<MessageSender> messageSenders;
 
-    @Autowired
-    private ObjectMapper objectMapper;
-
     /**
      * 发送消息
      *
-     * @param request http servlet request
+     * @param body http servlet request body
      * @return 消息结果集
      */
     @SuppressWarnings("unchecked")
-    @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Plugin(name = "发送消息", id = "send", parent = "message", sources = "System")
-    public RestResult<Object> send(HttpServletRequest request) throws Exception {
+    @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
+    @Idempotent(
+            key = "idempotent:message:send:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
+    public RestResult<Object> send(@RequestBody Map<String, Object> body,
+                                   @CurrentSecurityContext SecurityContext securityContext) throws Exception {
 
-        Map<String, Object> parameter = objectMapper.readValue(request.getInputStream(), Map.class);
-        String type = parameter.get(DEFAULT_TYPE_PARAM_NAME).toString();
+        String type = body.get(DEFAULT_TYPE_PARAM_NAME).toString();
 
-        return getMessageService(type).send(parameter);
+        return getMessageService(type).send(body);
     }
 
     /**

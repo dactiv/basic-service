@@ -102,9 +102,9 @@ public class EnumerateResourceService {
     public void onNacosInstancesChangeEvent(NacosInstancesChangeEvent event) {
         NacosService nacosService = Casts.cast(event.getSource());
 
-        if(CollectionUtils.isEmpty(nacosService.getInstances())) {
+        if (CollectionUtils.isEmpty(nacosService.getInstances())) {
             data.get(nacosService.getName()).clear();
-            return ;
+            return;
         }
 
         syncEnumerateResource(nacosService.getName(), nacosService.getInstances());
@@ -114,7 +114,7 @@ public class EnumerateResourceService {
      * 同步枚举資源
      *
      * @param serviceName 服务名称
-     * @param instances 实例集合
+     * @param instances   实例集合
      */
     private void syncEnumerateResource(String serviceName, List<Instance> instances) {
         Optional<Instance> optional = instances.stream().max(this::comparingInstanceVersion);
@@ -141,11 +141,11 @@ public class EnumerateResourceService {
         Map<String, Object> info = getInstanceEnumerate(instance);
 
         if (MapUtils.isEmpty(info)) {
-            return ;
+            return;
         }
 
         if (!info.containsKey(EnumerateEndpoint.DEFAULT_ENUM_KEY_NAME)) {
-            return ;
+            return;
         }
 
         Map<String, Map<String, Object>> enumerateData = Casts.cast(info.get(EnumerateEndpoint.DEFAULT_ENUM_KEY_NAME));
@@ -164,6 +164,7 @@ public class EnumerateResourceService {
      *
      * @param service  服务名称
      * @param enumName 枚举名称
+     *
      * @return 枚举信息
      */
     public Map<String, Object> getServiceEnumerate(String service, String enumName) {
@@ -186,6 +187,7 @@ public class EnumerateResourceService {
      * 获取实例枚举信息
      *
      * @param instance 实例
+     *
      * @return 实例信息
      */
     @SuppressWarnings("unchecked")
@@ -209,7 +211,6 @@ public class EnumerateResourceService {
 
     /**
      * 同步所有枚举資源
-     *
      */
     public void syncEnumerate() {
         nacosSpringEventManager.expiredAllListener();

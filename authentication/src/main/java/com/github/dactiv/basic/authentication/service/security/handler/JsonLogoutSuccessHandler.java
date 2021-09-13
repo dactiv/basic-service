@@ -152,6 +152,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      * 构造未授权 reset 结果集，目的为乱搞一通，让别人不知道这个是什么。
      *
      * @param request 请求对象
+     *
      * @return rest 结果集
      */
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {

@@ -6,20 +6,20 @@ mybatis-plus:
     db-config:
       id-type: auto
 
-enumerate:
-  base-packages: com.github.dactiv.basic.message.enumerate
-
-authentication:
-  plugin:
-    base-packages: com.github.dactiv.basic.message.controller
-    parent:
-      message:
-        name: '消息管理'
-        icon: 'icon-message'
-  audit:
-    type: elasticsearch
-  permit-uri-ant-matchers:
-    - "/actuator/**"
+dactiv:
+  authentication:
+    plugin:
+      base-packages: com.github.dactiv.basic.message.controller
+      parent:
+        message:
+          name: '消息管理'
+          icon: 'icon-message'
+    audit:
+      type: elasticsearch
+    permit-uri-ant-matchers:
+      - "/actuator/**"
+  enumerate:
+    base-packages: com.github.dactiv.basic.message.enumerate
 
 info:
   version: @version@

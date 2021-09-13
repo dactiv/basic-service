@@ -4,10 +4,11 @@ info:
   artifact-id: ${spring.application.name}
   group-id: @groupId@
 
-authentication:
-  audit:
-    type: elasticsearch
-  plugin:
-    base-packages: com.github.dactiv.basic.file.manager.controller
-  permit-uri-ant-matchers:
-    - "/actuator/**"
+dactiv:
+  authentication:
+    audit:
+      type: elasticsearch
+    plugin:
+      base-packages: com.github.dactiv.basic.file.manager.controller
+    permit-uri-ant-matchers:
+      - "/actuator/**"

@@ -23,6 +23,7 @@ public interface CaptchaService {
      * @param token         要拦截的 token
      * @param type          拦截类型
      * @param interceptType 拦截的 token 类型
+     *
      * @return 绑定 token
      */
     @PostMapping("createGenerateCaptchaIntercept")
@@ -35,6 +36,7 @@ public interface CaptchaService {
      *
      * @param type             验证码类型
      * @param deviceIdentified 唯一识别
+     *
      * @return 绑定 token
      */
     @GetMapping("generateToken")
@@ -45,6 +47,7 @@ public interface CaptchaService {
      * 校验验证码
      *
      * @param param 参数信息
+     *
      * @return rest 结果集
      */
     @PostMapping("verifyCaptcha")

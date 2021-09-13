@@ -15,7 +15,6 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -123,7 +122,6 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    @Concurrent(value = "message:rabbitmq:email:[#id]")
     public void sendEmail(@Payload Integer id,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
@@ -207,7 +205,6 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         content.forEach(e -> attachmentMessageService.saveEmailMessage(e));
         return true;
     }
-
 
     /**
      * 通过邮件消息 body 构造邮件消息并保存信息

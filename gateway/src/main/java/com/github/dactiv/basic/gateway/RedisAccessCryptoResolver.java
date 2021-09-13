@@ -68,6 +68,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
      * 获取响应加密访问 token key
      *
      * @param accessToken 响应加密访问 token
+     *
      * @return 响应加密访问 token key
      */
     private String getAccessTokenKey(String accessToken) {

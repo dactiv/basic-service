@@ -49,6 +49,7 @@ public class DictionaryService {
      * 获取数据字典
      *
      * @param id 数据字典 ID
+     *
      * @return 字典实体
      */
     public DataDictionary getDataDictionary(Integer id) {
@@ -59,6 +60,7 @@ public class DictionaryService {
      * 获取数据字典
      *
      * @param code 字典代码
+     *
      * @return 字典实体
      */
     public DataDictionary getDataDictionaryByCode(String code) {
@@ -69,6 +71,7 @@ public class DictionaryService {
      * 获取数据字典集合
      *
      * @param parentId 父类 id
+     *
      * @return 字典实体集合
      */
     public List<DataDictionary> getDataDictionariesByParentId(Integer parentId) {
@@ -83,6 +86,7 @@ public class DictionaryService {
      * 获取数据字典集合
      *
      * @param typeId 字典类型 id
+     *
      * @return 字典实体集合
      */
     public List<DataDictionary> getDataDictionariesByTypeId(Integer typeId) {
@@ -97,6 +101,7 @@ public class DictionaryService {
      * 查找数据字典
      *
      * @param wrapper 包装器
+     *
      * @return 数据字典集合
      */
     public List<DataDictionary> findDataDictionaries(Wrapper<DataDictionary> wrapper) {
@@ -108,6 +113,7 @@ public class DictionaryService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     包装器
+     *
      * @return 分页实体
      */
     public Page<DataDictionary> findDataDictionariesPage(PageRequest pageRequest, Wrapper<DataDictionary> wrapper) {
@@ -255,6 +261,7 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param id 主键 ID
+     *
      * @return 字典类型实体
      */
     public DictionaryType getDictionaryType(Integer id) {
@@ -265,6 +272,7 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param code 代码
+     *
      * @return 字典类型实体
      */
     public DictionaryType getDictionaryTypeByCode(String code) {
@@ -275,6 +283,7 @@ public class DictionaryService {
      * 获取字典类型实体
      *
      * @param parentId 父类 id
+     *
      * @return 字典类型实体
      */
     public List<DictionaryType> getDictionaryTypesByParentId(Integer parentId) {
@@ -285,6 +294,7 @@ public class DictionaryService {
      * 查找字典类型
      *
      * @param wrapper 包装器
+     *
      * @return 字典类型集合
      */
     public List<DictionaryType> findDictionaryTypes(Wrapper<DictionaryType> wrapper) {

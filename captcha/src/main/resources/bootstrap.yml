@@ -1,12 +1,13 @@
 server:
   port: 8082
 
-authentication:
-  permit-uri-ant-matchers:
-    - "/generateToken/**"
-    - "/generateCaptcha/**"
-    - "/verifyCaptcha/**"
-    - "/actuator/**"
+dactiv:
+  authentication:
+    permit-uri-ant-matchers:
+      - "/generateToken/**"
+      - "/generateCaptcha/**"
+      - "/verifyCaptcha/**"
+      - "/actuator/**"
 
 spring:
   main:

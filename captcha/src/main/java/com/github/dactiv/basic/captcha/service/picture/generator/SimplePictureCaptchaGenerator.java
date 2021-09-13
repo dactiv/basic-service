@@ -33,7 +33,7 @@ public class SimplePictureCaptchaGenerator implements PictureCaptchaGenerator {
     /**
      * 默认的干扰线集合
      */
-    private static final Color[] DEFAULT_INTERFERENCE_COLORS = new Color[]{
+    private static final Color[] DEFAULT_INTERFERENCE_COLORS = new Color[] {
             Color.GREEN,
             Color.PINK,
             Color.MAGENTA,
@@ -45,7 +45,7 @@ public class SimplePictureCaptchaGenerator implements PictureCaptchaGenerator {
     /**
      * 默认的干扰线集合
      */
-    private static final Color[] DEFAULT_FONT_COLORS = new Color[]{
+    private static final Color[] DEFAULT_FONT_COLORS = new Color[] {
             Color.BLUE,
             Color.RED,
             Color.BLACK

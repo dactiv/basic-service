@@ -118,8 +118,8 @@ public class SiteMessageController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[site:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[site:delete]') and isFullyAuthenticated()")
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         messageService.deleteSiteMessage(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");

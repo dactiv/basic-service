@@ -48,7 +48,7 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
         Optional<Instance> optional = nacosService
                 .getInstances()
                 .stream()
-                .max((target,source) -> enumerateResourceService.comparingInstanceVersion(target, source));
+                .max((target, source) -> enumerateResourceService.comparingInstanceVersion(target, source));
 
         if (optional.isEmpty()) {
             return false;

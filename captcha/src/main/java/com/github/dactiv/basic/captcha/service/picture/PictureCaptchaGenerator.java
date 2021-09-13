@@ -14,7 +14,9 @@ public interface PictureCaptchaGenerator {
      *
      * @param entity       图片验证码描述实体
      * @param outputStream 返回的图片留
+     *
      * @return 验证码
+     *
      * @throws Exception 生成错误时抛出
      */
     String generateCaptcha(PictureEntity entity, OutputStream outputStream) throws Exception;

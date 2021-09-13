@@ -12,17 +12,20 @@ info:
   artifact-id: ${spring.application.name}
   group-id: @groupId@
 
-authentication:
-  audit:
-    type: elasticsearch
-  plugin:
-    base-packages: com.github.dactiv.basic.authentication.controller
-    parent:
-      system:
-        name: '系统管理'
-        icon: 'icon-setting'
-  permit-uri-ant-matchers:
-    - "/prepare/**"
-    - "/login/**"
-    - "/logout/**"
-    - "/actuator/**"
+dactiv:
+  idempotent:
+    type: interceptor
+  authentication:
+    audit:
+      type: elasticsearch
+    plugin:
+      base-packages: com.github.dactiv.basic.authentication.controller
+      parent:
+        system:
+          name: '系统管理'
+          icon: 'icon-setting'
+    permit-uri-ant-matchers:
+      - "/prepare/**"
+      - "/login/**"
+      - "/logout/**"
+      - "/actuator/**"

@@ -21,6 +21,7 @@ public interface MessageService {
      * 发送消息
      *
      * @param request 请求参数
+     *
      * @return rest 结果集
      */
     @PostMapping("sendMessage")

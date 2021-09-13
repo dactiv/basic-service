@@ -63,6 +63,7 @@ public class AuthorizationService {
      * 获取账户认证的用户明细服务
      *
      * @param source 资源累袁
+     *
      * @return 账户认证的用户明细服务
      */
     public UserDetailsService getUserDetailsService(ResourceSource source) {
@@ -177,13 +178,13 @@ public class AuthorizationService {
     /**
      * 增加组資源
      *
-     * @param group 组实体
+     * @param group        组实体
      * @param resourceList 新增的資源 id
      */
     public void addGroupResource(Group group, List<Resource> resourceList) {
 
         if (CollectionUtils.isEmpty(resourceList)) {
-            return ;
+            return;
         }
 
         boolean isNotAnyMatchResourceSource = resourceList
@@ -219,8 +220,9 @@ public class AuthorizationService {
     /**
      * 是否管理后台来源
      *
-     * @param group 组
+     * @param group  组
      * @param source 来源
+     *
      * @return true 是，否则 false
      */
     public boolean isAdminGroupSource(Group group, String source) {
@@ -276,6 +278,7 @@ public class AuthorizationService {
      * 获取用户组
      *
      * @param id 主键 id
+     *
      * @return 用户组实体
      */
     public Group getGroup(Integer id) {
@@ -286,6 +289,7 @@ public class AuthorizationService {
      * 获取系统用户所关联用户组
      *
      * @param userId 系统用户主键 id
+     *
      * @return 用户组集合
      */
     public List<Group> getConsoleUserGroups(Integer userId) {
@@ -296,6 +300,7 @@ public class AuthorizationService {
      * 获取会员用户所关联用户组
      *
      * @param userId 会员用户主键 id
+     *
      * @return 用户组集合
      */
     public List<Group> getMemberUserGroups(Integer userId) {
@@ -306,6 +311,7 @@ public class AuthorizationService {
      * 根据过滤条件查找用户组
      *
      * @param wrapper 包装器
+     *
      * @return 用户组实体集合
      */
     public List<Group> findGroups(Wrapper<Group> wrapper) {
@@ -391,6 +397,7 @@ public class AuthorizationService {
      * 获取资源
      *
      * @param id 主键 id
+     *
      * @return 资源实体
      */
     public Resource getResource(Integer id) {
@@ -401,6 +408,7 @@ public class AuthorizationService {
      * 通过条件查询单个資源实体
      *
      * @param wrapper 查询条件
+     *
      * @return 資源实体
      */
     public Resource fineOneResource(Wrapper<Resource> wrapper) {
@@ -412,6 +420,7 @@ public class AuthorizationService {
      * 获取资源
      *
      * @param groupId 组主键值
+     *
      * @return 资源实体集合
      */
     public List<Resource> getGroupResources(Integer groupId, String applicationName) {
@@ -422,6 +431,7 @@ public class AuthorizationService {
      * 获取系统用户关联资源
      *
      * @param userId 用户主键值
+     *
      * @return 资源实体集合
      */
     public List<Resource> getConsoleUserResources(Integer userId) {
@@ -432,6 +442,7 @@ public class AuthorizationService {
      * 获取系统用户关联(包含系统用户组关联，所有资源)资源实体集合
      *
      * @param userId 用户主键值
+     *
      * @return 资源实体集合
      */
     public List<Resource> getConsolePrincipalResources(Integer userId, List<String> sourceContains, String type) {
@@ -442,6 +453,7 @@ public class AuthorizationService {
      * 获取資源集合
      *
      * @param wrapper 包装器
+     *
      * @return 資源集合
      */
     public List<Resource> findResources(Wrapper<Resource> wrapper) {

@@ -75,6 +75,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      *
      * @param acp        访问加解密断言
      * @param predicates 路由条件集合
+     *
      * @return 断言条件
      */
     private Optional<Predicate<ServerWebExchange>> createPredicate(AccessCryptoPredicate acp, List<RoutePredicateFactory> predicates) {
@@ -91,6 +92,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      *
      * @param p   路由条件
      * @param acp 访问加解密断言
+     *
      * @return 断言条件
      */
     private Predicate<ServerWebExchange> createPredicate(RoutePredicateFactory p, AccessCryptoPredicate acp) {
@@ -175,6 +177,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      * 获取请求解密的访问 token
      *
      * @param accessToken 访问 token
+     *
      * @return 访问 token
      */
     protected abstract AccessToken getAccessToken(String accessToken);
@@ -183,6 +186,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      * 获取访问 token
      *
      * @param serverWebExchange Server Web Exchange
+     *
      * @return 访问 token
      */
     private String getAccessTokenValue(ServerWebExchange serverWebExchange) {
@@ -200,6 +204,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      * 获取请求参数的密文内容
      *
      * @param body 请求参数内容
+     *
      * @return 字节原实体
      */
     protected List<ByteSource> getRequestCipher(String body) {
@@ -230,6 +235,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      * 解码 request body 成 map
      *
      * @param body request body
+     *
      * @return 解码后的 request body
      */
     protected MultiValueMap<String, String> decodeRequestBodyToMap(String body) {
@@ -248,6 +254,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      *
      * @param serverWebExchange Server Web Exchange
      * @param acpList           访问加解密断言集合
+     *
      * @return true 是，否则 false
      */
     private boolean isAllMatchPredicate(ServerWebExchange serverWebExchange, List<AccessCryptoPredicate> acpList) {

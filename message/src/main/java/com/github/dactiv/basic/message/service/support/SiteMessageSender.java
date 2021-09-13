@@ -3,7 +3,6 @@ package com.github.dactiv.basic.message.service.support;
 import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
-import com.github.dactiv.basic.message.entity.EmailMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
@@ -16,7 +15,6 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -95,7 +93,6 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
             ),
             containerFactory = "rabbitListenerContainerFactory"
     )
-    @Concurrent(value = "message:rabbitmq:email:[#id]")
     public void sendSiteMessage(@Payload Integer id,
                                 Channel channel,
                                 @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {

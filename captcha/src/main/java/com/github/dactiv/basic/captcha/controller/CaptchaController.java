@@ -39,6 +39,7 @@ public class CaptchaController {
      * @param token         要拦截的 token
      * @param type          拦截类型
      * @param interceptType 拦截的 token 类型
+     *
      * @return 绑定 token
      */
     @PreAuthorize("hasRole('BASIC')")
@@ -68,6 +69,7 @@ public class CaptchaController {
      *
      * @param type             验证码类型
      * @param deviceIdentified 设备唯一识别
+     *
      * @return 创建绑定 token
      */
     @GetMapping("generateToken")
@@ -86,7 +88,9 @@ public class CaptchaController {
      * 生成验证码
      *
      * @param request http servlet request
+     *
      * @return 验证码
+     *
      * @throws Exception 生成错误时抛出
      */
     @GetMapping("generateCaptcha")
@@ -105,6 +109,7 @@ public class CaptchaController {
      * 校验验证码
      *
      * @param request http servlet request
+     *
      * @return rest 结果集
      */
     @PostMapping("verifyCaptcha")

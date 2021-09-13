@@ -25,6 +25,7 @@ public class DelegateCaptchaService {
      * 根据 http servlet request 获取验证码服务
      *
      * @param request http servlet request
+     *
      * @return 验证码服务
      */
     public CaptchaService getCaptchaServiceByRequest(HttpServletRequest request) {
@@ -39,6 +40,7 @@ public class DelegateCaptchaService {
      * 根据验证码类型获取验证码服务
      *
      * @param type 类型
+     *
      * @return 验证码服务
      */
     public CaptchaService getCaptchaServiceByType(String type) {
@@ -60,6 +62,7 @@ public class DelegateCaptchaService {
      *
      * @param type             验证码类型
      * @param deviceIdentified 设备唯一识别
+     *
      * @return 绑定 token
      */
     public BuildToken generateToken(String type, String deviceIdentified) {
@@ -70,6 +73,7 @@ public class DelegateCaptchaService {
      * 验证 token
      *
      * @param request http servlet request
+     *
      * @return 验证结果集
      */
     public RestResult<Map<String, Object>> verify(HttpServletRequest request) {
@@ -83,7 +87,9 @@ public class DelegateCaptchaService {
      * 生成验证码
      *
      * @param request http servlet request
+     *
      * @return 验证码结果
+     *
      * @throws Exception 生成错误时抛出
      */
     public Object generateCaptcha(HttpServletRequest request) throws Exception {

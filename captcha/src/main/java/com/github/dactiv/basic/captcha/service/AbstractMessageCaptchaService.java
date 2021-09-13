@@ -13,6 +13,7 @@ import java.util.Map;
  *
  * @param <T> 消息类型实现
  * @param <C> 可过期的验证码类实现
+ *
  * @author maurice
  */
 public abstract class AbstractMessageCaptchaService<T extends MessageType, C extends ExpiredCaptcha>
@@ -70,6 +71,7 @@ public abstract class AbstractMessageCaptchaService<T extends MessageType, C ext
      * @param entity  泛型实体
      * @param entry   字典内容
      * @param captcha 验证码
+     *
      * @return 参数 map
      */
     protected abstract Map<String, Object> createSendMessageParam(T entity, Map<String, Object> entry, String captcha);

@@ -7,6 +7,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -49,6 +50,7 @@ public class MemberUserConsole {
      *
      * @param pageRequest 分页请求
      * @param request     http 请求
+     *
      * @return 分页实体
      */
     @PostMapping("page")
@@ -62,6 +64,7 @@ public class MemberUserConsole {
      * 查找会员用户信息
      *
      * @param request http 请求
+     *
      * @return 会员用户信息集合
      */
     @PostMapping("find")
@@ -75,6 +78,7 @@ public class MemberUserConsole {
      * 获取会员用户实体
      *
      * @param id 主键值
+     *
      * @return 用户实体
      */
     @GetMapping("get")
@@ -89,11 +93,13 @@ public class MemberUserConsole {
      * @param securityContext 安全上下文
      * @param oldPassword     旧密码
      * @param newPassword     新密码
+     *
      * @return 消息结果集
      */
     @PostMapping("updatePassword")
     @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(name = "修改密码", sources = {"Console", "UserCenter", "Mobile"}, audit = true)
+    @Idempotent(key = "idempotent:authentication:member:update-password:[#securityContext.authentication.details.id]")
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam(required = false) String oldPassword,
                                         @RequestParam String newPassword) {
@@ -112,11 +118,16 @@ public class MemberUserConsole {
      *
      * @param securityContext 安全上下文
      * @param newUsername     新登录账户
+     *
      * @return 消息结果集
      */
     @PostMapping("updateUsername")
     @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
+    @Idempotent(
+            key = "idempotent:authentication:member:update-username:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
     public RestResult<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam String newUsername) {
 
@@ -131,6 +142,7 @@ public class MemberUserConsole {
      * 判断登录账户是否唯一
      *
      * @param username 登录账户
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isUsernameUnique")
@@ -143,6 +155,7 @@ public class MemberUserConsole {
      * 判断邮件是否唯一
      *
      * @param email 电子邮件
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isEmailUnique")
@@ -155,6 +168,7 @@ public class MemberUserConsole {
      * 判断手机号码是否唯一
      *
      * @param phone 手机号码
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isPhoneUnique")

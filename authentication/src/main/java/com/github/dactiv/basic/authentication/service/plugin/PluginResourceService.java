@@ -13,12 +13,12 @@ import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
+import com.github.dactiv.framework.idempotent.advisor.LockType;
+import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceSubscribeEvent;
 import com.github.dactiv.framework.nacos.event.NacosSpringEventManager;
-import com.github.dactiv.framework.spring.security.concurrent.LockType;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
@@ -70,6 +70,7 @@ public class PluginResourceService {
      * 获取实例 info
      *
      * @param instance 实例
+     *
      * @return 实例信息
      */
     @SuppressWarnings("unchecked")
@@ -111,7 +112,7 @@ public class PluginResourceService {
 
     @Concurrent(
             value = "sync:plugin:resource:[#groupName]:[#serviceName]",
-            exceptionMessage = "同步插件信息遇到并发，不执行重试操作",
+            exception = "同步插件信息遇到并发，不执行重试操作",
             type = LockType.Lock
     )
     public void syncPluginResource(String groupName, String serviceName, List<Instance> instances) {
@@ -243,6 +244,7 @@ public class PluginResourceService {
      * 通过 info 信息创建插件信息实体集合
      *
      * @param info info 信息
+     *
      * @return 插件信息实体集合
      */
     private List<PluginInfo> createPluginInfoListFromInfo(Map<String, Object> info) {
@@ -263,6 +265,7 @@ public class PluginResourceService {
      * 通过插件 map 创建插件信息实体
      *
      * @param pluginMap 插件 map
+     *
      * @return 插件信息实体
      */
     private PluginInfo createPluginInfo(Map<String, Object> pluginMap) {
@@ -292,6 +295,7 @@ public class PluginResourceService {
      * 启用资源
      *
      * @param resource 资源信息
+     *
      * @return 流集合
      */
     private Stream<Resource> enabledApplicationResource(Resource resource) {
@@ -317,6 +321,7 @@ public class PluginResourceService {
      * 获取目标资源，如果 resource 在数据库理存在数据，将获取数据库的记录，并用 resource 数据替换一次
      *
      * @param resource 当前资源
+     *
      * @return 目标资源
      */
     private Resource getTargetResource(Resource resource) {
@@ -346,6 +351,7 @@ public class PluginResourceService {
      *
      * @param entry    插件信息
      * @param instance 插件实例
+     *
      * @return 流集合
      */
     private Stream<Resource> createResourceStream(Tree<String, PluginInfo> entry,
@@ -363,6 +369,7 @@ public class PluginResourceService {
      * @param source   資源来源
      * @param plugin   插件信息
      * @param instance 服务信息
+     *
      * @return 新的資源
      */
     private Resource createResource(String source, PluginInfo plugin, PluginInstance instance) {
@@ -440,9 +447,9 @@ public class PluginResourceService {
     public void onNacosInstancesChangeEvent(NacosInstancesChangeEvent event) {
         NacosService nacosService = Casts.cast(event.getSource());
 
-        if(CollectionUtils.isEmpty(nacosService.getInstances())) {
+        if (CollectionUtils.isEmpty(nacosService.getInstances())) {
             disabledApplicationResource(nacosService.getName());
-            return ;
+            return;
         }
 
         syncPluginResource(nacosService.getGroupName(), nacosService.getName(), nacosService.getInstances());
@@ -451,11 +458,7 @@ public class PluginResourceService {
     /**
      * 重新订阅所有服务
      */
-    @Concurrent(
-            value = "subscribe_or_unsubscribe:plugin",
-            exceptionMessage = "正在执行，请稍后在试。。",
-            type = LockType.Lock
-    )
+    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exception = "正在执行，请稍后在试。。", type = LockType.Lock)
     public void resubscribeAllService() {
         nacosSpringEventManager.expiredAllListener();
         nacosSpringEventManager.scanThenUnsubscribeService();

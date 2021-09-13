@@ -5,15 +5,20 @@ import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
+import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -44,8 +49,8 @@ public class GroupController {
      * 获取所有用户组
      */
     @PostMapping("find")
-    @PreAuthorize("hasAuthority('perms[group:find]')")
     @Plugin(name = "查询全部", sources = "Console")
+    @PreAuthorize("hasAuthority('perms[group:find]')")
     public List<Group> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
         List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -61,10 +66,11 @@ public class GroupController {
      * 获取用户的用户组集合
      *
      * @param userId 当前用户
+     *
      * @return 用户组实体集合
      */
-    @GetMapping("getConsoleUserGroups")
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("getConsoleUserGroups")
     @Plugin(name = "获取用户组信息", sources = "Console")
     public List<Integer> getConsoleUserGroups(@RequestParam Integer userId) {
 
@@ -77,11 +83,12 @@ public class GroupController {
      * 获取用户组
      *
      * @param id 主键值
+     *
      * @return 用户组实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasAuthority('perms[group:get]')")
     @Plugin(name = "获取信息", sources = "Console")
+    @PreAuthorize("hasAuthority('perms[group:get]')")
     public Group get(@RequestParam Integer id) {
         return authorizationService.getGroup(id);
     }
@@ -89,18 +96,23 @@ public class GroupController {
     /**
      * 保存用户组
      *
-     * @param entity      用户组实体
-     * @param resourceIds 资源ids
+     * @param entity          用户组实体
+     * @param securityContext 安全上下文
+     * @param resourceIds     资源 id 集合
+     *
      * @return 消息结果集
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
+    @Idempotent(
+            key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
     public RestResult<Integer> save(@Valid Group entity,
+                                    @CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam(required = false) List<Integer> resourceIds) {
-
         authorizationService.saveGroup(entity, resourceIds);
-
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
@@ -108,11 +120,12 @@ public class GroupController {
      * 删除用户组
      *
      * @param ids 主键值集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[group:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[group:delete]') and isFullyAuthenticated()")
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
         authorizationService.deleteGroup(ids);
@@ -124,6 +137,7 @@ public class GroupController {
      * 判断 spring security role 的 authority 值是否唯一
      *
      * @param authority spring security role 的 authority 值
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isAuthorityUnique")
@@ -138,6 +152,7 @@ public class GroupController {
      * 判断组名称是否唯一
      *
      * @param name 组名称
+     *
      * @return true 唯一，否则 false
      */
     @GetMapping("isNameUnique")

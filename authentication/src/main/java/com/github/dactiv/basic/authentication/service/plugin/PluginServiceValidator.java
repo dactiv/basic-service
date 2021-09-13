@@ -47,7 +47,7 @@ public class PluginServiceValidator implements NacosServiceListenerValidator {
         Optional<Instance> optional = nacosService
                 .getInstances()
                 .stream()
-                .max((target,source) -> pluginResourceService.comparingInstanceVersion(target, source));
+                .max((target, source) -> pluginResourceService.comparingInstanceVersion(target, source));
 
         if (optional.isEmpty()) {
             return false;

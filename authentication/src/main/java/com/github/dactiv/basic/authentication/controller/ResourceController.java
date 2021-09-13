@@ -6,6 +6,7 @@ import com.github.dactiv.basic.authentication.service.plugin.PluginResourceServi
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
@@ -52,6 +53,7 @@ public class ResourceController {
      * 查找资源
      *
      * @param request http 请求
+     *
      * @return 资源实体集合
      */
     @PostMapping("find")
@@ -72,6 +74,7 @@ public class ResourceController {
      * 获取资源
      *
      * @param id 主键值
+     *
      * @return 资源实体
      */
     @GetMapping("get")
@@ -85,6 +88,7 @@ public class ResourceController {
      * 获取用户关联资源实体集合
      *
      * @param userId 用户主键值
+     *
      * @return 资源实体集合
      */
     @PreAuthorize("isAuthenticated()")
@@ -101,6 +105,7 @@ public class ResourceController {
      *
      * @param securityContext 安全上下文
      * @param mergeTree       是否合并树形 true，是 否则 false
+     *
      * @return 资源实体集合
      */
     @PreAuthorize("isAuthenticated()")
@@ -128,6 +133,7 @@ public class ResourceController {
      * 获取组资源集合
      *
      * @param groupId 组 id
+     *
      * @return 资源实体集合
      */
     @GetMapping("getGroupResource")
@@ -144,8 +150,9 @@ public class ResourceController {
      * @return reset 结果集
      */
     @PostMapping("syncPluginResource")
-    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
+    @Idempotent(key = "idempotent:authentication:sync-plugin-resource:[#securityContext.authentication.details.id]")
     public RestResult<?> syncPluginResource() {
 
         pluginResourceService.resubscribeAllService();

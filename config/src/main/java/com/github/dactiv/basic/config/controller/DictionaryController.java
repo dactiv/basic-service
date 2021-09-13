@@ -7,11 +7,14 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -49,11 +52,12 @@ public class DictionaryController {
      *
      * @param pageRequest 分页信息
      * @param request     http servlet request
+     *
      * @return 分页实体
      */
     @PostMapping("getDataDictionaryPage")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:page]')")
     @Plugin(name = "获取数据字典分页", sources = "Console")
+    @PreAuthorize("hasAuthority('perms[data_dictionary:page]')")
     public Page<DataDictionary> getDataDictionaryPage(PageRequest pageRequest, HttpServletRequest request) {
         return dictionaryService.findDataDictionariesPage(
                 pageRequest,
@@ -66,6 +70,7 @@ public class DictionaryController {
      *
      * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
+     *
      * @return 数据字典集合
      */
     @PostMapping("findDataDictionary")
@@ -89,10 +94,11 @@ public class DictionaryController {
      * 判断数据字典唯一识别值是否唯一
      *
      * @param code 唯一识别值
+     *
      * @return true 是，否则 false
      */
-    @GetMapping("isDataDictionaryCodeUnique")
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("isDataDictionaryCodeUnique")
     @Plugin(name = "判断数据字典唯一识别值是否唯一", sources = "Console")
     public boolean isDataDictionaryCodeUnique(@RequestParam String code) {
         return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
@@ -102,11 +108,12 @@ public class DictionaryController {
      * 获取数据字典
      *
      * @param id 数据字典 ID
+     *
      * @return 数据字典实体
      */
     @GetMapping("getDataDictionary")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:get]')")
     @Plugin(name = "获取数据字典实体信息", sources = "Console")
+    @PreAuthorize("hasAuthority('perms[data_dictionary:get]')")
     public DataDictionary getDataDictionary(@RequestParam Integer id) {
         return dictionaryService.getDataDictionary(id);
     }
@@ -117,9 +124,14 @@ public class DictionaryController {
      * @param entity 数据字典实体
      */
     @PostMapping("saveDataDictionary")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存数据字典实体", sources = "Console", audit = true)
-    public RestResult<Integer> saveDataDictionary(@Valid DataDictionary entity) {
+    @PreAuthorize("hasAuthority('perms[data_dictionary:save]') and isFullyAuthenticated()")
+    @Idempotent(
+            key = "idempotent:config:data-dictionary:save:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
+    public RestResult<Integer> saveDataDictionary(@Valid DataDictionary entity,
+                                                  @CurrentSecurityContext SecurityContext securityContext) {
         dictionaryService.saveDataDictionary(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
@@ -130,8 +142,8 @@ public class DictionaryController {
      * @param ids 主键值集合
      */
     @PostMapping("deleteDataDictionary")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除数据字典实体", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[data_dictionary:delete]') and isFullyAuthenticated()")
     public RestResult<?> deleteDataDictionary(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDataDictionaries(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
@@ -144,6 +156,7 @@ public class DictionaryController {
      *
      * @param request   http servlet request
      * @param mergeTree 是否合并树形，true 是，否则 false
+     *
      * @return 字典类型集合
      */
     @PostMapping("findDictionaryType")
@@ -167,6 +180,7 @@ public class DictionaryController {
      * 获取字典类型实体
      *
      * @param id 主键 ID
+     *
      * @return 字典类型实体
      */
     @GetMapping("getDictionaryType")
@@ -180,10 +194,11 @@ public class DictionaryController {
      * 判断字典类型唯一识别值是否唯一
      *
      * @param code 唯一识别值
+     *
      * @return true 是，否则 false
      */
-    @GetMapping("isDictionaryTypeCodeUnique")
     @PreAuthorize("isAuthenticated()")
+    @GetMapping("isDictionaryTypeCodeUnique")
     @Plugin(name = "判断字类型典唯一识别值是否唯一", sources = "Console")
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
 
@@ -196,9 +211,14 @@ public class DictionaryController {
      * @param entity 数据字典类型实体
      */
     @PostMapping("saveDictionaryType")
-    @PreAuthorize("hasAuthority('perms[dictionary_type:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
-    public RestResult<Integer> saveDictionaryType(@Valid DictionaryType entity) {
+    @PreAuthorize("hasAuthority('perms[dictionary_type:save]') and isFullyAuthenticated()")
+    @Idempotent(
+            key = "idempotent:config:dictionary-type:save:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
+    public RestResult<Integer> saveDictionaryType(@Valid DictionaryType entity,
+                                                  @CurrentSecurityContext SecurityContext securityContext) {
         dictionaryService.saveDictionaryType(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
@@ -209,8 +229,8 @@ public class DictionaryController {
      * @param ids 主键值集合
      */
     @PostMapping("deleteDictionaryType")
-    @PreAuthorize("hasAuthority('perms[dictionary_type:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[dictionary_type:delete]') and isFullyAuthenticated()")
     public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids) {
         dictionaryService.deleteDictionaryTypes(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");

@@ -26,6 +26,7 @@ public class MinioConfig {
      * mini 模版
      *
      * @param minioProperties mini 模版
+     *
      * @return mini 模版
      */
     @Bean

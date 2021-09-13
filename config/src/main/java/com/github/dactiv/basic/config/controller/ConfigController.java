@@ -23,6 +23,7 @@ import com.github.dactiv.framework.crypto.algorithm.cipher.AbstractBlockCipherSe
 import com.github.dactiv.framework.crypto.algorithm.cipher.RsaCipherService;
 import com.github.dactiv.framework.crypto.algorithm.hash.Hash;
 import com.github.dactiv.framework.crypto.algorithm.hash.HashAlgorithmMode;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -84,6 +85,7 @@ public class ConfigController {
      * 获取数据字典
      *
      * @param name 字典名称
+     *
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionaries/{name:.*}")
@@ -107,6 +109,7 @@ public class ConfigController {
      * 获取所有访问加解密
      *
      * @param type 值
+     *
      * @return 访问加解密集合
      */
     @GetMapping("findAccessCrypto")
@@ -136,6 +139,7 @@ public class ConfigController {
      * 获取公共 token
      *
      * @param deviceIdentified 设备唯一识别
+     *
      * @return 访问 token
      */
     @RequestMapping("getPublicToken")
@@ -194,6 +198,7 @@ public class ConfigController {
      * @param deviceIdentified 设备唯一识别
      * @param token            token 信息
      * @param key              密钥信息
+     *
      * @return 一个或多个的带签名信息的 token
      */
     @PostMapping("getAccessToken")
@@ -275,6 +280,7 @@ public class ConfigController {
      * @param token        访问 token 信息
      * @param publicKey    密钥
      * @param privateToken 私有token
+     *
      * @return 带签名信息的 token
      */
     private SignToken createSignToken(RsaCipherService rsa,
@@ -298,6 +304,7 @@ public class ConfigController {
      * 获取私有 token 的 redis 桶
      *
      * @param token token 值
+     *
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getPrivateTokenBucket(String token) {
@@ -308,6 +315,7 @@ public class ConfigController {
      * 获取访问 token 的 redis 桶
      *
      * @param token token 值
+     *
      * @return redis 桶
      */
     private RBucket<SimpleExpirationToken> getAccessTokeBucket(String token) {
@@ -329,6 +337,7 @@ public class ConfigController {
      *
      * @param service       服务名
      * @param enumerateName 枚举名
+     *
      * @return 枚举信息
      */
     @GetMapping("getServiceEnumerate")
@@ -356,6 +365,7 @@ public class ConfigController {
      */
     @PostMapping("syncEnumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
+    @Idempotent(key = "idempotent:config:sync-enumerate:[#securityContext.authentication.details.id]")
     @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
     public RestResult<Map<String, Map<String, Map<String, Object>>>> syncEnumerate() {
 

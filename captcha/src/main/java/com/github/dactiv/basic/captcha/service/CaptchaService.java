@@ -16,6 +16,7 @@ public interface CaptchaService {
      * 生成 token
      *
      * @param deviceIdentified 设备唯一是被
+     *
      * @return token
      */
     BuildToken generateToken(String deviceIdentified);
@@ -24,6 +25,7 @@ public interface CaptchaService {
      * 验证请求
      *
      * @param request http servlet 请求
+     *
      * @return 验证结果集
      */
     RestResult<Map<String, Object>> verify(HttpServletRequest request);
@@ -33,6 +35,7 @@ public interface CaptchaService {
      *
      * @param buildToken     绑定 token
      * @param requestCaptcha 提交过来的验证码
+     *
      * @return 验证结果集
      */
     RestResult<Map<String, Object>> verify(BuildToken buildToken, String requestCaptcha);
@@ -48,7 +51,9 @@ public interface CaptchaService {
      * 生成验证码
      *
      * @param request http servlet request
+     *
      * @return 验证码结果
+     *
      * @throws Exception 生成错误时抛出
      */
     Object generateCaptcha(HttpServletRequest request) throws Exception;
@@ -57,6 +62,7 @@ public interface CaptchaService {
      * 是否支持本次请求
      *
      * @param request http servlet request
+     *
      * @return true 是，否则 false
      */
     boolean isSupport(HttpServletRequest request);
@@ -65,6 +71,7 @@ public interface CaptchaService {
      * 获取绑定 token
      *
      * @param token token 值
+     *
      * @return 绑定 token
      */
     BuildToken getBuildToken(String token);

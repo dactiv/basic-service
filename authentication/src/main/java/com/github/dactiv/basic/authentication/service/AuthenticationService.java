@@ -16,10 +16,10 @@ import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.idempotent.advisor.LockType;
+import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
-import com.github.dactiv.framework.spring.security.concurrent.LockType;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
@@ -120,6 +120,7 @@ public class AuthenticationService {
      * 获取认证信息表实体
      *
      * @param id 主键 id
+     *
      * @return 认证信息表实体
      */
     public AuthenticationInfo getAuthenticationInfo(Integer id) {
@@ -131,6 +132,7 @@ public class AuthenticationService {
      *
      * @param userId 用户 id
      * @param types  类型
+     *
      * @return 认证信息表实体
      */
     public AuthenticationInfo getLastAuthenticationInfo(Integer userId, List<String> types) {
@@ -146,6 +148,7 @@ public class AuthenticationService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     查询包装器
+     *
      * @return 分页实体
      */
     public Page<AuthenticationInfo> findAuthenticationInfoPage(PageRequest pageRequest, Wrapper<AuthenticationInfo> wrapper) {
@@ -207,7 +210,7 @@ public class AuthenticationService {
     }
 
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
-    @Concurrent(value = "sync:authentication:info", exceptionMessage = "同步认证信息遇到并发，不执行重试操作", type = LockType.Lock)
+    @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", type = LockType.Lock)
     public void syncAuthenticationInfo() {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(

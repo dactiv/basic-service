@@ -364,6 +364,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取存储在 redis 的验证码实体 key 名称
      *
      * @param buildToken 绑定 token
+     *
      * @return key 名称
      */
     private String getCaptchaKey(BuildToken buildToken) {
@@ -374,6 +375,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取验证码桶
      *
      * @param token token 值
+     *
      * @return 绑定 token 桶
      */
     public RBucket<C> getCaptchaBucket(BuildToken token) {
@@ -384,6 +386,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取验证码实体
      *
      * @param buildToken 绑定 token
+     *
      * @return 验证码实体
      */
     protected C getCaptcha(BuildToken buildToken) {
@@ -404,7 +407,9 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @param buildToken 绑定 token
      * @param entity     泛型实体
+     *
      * @return 生成验证码结果集
+     *
      * @throws Exception 生成错误时抛出
      */
     protected abstract GenerateCaptchaResult generateCaptcha(BuildToken buildToken, E entity) throws Exception;
@@ -414,6 +419,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      *
      * @param requestCaptcha 提交过来的验证码
      * @param captcha        当前验证码
+     *
      * @return true 是，否则 false
      */
     protected boolean matchesCaptcha(String requestCaptcha, C captcha) {
@@ -426,6 +432,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取存储在 redis 的生成验证码的 token key 名称
      *
      * @param token token 值
+     *
      * @return key 名称
      */
     public String getBuildTokenKey(String token) {
@@ -436,6 +443,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取绑定 token 桶
      *
      * @param token token 值
+     *
      * @return 绑定 token 桶
      */
     public RBucket<BuildToken> getBuildTokenBucket(String token) {
@@ -459,6 +467,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      * 获取绑定 token
      *
      * @param request http servlet request
+     *
      * @return 绑定 token
      */
     public BuildToken getBuildToken(HttpServletRequest request) {

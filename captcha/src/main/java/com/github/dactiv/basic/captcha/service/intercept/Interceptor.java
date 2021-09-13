@@ -19,6 +19,7 @@ public interface Interceptor {
      * @param token         要拦截的 token
      * @param type          拦截的验证码类型
      * @param interceptType 拦截的 token 类型
+     *
      * @return 绑定 token
      */
     BuildToken generateCaptchaIntercept(String token, String type, String interceptType);
@@ -27,6 +28,7 @@ public interface Interceptor {
      * 校验验证码
      *
      * @param request http servlet request
+     *
      * @return 校验结果
      */
     RestResult<Map<String, Object>> verifyCaptcha(HttpServletRequest request);

@@ -65,6 +65,7 @@ public class SecurityController {
      * @param principal   用户登陆账户
      * @param after       数据发生时间
      * @param type        审计类型
+     *
      * @return 审计事件
      */
     @PostMapping("audit")
@@ -91,6 +92,7 @@ public class SecurityController {
      *
      * @param id    主键 id
      * @param after 数据发生时间
+     *
      * @return 用户审计数据
      */
     @GetMapping("getAudit")
@@ -117,6 +119,7 @@ public class SecurityController {
      * 登录预处理
      *
      * @param request http servlet request
+     *
      * @return rest 结果集
      */
     @GetMapping("prepare")
@@ -138,6 +141,7 @@ public class SecurityController {
      * 登陆成功后跳转的连接，直接获取当前用户
      *
      * @param securityContext 安全上下文
+     *
      * @return 当前用户
      */
     @GetMapping("getPrincipal")
@@ -152,6 +156,7 @@ public class SecurityController {
      * @param deviceIdentified 唯一识别
      * @param username         登录账户
      * @param password         登录密码
+     *
      * @return 移动端的用户明细实现
      */
     @PreAuthorize("hasRole('ORDINARY')")
@@ -201,6 +206,7 @@ public class SecurityController {
      *
      * @param id     用户 id
      * @param status 状态值
+     *
      * @return 消息结果集
      */
     @PreAuthorize("hasRole('BASIC')")

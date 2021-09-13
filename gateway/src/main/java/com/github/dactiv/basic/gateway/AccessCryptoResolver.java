@@ -28,6 +28,7 @@ public interface AccessCryptoResolver {
      *
      * @param accessCrypto      访问加解密
      * @param serverWebExchange Server Web Exchange
+     *
      * @return true 是，否则 false
      */
     default boolean isRequestDecrypt(AccessCrypto accessCrypto, ServerWebExchange serverWebExchange) {
@@ -40,6 +41,7 @@ public interface AccessCryptoResolver {
      * @param serverWebExchange Server Web Exchange
      * @param accessCrypto      访问加解密
      * @param body              当前请求的内容信息
+     *
      * @return 解密后的请求内容
      */
     Mono<String> decryptRequestBody(ServerWebExchange serverWebExchange, AccessCrypto accessCrypto, String body);
@@ -49,6 +51,7 @@ public interface AccessCryptoResolver {
      *
      * @param accessCrypto      访问加解密
      * @param serverWebExchange Server Web Exchange
+     *
      * @return true 是，否则 false
      */
     default boolean isResponseEncrypt(AccessCrypto accessCrypto, ServerWebExchange serverWebExchange) {
@@ -61,6 +64,7 @@ public interface AccessCryptoResolver {
      * @param serverWebExchange Server Web Exchange
      * @param accessCrypto      访问加解密
      * @param originalBody      当前响应的内容信息
+     *
      * @return 加密后的响应的内容信息
      */
     Mono<String> encryptResponseBody(ServerWebExchange serverWebExchange, AccessCrypto accessCrypto, String originalBody);

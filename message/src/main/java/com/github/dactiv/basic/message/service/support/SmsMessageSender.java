@@ -12,7 +12,6 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
-import com.github.dactiv.framework.spring.security.concurrent.annotation.Concurrent;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.amqp.core.AmqpTemplate;
@@ -108,6 +107,10 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     public SmsMessage sendSms(Integer id) {
 
         SmsMessage entity = messageService.getSmsMessage(id);
+
+        if (ExecuteStatus.Success.getValue().equals(entity.getStatus())) {
+            return entity;
+        }
 
         SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
 

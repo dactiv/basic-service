@@ -7,6 +7,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -50,6 +51,7 @@ public class ConsoleUserController {
      *
      * @param pageRequest 分页请求
      * @param request     http 请求
+     *
      * @return 分页实体
      */
     @PostMapping("page")
@@ -63,6 +65,7 @@ public class ConsoleUserController {
      * 获取系统用户实体
      *
      * @param id 主键值
+     *
      * @return 用户实体
      */
     @GetMapping("get")
@@ -78,12 +81,18 @@ public class ConsoleUserController {
      * @param entity      系统用户实体
      * @param groupIds    用户组 ID 集合
      * @param resourceIds 用户组资源 ID 集合
+     *
      * @return 消息结果集
      */
     @PostMapping("save")
-    @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
+    @Idempotent(
+            key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]",
+            ignore = "securityContext"
+    )
     public RestResult<Integer> save(@Valid ConsoleUser entity,
+                                    @CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam(required = false) List<Integer> groupIds,
                                     @RequestParam(required = false) List<Integer> resourceIds) {
 
@@ -96,6 +105,7 @@ public class ConsoleUserController {
      * 删除系统用户
      *
      * @param ids 系统用户主键 ID 集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")
@@ -134,6 +144,7 @@ public class ConsoleUserController {
      * 判断登录账户是否唯一
      *
      * @param username 登录账户
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isUsernameUnique")
@@ -147,6 +158,7 @@ public class ConsoleUserController {
      * 判断邮件是否唯一
      *
      * @param email 电子邮件
+     *
      * @return true 是，否则 false
      */
     @GetMapping("isEmailUnique")

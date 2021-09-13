@@ -124,7 +124,9 @@ public class FileManagerService {
      *
      * @param file       文件
      * @param bucketName 放置文件的桶名称
+     *
      * @return reset 结果集
+     *
      * @throws Exception 上传错误时抛出
      */
     public Map<String, Object> upload(MultipartFile file, String bucketName) throws Exception {
@@ -177,6 +179,7 @@ public class FileManagerService {
      *
      * @param bucketName 同名称
      * @param filename   文件名称
+     *
      * @throws Exception 删除错误时抛出
      */
     public void delete(String bucketName, String filename) throws Exception {
@@ -201,7 +204,9 @@ public class FileManagerService {
      *
      * @param bucketName 桶名称
      * @param filename   文件名称
+     *
      * @return 输入流
+     *
      * @throws Exception 获取错误时抛出
      */
     public InputStream get(String bucketName, String filename) throws Exception {
@@ -214,6 +219,7 @@ public class FileManagerService {
      * @param target       目标对象
      * @param targetClass  目标类
      * @param ignoreFields 要忽略的字段名
+     *
      * @return map 对象
      */
     private Map<String, Object> convertFields(Object target, Class<?> targetClass, String... ignoreFields) {
@@ -239,6 +245,7 @@ public class FileManagerService {
      *
      * @param target 目标对象
      * @param field  字段
+     *
      * @return 值
      */
     private Object getFieldToStringValue(Object target, Field field) {
