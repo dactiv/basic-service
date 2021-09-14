@@ -1,7 +1,9 @@
-package com.github.dactiv.basic.message.service;
+package com.github.dactiv.basic.commons.feign.authentication;
 
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
+import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -14,7 +16,7 @@ import java.util.Map;
  *
  * @author maurice
  */
-@FeignClient(value = "authentication", configuration = AuthenticationConfiguration.class)
+@FeignClient(value = Constants.SYS_AUTHENTICATION_NAME, configuration = AuthenticationConfiguration.class)
 public interface AuthenticationService {
 
     /**
@@ -24,7 +26,7 @@ public interface AuthenticationService {
      * @param types  认证类型
      * @return 认证信息
      */
-    @PostMapping("info/getLastAuthenticationInfo")
+    @GetMapping("info/getLastAuthenticationInfo")
     Map<String, Object> getLastAuthenticationInfo(@RequestParam("userId") Integer userId, @RequestParam("types") List<String> types);
 
     /**

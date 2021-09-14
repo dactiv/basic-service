@@ -1,5 +1,6 @@
-package com.github.dactiv.basic.authentication.service.security;
+package com.github.dactiv.basic.commons.feign.captcha;
 
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -14,7 +15,7 @@ import java.util.Map;
  *
  * @author maurice
  */
-@FeignClient(value = "captcha", configuration = AuthenticationConfiguration.class)
+@FeignClient(value = Constants.SYS_CAPTCHA_NAME, configuration = AuthenticationConfiguration.class)
 public interface CaptchaService {
 
     /**

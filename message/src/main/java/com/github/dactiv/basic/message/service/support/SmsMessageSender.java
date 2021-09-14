@@ -91,7 +91,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
         SmsMessage entity = sendSms(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus())) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
             throw new SystemException(entity.getException());
         }
 
@@ -100,7 +100,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
     /**
      * 发送短信
-     *
+     *å
      * @param id 短信实体 id
      */
     @Transactional(rollbackFor = Exception.class)

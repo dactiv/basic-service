@@ -13,8 +13,8 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
  * @author maurice.chen
  */
 @EnableWebSecurity
-@EnableFeignClients
 @EnableDiscoveryClient
+@EnableFeignClients("com.github.dactiv.basic.commons.feign")
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.captcha")
 public class CaptchaMain {

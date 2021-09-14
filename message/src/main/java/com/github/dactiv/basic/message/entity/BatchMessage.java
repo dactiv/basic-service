@@ -7,6 +7,7 @@ import com.github.dactiv.basic.message.enumerate.AttachmentType;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -25,10 +26,10 @@ import java.util.Date;
  */
 @Data
 @NoArgsConstructor
-@EqualsAndHashCode
 @Alias("batchMessage")
 @TableName("tb_batch_message")
-public class BatchMessage implements NumberIdEntity<Integer> {
+@EqualsAndHashCode(callSuper = true)
+public class BatchMessage extends IdEntity<Integer> {
 
     private static final long serialVersionUID = 3580346090724641812L;
 

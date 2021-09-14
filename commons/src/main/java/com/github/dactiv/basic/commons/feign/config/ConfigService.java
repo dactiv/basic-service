@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service;
+package com.github.dactiv.basic.commons.feign.config;
 
 import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;

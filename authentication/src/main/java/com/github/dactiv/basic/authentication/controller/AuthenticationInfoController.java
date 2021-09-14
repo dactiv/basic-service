@@ -55,8 +55,8 @@ public class AuthenticationInfoController {
      *
      * @return 认证信息
      */
-    @GetMapping("getLastAuthenticationInfo")
     @PreAuthorize("hasRole('BASIC')")
+    @GetMapping("getLastAuthenticationInfo")
     public AuthenticationInfo getLastAuthenticationInfo(@RequestParam Integer userId, @RequestParam List<String> types) {
 
         return authenticationService.getLastAuthenticationInfo(userId, types);

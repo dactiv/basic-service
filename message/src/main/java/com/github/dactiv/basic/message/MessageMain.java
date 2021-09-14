@@ -16,10 +16,10 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  * @author maurice.chen
  */
 @EnableWebSecurity
-@EnableFeignClients
 @EnableDiscoveryClient
 @EnableRedisHttpSession
 @EnableConfigurationProperties
+@EnableFeignClients("com.github.dactiv.basic.commons.feign")
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
 @SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.message")
 public class MessageMain {

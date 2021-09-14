@@ -19,14 +19,6 @@ public class RabbitmqConfig {
     public final static String DEFAULT_DELAY_EXCHANGE = "message.delay.exchange";
 
     @Bean
-    public RabbitTemplate rabbitTemplate(ConnectionFactory connectionFactory) {
-
-        RabbitTemplate template = new RabbitTemplate(connectionFactory);
-        template.setMessageConverter(new Jackson2JsonMessageConverter());
-        return template;
-    }
-
-    @Bean
     public AsyncAmqpTemplate asyncAmqpTemplate(RabbitTemplate rabbitTemplate) {
         return new AsyncRabbitTemplate(rabbitTemplate);
     }

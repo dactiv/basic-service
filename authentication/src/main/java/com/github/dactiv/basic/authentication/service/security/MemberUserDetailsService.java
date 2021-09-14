@@ -3,6 +3,7 @@ package com.github.dactiv.basic.authentication.service.security;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;

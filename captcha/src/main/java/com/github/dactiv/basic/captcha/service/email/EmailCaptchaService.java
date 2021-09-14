@@ -2,12 +2,14 @@ package com.github.dactiv.basic.captcha.service.email;
 
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
+import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.TimeProperties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
+import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
@@ -42,9 +44,10 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
         // 构造参数，提交给消息服务发送信息
         param.put("title", entry.get("name"));
         param.put("content", content);
-        param.put("toUser", entity.getEmail());
+        param.put("toEmails", Collections.singletonList(entity.getEmail()));
         param.put("type", entry.get("name"));
-        param.put("messageType", DEFAULT_TYPE);
+
+        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, DEFAULT_TYPE);
 
         return param;
     }

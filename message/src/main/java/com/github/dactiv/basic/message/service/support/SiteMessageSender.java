@@ -99,7 +99,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         SiteMessage entity = sendSiteMessage(id);
 
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.getRetryCount() <= maxRetryCount) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
             throw new SystemException(entity.getException());
         }
 
@@ -117,10 +117,15 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         SiteMessage entity = attachmentMessageService.getSiteMessage(id);
 
+        if (Objects.isNull(entity)) {
+            return null;
+        }
+
         SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
 
         entity.setLastSendTime(new Date());
         entity.setChannel(siteMessageChannelSender.getType());
+        entity.setRetryCount(entity.getRetryCount() + 1);
 
         try {
 

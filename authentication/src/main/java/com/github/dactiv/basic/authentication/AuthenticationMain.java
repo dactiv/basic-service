@@ -14,9 +14,9 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
  * @author maurice.chen
  */
 @EnableWebSecurity
-@EnableFeignClients
 @EnableDiscoveryClient
 @EnableRedisHttpSession
+@EnableFeignClients("com.github.dactiv.basic.commons.feign")
 @SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.authentication")
 public class AuthenticationMain {
 

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.service.support.site.umeng;
 
 import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.service.AuthenticationService;
+import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidMessage;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPayload;
@@ -71,7 +71,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
     @SuppressWarnings("unchecked")
     @Override
-    public RestResult<Map<String, Object>> sendSiteMessage(SiteMessage message) throws Exception {
+    public RestResult<Map<String, Object>> sendSiteMessage(SiteMessage message) {
 
         List<String> types = Arrays.asList(ResourceSource.Mobile.toString(), ResourceSource.UserCenter.toString());
 

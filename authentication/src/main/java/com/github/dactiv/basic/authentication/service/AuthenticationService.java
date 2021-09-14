@@ -8,12 +8,14 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
+import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.advisor.LockType;
@@ -63,7 +65,11 @@ public class AuthenticationService {
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
 
-    private final DateIndexGenerator dateIndexGenerator = new DateIndexGenerator(AuthenticationInfo.DEFAULT_INDEX, "-", "creationTime");
+    private final DateIndexGenerator dateIndexGenerator = new DateIndexGenerator(
+            AuthenticationInfo.DEFAULT_INDEX,
+            "-",
+            NumberIdEntity.CREATION_TIME_FIELD_NAME
+    );
 
     /**
      * 保存认证信息表实体

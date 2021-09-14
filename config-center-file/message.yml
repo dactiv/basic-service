@@ -63,17 +63,31 @@ spring:
     port: 5672
     username: 用户名
     password: 密码
+    # 开启发送失败返回
     publisher-returns: true
+    # 开启发送确认
     publisher-confirm-type: correlated
     listener:
+      # 开启 ack
       simple:
         acknowledge-mode: manual
         retry:
+          # 重试初始间隔时间
+          initial-interval: 2000
+          # 间隔时间乘子，间隔时间 * 乘子 = 下一次的间隔时间，最大不能超过设置的最大间隔时间
+          multiplier: 2
+          # 启用重试
           enabled: true
-          max-attempts: 3
-          max-interval: 30000   # 重试最大间隔时间
-          initial-interval: 5000  # 重试初始间隔时间
-          multiplier: 2 # 间隔时间乘子，间隔时间*乘子=下一次的间隔时间，最大不能超过设置的最大间隔时间
-    cache:
-      channel:
-        size: 100
+      # 开启 ack
+      direct:
+        acknowledge-mode: manual
+        retry:
+          # 重试初始间隔时间
+          initial-interval: 2000
+          # 间隔时间乘子，间隔时间 * 乘子 = 下一次的间隔时间，最大不能超过设置的最大间隔时间
+          multiplier: 2
+          # 启用重试
+          enabled: true
+    # 支持消息的确认与返回
+    template:
+      mandatory: true

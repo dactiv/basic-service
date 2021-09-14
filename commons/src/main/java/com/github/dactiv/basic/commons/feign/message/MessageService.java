@@ -1,10 +1,11 @@
-package com.github.dactiv.basic.captcha.service;
+package com.github.dactiv.basic.commons.feign.message;
 
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.AuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RequestBody;
 
 import java.util.Map;
 
@@ -13,9 +14,13 @@ import java.util.Map;
  *
  * @author maurice
  */
-// FIXME 添加一个功能工模块，将这些feign 全部统一放到一起
-@FeignClient(value = "message", configuration = AuthenticationConfiguration.class)
+@FeignClient(value = Constants.SYS_MESSAGE_NAME, configuration = AuthenticationConfiguration.class)
 public interface MessageService {
+
+    /**
+     * 默认的消息类型 key 名称
+     */
+    String DEFAULT_MESSAGE_TYPE_KEY = "messageType";
 
     /**
      * 发送消息
@@ -24,7 +29,7 @@ public interface MessageService {
      *
      * @return rest 结果集
      */
-    @PostMapping("sendMessage")
-    RestResult<Map<String, Object>> sendMessage(@RequestParam Map<String, Object> request);
+    @PostMapping("send")
+    RestResult<Map<String, Object>> send(@RequestBody Map<String, Object> request);
 
 }

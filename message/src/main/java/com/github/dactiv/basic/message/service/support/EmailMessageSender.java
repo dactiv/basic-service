@@ -4,9 +4,8 @@ import com.github.dactiv.basic.message.RabbitmqConfig;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.service.basic.AbstractMessageSender;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
-import com.github.dactiv.basic.message.service.FileManagerService;
+import com.github.dactiv.basic.commons.feign.file.FileManagerService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.mail.MailConfig;
@@ -44,7 +43,6 @@ import org.springframework.transaction.annotation.Transactional;
 
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -128,7 +126,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
         EmailMessage entity = sendEmail(id);
 
-        if (ExecuteStatus.Failure.getValue().equals(entity.getStatus()) && entity.getRetryCount() <= maxRetryCount) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
             throw new SystemException(entity.getException());
         }
 
@@ -145,7 +143,12 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
         EmailMessage entity = attachmentMessageService.getEmailMessage(id);
 
+        if (Objects.isNull(entity)) {
+            return null;
+        }
+
         entity.setLastSendTime(new Date());
+        entity.setRetryCount(entity.getRetryCount() + 1);
 
         JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
 

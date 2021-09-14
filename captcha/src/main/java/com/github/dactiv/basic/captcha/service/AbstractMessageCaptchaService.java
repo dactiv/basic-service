@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.captcha.service;
 
+import com.github.dactiv.basic.commons.feign.config.ConfigService;
+import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -51,7 +53,7 @@ public abstract class AbstractMessageCaptchaService<T extends MessageType, C ext
 
         Map<String, Object> param = createSendMessageParam(entity, entry, captcha);
 
-        RestResult<Map<String, Object>> result = messageService.sendMessage(param);
+        RestResult<Map<String, Object>> result = messageService.send(param);
         // 如果发送成记录短信验证码到 redis 中给校验备用。
         if (result.getStatus() != HttpStatus.OK.value()) {
             throw new ServiceException("消息发送失败");
