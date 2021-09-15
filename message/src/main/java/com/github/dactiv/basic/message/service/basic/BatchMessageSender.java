@@ -12,7 +12,10 @@ import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.commons.retry.Retryable;
+import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
@@ -24,7 +27,7 @@ import java.util.*;
  * @param <T> 批量消息数据的泛型实体类型
  * @param <S> 请求的消息数据泛型实体类型
  */
-public abstract class BatchMessageSender<T extends BasicMessage, S extends BatchMessage.Body> extends AbstractMessageSender<T>{
+public abstract class BatchMessageSender<T extends BasicMessage, S extends BatchMessage.Body> extends AbstractMessageSender<T> {
 
     public static final String DEFAULT_MESSAGE_COUNT_KEY = "count";
 
@@ -53,6 +56,12 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
     @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
+    /**
+     * rabbit 配置
+     */
+    @Autowired
+    private RabbitProperties rabbitProperties;
+
     protected final Class<S> sendEntityClass;
 
     public BatchMessageSender() {
@@ -70,6 +79,12 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
                 String.valueOf(HttpStatus.NO_CONTENT.value()),
                 new SystemException("未知执行结果")
         );
+
+        content
+                .stream()
+                .filter(c -> Retryable.class.isAssignableFrom(c.getClass()))
+                .map(c -> Casts.cast(c, Retryable.class))
+                .forEach(c -> c.setMaxRetryCount(getMaxRetryCount()));
 
         if (content.size() > 1) {
 
@@ -116,7 +131,9 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
 
     /**
      * 发送消息前的处理
+     *
      * @param content 批量消息内容
+     *
      * @return true 继续发送，否则 false
      */
     protected boolean preSend(List<S> content) {
@@ -146,11 +163,8 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      *
      * @param body 批量消息接口实现类
      */
-    protected void updateBatchMessage(BatchMessage.Body body) {
-
-        if (Objects.isNull(body.getBatchId())) {
-            return;
-        }
+    @Concurrent("message:batch:update:[#body.batchId]")
+    public void updateBatchMessage(BatchMessage.Body body) {
 
         BatchMessage batchMessage = messageService.getBatchMessage(body.getBatchId());
 
@@ -198,5 +212,16 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      */
     protected void onBatchMessageComplete(BatchMessage batchMessage) {
         attachmentCache.remove(batchMessage.getId());
+    }
+
+    /**
+     * 获取最大重试次数
+     *
+     * @return 重试次数
+     */
+    protected int getMaxRetryCount() {
+        return rabbitProperties.getListener().getSimple().getRetry().isEnabled() ?
+                rabbitProperties.getListener().getSimple().getRetry().getMaxAttempts() :
+                0;
     }
 }

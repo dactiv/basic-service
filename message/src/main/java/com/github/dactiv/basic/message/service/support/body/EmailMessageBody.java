@@ -25,7 +25,7 @@ import java.util.List;
 public class EmailMessageBody extends BasicMessage implements AttachmentMessage {
 
     private static final long serialVersionUID = -1367698344075208239L;
-    
+
     /**
      * 标题
      */

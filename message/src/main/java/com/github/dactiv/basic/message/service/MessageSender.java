@@ -15,7 +15,9 @@ public interface MessageSender {
      * 发送消息
      *
      * @param request http servlet request
+     *
      * @return rest 结果集
+     *
      * @throws Exception 发送错误时抛出
      */
     RestResult<Object> send(Map<String, Object> request) throws Exception;

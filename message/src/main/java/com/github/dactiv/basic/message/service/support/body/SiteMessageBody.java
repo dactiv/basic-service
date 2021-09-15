@@ -33,7 +33,7 @@ public class SiteMessageBody extends BasicMessage implements AttachmentMessage {
     private String title;
 
     /**
-    /**
+     * /**
      * 接收方用户 id 集合
      */
     @NotEmpty

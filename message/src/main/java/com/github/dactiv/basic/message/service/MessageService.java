@@ -42,6 +42,7 @@ public class MessageService {
      * 保存 table : tb_batch_message 实体
      *
      * @param batchMessage 实体
+     *
      * @see BatchMessage
      */
     public void saveBatchMessage(BatchMessage batchMessage) {
@@ -56,6 +57,7 @@ public class MessageService {
      * 新增 table : tb_batch_message 实体
      *
      * @param batchMessage 实体
+     *
      * @see BatchMessage
      */
     public void insertBatchMessage(BatchMessage batchMessage) {
@@ -66,6 +68,7 @@ public class MessageService {
      * 更新 table : tb_batch_message 实体
      *
      * @param batchMessage 实体
+     *
      * @see BatchMessage
      */
     public void updateBatchMessage(BatchMessage batchMessage) {
@@ -76,6 +79,7 @@ public class MessageService {
      * 删除 table : tb_batch_message 实体
      *
      * @param id 主键 id
+     *
      * @see BatchMessage
      */
     public void deleteBatchMessage(Integer id) {
@@ -86,6 +90,7 @@ public class MessageService {
      * 删除 table : tb_batch_message 实体
      *
      * @param ids 主键 id 集合
+     *
      * @see BatchMessage
      */
     public void deleteBatchMessage(List<Integer> ids) {
@@ -96,7 +101,9 @@ public class MessageService {
      * 获取 table : tb_batch_message 实体
      *
      * @param id 主键 id
+     *
      * @return tb_batch_message 实体
+     *
      * @see BatchMessage
      */
     public BatchMessage getBatchMessage(Integer id) {
@@ -107,7 +114,9 @@ public class MessageService {
      * 获取 table : tb_batch_message 实体
      *
      * @param wrapper 过滤条件
+     *
      * @return tb_batch_message 实体
+     *
      * @see BatchMessage
      */
     public BatchMessage findOneBatchMessage(Wrapper<BatchMessage> wrapper) {
@@ -118,7 +127,9 @@ public class MessageService {
      * 根据过滤条件查找 table : tb_batch_message 实体
      *
      * @param wrapper 过滤条件
+     *
      * @return tb_batch_message 实体集合
+     *
      * @see BatchMessage
      */
     public List<BatchMessage> findBatchMessageList(Wrapper<BatchMessage> wrapper) {
@@ -130,7 +141,9 @@ public class MessageService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     过滤条件
+     *
      * @return 分页实体
+     *
      * @see BatchMessage
      */
     public Page<BatchMessage> findBatchMessagePage(PageRequest pageRequest, Wrapper<BatchMessage> wrapper) {
@@ -204,6 +217,7 @@ public class MessageService {
      * 获取短信消息
      *
      * @param id 主键 id
+     *
      * @return 短信消息实体
      */
     public SmsMessage getSmsMessage(Integer id) {
@@ -215,6 +229,7 @@ public class MessageService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     包装器
+     *
      * @return 分页实体
      */
     public Page<SmsMessage> findSmsMessagePage(PageRequest pageRequest, Wrapper<SmsMessage> wrapper) {

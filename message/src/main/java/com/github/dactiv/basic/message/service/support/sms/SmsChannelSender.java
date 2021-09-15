@@ -30,6 +30,7 @@ public interface SmsChannelSender {
      * 发送短信
      *
      * @param entity 短信实体
+     *
      * @return rest 结果集
      */
     RestResult<Map<String, Object>> sendSms(SmsMessage entity);

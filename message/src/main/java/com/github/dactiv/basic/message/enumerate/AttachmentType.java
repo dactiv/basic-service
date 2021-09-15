@@ -52,6 +52,7 @@ public enum AttachmentType implements NameValueEnum<Integer> {
      * 通过类类型获取枚举内容
      *
      * @param type 类类型
+     *
      * @return 实际枚举只
      */
     public static AttachmentType valueOf(Class<? extends BasicMessage> type) {

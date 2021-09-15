@@ -56,6 +56,9 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     @Autowired
     private AmqpTemplate amqpTemplate;
 
+    @Autowired
+    private SmsMessageSender oneself;
+
     /**
      * 渠道商
      */
@@ -63,17 +66,11 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     private String channel;
 
     /**
-     * 最大重试次数
-     */
-    @Value("${message.sms.max-retry-count:3}")
-    private Integer maxRetryCount;
-
-    /**
      * 发送短信
      *
-     * @param id 短信实体 id
+     * @param id      短信实体 id
      * @param channel 频道信息
-     * @param tag ack 值
+     * @param tag     ack 值
      *
      * @throws Exception 发送失败或确认 ack 错误时抛出。
      */
@@ -83,7 +80,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
             ),
-            containerFactory = "rabbitListenerContainerFactory"
+            concurrency = "8"
     )
     public void sendSms(@Payload Integer id,
                         Channel channel,
@@ -91,7 +88,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
         SmsMessage entity = sendSms(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -100,7 +97,8 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
     /**
      * 发送短信
-     *å
+     * å
+     *
      * @param id 短信实体 id
      */
     @Transactional(rollbackFor = Exception.class)
@@ -124,7 +122,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
             if (restResult.getStatus() == HttpStatus.OK.value()) {
                 ExecuteStatus.success(entity);
-            } else if (!entity.isRetry()){
+            } else if (!entity.isRetry()) {
                 ExecuteStatus.failure(entity, restResult.getMessage());
             } else {
                 entity.setStatus(ExecuteStatus.Retrying.getValue());
@@ -132,16 +130,18 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
         } catch (Exception e) {
             log.error("发送短信失败", e);
-            if (!entity.isRetry()){
+            if (!entity.isRetry()) {
                 ExecuteStatus.failure(entity, e.getMessage());
             } else {
                 entity.setStatus(ExecuteStatus.Retrying.getValue());
             }
         }
 
-        updateBatchMessage(entity);
-
         messageService.saveSmsMessage(entity);
+
+        if (Objects.nonNull(entity.getBatchId())) {
+            oneself.updateBatchMessage(entity);
+        }
 
         return entity;
     }
@@ -150,6 +150,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
      * 获取发送短信的渠道发送者
      *
      * @param channel 渠道类型
+     *
      * @return 短信渠道发送者
      */
     private SmsChannelSender getSmsChannelSender(String channel) {
@@ -190,6 +191,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
      * 通过短信消息 body 构造短信消息并保存信息
      *
      * @param body 短信消息 body
+     *
      * @return 短信消息流
      */
     private Stream<SmsMessage> createSmsMessageEntity(SmsMessageBody body) {
@@ -206,7 +208,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
             for (Map<String, Object> user : users) {
 
-                SmsMessage entity = ofEntity(body);
+                SmsMessage entity = Casts.of(body, SmsMessage.class);
                 entity.setPhoneNumber(user.get("phone").toString());
 
                 result.add(entity);
@@ -215,7 +217,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
         } else {
             for (String phoneNumber : body.getPhoneNumbers()) {
 
-                SmsMessage entity = ofEntity(body);
+                SmsMessage entity = Casts.of(body, SmsMessage.class);
                 entity.setPhoneNumber(phoneNumber);
 
                 result.add(entity);
@@ -223,20 +225,6 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
         }
 
         return result.stream();
-    }
-
-    /**
-     * 创建站内信消息实体
-     *
-     * @param body 站内信消息 body
-     * @return 站内信消息实体
-     */
-    private SmsMessage ofEntity(SmsMessageBody body) {
-        SmsMessage entity = Casts.of(body, SmsMessage.class);
-
-        entity.setMaxRetryCount(maxRetryCount);
-
-        return entity;
     }
 
     @Override

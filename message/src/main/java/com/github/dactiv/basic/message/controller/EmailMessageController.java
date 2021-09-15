@@ -44,6 +44,7 @@ public class EmailMessageController {
      *
      * @param pageRequest 分页信息
      * @param request     http servlet request
+     *
      * @return 分页实体
      */
     @PostMapping("page")
@@ -57,6 +58,7 @@ public class EmailMessageController {
      * 获取邮件消息
      *
      * @param id 邮件消息主键 ID
+     *
      * @return 邮件消息实体
      */
     @GetMapping("get")

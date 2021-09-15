@@ -50,7 +50,9 @@ public class BatchMessageController {
      *
      * @param pageRequest 分页信息
      * @param request     http servlet request
+     *
      * @return 分页实体
+     *
      * @see BatchMessage
      */
     @PostMapping("page")
@@ -67,7 +69,9 @@ public class BatchMessageController {
      * 获取 table: tb_batch_message 实体
      *
      * @param id 主键 ID
+     *
      * @return tb_batch_message 实体
+     *
      * @see BatchMessage
      */
     @GetMapping("get")
@@ -81,6 +85,7 @@ public class BatchMessageController {
      * 保存 table: tb_batch_message 实体
      *
      * @param entity tb_batch_message 实体
+     *
      * @see BatchMessage
      */
     @PostMapping("save")
@@ -95,6 +100,7 @@ public class BatchMessageController {
      * 删除 table: tb_batch_message 实体
      *
      * @param ids 主键 ID 值集合
+     *
      * @see BatchMessage
      */
     @PostMapping("delete")

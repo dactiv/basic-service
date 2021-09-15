@@ -22,7 +22,7 @@ import java.util.Date;
 @Alias("smsMessage")
 @TableName("tb_sms_message")
 @EqualsAndHashCode(callSuper = true)
-public class SmsMessage extends BasicMessage implements Retryable, ExecuteStatus.Body, BatchMessage.Body{
+public class SmsMessage extends BasicMessage implements Retryable, ExecuteStatus.Body, BatchMessage.Body {
 
     private static final long serialVersionUID = 3229810529789017287L;
 

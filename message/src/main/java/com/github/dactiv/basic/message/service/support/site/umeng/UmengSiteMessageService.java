@@ -157,6 +157,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * 获取 ios 消息实体
      *
      * @param entity 站内信实体
+     *
      * @return 基础消息实体
      */
     @SuppressWarnings("unchecked")
@@ -204,6 +205,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * 获取安卓消息实体
      *
      * @param entity 站内信实体
+     *
      * @return 基础消息实体
      */
     public BasicMessage getAndroidMessage(SiteMessage entity, MessageType type) {

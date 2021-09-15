@@ -49,6 +49,7 @@ public class SiteMessageController {
      *
      * @param pageRequest 分页信息
      * @param request     过滤条件
+     *
      * @return 分页实体
      */
     @PostMapping("page")
@@ -62,6 +63,7 @@ public class SiteMessageController {
      * 按类型分组获取站内信未读数量
      *
      * @param securityContext 安全上下文
+     *
      * @return 按类型分组的未读数量
      */
     @GetMapping("unreadQuantity")
@@ -81,6 +83,7 @@ public class SiteMessageController {
      *
      * @param types           站内信类型
      * @param securityContext 安全上下文
+     *
      * @return 消息结果集
      */
     @PostMapping("read")
@@ -102,6 +105,7 @@ public class SiteMessageController {
      * 获取站内信消息
      *
      * @param id 站内信消息主键 ID
+     *
      * @return 站内信消息实体
      */
     @GetMapping("get")
@@ -115,6 +119,7 @@ public class SiteMessageController {
      * 删除站内信消息
      *
      * @param ids 站内信消息主键 ID 值集合
+     *
      * @return 消息结果集
      */
     @PostMapping("delete")

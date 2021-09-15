@@ -36,6 +36,7 @@ public class SenderController {
      * 发送消息
      *
      * @param body http servlet request body
+     *
      * @return 消息结果集
      */
     @SuppressWarnings("unchecked")
@@ -58,6 +59,7 @@ public class SenderController {
      * 更具类型获取验证码服务
      *
      * @param type 消息类型
+     *
      * @return 验证码服务
      */
     private MessageSender getMessageService(String type) {

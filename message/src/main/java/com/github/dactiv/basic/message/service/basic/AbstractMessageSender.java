@@ -20,6 +20,7 @@ import java.util.*;
  * 抽象的消息发送者实现，主要是构建和验证发送消息实体的一个抽象类
  *
  * @param <T> 消息的请求数据泛型实体类型
+ *
  * @author maurice
  */
 @Slf4j
@@ -73,6 +74,7 @@ public abstract class AbstractMessageSender<T extends BasicMessage> implements M
      * 发送消息
      *
      * @param result body 集合
+     *
      * @return reset 结果集
      */
     protected abstract RestResult<Object> sendMessage(List<T> result);
@@ -81,7 +83,9 @@ public abstract class AbstractMessageSender<T extends BasicMessage> implements M
      * 绑定并验证请求数据
      *
      * @param value 请求参数
+     *
      * @return body
+     *
      * @throws BindException 验证数据错误时抛出
      */
     private T bindAndValidate(Map<String, Object> value) throws BindException {

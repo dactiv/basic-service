@@ -64,6 +64,9 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @Autowired
     private AmqpTemplate amqpTemplate;
 
+    @Autowired
+    private SiteMessageSender oneself;
+
     /**
      * 渠道商
      */
@@ -71,17 +74,11 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     private String channel;
 
     /**
-     * 最大重试次数
-     */
-    @Value("${message.site.max-retry-count:3}")
-    private Integer maxRetryCount;
-
-    /**
      * 发送站内信
      *
-     * @param id 站内信实体 id
+     * @param id      站内信实体 id
      * @param channel 频道信息
-     * @param tag ack 值
+     * @param tag     ack 值
      *
      * @throws Exception 发送失败或确认 ack 错误时抛出。
      */
@@ -91,7 +88,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
             ),
-            containerFactory = "rabbitListenerContainerFactory"
+            concurrency = "8"
     )
     public void sendSiteMessage(@Payload Integer id,
                                 Channel channel,
@@ -99,7 +96,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         SiteMessage entity = sendSiteMessage(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -144,7 +141,9 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         attachmentMessageService.saveSiteMessage(entity);
 
-        updateBatchMessage(entity);
+        if (Objects.nonNull(entity.getBatchId())) {
+            oneself.updateBatchMessage(entity);
+        }
 
         return entity;
     }
@@ -153,6 +152,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      * 获取站内信消息渠道发送者
      *
      * @param channel 渠道类型
+     *
      * @return 站内信消息渠道发送者
      */
     private SiteMessageChannelSender getSiteMessageChannelSender(String channel) {
@@ -167,6 +167,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      * 通过站内信消息 body 构造站内信消息并保存信息
      *
      * @param body 站内信消息 body
+     *
      * @return 邮件消息流
      */
     private Stream<SiteMessage> createSiteMessageEntity(SiteMessageBody body) {
@@ -206,12 +207,11 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      * 创建站内信消息实体
      *
      * @param body 站内信消息 body
+     *
      * @return 站内信消息实体
      */
     private SiteMessage ofEntity(SiteMessageBody body) {
         SiteMessage entity = Casts.of(body, SiteMessage.class, "attachmentList");
-
-        entity.setMaxRetryCount(maxRetryCount);
 
         if (CollectionUtils.isNotEmpty(body.getAttachmentList())) {
             entity.setHasAttachment(YesOrNo.Yes.getValue());

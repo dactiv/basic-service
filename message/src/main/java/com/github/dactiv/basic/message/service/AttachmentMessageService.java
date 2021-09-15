@@ -55,6 +55,7 @@ public class AttachmentMessageService {
      * 保存 table : tb_attachment 实体
      *
      * @param attachment 实体
+     *
      * @see Attachment
      */
     public void saveAttachment(Attachment attachment) {
@@ -69,6 +70,7 @@ public class AttachmentMessageService {
      * 新增 table : tb_attachment 实体
      *
      * @param attachment 实体
+     *
      * @see Attachment
      */
     public void insertAttachment(Attachment attachment) {
@@ -79,6 +81,7 @@ public class AttachmentMessageService {
      * 更新 table : tb_attachment 实体
      *
      * @param attachment 实体
+     *
      * @see Attachment
      */
     public void updateAttachment(Attachment attachment) {
@@ -89,6 +92,7 @@ public class AttachmentMessageService {
      * 删除 table : tb_attachment 实体
      *
      * @param id 主键 id
+     *
      * @see Attachment
      */
     public void deleteAttachment(Integer id) {
@@ -99,6 +103,7 @@ public class AttachmentMessageService {
      * 删除 table : tb_attachment 实体
      *
      * @param ids 主键 id 集合
+     *
      * @see Attachment
      */
     public void deleteAttachment(List<Integer> ids) {
@@ -109,7 +114,9 @@ public class AttachmentMessageService {
      * 获取 table : tb_attachment 实体
      *
      * @param id 主键 id
+     *
      * @return tb_attachment 实体
+     *
      * @see Attachment
      */
     public Attachment getAttachment(Integer id) {
@@ -120,7 +127,9 @@ public class AttachmentMessageService {
      * 获取 table : tb_attachment 实体
      *
      * @param wrapper 过滤条件
+     *
      * @return tb_attachment 实体
+     *
      * @see Attachment
      */
     public Attachment findOneAttachment(Wrapper<Attachment> wrapper) {
@@ -131,7 +140,9 @@ public class AttachmentMessageService {
      * 根据过滤条件查找 table : tb_attachment 实体
      *
      * @param wrapper 过滤条件
+     *
      * @return tb_attachment 实体集合
+     *
      * @see Attachment
      */
     public List<Attachment> findAttachmentList(Wrapper<Attachment> wrapper) {
@@ -143,7 +154,9 @@ public class AttachmentMessageService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     过滤条件
+     *
      * @return 分页实体
+     *
      * @see Attachment
      */
     public Page<Attachment> findAttachmentPage(PageRequest pageRequest, Wrapper<Attachment> wrapper) {
@@ -229,6 +242,7 @@ public class AttachmentMessageService {
      * 获取邮件消息
      *
      * @param id 主键 id
+     *
      * @return 邮件消息实体
      */
     public EmailMessage getEmailMessage(Integer id) {
@@ -252,6 +266,7 @@ public class AttachmentMessageService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     过滤条件
+     *
      * @return 分页实体
      */
     public Page<EmailMessage> findEmailMessagePage(PageRequest pageRequest, Wrapper<EmailMessage> wrapper) {
@@ -331,6 +346,7 @@ public class AttachmentMessageService {
      * 获取站内信消息
      *
      * @param id 主键 id
+     *
      * @return 站内信消息实体
      */
     public SiteMessage getSiteMessage(Integer id) {
@@ -353,6 +369,7 @@ public class AttachmentMessageService {
      * 根据过滤条件查找站内信消息数据
      *
      * @param wrapper 包装器
+     *
      * @return 站内信消息实体集合
      */
     public List<SiteMessage> findSiteMessageList(Wrapper<SiteMessage> wrapper) {
@@ -364,6 +381,7 @@ public class AttachmentMessageService {
      *
      * @param pageRequest 分页请求
      * @param wrapper     包装器
+     *
      * @return 分页实体
      */
     public Page<SiteMessage> findSiteMessagePage(PageRequest pageRequest, Wrapper<SiteMessage> wrapper) {
@@ -380,6 +398,7 @@ public class AttachmentMessageService {
      * 计数站内信未读数量
      *
      * @param userId 用户 id
+     *
      * @return 按类型分组的未读数量
      */
     public List<Map<String, Object>> countSiteMessageUnreadQuantity(Integer userId) {

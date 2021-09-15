@@ -24,6 +24,7 @@ public interface AuthenticationService {
      *
      * @param userId 用户 id
      * @param types  认证类型
+     *
      * @return 认证信息
      */
     @GetMapping("info/getLastAuthenticationInfo")
@@ -33,6 +34,7 @@ public interface AuthenticationService {
      * 查找用户信息
      *
      * @param filter 过滤条件
+     *
      * @return 用户信息集合
      */
     @PostMapping("member/user/find")

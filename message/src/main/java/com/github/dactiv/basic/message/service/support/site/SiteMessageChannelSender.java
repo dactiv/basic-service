@@ -23,6 +23,7 @@ public interface SiteMessageChannelSender {
      * 发送消息
      *
      * @param entity 站内信消息实体
+     *
      * @return rest 结果集
      */
     RestResult<Map<String, Object>> sendSiteMessage(SiteMessage entity) throws Exception;

@@ -67,17 +67,14 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     private final Map<String, JavaMailSenderImpl> mailSenderMap = new LinkedHashMap<>();
 
-    /**
-     * 最大重试次数
-     */
-    @Value("${message.mail.max-retry-count:3}")
-    private Integer maxRetryCount;
-
     @Autowired
     private AmqpTemplate amqpTemplate;
 
     @Autowired
     private AttachmentMessageService attachmentMessageService;
+
+    @Autowired
+    private EmailMessageSender oneself;
 
     @Autowired
     private MailConfig mailConfig;
@@ -110,6 +107,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      * @param id      邮件实体 id
      * @param channel 频道信息
      * @param tag     ack 值
+     *
      * @throws Exception 发送失败或确认 ack 错误时抛出。
      */
     @RabbitListener(
@@ -118,7 +116,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
             ),
-            containerFactory = "rabbitListenerContainerFactory"
+            concurrency = "8"
     )
     public void sendEmail(@Payload Integer id,
                           Channel channel,
@@ -126,7 +124,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
         EmailMessage entity = sendEmail(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < maxRetryCount) {
+        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -197,7 +195,9 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
         attachmentMessageService.saveEmailMessage(entity);
 
-        updateBatchMessage(entity);
+        if (Objects.nonNull(entity.getBatchId())) {
+            oneself.updateBatchMessage(entity);
+        }
 
         return entity;
     }
@@ -213,6 +213,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      * 通过邮件消息 body 构造邮件消息并保存信息
      *
      * @param body 邮件消息 body
+     *
      * @return 邮件消息流
      */
     private Stream<EmailMessage> createEmailMessageEntity(EmailMessageBody body) {
@@ -253,6 +254,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      * 创建邮件消息实体
      *
      * @param body 邮件消息 body
+     *
      * @return 邮件消息实体
      */
     private EmailMessage ofEntity(EmailMessageBody body) {
@@ -265,7 +267,6 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         }
 
         entity.setFromEmail(mailSender.getUsername());
-        entity.setMaxRetryCount(maxRetryCount);
 
         if (CollectionUtils.isNotEmpty(body.getAttachmentList())) {
             entity.setHasAttachment(YesOrNo.Yes.getValue());
@@ -282,9 +283,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     @Override
     public void afterPropertiesSet() {
-
         mailConfig.getAccounts().entrySet().forEach(this::generateMailSender);
-
     }
 
     /**
