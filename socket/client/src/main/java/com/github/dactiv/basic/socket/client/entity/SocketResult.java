@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.socket.client.entity;
 
-import com.github.dactiv.basic.socket.client.enumerate.NoticeType;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -130,12 +129,12 @@ public class SocketResult implements Serializable {
      * @param message          消息内容
      * @param type             用户通知类型
      */
-    public void addUnicastMessageNotice(String deviceIdentified, String message, NoticeType type) {
+    public void addUnicastMessageNotice(String deviceIdentified, String message, String type) {
 
         addUnicastMessage(
                 deviceIdentified,
-                NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME,
-                UserNotice.of(null, message, type.getValue())
+                UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME,
+                UserNotice.of(null, message, type)
         );
     }
 
@@ -147,11 +146,11 @@ public class SocketResult implements Serializable {
      * @param message          消息内容
      * @param type             用户通知类型
      */
-    public void addUnicastMessageNotice(String deviceIdentified, String title, String message, NoticeType type) {
+    public void addUnicastMessageNotice(String deviceIdentified, String title, String message, String type) {
         addUnicastMessage(
                 deviceIdentified,
-                NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME,
-                UserNotice.of(title, message, type.getValue())
+                UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME,
+                UserNotice.of(title, message, type)
         );
     }
 
@@ -161,8 +160,8 @@ public class SocketResult implements Serializable {
      * @param message 消息内容
      * @param type    用户通知类型
      */
-    public void addBroadcastSocketUserNotice(String message, NoticeType type) {
-        addBroadcastSocketMessage(NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(null, message, type.getValue()));
+    public void addBroadcastSocketUserNotice(String message, String type) {
+        addBroadcastSocketMessage(UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(null, message, type));
     }
 
     /**
@@ -172,8 +171,8 @@ public class SocketResult implements Serializable {
      * @param message 消息内容
      * @param type    用户通知类型
      */
-    public void addBroadcastSocketUserNotice(String title, String message, NoticeType type) {
-        addBroadcastSocketMessage(NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(title, message, type.getValue()));
+    public void addBroadcastSocketUserNotice(String title, String message, String type) {
+        addBroadcastSocketMessage(UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(title, message, type));
     }
 
 
@@ -184,8 +183,8 @@ public class SocketResult implements Serializable {
      * @param message 消息内容
      * @param type    用户通知类型
      */
-    public void addBroadcastSocketUserNoticeByRoom(String room, String message, NoticeType type) {
-        addBroadcastSocketMessage(room, NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(null, message, type.getValue()));
+    public void addBroadcastSocketUserNoticeByRoom(String room, String message, String type) {
+        addBroadcastSocketMessage(room, UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(null, message, type));
     }
 
     /**
@@ -196,8 +195,8 @@ public class SocketResult implements Serializable {
      * @param message 消息内容
      * @param type    用户通知类型
      */
-    public void addBroadcastSocketUserNoticeByRoom(String room, String title, String message, NoticeType type) {
-        addBroadcastSocketMessage(room, NoticeType.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(title, message, type.getValue()));
+    public void addBroadcastSocketUserNoticeByRoom(String room, String title, String message, String type) {
+        addBroadcastSocketMessage(room, UserNotice.SYSTEM_USER_NOTICE_EVENT_NAME, UserNotice.of(title, message, type));
     }
 
     /**

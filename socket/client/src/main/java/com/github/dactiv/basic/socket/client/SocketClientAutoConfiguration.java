@@ -23,12 +23,12 @@ import org.springframework.web.client.RestTemplate;
 @Configuration
 @AutoConfigureBefore(SpringWebMvcSupportAutoConfiguration.class)
 @EnableConfigurationProperties({SpringWebSupportProperties.class, SecurityProperties.class})
-@ConditionalOnProperty(prefix = "sg.socket.client", value = "enabled", matchIfMissing = true)
+@ConditionalOnProperty(prefix = "dactiv.socket.client", value = "enabled", matchIfMissing = true)
 public class SocketClientAutoConfiguration {
 
     @Bean
-    @ConditionalOnMissingBean(com.github.dactiv.basic.socket.client.SocketClientTemplate.class)
-    public com.github.dactiv.basic.socket.client.SocketClientTemplate socketClientTemplate(RestTemplate restTemplate,
+    @ConditionalOnMissingBean(SocketClientTemplate.class)
+    public SocketClientTemplate socketClientTemplate(RestTemplate restTemplate,
                                                                                     DiscoveryClient discoveryClient,
                                                                                     ThreadPoolTaskExecutor threadPoolTaskExecutor,
                                                                                     SecurityProperties securityProperties) {
@@ -36,13 +36,13 @@ public class SocketClientAutoConfiguration {
     }
 
     @Bean
-    public com.github.dactiv.basic.socket.client.SocketResultResponseBodyAdvice socketResultResponseBodyAdvice(SpringWebSupportProperties properties,
-                                                                                                        com.github.dactiv.basic.socket.client.SocketClientTemplate socketClientTemplate) {
-        return new com.github.dactiv.basic.socket.client.SocketResultResponseBodyAdvice(properties, socketClientTemplate);
+    public SocketResultResponseBodyAdvice socketResultResponseBodyAdvice(SpringWebSupportProperties properties,
+                                                                         SocketClientTemplate socketClientTemplate) {
+        return new SocketResultResponseBodyAdvice(properties, socketClientTemplate);
     }
 
     @Bean
-    public SocketMessageInterceptor socketMessageInterceptor(com.github.dactiv.basic.socket.client.SocketClientTemplate socketClientTemplate) {
+    public SocketMessageInterceptor socketMessageInterceptor(SocketClientTemplate socketClientTemplate) {
         return new SocketMessageInterceptor(socketClientTemplate);
     }
 

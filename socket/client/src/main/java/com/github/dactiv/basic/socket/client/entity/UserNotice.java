@@ -16,7 +16,7 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor(staticName = "of")
 public class UserNotice {
 
-    public static final String RABBIT_MQ_USER_SOCKET_FANOUT_EXCHANGE_NAME = "game.sg.socket.user.exchange";
+    public static final String SYSTEM_USER_NOTICE_EVENT_NAME = "SYSTEM_USER_NOTICE_EVENT";
 
     /**
      * 标题
@@ -31,6 +31,6 @@ public class UserNotice {
     /**
      * 类型
      */
-    private Integer type;
+    private String type;
 
 }
