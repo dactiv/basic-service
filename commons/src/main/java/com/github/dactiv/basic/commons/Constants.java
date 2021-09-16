@@ -48,4 +48,9 @@ public interface Constants {
      * 权限系统的默认 rabbitmq 交换机名称
      */
     String SYS_AUTHENTICATION_RABBITMQ_EXCHANGE = SYS_AUTHENTICATION_NAME + Casts.DEFAULT_DOT_SYMBOL + RABBITMQ_EXCHANGE;
+
+    /**
+     * 消息系统的默认 rabbitmq 交换机名称
+     */
+    String SYS_MESSAGE_RABBITMQ_EXCHANGE = SYS_MESSAGE_NAME + Casts.DEFAULT_DOT_SYMBOL + RABBITMQ_EXCHANGE;
 }

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
@@ -27,7 +27,6 @@ import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.io.ByteArrayResource;
@@ -88,7 +87,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
                 .stream()
                 .map(BasicMessage::getId)
                 .forEach(id ->
-                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+                        amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条邮件消息完成",
@@ -113,7 +112,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
+                    exchange = @Exchange(value = Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE),
                     key = DEFAULT_QUEUE_NAME
             )
     )

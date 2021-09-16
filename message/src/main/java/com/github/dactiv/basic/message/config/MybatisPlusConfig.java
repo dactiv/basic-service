@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication;
+package com.github.dactiv.basic.message.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;

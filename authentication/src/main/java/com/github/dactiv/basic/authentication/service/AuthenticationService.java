@@ -7,9 +7,8 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
-import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
-import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
@@ -60,7 +59,7 @@ public class AuthenticationService {
     private MessageService messageService;
 
     @Autowired
-    private AuthenticationExtendProperties properties;
+    private AuthenticationConfig properties;
 
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.basic.message.RabbitmqConfig;
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.SiteMessage;
@@ -85,7 +85,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
+                    exchange = @Exchange(value = Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE),
                     key = DEFAULT_QUEUE_NAME
             )
     )
@@ -238,7 +238,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
                 .stream()
                 .map(BasicMessage::getId)
                 .forEach(id ->
-                        amqpTemplate.convertAndSend(RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+                        amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条站内信消息完成",

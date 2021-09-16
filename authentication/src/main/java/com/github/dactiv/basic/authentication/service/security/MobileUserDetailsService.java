@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
@@ -42,7 +43,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
     @Autowired
-    private AuthenticationExtendProperties properties;
+    private AuthenticationConfig properties;
 
     @Autowired
     private RedissonClient redissonClient;

@@ -39,4 +39,14 @@ public interface AuthenticationService {
      */
     @PostMapping("member/user/find")
     List<Map<String, Object>> findMemberUser(@RequestBody Map<String, Object> filter);
+
+    /**
+     * 获取系统用户信息
+     *
+     * @param id 用户 id
+     *
+     * @return 系统用户信息
+     */
+    @GetMapping("console/user/get")
+    Map<String, Object> getConsoleUser(Integer id);
 }

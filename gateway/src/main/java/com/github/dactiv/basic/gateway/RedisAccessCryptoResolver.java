@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.gateway;
 
+import com.github.dactiv.basic.gateway.config.AccessCryptoConfig;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.ExpirationToken;
@@ -36,7 +37,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
     private static final Logger LOGGER = LoggerFactory.getLogger(RedisAccessCryptoResolver.class);
 
     @Autowired
-    private AccessCryptoProperties accessCryptoProperties;
+    private AccessCryptoConfig accessCryptoConfig;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -72,7 +73,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
      * @return 响应加密访问 token key
      */
     private String getAccessTokenKey(String accessToken) {
-        return accessCryptoProperties.getAccessTokenKey() + accessToken;
+        return accessCryptoConfig.getAccessTokenKey() + accessToken;
     }
 
     public RBucket<AccessToken> getAccessTokenBucket(String accessToken) {
@@ -91,7 +92,7 @@ public class RedisAccessCryptoResolver extends AbstractAccessCryptoResolver impl
 
     @NacosCronScheduled(cron = "${spring.application.crypto.access.redis.sync-cron:0 0/3 * * * ?}")
     public void syncRedisAccessCryptoList() {
-        RList<AccessCrypto> list = redissonClient.getList(accessCryptoProperties.getAccessCryptoListKey());
+        RList<AccessCrypto> list = redissonClient.getList(accessCryptoConfig.getAccessCryptoListKey());
         RFuture<List<AccessCrypto>> future = list.rangeAsync(0, list.size());
 
         future.onComplete((accessCryptos, throwable) -> {

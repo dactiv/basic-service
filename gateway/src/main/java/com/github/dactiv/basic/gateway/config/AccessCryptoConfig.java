@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.gateway;
+package com.github.dactiv.basic.gateway.config;
 
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
 @Data
 @Component
 @ConfigurationProperties(prefix = "crypto.access")
-public class AccessCryptoProperties {
+public class AccessCryptoConfig {
 
     /**
      * request 中的客户端密文参数名

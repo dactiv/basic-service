@@ -7,7 +7,7 @@ import com.fasterxml.jackson.core.util.VersionUtil;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
-import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -62,7 +62,7 @@ public class PluginResourceService {
     private AuthorizationService authorizationService;
 
     @Autowired
-    private AuthenticationExtendProperties properties;
+    private AuthenticationConfig properties;
 
     private final Map<String, List<PluginInstance>> instanceCache = new LinkedHashMap<>();
 

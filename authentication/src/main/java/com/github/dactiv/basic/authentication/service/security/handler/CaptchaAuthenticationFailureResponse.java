@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.framework.commons.RestResult;
@@ -31,7 +31,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
     public static final String CAPTCHA_EXECUTE_CODE = "1001";
 
     @Autowired
-    private AuthenticationExtendProperties extendProperties;
+    private AuthenticationConfig extendProperties;
 
     @Autowired
     private AuthenticationProperties properties;

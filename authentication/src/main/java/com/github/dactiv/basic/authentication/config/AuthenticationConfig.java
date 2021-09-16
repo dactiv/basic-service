@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.security;
+package com.github.dactiv.basic.authentication.config;
 
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -22,7 +22,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @NoArgsConstructor
 @ConfigurationProperties("authentication.extend")
-public class AuthenticationExtendProperties {
+public class AuthenticationConfig {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
 

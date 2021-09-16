@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.gateway;
 
+import com.github.dactiv.basic.gateway.config.AccessCryptoConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
@@ -47,7 +48,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractAccessCryptoResolver.class);
 
     @Autowired
-    private AccessCryptoProperties accessCryptoProperties;
+    private AccessCryptoConfig accessCryptoConfig;
 
     @Autowired
     private CryptoAlgorithm accessTokenAlgorithm;
@@ -105,13 +106,13 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
             String trimString = StringUtils.trim(v);
 
-            String fieldName = StringUtils.substringBefore(trimString, accessCryptoProperties.getParamNameValueDelimiter());
+            String fieldName = StringUtils.substringBefore(trimString, accessCryptoConfig.getParamNameValueDelimiter());
 
             if (StringUtils.isEmpty(fieldName)) {
                 return;
             }
 
-            String fieldValue = StringUtils.substringAfter(trimString, accessCryptoProperties.getParamNameValueDelimiter());
+            String fieldValue = StringUtils.substringAfter(trimString, accessCryptoConfig.getParamNameValueDelimiter());
 
             if (StringUtils.isEmpty(fieldValue)) {
                 return;
@@ -165,7 +166,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
         // 获取原始的请求 body map
         MultiValueMap<String, String> originalBody = Casts.castRequestBodyMap(body);
         // 删除密文阐述
-        originalBody.remove(accessCryptoProperties.getCipherTextParamName());
+        originalBody.remove(accessCryptoConfig.getCipherTextParamName());
         // 将原始的请求 body 里还存在的参数添加到新的请求 body 里
         newRequestBody.putAll(originalBody);
 
@@ -191,7 +192,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     private String getAccessTokenValue(ServerWebExchange serverWebExchange) {
 
-        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(accessCryptoProperties.getAccessTokenHeaders());
+        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(accessCryptoConfig.getAccessTokenHeaders());
 
         if (CollectionUtils.isEmpty(accessToken)) {
             throw new CryptoException("key 值不能为 null");
@@ -209,7 +210,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     protected List<ByteSource> getRequestCipher(String body) {
         MultiValueMap<String, String> requestBody = decodeRequestBodyToMap(body);
-        List<String> values = requestBody.get(accessCryptoProperties.getCipherTextParamName());
+        List<String> values = requestBody.get(accessCryptoConfig.getCipherTextParamName());
 
         return values.stream().map(value -> {
 

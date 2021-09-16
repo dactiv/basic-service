@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
@@ -47,7 +48,7 @@ public class MemberUserDetailsService implements UserDetailsService {
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
     @Autowired
-    private AuthenticationExtendProperties properties;
+    private AuthenticationConfig properties;
 
     @Autowired
     private UserService userService;

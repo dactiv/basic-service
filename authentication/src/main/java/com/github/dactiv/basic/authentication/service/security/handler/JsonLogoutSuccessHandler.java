@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.github.dactiv.basic.authentication.service.UserService;
-import com.github.dactiv.basic.authentication.service.security.AuthenticationExtendProperties;
+import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.framework.commons.Casts;
@@ -56,7 +56,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private final static String DEFAULT_TOKEN_NAME = "token";
 
     @Autowired
-    private AuthenticationExtendProperties authenticationProperties;
+    private AuthenticationConfig authenticationProperties;
 
     @Autowired
     private CaptchaAuthenticationFailureResponse failureHandler;

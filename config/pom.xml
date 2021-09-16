@@ -5,12 +5,11 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>com.github.dactiv.framework</groupId>
+        <groupId>com.github.dactiv.basic</groupId>
         <artifactId>parent</artifactId>
         <version>1.0.0-SNAPSHOT</version>
     </parent>
 
-    <groupId>com.github.dactiv.basic</groupId>
     <artifactId>config</artifactId>
     <name>config</name>
     <description>config service</description>
@@ -21,25 +20,21 @@
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
             <artifactId>spring-security</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
             <artifactId>idempotent</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
             <artifactId>access-crypto</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
             <artifactId>alibaba-nacos</artifactId>
-            <version>1.0.0-SNAPSHOT</version>
         </dependency>
 
         <dependency>
@@ -50,7 +45,6 @@
         <dependency>
             <groupId>mysql</groupId>
             <artifactId>mysql-connector-java</artifactId>
-            <version>8.0.25</version>
         </dependency>
 
         <dependency>
@@ -61,7 +55,6 @@
         <dependency>
             <groupId>net.logstash.logback</groupId>
             <artifactId>logstash-logback-encoder</artifactId>
-            <version>6.6</version>
         </dependency>
 
         <dependency>
@@ -72,7 +65,6 @@
         <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
-            <version>1.18.20</version>
             <scope>provided</scope>
         </dependency>
 
