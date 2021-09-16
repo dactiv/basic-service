@@ -203,12 +203,12 @@ public class AuthenticationService {
         param.put("toUserIds", Collections.singletonList(info.getUserId()));
         param.put("type", properties.getAbnormalArea().getMessageType());
         param.put("title", properties.getAbnormalArea().getTitle());
-        param.put("data", Casts.convertValue(info, Map.class));
+        param.put("data", info.getDevice());
         param.put("isPush", YesOrNo.Yes.getValue());
 
         try {
 
-            RestResult<Map<String, Object>> result = messageService.send(param);
+            RestResult<Object> result = messageService.send(param);
 
             if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
                 throw new ServiceException(result.getMessage());

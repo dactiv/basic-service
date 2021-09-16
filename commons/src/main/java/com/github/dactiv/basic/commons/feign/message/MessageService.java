@@ -30,6 +30,6 @@ public interface MessageService {
      * @return rest 结果集
      */
     @PostMapping("send")
-    RestResult<Map<String, Object>> send(@RequestBody Map<String, Object> request);
+    RestResult<Object> send(@RequestBody Map<String, Object> request);
 
 }

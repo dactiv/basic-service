@@ -7,9 +7,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
+import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import nl.basjes.parse.useragent.UserAgent;
 import org.springframework.data.annotation.Id;
 
 import javax.validation.constraints.NotEmpty;
@@ -38,12 +41,14 @@ public class AuthenticationInfo implements NumberIdEntity<Integer> {
      * 主键
      */
     @Id
+    @EqualsAndHashCode.Exclude
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     /**
      * 创建时间
      */
+    @EqualsAndHashCode.Exclude
     private Date creationTime = new Date();
 
     /**
@@ -68,6 +73,7 @@ public class AuthenticationInfo implements NumberIdEntity<Integer> {
      * 设备名称
      */
     @NotEmpty
+    @EqualsAndHashCode.Exclude
     @TableField(typeHandler = JacksonTypeHandler.class)
     private Map<String, String> device;
 
