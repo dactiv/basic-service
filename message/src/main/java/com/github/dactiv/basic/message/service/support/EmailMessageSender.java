@@ -115,8 +115,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
-            ),
-            concurrency = "8"
+            )
     )
     public void sendEmail(@Payload Integer id,
                           Channel channel,

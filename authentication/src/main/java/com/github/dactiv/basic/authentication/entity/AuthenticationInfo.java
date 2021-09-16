@@ -1,8 +1,10 @@
 package com.github.dactiv.basic.authentication.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
@@ -13,6 +15,8 @@ import org.springframework.data.annotation.Id;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+import java.util.LinkedHashMap;
+import java.util.Map;
 
 /**
  * <p>认证信息实体类</p>
@@ -64,7 +68,8 @@ public class AuthenticationInfo implements NumberIdEntity<Integer> {
      * 设备名称
      */
     @NotEmpty
-    private String device;
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, String> device;
 
     /**
      * 省

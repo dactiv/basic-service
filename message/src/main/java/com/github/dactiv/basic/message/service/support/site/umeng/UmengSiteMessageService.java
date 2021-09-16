@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.service.support.site.umeng;
 
-import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
+import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidMessage;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPayload;
@@ -14,7 +14,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mobile.DevicePlatform;
+import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -87,13 +87,13 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         }
 
         // 得到设备信息
-        String device = info.get("device").toString();
+        Map<String, Object> device = Casts.cast(info.get("device"), Map.class);
 
         BasicMessage basicMessage = null;
         // 根据谁被信息构造基础消息对象
-        if (DevicePlatform.ANDROID.toString().equals(device)) {
+        if ("ANDROID".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
             basicMessage = getAndroidMessage(message, MessageType.Customize);
-        } else if (DevicePlatform.IOS.toString().equals(device)) {
+        } else if ("IOS".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
             basicMessage = getIosMessage(message, MessageType.Customize);
         }
 
@@ -186,8 +186,8 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         Map<String, Object> payloadMap = Casts.convertValue(iosPayload, Map.class);
 
-        payloadMap.putAll(entity.getLink());
-        payloadMap.put("type", entity.getType());
+        payloadMap.putAll(entity.getMeta());
+        //payloadMap.put("type", entity.getType());
 
         result.setPayload(payloadMap);
 
@@ -196,7 +196,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         policy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(policy);
 
-        result.setDescription(entity.getType() + "-" + DevicePlatform.IOS.toString());
+        result.setDescription("IOS");
 
         return result;
     }
@@ -223,7 +223,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         androidPayload.setDisplayType("notification");
 
-        androidPayload.getExtra().putAll(entity.getLink());
+        androidPayload.getExtra().putAll(entity.getMeta());
 
         AndroidPayloadBody androidPayloadBody = new AndroidPayloadBody();
 
@@ -247,7 +247,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         androidPolicy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(androidPolicy);
 
-        result.setDescription(entity.getType() + "-" + DevicePlatform.ANDROID.toString());
+        result.setDescription("ANDROID");
 
         if (!properties.getAndroid().getIgnoreActivityType().contains(entity.getType())) {
             result.setMipush(properties.getAndroid().isPush());

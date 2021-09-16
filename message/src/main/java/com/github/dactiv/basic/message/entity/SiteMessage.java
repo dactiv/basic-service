@@ -63,16 +63,10 @@ public class SiteMessage extends BasicMessage implements AttachmentMessage, Retr
     private Date readTime;
 
     /**
-     * 链接
-     */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private Map<String, Object> link;
-
-    /**
      * 数据
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private Map<String, Object> data;
+    private Map<String, Object> meta;
     /**
      * 重试次数
      */

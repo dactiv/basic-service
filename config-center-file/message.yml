@@ -71,6 +71,7 @@ spring:
       # 开启 ack
       simple:
         acknowledge-mode: manual
+        concurrency: 8
         retry:
           # 重试初始间隔时间
           initial-interval: 2000

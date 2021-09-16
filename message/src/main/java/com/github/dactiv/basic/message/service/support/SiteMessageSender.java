@@ -87,8 +87,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = RabbitmqConfig.DEFAULT_DELAY_EXCHANGE, delayed = "true"),
                     key = DEFAULT_QUEUE_NAME
-            ),
-            concurrency = "8"
+            )
     )
     public void sendSiteMessage(@Payload Integer id,
                                 Channel channel,

@@ -177,8 +177,7 @@ public class SecurityController {
         }
 
         String rawPassword = DigestUtils.md5DigestAsHex((password + username + deviceIdentified).getBytes())
-                + mobileUserDetails.getDevice().toString()
-                + mobileUserDetails.getDevice().getDevicePlatform().name();
+                + mobileUserDetails.getDevice().toString();
 
         if (!mobileUserDetailsService.getPasswordEncoder().matches(rawPassword, mobileUserDetails.getPassword())) {
             throw new ServiceException("用户名密码错误");

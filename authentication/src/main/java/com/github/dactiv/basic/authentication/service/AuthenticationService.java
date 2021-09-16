@@ -187,32 +187,37 @@ public class AuthenticationService {
 
         AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
-        if (Objects.nonNull(authenticationInfo) && !authenticationInfo.equals(info) && info.getId() > authenticationInfo.getId()) {
+        if (Objects.isNull(authenticationInfo)) {
+            return ;
+        }
 
-            Map<String, Object> param = new LinkedHashMap<>();
+        if (authenticationInfo.equals(info)) {
+            return ;
+        }
 
-            param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, properties.getAbnormalArea().getSendType());
+        Map<String, Object> param = new LinkedHashMap<>();
 
-            param.put("content", properties.getAbnormalArea().getSendContent());
-            param.put("toUserIds", Collections.singletonList(info.getUserId()));
-            param.put("type", properties.getAbnormalArea().getMessageType());
-            param.put("title", properties.getAbnormalArea().getTitle());
-            param.put("data", Casts.convertValue(info, Map.class));
-            param.put("isPush", YesOrNo.Yes.getValue());
+        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, properties.getAbnormalArea().getSendType());
 
-            try {
+        param.put("content", properties.getAbnormalArea().getSendContent());
+        param.put("toUserIds", Collections.singletonList(info.getUserId()));
+        param.put("type", properties.getAbnormalArea().getMessageType());
+        param.put("title", properties.getAbnormalArea().getTitle());
+        param.put("data", Casts.convertValue(info, Map.class));
+        param.put("isPush", YesOrNo.Yes.getValue());
 
-                RestResult<Map<String, Object>> result = messageService.send(param);
+        try {
 
-                if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
-                    throw new ServiceException(result.getMessage());
-                }
+            RestResult<Map<String, Object>> result = messageService.send(param);
 
-            } catch (Exception e) {
-                log.warn("发送站内信错误", e);
+            if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
+                throw new ServiceException(result.getMessage());
             }
 
+        } catch (Exception e) {
+            log.warn("发送站内信错误", e);
         }
+
     }
 
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")

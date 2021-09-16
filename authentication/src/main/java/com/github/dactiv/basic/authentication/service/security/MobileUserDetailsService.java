@@ -10,9 +10,8 @@ import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
-import com.github.dactiv.framework.spring.web.mobile.Device;
-import com.github.dactiv.framework.spring.web.mobile.DeviceResolver;
-import com.github.dactiv.framework.spring.web.mobile.LiteDeviceResolver;
+import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -51,8 +50,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @Autowired
     private PasswordEncoder passwordEncoder;
 
-    private final DeviceResolver deviceResolver = new LiteDeviceResolver();
-
     @Override
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
             throws AuthenticationException {
@@ -78,7 +75,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
                                    RequestAuthenticationToken token,
                                    SecurityUserDetails userDetails) {
 
-        Device device = deviceResolver.resolveDevice(token.getHttpServletRequest());
+        UserAgent device = DeviceUtils.getRequiredCurrentDevice(token.getHttpServletRequest());
 
         String password = appendPasswordString(presentedPassword, device);
 
@@ -120,7 +117,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
                                                      String identified,
                                                      HttpServletRequest request) {
 
-        Device device = deviceResolver.resolveDevice(request);
+        UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
 
         return new MobileUserDetails(user.getId(), user.getUsername(), user.getPassword(), identified, device);
     }
@@ -203,8 +200,8 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      *
      * @return 新的字符串内容
      */
-    private String appendPasswordString(String password, Device device) {
-        return password + device.toString() + device.getDevicePlatform().name();
+    private String appendPasswordString(String password, UserAgent device) {
+        return password + device.toString();
     }
 
     @Override

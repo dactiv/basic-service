@@ -2,20 +2,22 @@ package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessResponse;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mobile.Device;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
-import com.github.dactiv.framework.spring.web.mobile.LiteDeviceResolver;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
@@ -40,7 +42,8 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
     @Autowired
     private AuthenticationService authenticationService;
 
-    private final LiteDeviceResolver deviceResolver = new LiteDeviceResolver();
+    @Autowired
+    private AmqpTemplate amqpTemplate;
 
     @Override
     public void setting(RestResult<Object> result, HttpServletRequest request) {
@@ -86,28 +89,26 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
                 }
             }
 
-            Device device = deviceResolver.resolveDevice(request);
-
             AuthenticationInfo info = new AuthenticationInfo();
 
-            info.setDevice(device.getDevicePlatform().toString());
+            UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
+            info.setDevice(device.toMap());
+
             info.setUserId(Casts.cast(userDetails.getId(), Integer.class));
             info.setType(userDetails.getType());
             info.setIp(SpringMvcUtils.getIpAddress(request));
             info.setRetryCount(0);
-            // FIXME 省市县没有通过 ip 分析后进行赋值，如果有接口，节点改成 MQ 形式保存。
-            authenticationService.saveAuthenticationInfo(info);
 
-            authenticationService.validAuthenticationInfo(info);
-
+            amqpTemplate.convertAndSend(
+                    Constants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
+                    ValidAuthenticationInfoReceiver.DEFAULT_QUEUE_NAME,
+                    info
+            );
         }
 
         if (MobileUserDetails.class.isAssignableFrom(details.getClass())) {
-
             MobileUserDetails mobileUserDetails = Casts.cast(details);
-
             Map<String, Object> data = mobileAuthenticationService.createMobileAuthenticationResult(mobileUserDetails);
-
             result.setData(data);
         }
     }

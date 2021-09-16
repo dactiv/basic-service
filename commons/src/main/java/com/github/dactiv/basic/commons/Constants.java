@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.commons;
 
+import com.github.dactiv.framework.commons.Casts;
+
 /**
  * 系统常量
  *
@@ -11,6 +13,11 @@ public interface Constants {
      * 默认 rabbitmq 的延迟交换机名称
      */
     String RABBITMQ_DELAY_EXCHANGE = "default.delay.exchange";
+
+    /**
+     * 默认 rabbitmq 交换机名称
+     */
+    String RABBITMQ_EXCHANGE = "default.exchange";
 
     /**
      * 消息系统名称
@@ -36,4 +43,9 @@ public interface Constants {
      * 文件管理系统名称
      */
     String SYS_FILE_MANAGER_NAME = "file-manager";
+
+    /**
+     * 权限系统的默认 rabbitmq 交换机名称
+     */
+    String SYS_AUTHENTICATION_RABBITMQ_EXCHANGE = SYS_AUTHENTICATION_NAME + Casts.DEFAULT_DOT_SYMBOL + RABBITMQ_EXCHANGE;
 }
