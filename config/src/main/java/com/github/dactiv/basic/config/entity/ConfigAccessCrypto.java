@@ -40,6 +40,7 @@ public class ConfigAccessCrypto extends AccessCrypto implements NumberIdEntity<I
     /**
      * 创建时间
      */
+    @EqualsAndHashCode.Exclude
     private Date creationTime = new Date();
 
     /**

@@ -1,11 +1,11 @@
 package com.github.dactiv.basic.message.service.basic;
 
+import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
+import com.github.dactiv.basic.commons.feign.file.FileManagerService;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
 import com.github.dactiv.basic.message.enumerate.AttachmentType;
-import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
-import com.github.dactiv.basic.commons.feign.file.FileManagerService;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;

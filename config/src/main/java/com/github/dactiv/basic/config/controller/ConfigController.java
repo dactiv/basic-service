@@ -5,10 +5,10 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.entity.DataDictionary;
+import com.github.dactiv.basic.config.enumerate.EnumerateResourceService;
 import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
-import com.github.dactiv.basic.config.enumerate.EnumerateResourceService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
@@ -364,8 +364,8 @@ public class ConfigController {
      * @return 所有服务枚举信息
      */
     @PostMapping("syncEnumerate")
+    @Idempotent(key = "idempotent:config:sync-enumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
-    @Idempotent(key = "idempotent:config:sync-enumerate:[#securityContext.authentication.details.id]")
     @Plugin(name = "同步所有枚举", parent = "enumerate", sources = "Console", audit = true)
     public RestResult<Map<String, Map<String, Map<String, Object>>>> syncEnumerate() {
 

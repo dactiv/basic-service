@@ -87,10 +87,7 @@ public class ConsoleUserController {
     @PostMapping("save")
     @Plugin(name = "保存", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
-    @Idempotent(
-            key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid ConsoleUser entity,
                                     @CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam(required = false) List<Integer> groupIds,
@@ -109,8 +106,8 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
 
         userService.deleteConsoleUsers(ids);
@@ -126,8 +123,9 @@ public class ConsoleUserController {
      * @param newPassword     新密码
      */
     @PostMapping("updatePassword")
-    @PreAuthorize("hasAuthority('perms[console_user:updatePassword]') and isFullyAuthenticated()")
     @Plugin(name = "修改密码", sources = "Console", audit = true)
+    @PreAuthorize("hasAuthority('perms[console_user:updatePassword]') and isFullyAuthenticated()")
+    @Idempotent(key = "idempotent:authentication:user:update-password:[#securityContext.authentication.details.id]")
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam String oldPassword,
                                         @RequestParam String newPassword) {

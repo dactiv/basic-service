@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server;
 
 import com.github.dactiv.basic.socket.server.config.SocketServerConfig;
+import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
@@ -21,4 +22,8 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableFeignClients("com.github.dactiv.basic.commons.feign")
 @SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.socket.server", exclude = DataSourceAutoConfiguration.class)
 public class SocketServerMain {
+
+    public static void main(String[] args) {
+        SpringApplication.run(SocketServerMain.class, args);
+    }
 }

@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
 import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
-import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
+import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;

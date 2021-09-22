@@ -7,6 +7,8 @@ mybatis-plus:
       id-type: auto
 
 dactiv:
+  idempotent:
+    ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:
     plugin:
       base-packages: com.github.dactiv.basic.message.controller

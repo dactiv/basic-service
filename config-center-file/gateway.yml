@@ -17,6 +17,12 @@ spring:
     port: 6379
   cloud:
     gateway:
+      routes:
+        # 配置 socketio 路由
+        - id: socket
+          predicates:
+            - Path=/socket.io/**
+          uri: lb://socket
       discovery:
         locator:
           enabled: true
@@ -44,5 +50,3 @@ spring:
           nacos:
             server-addr: ${spring.cloud.nacos.discovery.server-addr}
             data-id: sentinel-gateway-api-group.json
-            group-id: SG
-            rule-type: GW_API_GROUP

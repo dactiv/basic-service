@@ -5,7 +5,6 @@ import com.github.dactiv.basic.socket.client.entity.MultipleUnicastMessage;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.entity.UnicastMessage;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
-import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;

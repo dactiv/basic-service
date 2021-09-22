@@ -43,8 +43,8 @@ public class ConsoleUser implements NumberIdEntity<Integer> {
     /**
      * 创建时间
      */
+    @EqualsAndHashCode.Exclude
     private Date creationTime = new Date();
-
 
     /**
      * 邮箱

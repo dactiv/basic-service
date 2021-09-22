@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.config;
 
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
 import com.github.dactiv.basic.authentication.service.security.CaptchaAuthenticationFilter;
 import com.github.dactiv.basic.authentication.service.security.JsonSessionInformationExpiredStrategy;
 import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;

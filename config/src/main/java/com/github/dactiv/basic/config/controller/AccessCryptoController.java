@@ -80,10 +80,7 @@ public class AccessCryptoController {
     @PostMapping("save")
     @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[access_crypto:save]') and isFullyAuthenticated()")
-    @Idempotent(
-            key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
         accessCryptoService.saveAccessCrypto(entity);

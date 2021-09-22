@@ -126,10 +126,7 @@ public class DictionaryController {
     @PostMapping("saveDataDictionary")
     @Plugin(name = "保存数据字典实体", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[data_dictionary:save]') and isFullyAuthenticated()")
-    @Idempotent(
-            key = "idempotent:config:data-dictionary:save:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:config:data-dictionary:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> saveDataDictionary(@Valid DataDictionary entity,
                                                   @CurrentSecurityContext SecurityContext securityContext) {
         dictionaryService.saveDataDictionary(entity);
@@ -213,10 +210,7 @@ public class DictionaryController {
     @PostMapping("saveDictionaryType")
     @Plugin(name = "保存", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[dictionary_type:save]') and isFullyAuthenticated()")
-    @Idempotent(
-            key = "idempotent:config:dictionary-type:save:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:config:dictionary-type:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> saveDictionaryType(@Valid DictionaryType entity,
                                                   @CurrentSecurityContext SecurityContext securityContext) {
         dictionaryService.saveDictionaryType(entity);

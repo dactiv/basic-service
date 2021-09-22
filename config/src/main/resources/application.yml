@@ -13,6 +13,8 @@ info:
   group-id: @groupId@
 
 dactiv:
+  idempotent:
+    ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:
     audit:
       type: elasticsearch

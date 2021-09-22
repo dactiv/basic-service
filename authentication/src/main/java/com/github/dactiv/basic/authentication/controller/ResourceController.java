@@ -151,8 +151,8 @@ public class ResourceController {
      */
     @PostMapping("syncPluginResource")
     @Plugin(name = "同步插件资源", sources = "Console", audit = true)
-    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:resource:sync-plugin-resource")
+    @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     public RestResult<?> syncPluginResource() {
 
         pluginResourceService.resubscribeAllService();

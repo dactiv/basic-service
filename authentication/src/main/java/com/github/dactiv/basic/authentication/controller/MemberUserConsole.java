@@ -124,10 +124,7 @@ public class MemberUserConsole {
     @PostMapping("updateUsername")
     @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(name = "修改登录账户", sources = {"UserCenter", "Mobile"}, audit = true)
-    @Idempotent(
-            key = "idempotent:authentication:member:update-username:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:authentication:member:update-username:[#securityContext.authentication.details.id]")
     public RestResult<?> updateUsername(@CurrentSecurityContext SecurityContext securityContext,
                                         @RequestParam String newUsername) {
 

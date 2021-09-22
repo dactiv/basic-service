@@ -277,7 +277,7 @@ public class SocketResult implements Serializable {
 
         if (IdEntity.class.isAssignableFrom(newData.getClass())) {
 
-            IdEntity newIdEntity = Casts.cast(newData);
+            IdEntity<Object> newIdEntity = Casts.cast(newData);
 
             for (SocketMessage<?> message : existMessageList) {
 
@@ -287,7 +287,7 @@ public class SocketResult implements Serializable {
                     continue;
                 }
 
-                IdEntity oldIdEntity = Casts.cast(oldData);
+                IdEntity<Object> oldIdEntity = Casts.cast(oldData);
 
                 if (Objects.equals(oldIdEntity.getId(), newIdEntity.getId())) {
                     result.add(message);

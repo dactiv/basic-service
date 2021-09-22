@@ -29,10 +29,10 @@ public class SocketClientAutoConfiguration {
     @Bean
     @ConditionalOnMissingBean(SocketClientTemplate.class)
     public SocketClientTemplate socketClientTemplate(RestTemplate restTemplate,
-                                                                                    DiscoveryClient discoveryClient,
-                                                                                    ThreadPoolTaskExecutor threadPoolTaskExecutor,
-                                                                                    SecurityProperties securityProperties) {
-        return com.github.dactiv.basic.socket.client.SocketClientTemplate.of(discoveryClient, restTemplate, threadPoolTaskExecutor, securityProperties);
+                                                     DiscoveryClient discoveryClient,
+                                                     ThreadPoolTaskExecutor threadPoolTaskExecutor,
+                                                     SecurityProperties securityProperties) {
+        return SocketClientTemplate.of(discoveryClient, restTemplate, threadPoolTaskExecutor, securityProperties);
     }
 
     @Bean

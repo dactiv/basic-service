@@ -6,7 +6,6 @@ import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
-import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
@@ -18,7 +17,6 @@ import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
-import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
 
@@ -105,10 +103,7 @@ public class GroupController {
     @PostMapping("save")
     @Plugin(name = "保存", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
-    @Idempotent(
-            key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
+    @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid Group entity,
                                     @CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam(required = false) List<Integer> resourceIds) {

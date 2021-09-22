@@ -44,6 +44,7 @@ public class DictionaryType implements Tree<Integer, DictionaryType>, NumberIdEn
     /**
      * 创建时间
      */
+    @EqualsAndHashCode.Exclude
     private Date creationTime = new Date();
 
     /**

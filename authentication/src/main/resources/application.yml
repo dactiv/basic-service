@@ -14,7 +14,7 @@ info:
 
 dactiv:
   idempotent:
-    type: interceptor
+    ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:
     audit:
       type: elasticsearch

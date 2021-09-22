@@ -9,7 +9,6 @@ import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
-import com.github.dactiv.framework.commons.retry.Retryable;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -38,6 +37,7 @@ public class BasicMessage implements NumberIdEntity<Integer> {
     /**
      * 创建时间
      */
+    @EqualsAndHashCode.Exclude
     private Date creationTime = new Date();
 
     /**

@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -15,7 +14,6 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 import java.util.Map;
 
@@ -42,11 +40,8 @@ public class SenderController {
     @SuppressWarnings("unchecked")
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Plugin(name = "发送消息", id = "send", parent = "message", sources = "System")
+    @Idempotent(key = "idempotent:message:send:[#securityContext.authentication.details.id]")
     @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
-    @Idempotent(
-            key = "idempotent:message:send:[#securityContext.authentication.details.id]",
-            ignore = "securityContext"
-    )
     public RestResult<Object> send(@RequestBody Map<String, Object> body,
                                    @CurrentSecurityContext SecurityContext securityContext) throws Exception {
 
