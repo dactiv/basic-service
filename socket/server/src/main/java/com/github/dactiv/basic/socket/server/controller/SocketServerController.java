@@ -22,7 +22,6 @@ import java.util.stream.Collectors;
  * socket 服务控制器
  *
  * @author maurice.chen
- *
  */
 @RestController
 public class SocketServerController {
@@ -44,7 +43,7 @@ public class SocketServerController {
      * 加入房间频道
      *
      * @param securityContext spring 安全上下文
-     * @param rooms 房间集合
+     * @param rooms           房间集合
      *
      * @return rest 结果集
      */
@@ -52,7 +51,7 @@ public class SocketServerController {
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(name = "加入房间频道", sources = "SocketUser")
     public RestResult<?> joinRoom(@CurrentSecurityContext SecurityContext securityContext,
-                                         @RequestParam List<String> rooms) {
+                                  @RequestParam List<String> rooms) {
 
         SocketUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -96,10 +95,10 @@ public class SocketServerController {
                 .flatMap(r -> r.toUnicastMessageList().stream())
                 .forEach(r -> socketServerManager.sendMessage(r));
 
-       return messageList
-               .stream()
-               .map(r -> RestResult.ofSuccess("单播 socket 成功", r.getMessage().getData()))
-               .collect(Collectors.toList());
+        return messageList
+                .stream()
+                .map(r -> RestResult.ofSuccess("单播 socket 成功", r.getMessage().getData()))
+                .collect(Collectors.toList());
     }
 
     /**

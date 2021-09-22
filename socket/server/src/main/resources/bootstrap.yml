@@ -1,0 +1,26 @@
+server:
+  port: 8086
+
+spring:
+  main:
+    banner-mode: "off"
+  application:
+    name: @artifactId@
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
+  cloud:
+    nacos:
+      discovery:
+        server-addr: localhost:8848
+        metadata:
+          version: ${info.version}
+          name: ${info.name}
+          artifact-id: ${info.artifact-id}
+          group-id: ${info.group-id}
+      config:
+        server-addr: ${spring.cloud.nacos.discovery.server-addr}
+        file-extension: yml
+        extension-configs:
+          - data-id: application.${spring.cloud.nacos.config.file-extension}
+            refresh: true

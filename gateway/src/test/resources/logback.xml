@@ -7,8 +7,6 @@
         </encoder>
     </appender>
 
-    <logger name="com.github.dactiv.basic.basic.config" level="DEBUG"/>
-
     <root level="INFO">
         <appender-ref ref="CONSOLE-APPENDER"/>
     </root>

@@ -1,0 +1,14 @@
+info:
+  version: @version@
+  name: @name@
+  artifact-id: ${spring.application.name}
+  group-id: @groupId@
+
+dactiv:
+  authentication:
+    permit-uri-ant-matchers:
+      - "/health/**"
+      - "/joinRoom/**"
+      - "/broadcast/**"
+      - "/multipleUnicast/**"
+      - "/unicast/**"
