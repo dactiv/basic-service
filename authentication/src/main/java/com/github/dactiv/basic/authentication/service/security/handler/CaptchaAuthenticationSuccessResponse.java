@@ -40,9 +40,6 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
     private CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
 
     @Autowired
-    private AuthenticationService authenticationService;
-
-    @Autowired
     private AmqpTemplate amqpTemplate;
 
     @Override
@@ -52,64 +49,99 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
         jsonAuthenticationFailureHandler.deleteAllowableFailureNumber(request);
 
-        if (SecurityUserDetails.class.isAssignableFrom(details.getClass())) {
+        AuthenticationInfo info = new AuthenticationInfo();
 
-            SecurityUserDetails userDetails = Casts.cast(details);
-
-            if (StringUtils.equals(userDetails.getType(), ResourceSource.UserCenter.toString())) {
-
-                String identified = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
-
-                if (StringUtils.isNotEmpty(identified)) {
-
-                    MemberUser memberUser = mobileAuthenticationService
-                            .getUserService()
-                            .getMemberUser(Casts.cast(userDetails.getId()));
-
-                    MobileUserDetails mobileUserDetails = mobileAuthenticationService.createMobileUserDetails(
-                            memberUser,
-                            identified,
-                            request
-                    );
-
-                    mobileUserDetails.setResourceAuthorities(userDetails.getResourceAuthorities());
-                    mobileUserDetails.setRoleAuthorities(userDetails.getRoleAuthorities());
-
-                    Map<String, Object> data = mobileAuthenticationService
-                            .createMobileAuthenticationResult(mobileUserDetails);
-
-                    Object isNew = request.getAttribute(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME);
-
-                    if (Objects.nonNull(isNew)) {
-                        data.put(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME, isNew);
-                    }
-
-                    result.setData(data);
-
-                }
-            }
-
-            AuthenticationInfo info = new AuthenticationInfo();
-
-            UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
-            info.setDevice(device.toMap());
-
-            info.setUserId(Casts.cast(userDetails.getId(), Integer.class));
-            info.setType(userDetails.getType());
-            info.setIp(SpringMvcUtils.getIpAddress(request));
-            info.setRetryCount(0);
-
-            amqpTemplate.convertAndSend(
-                    Constants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
-                    ValidAuthenticationInfoReceiver.DEFAULT_QUEUE_NAME,
-                    info
-            );
-        }
+        UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
+        info.setDevice(device.toMap());
 
         if (MobileUserDetails.class.isAssignableFrom(details.getClass())) {
             MobileUserDetails mobileUserDetails = Casts.cast(details);
             Map<String, Object> data = mobileAuthenticationService.createMobileAuthenticationResult(mobileUserDetails);
             result.setData(data);
+
+            info.setUserId(Casts.cast(mobileUserDetails.getId(), Integer.class));
+            info.setType(mobileUserDetails.getType());
+        } else if (SecurityUserDetails.class.isAssignableFrom(details.getClass())) {
+
+            SecurityUserDetails userDetails = Casts.cast(details);
+
+            String identified = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
+
+            if (StringUtils.isNotEmpty(identified)) {
+
+                Map<String, Object> data;
+
+                if (StringUtils.equals(ResourceSource.UserCenter.toString(),userDetails.getType())) {
+                    Boolean isNew = Casts.cast(
+                            request.getAttribute(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME)
+                    );
+                    data = createUserCenterDetailsData(identified, device, isNew, userDetails);
+                } else {
+                    data = createUserDetailsData(identified, device, userDetails);
+                }
+
+                result.setData(data);
+
+            }
+
+            info.setUserId(Casts.cast(userDetails.getId(), Integer.class));
+            info.setType(userDetails.getType());
         }
+
+        info.setIp(SpringMvcUtils.getIpAddress(request));
+        info.setRetryCount(0);
+
+        amqpTemplate.convertAndSend(
+                Constants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
+                ValidAuthenticationInfoReceiver.DEFAULT_QUEUE_NAME,
+                info
+        );
+    }
+
+    private Map<String, Object> createUserDetailsData(String identified,
+                                                      UserAgent device,
+                                                      SecurityUserDetails userDetails) {
+
+        MobileUserDetails mobileUserDetails = mobileAuthenticationService.createMobileUserDetails(
+                userDetails,
+                identified,
+                device
+        );
+
+        mobileUserDetails.setResourceAuthorities(userDetails.getResourceAuthorities());
+        mobileUserDetails.setRoleAuthorities(userDetails.getRoleAuthorities());
+
+        Map<String, Object> data = mobileAuthenticationService.createMobileAuthenticationResult(mobileUserDetails);
+
+        data.put(CaptchaAuthenticationFailureResponse.DEFAULT_TYPE_PARAM_NAME, userDetails.getType());
+
+        return data;
+    }
+
+    private Map<String, Object> createUserCenterDetailsData(String identified,
+                                                            UserAgent device,
+                                                            Boolean isNew,
+                                                            SecurityUserDetails userDetails) {
+
+        MemberUser memberUser = mobileAuthenticationService
+                .getUserService()
+                .getMemberUser(Casts.cast(userDetails.getId()));
+
+        MobileUserDetails mobileUserDetails = mobileAuthenticationService.createMobileUserDetails(
+                memberUser,
+                identified,
+                device
+        );
+
+        mobileUserDetails.setResourceAuthorities(userDetails.getResourceAuthorities());
+        mobileUserDetails.setRoleAuthorities(userDetails.getRoleAuthorities());
+
+        Map<String, Object> data = mobileAuthenticationService.createMobileAuthenticationResult(mobileUserDetails);
+
+        if (Objects.nonNull(isNew)) {
+            data.put(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME, isNew);
+        }
+
+        return data;
     }
 }

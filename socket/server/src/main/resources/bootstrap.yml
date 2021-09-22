@@ -5,7 +5,7 @@ spring:
   main:
     banner-mode: "off"
   application:
-    name: @artifactId@
+    name: @name@
   elasticsearch:
     rest:
       uris: http://localhost:9200

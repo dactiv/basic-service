@@ -19,6 +19,7 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import org.redisson.api.RBucket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
@@ -159,14 +160,14 @@ public class SecurityController {
      *
      * @return 移动端的用户明细实现
      */
-    @PreAuthorize("hasRole('ORDINARY')")
+    @PreAuthorize("isAuthenticated()")
     @Auditable(type = "验证移动用户明细信息")
     @PostMapping("validMobileUserDetails")
     public MobileUserDetails validMobileUserDetails(@RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified,
                                                     @RequestParam String username,
                                                     @RequestParam String password) {
-
-        MobileUserDetails mobileUserDetails = mobileUserDetailsService.getMobileUserDetailsBucket(username).get();
+        RBucket<MobileUserDetails> bucket = mobileUserDetailsService.getMobileUserDetailsBucket(username);
+        MobileUserDetails mobileUserDetails = bucket.get();
 
         if (mobileUserDetails == null) {
             throw new ServiceException("找不到[" + username + "]的移动用户明细");

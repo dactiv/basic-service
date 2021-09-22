@@ -62,7 +62,7 @@ public abstract class AbstractMessageSender<T extends SocketMessage<?>> implemen
     protected abstract ClientOperations getClientOperations(T message, SocketIOServer socketIOServer);
 
     /**
-     * 发送时间消息
+     * 发送事件消息
      *
      * @param client  客户端
      * @param message 消息

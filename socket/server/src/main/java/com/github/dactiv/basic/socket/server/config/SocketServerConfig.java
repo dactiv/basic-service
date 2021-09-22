@@ -1,45 +1,37 @@
 package com.github.dactiv.basic.socket.server.config;
 
-import com.corundumstudio.socketio.Configuration;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import org.springframework.boot.context.properties.ConfigurationProperties;
+import com.corundumstudio.socketio.SocketIOServer;
+import com.github.dactiv.basic.socket.server.service.SocketServerManager;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * socket io 服务配置
+ * socket 服务配置
  *
- * @author maurice
+ * @author maurice.chen
  */
-@Data
-@NoArgsConstructor
-@EqualsAndHashCode(callSuper = true)
-@ConfigurationProperties("dactiv.socket.server")
-public class SocketServerConfig extends Configuration {
-
-    public static final String DEFAULT_SERVER_ID_PARAM_NAME = "serverId";
+@Configuration
+public class SocketServerConfig {
 
     /**
-     * 校验用户信息地址
+     * socket io 服务配置
+     *
+     * @param properties          配置信息
+     * @param socketServerManager socket 服务管理
+     *
+     * @return socket io 服务
      */
-    private String validTokenUrl;
+    @Bean
+    public SocketIOServer socketIoServer(SocketServerProperties properties, SocketServerManager socketServerManager) {
 
-    /**
-     * 链接 socket 成功后的通知地址
-     */
-    private String onUserConnectUrl;
+        properties.setAuthorizationListener(socketServerManager);
 
-    /**
-     * 断开 socket 链接后的通知地址
-     */
-    private String onUserDisconnectUrl;
+        SocketIOServer socketIoServer = new SocketIOServer(properties);
 
-    /**
-     * 服务器 id
-     */
-    private Integer id;
-    /**
-     * socket 服务名称
-     */
-    private String serverName = "socket";
+        socketIoServer.addConnectListener(socketServerManager);
+        socketIoServer.addDisconnectListener(socketServerManager);
+
+
+        return socketIoServer;
+    }
 }

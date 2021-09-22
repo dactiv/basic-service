@@ -1,7 +1,7 @@
 info:
   version: @version@
   name: @name@
-  artifact-id: ${spring.application.name}
+  artifact-id: @artifactId@
   group-id: @groupId@
 
 dactiv:
@@ -12,3 +12,4 @@ dactiv:
       - "/broadcast/**"
       - "/multipleUnicast/**"
       - "/unicast/**"
+

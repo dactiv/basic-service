@@ -4,6 +4,7 @@ import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAu
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
+import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
@@ -22,9 +23,8 @@ import java.util.Map;
  *
  * @author maurice.chen
  */
+@Slf4j
 public class CaptchaAuthenticationFilter extends RequestAuthenticationFilter {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(CaptchaAuthenticationFilter.class);
 
     private final CaptchaAuthenticationFailureResponse handler;
 
@@ -60,7 +60,7 @@ public class CaptchaAuthenticationFilter extends RequestAuthenticationFilter {
                     throw new BadCredentialsException(restResult.getMessage());
                 }
             } catch (Exception e) {
-                LOGGER.error("调用校验验证码服务发生异常", e);
+                log.error("调用校验验证码服务发生异常", e);
                 throw new BadCredentialsException("验证码错误");
             }
 

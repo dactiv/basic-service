@@ -48,5 +48,5 @@ public interface AuthenticationService {
      * @return 系统用户信息
      */
     @GetMapping("console/user/get")
-    Map<String, Object> getConsoleUser(Integer id);
+    Map<String, Object> getConsoleUser(@RequestParam("id") Integer id);
 }

@@ -46,6 +46,19 @@
             <scope>test</scope>
         </dependency>
 
+        <dependency>
+            <groupId>com.github.haruntuncay</groupId>
+            <artifactId>socket.io-client</artifactId>
+            <version>1.1</version>
+            <scope>test</scope>
+            <exclusions>
+                <exclusion>
+                    <groupId>org.json</groupId>
+                    <artifactId>json</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
     </dependencies>
 
     <build>

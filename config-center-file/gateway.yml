@@ -16,13 +16,24 @@ spring:
     host: localhost
     port: 6379
   cloud:
+    sentinel:
+      transport:
+        port: 8787
+        dashboard: localhost:8787
+      eager: true
+      datasource:
+        gateway-api-group-api-group:
+          nacos:
+            server-addr: ${spring.cloud.nacos.discovery.server-addr}
+            data-id: sentinel-gateway-api-group.json
+            rule-type: GW_API_GROUP
     gateway:
       routes:
         # 配置 socketio 路由
         - id: socket
           predicates:
             - Path=/socket.io/**
-          uri: lb://socket
+          uri: lb://netty-socket-server
       discovery:
         locator:
           enabled: true
@@ -40,13 +51,3 @@ spring:
               args:
                 name: "'X-REQUEST-CLIENT'"
                 value: "'SPRING_GATEWAY'"
-    sentinel:
-      transport:
-        port: 8787
-        dashboard: localhost:8787
-      eager: true
-      datasource:
-        gateway-api-group-api-group:
-          nacos:
-            server-addr: ${spring.cloud.nacos.discovery.server-addr}
-            data-id: sentinel-gateway-api-group.json

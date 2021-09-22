@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.client.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
@@ -39,27 +40,14 @@ public class SocketUserDetails extends MobileUserDetails {
     /**
      * 链接 socket 服务器的 ip 地址
      */
+    @JsonIgnore
     private String socketServerIp;
 
     /**
      * 链接 socket 服务器的端口
      */
+    @JsonIgnore
     private Integer port;
-
-    /**
-     * 认证系统的用户 id
-     */
-    private Integer userId;
-
-    /**
-     * 昵称
-     */
-    private String nickname;
-
-    /**
-     * 所属服务器 id
-     */
-    private Integer serverId;
 
     /**
      * 最后链接时间
@@ -101,14 +89,5 @@ public class SocketUserDetails extends MobileUserDetails {
         super(id, username, password, deviceIdentified, device);
         setType(DEFAULT_TYPE);
 
-    }
-
-    /**
-     * 是否为新用户
-     *
-     * @return true 是，否则 false
-     */
-    public boolean isNew() {
-        return Objects.isNull(getId());
     }
 }

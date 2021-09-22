@@ -106,21 +106,40 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     }
 
     /**
-     * 通过会员用户创建 spring security 用户实现
+     * 通过会员用户创建移动端的用户明细实现
      *
      * @param user       会员用户
      * @param identified 设备的唯一识别
-     * @param request    http servlet request
+     * @param device     设备信息
      *
      * @return 移动端的用户明细实现
      */
     public MobileUserDetails createMobileUserDetails(MemberUser user,
                                                      String identified,
-                                                     HttpServletRequest request) {
-
-        UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
+                                                     UserAgent device) {
 
         return new MobileUserDetails(user.getId(), user.getUsername(), user.getPassword(), identified, device);
+    }
+
+    /**
+     * 通过安全用户明细创建移动端的用户明细实现
+     *
+     * @param userDetails 会员用户
+     * @param identified  设备的唯一识别
+     * @param device      设备信息
+     *
+     * @return 移动端的用户明细实现
+     */
+    public MobileUserDetails createMobileUserDetails(SecurityUserDetails userDetails,
+                                                     String identified,
+                                                     UserAgent device) {
+        return new MobileUserDetails(
+                Casts.cast(userDetails.getId(), Integer.class),
+                userDetails.getUsername(),
+                userDetails.getPassword(),
+                identified,
+                device
+        );
     }
 
     /**

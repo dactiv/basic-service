@@ -69,8 +69,8 @@ public class ConsoleUserController {
      * @return 用户实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasAuthority('perms[console_user:get]')")
-    @Plugin(name = "获取信息", sources = "Console")
+    @PreAuthorize("hasRole('BASIC')")
+    @Plugin(name = "获取信息", sources = "System")
     public ConsoleUser get(@RequestParam Integer id) {
         return userService.getConsoleUser(id);
     }
