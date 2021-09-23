@@ -18,7 +18,7 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import org.redisson.api.RBucket;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.audit.AuditEvent;

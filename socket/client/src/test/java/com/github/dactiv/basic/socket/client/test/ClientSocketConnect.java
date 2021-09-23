@@ -10,7 +10,7 @@ import com.github.dactiv.framework.spring.security.authentication.RequestAuthent
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.security.authentication.config.DeviceIdProperties;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;

@@ -3,7 +3,6 @@ package com.github.dactiv.basic.authentication.service.security.handler;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
-import com.github.dactiv.basic.authentication.service.AuthenticationService;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.Constants;
@@ -13,7 +12,7 @@ import com.github.dactiv.framework.spring.security.authentication.handler.JsonAu
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.StringUtils;

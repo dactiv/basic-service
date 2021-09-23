@@ -11,7 +11,7 @@ import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.redisson.api.RBucket;

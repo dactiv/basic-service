@@ -9,11 +9,11 @@ import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.idempotent.advisor.LockType;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
@@ -34,6 +34,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -113,7 +114,7 @@ public class PluginResourceService {
     @Concurrent(
             value = "sync:plugin:resource:[#groupName]:[#serviceName]",
             exception = "同步插件信息遇到并发，不执行重试操作",
-            type = LockType.Lock
+            waitTime = @Time(0L)
     )
     public void syncPluginResource(String groupName, String serviceName, List<Instance> instances) {
 
@@ -458,7 +459,7 @@ public class PluginResourceService {
     /**
      * 重新订阅所有服务
      */
-    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exception = "正在执行，请稍后在试。。", type = LockType.Lock)
+    @Concurrent(value = "subscribe_or_unsubscribe:plugin", exception = "正在执行，请稍后在试。。", waitTime = @Time(0L))
     public void resubscribeAllService() {
         nacosSpringEventManager.expiredAllListener();
         nacosSpringEventManager.scanThenUnsubscribeService();

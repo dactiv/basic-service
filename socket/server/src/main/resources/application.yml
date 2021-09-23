@@ -12,4 +12,5 @@ dactiv:
       - "/broadcast/**"
       - "/multipleUnicast/**"
       - "/unicast/**"
+      - "/actuator/**"
 

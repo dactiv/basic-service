@@ -4,6 +4,8 @@ import com.github.dactiv.basic.socket.client.entity.*;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
+import com.github.dactiv.framework.spring.security.authentication.service.feign.FeignAuthenticationConfiguration;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -12,9 +14,10 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.DisposableBean;
-import org.springframework.boot.autoconfigure.security.SecurityProperties;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.RestTemplate;
@@ -45,7 +48,7 @@ public class SocketClientTemplate implements DisposableBean {
     private ThreadPoolTaskExecutor taskExecutor;
 
     @NonNull
-    private SecurityProperties securityProperties;
+    private AuthenticationProperties properties;
 
     /**
      * 广播消息
@@ -365,38 +368,37 @@ public class SocketClientTemplate implements DisposableBean {
                     .findFirst()
                     .orElseThrow(() -> new SystemException("找不到 IP 为 [" + ip + "] 的服务实例"));
 
-            urls.add("http://" + ip + ":" + instance.getPort() + "/" + type);
+            urls.add(instance.getUri() + "/" + type);
 
         } else {
             List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
 
             urls = serviceInstances
                     .stream()
-                    .map(s -> "http://" + s.getHost() + ":" + s.getPort() + "/" + type)
+                    .map(s -> s.getUri() + "/" + type)
                     .collect(Collectors.toList());
         }
 
-        /*HttpHeaders httpHeaders = BasicAuthenticationConfiguration.of(securityProperties);
+        HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<List<? extends SocketMessage<?>>> entity = new HttpEntity<>(values, httpHeaders);*/
+        HttpEntity<List<? extends SocketMessage<?>>> entity = new HttpEntity<>(values, httpHeaders);
 
         List<Map<String, Object>> result = new LinkedList<>();
 
-        /*for (String url : urls) {
+        for (String url : urls) {
 
             ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
                     url,
                     HttpMethod.POST,
                     entity,
-                    new ParameterizedTypeReference<>() {
-                    }
+                    new ParameterizedTypeReference<>() {}
             );
 
             if (Objects.nonNull(response.getBody())) {
                 result.addAll(response.getBody());
             }
-        }*/
+        }
 
         return result;
 

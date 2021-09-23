@@ -6,6 +6,7 @@ import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAu
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.framework.spring.security.SpringSecuritySupportAutoConfiguration;
 import com.github.dactiv.framework.spring.security.WebSecurityConfigurerAfterAdapter;
+import com.github.dactiv.framework.spring.security.authentication.AuthenticationTypeTokenResolver;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationFailureHandler;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessHandler;
@@ -22,6 +23,8 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
+
+import java.util.List;
 
 /**
  * 自定义 spring security 的配置
@@ -66,11 +69,15 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
     @Autowired
     private AuthenticationManager authenticationManager;
 
+    @Autowired(required = false)
+    private List<AuthenticationTypeTokenResolver> authenticationTypeTokenResolvers;
+
     @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
 
         CaptchaAuthenticationFilter filter = new CaptchaAuthenticationFilter(
                 properties,
+                authenticationTypeTokenResolvers,
                 captchaAuthenticationFailureResponse
         );
 

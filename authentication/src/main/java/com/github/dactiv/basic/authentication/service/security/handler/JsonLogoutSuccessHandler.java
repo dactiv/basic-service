@@ -14,8 +14,10 @@ import com.github.dactiv.framework.spring.security.authentication.token.Principa
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import nl.basjes.parse.useragent.UserAgent;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -30,6 +32,7 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -157,7 +160,8 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      */
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
 
-        RestResult<Map<String, Object>> result = createRestResult();
+        RestResult<Map<String, Object>> result = createRestResult(request);
+
         postCaptchaData(result, request);
 
         return result;
@@ -168,7 +172,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      *
      * @return reset 结果集
      */
-    private RestResult<Map<String, Object>> createRestResult() {
+    private RestResult<Map<String, Object>> createRestResult(HttpServletRequest request) {
 
         String executeCode = String.valueOf(HttpStatus.OK.value());
 
@@ -200,6 +204,13 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 data.put(RememberMeProperties.DEFAULT_PARAM_NAME, false);
             }
         }
+
+        String identified = StringUtils.defaultString(
+                request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME),
+                UUID.randomUUID().toString()
+        );
+
+        data.put(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_PARAM_NAME, identified);
 
         return new RestResult<>(
                 message,

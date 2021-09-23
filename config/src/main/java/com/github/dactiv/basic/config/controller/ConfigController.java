@@ -27,7 +27,7 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.mobile.DeviceUtils;
+import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
@@ -395,7 +395,7 @@ public class ConfigController {
             ServiceInstance instance = instances.stream().findFirst().orElse(null);
 
             if (Objects.nonNull(instance)) {
-                String url = "http://" + instance.getHost() + ":" + instance.getPort() + "/" + DEFAULT_EVN_URI;
+                String url = instance.getUri() + "/" + DEFAULT_EVN_URI;
                 try {
                     //noinspection unchecked
                     Map<String, Object> data = restTemplate.getForObject(url, Map.class);

@@ -2,6 +2,7 @@ package com.github.dactiv.basic.socket.client;
 
 import com.github.dactiv.basic.socket.client.holder.Interceptor.SocketMessageInterceptor;
 import com.github.dactiv.basic.socket.client.holder.SocketMessagePointcutAdvisor;
+import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.web.SpringWebMvcSupportAutoConfiguration;
 import com.github.dactiv.framework.spring.web.SpringWebSupportProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
@@ -31,8 +32,8 @@ public class SocketClientAutoConfiguration {
     public SocketClientTemplate socketClientTemplate(RestTemplate restTemplate,
                                                      DiscoveryClient discoveryClient,
                                                      ThreadPoolTaskExecutor threadPoolTaskExecutor,
-                                                     SecurityProperties securityProperties) {
-        return SocketClientTemplate.of(discoveryClient, restTemplate, threadPoolTaskExecutor, securityProperties);
+                                                     AuthenticationProperties properties) {
+        return SocketClientTemplate.of(discoveryClient, restTemplate, threadPoolTaskExecutor, properties);
     }
 
     @Bean

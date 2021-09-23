@@ -10,6 +10,7 @@ import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -17,7 +18,6 @@ import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.idempotent.advisor.LockType;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
@@ -220,7 +220,7 @@ public class AuthenticationService {
     }
 
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
-    @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", type = LockType.Lock)
+    @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", waitTime = @Time(0L))
     public void syncAuthenticationInfo() {
 
         Page<AuthenticationInfo> page = findAuthenticationInfoPage(

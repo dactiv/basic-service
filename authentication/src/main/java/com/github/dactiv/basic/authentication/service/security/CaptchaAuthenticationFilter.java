@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.spring.security.authentication.AuthenticationTypeTokenResolver;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -16,6 +17,7 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.util.Arrays;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -29,8 +31,9 @@ public class CaptchaAuthenticationFilter extends RequestAuthenticationFilter {
     private final CaptchaAuthenticationFailureResponse handler;
 
     public CaptchaAuthenticationFilter(AuthenticationProperties properties,
+                                       List<AuthenticationTypeTokenResolver> authenticationTypeTokenResolvers,
                                        CaptchaAuthenticationFailureResponse handler) {
-        super(properties);
+        super(properties, authenticationTypeTokenResolvers);
         this.handler = handler;
     }
 
