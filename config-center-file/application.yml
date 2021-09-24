@@ -23,9 +23,6 @@ spring:
 dactiv:
   authentication:
     users:
-      - data:
-        - name: "feign"
-          password: "feign"
-          roles: "BASIC"
-        cache:
-          name: "spring:security:default:users:feign"
+      - name: "feign"
+        password: "feign"
+        roles: "BASIC"
