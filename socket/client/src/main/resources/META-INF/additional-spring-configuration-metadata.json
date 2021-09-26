@@ -1,0 +1,15 @@
+{
+  "groups": [
+    {
+      "name": "com.fuyu.game"
+    }
+  ],
+  "properties": [
+    {
+      "name": "dactiv.socket.client.enabled",
+      "type": "java.lang.Boolean",
+      "description": "enabled socket client.",
+      "defaultValue": true
+    }
+  ]
+}
