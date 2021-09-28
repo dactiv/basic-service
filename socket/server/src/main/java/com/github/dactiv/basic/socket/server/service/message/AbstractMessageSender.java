@@ -70,7 +70,7 @@ public abstract class AbstractMessageSender<T extends SocketMessage<?>> implemen
     public static void sendEventMessage(ClientOperations client, String event, String message) {
         client.sendEvent(event, message);
 
-        if (SocketServerManager.SERVER_DISCONNECTED_EVENT_NAME.equals(event)) {
+        if (SocketServerManager.SERVER_DISCONNECT_EVENT_NAME.equals(event)) {
             client.disconnect();
         }
     }

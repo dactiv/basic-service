@@ -2,7 +2,7 @@
 
 使用 spring boot、spring cloud、nacos、rabbitmq、redis、minio 等框架搭建的为服务基础服务。
 
-该项目主要包含有：
+## 功能介绍
 
 1. authentication： 认证服务，用于统一的登陆/登出，操作审计，权限等业务管理功能。
 2. captcha: 验证码服务，用于发送验证码使用，包含短信，邮箱，图片验证码的一些基础业务功能。

@@ -11,9 +11,7 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
-import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
 import com.github.dactiv.basic.socket.client.SocketClientTemplate;
-import com.github.dactiv.basic.socket.client.entity.BroadcastMessage;
 import com.github.dactiv.basic.socket.client.entity.SocketMessage;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.entity.SocketUserMessage;
@@ -71,21 +69,21 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      */
     public static final String DEFAULT_IDENTIFIED_HEADER_NAME = "io";
     /**
-     * 当 socket 链接时的通知事件
+     * 默认客户端提交的备唯一识别名称
      */
-    public static final String CONNECTED_EVENT_NAME = "SOCKET_CONNECTED_EVENT";
+    public static final String DEFAULT_CLIENT_IDENTIFIED_PARAM_NAME = "did";
     /**
-     * 当 socket 断开链接时的通知事件
+     * 默认客户端提交的用户 id 参数
      */
-    public static final String DISCONNECTED_EVENT_NAME = "SOCKET_DISCONNECTED_EVENT";
+    public static final String DEFAULT_USER_ID_PARAM_NAME = "uid";
     /**
      * 当 socket 服务主动断开时的通知事件
      */
-    public static final String SERVER_DISCONNECTED_EVENT_NAME = "SOCKET_SERVER_DISCONNECT_EVENT";
+    public static final String SERVER_DISCONNECT_EVENT_NAME = "socket_server_disconnect";
     /**
      * 当 socket 服务要求客户端断开时的通知事件
      */
-    public static final String CLIENT_DISCONNECTED_EVENT_NAME = "SOCKET_CLIENT_DISCONNECT_EVENT";
+    public static final String CLIENT_DISCONNECT_EVENT_NAME = "client_disconnect";
 
     @Autowired
     private DeviceIdContextRepository securityContextRepository;
@@ -95,9 +93,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
     @Autowired
     private RestTemplate restTemplate;
-
-    @Autowired
-    private AuthenticationService authenticationService;
 
     @Autowired
     private SocketIOServer socketServer;
@@ -205,8 +200,10 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         String username = data.getSingleUrlParam(authenticationProperties.getUsernameParamName());
         String password = data.getSingleUrlParam(authenticationProperties.getPasswordParamName());
 
-        String deviceIdentified = data.getHttpHeaders().get(DEFAULT_IDENTIFIED_HEADER_NAME);
-        String userId = data.getHttpHeaders().get(authenticationProperties.getDeviceId().getAccessUserIdHeaderName());
+        String deviceIdentified = data.getSingleUrlParam(DEFAULT_CLIENT_IDENTIFIED_PARAM_NAME);
+        String userId = data.getSingleUrlParam(DEFAULT_USER_ID_PARAM_NAME);
+
+        data.getHttpHeaders().add(DEFAULT_IDENTIFIED_HEADER_NAME, deviceIdentified);
 
         try {
 
@@ -370,7 +367,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
             SocketUserMessage<?> socketUserDetails = SocketUserMessage.of(
                     details,
-                    CLIENT_DISCONNECTED_EVENT_NAME,
+                    CLIENT_DISCONNECT_EVENT_NAME,
                     RestResult.ofSuccess("您的账号已在其他客户端登陆，如果非本人操作，请及时修改密码")
             );
 
@@ -393,13 +390,13 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     @Override
     public void onConnect(SocketIOClient client) {
 
-        String deviceIdentified = client.getHandshakeData().getHttpHeaders().get(DEFAULT_IDENTIFIED_HEADER_NAME);
+        String deviceIdentified = client.getHandshakeData().getSingleUrlParam(DEFAULT_CLIENT_IDENTIFIED_PARAM_NAME);
 
         SecurityContext securityContext = securityContextRepository.getSecurityContextBucket(deviceIdentified).get();
 
         if (Objects.isNull(securityContext)) {
             log.warn("在认证通过后连接 socket 时出现获取用户信息为 null 的情况, deviceIdentified 为:" + deviceIdentified);
-            client.sendEvent(SERVER_DISCONNECTED_EVENT_NAME, Casts.writeValueAsString(RestResult.of("找不到当前认证的用户")));
+            client.sendEvent(SERVER_DISCONNECT_EVENT_NAME, Casts.writeValueAsString(RestResult.of("找不到当前认证的用户")));
             client.disconnect();
         }
 
@@ -417,13 +414,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         refreshSpringSecurityContext(user);
 
-        BroadcastMessage<String> message = BroadcastMessage.of(
-                CONNECTED_EVENT_NAME,
-                Casts.writeValueAsString(RestResult.ofSuccess(user))
-        );
-
-        socketClientTemplate.broadcast(message);
-
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "
                 + client.getRemoteAddress().toString() + ", 用户为: " + user.getId());
 
@@ -434,7 +424,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         String uuid = client.getSessionId().toString();
 
-        String deviceIdentified = client.getHandshakeData().getHttpHeaders().get(DEFAULT_IDENTIFIED_HEADER_NAME);
+        String deviceIdentified = client.getHandshakeData().getSingleUrlParam(DEFAULT_CLIENT_IDENTIFIED_PARAM_NAME);
         RBucket<SecurityContext> bucket = securityContextRepository.getSecurityContextBucket(deviceIdentified);
 
         SecurityContext securityContext = bucket.get();
@@ -447,13 +437,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         // 删除 spring security 用户信息
         bucket.deleteAsync();
-
-        BroadcastMessage<String> message = BroadcastMessage.of(
-                DISCONNECTED_EVENT_NAME,
-                Casts.writeValueAsString(RestResult.ofSuccess(user))
-        );
-
-        socketClientTemplate.broadcast(message);
 
         log.info("IP: {} UUID: {} 设备断开连接 ,用户为: {}" , client.getRemoteAddress().toString(), uuid, user.getId());
 

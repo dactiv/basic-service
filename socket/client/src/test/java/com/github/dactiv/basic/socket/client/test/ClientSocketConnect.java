@@ -8,10 +8,12 @@ import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.security.authentication.config.DeviceIdProperties;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;
+import io.socket.client.IO;
+import io.socket.client.Socket;
+import io.socket.engineio.client.transports.WebSocket;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.MapUtils;
 import org.springframework.http.HttpEntity;
@@ -19,9 +21,8 @@ import org.springframework.http.HttpHeaders;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
-import socketio_client.IO;
-import socketio_client.Socket;
 
+import java.net.URISyntaxException;
 import java.util.Map;
 
 
@@ -64,21 +65,29 @@ public class ClientSocketConnect {
         //noinspection unchecked
         Map<String, Object> data = Casts.cast(result.get(RestResult.DEFAULT_DATA_NAME), Map.class);
 
+        MultiValueMap<String, String> queryMap = new LinkedMultiValueMap<>();
+        queryMap.add("did", deviceId);
+        queryMap.add("uid", data.get(IdEntity.ID_FIELD_NAME).toString());
+        queryMap.add(RequestAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY,username);
+        queryMap.add(RequestAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY, data.get(Constants.TOKEN).toString());
+
         Thread thread = new Thread(() -> {
 
-            Socket socket = IO.of("http://localhost:8080")
-                    .webSocketOnly()
-                    .header("io", deviceId)
-                    .header(DeviceIdProperties.DEFAULT_USER_ID_HEADER_NAME, data.get(IdEntity.ID_FIELD_NAME).toString())
-                    .query(RequestAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY,username)
-                    .query(RequestAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY, data.get(Constants.TOKEN).toString())
-                    .socket();
+            IO.Options options = new IO.Options();
+            options.query = Casts.castRequestBodyMapToString(queryMap);
+            options.transports = new String[]{WebSocket.NAME};
+            options.port = 8800;
 
-            socket.on(Socket.CONNECT, argv -> log.info("连接成功"));
+            try {
+                Socket socket = IO.socket("http://localhost:8080", options);
 
-            socket.on(Socket.DISCONNECT, argv -> log.info("连接断开"));
+                socket.on(Socket.EVENT_CONNECT, argv -> log.info("连接成功"));
+                socket.on(Socket.EVENT_DISCONNECT, argv -> log.info("连接断开"));
 
-            socket.open();
+                socket.open();
+            } catch (URISyntaxException e) {
+                log.error("链接 socket 失败", e);
+            }
 
         });
 
