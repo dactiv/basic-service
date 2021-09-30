@@ -18,7 +18,7 @@ public interface SocketResultHolderStrategy {
      *
      * 获取 socket 结果集
      *
-     * @return
+     * @return socket 结果集
      */
     SocketResult get();
 

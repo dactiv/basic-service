@@ -14,6 +14,12 @@ dactiv:
       valid-token-url: http://localhost:8080/authentication/validMobileUserDetails
 
 spring:
+  datasource:
+    url: jdbc:mysql://localhost:3306/socket_server?autoReconnect=true&useUnicode=true&characterEncoding=UTF-8&useSSL=false
+    driverClassName: com.mysql.cj.jdbc.Driver
+    username: 用户名
+    password: 密码
+    type: com.zaxxer.hikari.HikariDataSource
   redis:
     host: localhost
     port: 6379

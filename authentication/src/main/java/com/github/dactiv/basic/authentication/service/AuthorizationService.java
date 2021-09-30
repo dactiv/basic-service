@@ -6,12 +6,18 @@ import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.dao.ResourceDao;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
+import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -26,9 +32,12 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+
+import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 
 /**
  * 授权管理服务
@@ -108,6 +117,7 @@ public class AuthorizationService {
      * @param group       用户组实体
      * @param resourceIds 资源 ID 集合
      */
+    @SocketMessage(SOCKET_RESULT_ID)
     public void saveGroup(Group group, List<Integer> resourceIds) {
 
         List<ResourceSource> resourceSourceStream = Arrays.asList(ResourceSource.values());
@@ -136,6 +146,8 @@ public class AuthorizationService {
                 groupDao.insertResourceAssociation(group.getId(), resourceIds);
             }
         }
+
+        SocketResultHolder.get().addBroadcastSocketMessage(Group.SAVE_SOCKET_EVENT_NAME, group);
 
     }
 
@@ -236,6 +248,7 @@ public class AuthorizationService {
      *
      * @param ids 主键 id 集合
      */
+    @SocketMessage
     public void deleteGroup(List<Integer> ids) {
         ids.forEach(this::deleteGroup);
     }
@@ -245,6 +258,7 @@ public class AuthorizationService {
      *
      * @param id 主键 id
      */
+    @SocketMessage
     public void deleteGroup(Integer id) {
         Group group = getGroup(id);
 
@@ -272,6 +286,8 @@ public class AuthorizationService {
         if (groups.isEmpty()) {
             deleteAuthorizationCache();
         }
+
+        SocketResultHolder.get().addBroadcastSocketMessage(Group.SAVE_SOCKET_EVENT_NAME, id);
     }
 
     /**

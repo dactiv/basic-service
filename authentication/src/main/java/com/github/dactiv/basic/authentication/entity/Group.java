@@ -14,6 +14,7 @@ import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -27,6 +28,8 @@ import javax.validation.constraints.NotNull;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
+
 /**
  * <p>用户组实体类</p>
  * <p>Table: tb_group - 用户组表</p>
@@ -39,9 +42,19 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TableName("tb_group")
+@IncludeView(value = SOCKET_RESULT_ID, properties = {"id", "name", "parentId"})
 public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5357157352791368716L;
+
+    /**
+     * 创建 socket 事件名称
+     */
+    public static final String SAVE_SOCKET_EVENT_NAME = "save_group";
+    /**
+     * 删除 socket 事件名称
+     */
+    public static final String DELETE_SOCKET_EVENT_NAME = "delete_group";
 
     /**
      * 主键

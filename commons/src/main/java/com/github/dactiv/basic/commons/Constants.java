@@ -45,6 +45,11 @@ public interface Constants {
     String SYS_FILE_MANAGER_NAME = "file-manager";
 
     /**
+     * socket 结果集 id，用于响应socket 内容时的过滤或引入字段 id
+     */
+    String SOCKET_RESULT_ID = "socket_result";
+
+    /**
      * 权限系统的默认 rabbitmq 交换机名称
      */
     String SYS_AUTHENTICATION_RABBITMQ_EXCHANGE = SYS_AUTHENTICATION_NAME + Casts.DEFAULT_DOT_SYMBOL + RABBITMQ_EXCHANGE;

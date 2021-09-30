@@ -20,7 +20,7 @@ import org.springframework.session.data.redis.config.annotation.web.http.EnableR
 @EnableRedisHttpSession
 @Import(SocketServerProperties.class)
 @EnableFeignClients("com.github.dactiv.basic.commons.feign")
-@SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.socket.server", exclude = DataSourceAutoConfiguration.class)
+@SpringBootApplication(scanBasePackages = "com.github.dactiv.basic.socket.server")
 public class SocketServerMain {
 
     public static void main(String[] args) {

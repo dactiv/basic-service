@@ -9,18 +9,24 @@ import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
+import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.entity.MemberUserInitialization;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
+import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
@@ -43,8 +49,10 @@ import org.springframework.util.DigestUtils;
 
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 
+import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.Console;
 import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.UserCenter;
 
@@ -151,6 +159,7 @@ public class UserService implements InitializingBean {
      * @param groupIds    对应组的主键值
      * @param resourceIds 对应资源主键值
      */
+    @SocketMessage(SOCKET_RESULT_ID)
     public void saveConsoleUser(ConsoleUser entity, List<Integer> groupIds, List<Integer> resourceIds) {
 
         saveConsoleUser(entity, groupIds);
@@ -164,6 +173,8 @@ public class UserService implements InitializingBean {
         }
 
         expireUserSession(entity.getUsername());
+
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.SAVE_SOCKET_EVENT_NAME, entity);
     }
 
     /**
@@ -303,6 +314,7 @@ public class UserService implements InitializingBean {
      *
      * @param ids 主键 id 集合
      */
+    @SocketMessage
     public void deleteConsoleUsers(List<Integer> ids) {
         ids.forEach(this::deleteConsoleUser);
     }
@@ -312,6 +324,7 @@ public class UserService implements InitializingBean {
      *
      * @param id 主键 id
      */
+    @SocketMessage
     public void deleteConsoleUser(Integer id) {
         ConsoleUser consoleUser = getConsoleUser(id);
         deleteConsoleUser(consoleUser);
@@ -322,6 +335,7 @@ public class UserService implements InitializingBean {
      *
      * @param consoleUser 用户实体
      */
+    @SocketMessage
     public void deleteConsoleUser(ConsoleUser consoleUser) {
         if (consoleUser == null) {
             return;
@@ -344,6 +358,8 @@ public class UserService implements InitializingBean {
         deleteRedisCache(Console, token);
 
         expireUserSession(token.getType() + ":" + token.getPrincipal().toString());
+
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.DELETE_SOCKET_EVENT_NAME, consoleUser.getId());
     }
 
     /**
@@ -396,6 +412,17 @@ public class UserService implements InitializingBean {
         IPage<ConsoleUser> result = consoleUserDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
+    }
+
+    /**
+     * 通过用户组查询系统用户集合
+     *
+     * @param groupId 组 id
+     *
+     * @return 系统用户集合
+     */
+    public List<ConsoleUser> findConsoleUserByGroupId(String groupId) {
+        return consoleUserDao.findByGroupId(groupId);
     }
 
     // -------------------------------- 会员用户管理 -------------------------------- //

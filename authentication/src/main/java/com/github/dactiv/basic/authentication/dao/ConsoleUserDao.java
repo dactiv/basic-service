@@ -3,10 +3,7 @@ package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import org.apache.ibatis.annotations.Delete;
-import org.apache.ibatis.annotations.Insert;
-import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
+import org.apache.ibatis.annotations.*;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -78,4 +75,32 @@ public interface ConsoleUserDao extends BaseMapper<ConsoleUser> {
     )
     void insertResourceAssociation(@Param("id") Integer id, @Param("resourceIds") List<Integer> resourceIds);
 
+    /**
+     * 通过用户组查询系统用户集合
+     *
+     * @param groupId 组 id
+     *
+     * @return 系统用户集合
+     */
+    @Select(
+            "SELECT " +
+            "   cu.id, " +
+            "   cu.creation_time, " +
+            "   cu.email, " +
+            "   cu.password, " +
+            "   cu.status, " +
+            "   cu.username, " +
+            "   cu.real_name, " +
+            "   cu.avatar, " +
+            "   cu.remark " +
+            "FROM " +
+            "   tb_console_user cu " +
+            "INNER JOIN " +
+            "   tb_group_console_user gcu " +
+            "ON " +
+            "   gcu.user_id = cu.id " +
+            "WHERE " +
+            "   gcu.group_id = #{groupId} "
+    )
+    List<ConsoleUser> findByGroupId(@Param("groupId")String groupId);
 }

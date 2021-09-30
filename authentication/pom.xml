@@ -63,6 +63,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.dactiv.basic.socket</groupId>
+            <artifactId>client</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>org.projectlombok</groupId>
             <artifactId>lombok</artifactId>
             <scope>provided</scope>

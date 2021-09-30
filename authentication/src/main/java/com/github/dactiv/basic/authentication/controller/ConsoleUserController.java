@@ -55,10 +55,24 @@ public class ConsoleUserController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @PreAuthorize("hasAuthority('perms[console_user:page]')")
     @Plugin(name = "查询分页", sources = "Console")
+    @PreAuthorize("hasAuthority('perms[console_user:page]')")
     public Page<ConsoleUser> page(PageRequest pageRequest, HttpServletRequest request) {
         return userService.findConsoleUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+    }
+
+    /**
+     * 通过用户组 id 查询系统用户集合
+     *
+     * @param groupId 用户组 id
+     *
+     * @return 系统用户集合
+     */
+    @GetMapping("findByGroup")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "通过用户组 id 查询系统用户集合", sources = "System")
+    public List<ConsoleUser> findByGroup(@RequestParam String groupId) {
+        return userService.findConsoleUserByGroupId(groupId);
     }
 
     /**

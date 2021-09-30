@@ -7,6 +7,8 @@ import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
+import com.github.dactiv.framework.spring.web.result.filter.annotation.view.ExcludeView;
+import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,6 +20,8 @@ import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.Date;
+
+import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 
 /**
  * <p>系统用户实体类</p>
@@ -31,9 +35,19 @@ import java.util.Date;
 @NoArgsConstructor
 @Alias("consoleUser")
 @TableName("tb_console_user")
+@ExcludeView(value = SOCKET_RESULT_ID, properties = {"creationTime", "password", "remark"})
 public class ConsoleUser implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 542256170672538050L;
+    /**
+     * 创建 socket 事件名称
+     */
+    public static final String SAVE_SOCKET_EVENT_NAME = "save_console_user";
+    /**
+     * 删除 socket 事件名称
+     */
+    public static final String DELETE_SOCKET_EVENT_NAME = "delete_console_user";
+
     /**
      * 主键
      */
@@ -79,6 +93,12 @@ public class ConsoleUser implements NumberIdEntity<Integer> {
     @NotEmpty
     @Length(max = 16)
     private String realName;
+
+    /**
+     * 头像
+     */
+    @Length(max = 64)
+    private String avatar;
 
     /**
      * 备注
