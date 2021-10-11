@@ -5,6 +5,7 @@ import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
@@ -17,7 +18,10 @@ import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.entity.SocketUserMessage;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.server.config.SocketServerProperties;
+import com.github.dactiv.basic.socket.server.enitty.Room;
+import com.github.dactiv.basic.socket.server.enumerate.RoomType;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
+import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
@@ -29,8 +33,10 @@ import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
 import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
@@ -111,6 +117,12 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
     @Autowired
     private AuthenticationProperties authenticationProperties;
+
+    @Autowired
+    private RoomService roomService;
+
+    @Autowired
+    private RedissonClient redissonClient;
 
     /**
      * 发送消息
@@ -352,6 +364,12 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
             bucket.set(newSecurityContext);
         }
 
+        if (Objects.nonNull(user.getId())) {
+            String name = authenticationProperties.getDeviceId().getCache().getName(user.getId().toString());
+            RBucket<SocketUserDetails> userDetailsRBucket = redissonClient.getBucket(name);
+            userDetailsRBucket.setAsync(user);
+        }
+
         if (log.isDebugEnabled()) {
             log.debug("刷新 ID 为 [" + user.getId() + "] 的用户缓存");
         }
@@ -413,6 +431,12 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         user.setConnectTime(new Date());
 
         refreshSpringSecurityContext(user);
+        // 获取用户房间信息
+        List<Room> rooms = roomService.findRoomList(Casts.cast(user.getId(), Integer.class));
+        // 如果存在房间，讲客户端假如房间，做广播使用。
+        if (CollectionUtils.isEmpty(rooms)) {
+            rooms.forEach(r -> client.joinRoom(socketServerProperties.getRoomPrefix() + r.getId()));
+        }
 
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "
                 + client.getRemoteAddress().toString() + ", 用户为: " + user.getId());
@@ -438,7 +462,44 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         // 删除 spring security 用户信息
         bucket.deleteAsync();
 
+        String name = authenticationProperties.getDeviceId().getCache().getName(user.getId().toString());
+        RBucket<SocketUserDetails> userDetailsRBucket = redissonClient.getBucket(name);
+        // 删除用户明细信息
+        userDetailsRBucket.deleteAsync();
+
         log.info("IP: {} UUID: {} 设备断开连接 ,用户为: {}" , client.getRemoteAddress().toString(), uuid, user.getId());
 
+    }
+
+    /**
+     * 获取 socket 用户明细
+     *
+     * @param id 用户 id
+     *
+     * @return socket 用户明细
+     */
+    public SocketUserDetails getSocketUserDetails(Integer id) {
+        String name = authenticationProperties.getDeviceId().getCache().getName(id.toString());
+        RBucket<SocketUserDetails> userDetailsRBucket = redissonClient.getBucket(name);
+
+        return userDetailsRBucket.get();
+    }
+
+    /**
+     * 获取 socket 用户明细
+     *
+     * @param deviceIdentified 设备唯一识别
+     *
+     * @return socket 用户明细
+     */
+    public SocketUserDetails getSocketUserDetails(String deviceIdentified) {
+        RBucket<SecurityContext> bucket = securityContextRepository.getSecurityContextBucket(deviceIdentified);
+        SecurityContext securityContext = bucket.get();
+
+        if (Objects.isNull(securityContext)) {
+            return null;
+        }
+
+        return Casts.cast(securityContext.getAuthentication().getDetails());
     }
 }

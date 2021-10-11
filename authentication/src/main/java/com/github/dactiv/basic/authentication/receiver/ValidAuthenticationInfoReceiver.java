@@ -17,7 +17,7 @@ import org.springframework.stereotype.Component;
 import java.io.IOException;
 
 /**
- * 验证认证信息接受者
+ * 验证认证信息 MQ 接收者
  *
  * @author maurice.chen
  */

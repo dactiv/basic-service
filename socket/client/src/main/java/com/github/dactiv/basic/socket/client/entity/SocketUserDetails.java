@@ -34,6 +34,8 @@ public class SocketUserDetails extends MobileUserDetails {
 
     /**
      * 链接状态
+     *
+     * @see ConnectStatus
      */
     private Integer connectStatus = ConnectStatus.Disconnected.getValue();
 

@@ -7,6 +7,7 @@ import com.github.dactiv.basic.authentication.service.security.handler.JsonLogou
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
@@ -15,6 +16,7 @@ import com.github.dactiv.framework.spring.security.audit.StringIdEntity;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -149,6 +151,26 @@ public class SecurityController {
     @PreAuthorize("isAuthenticated()")
     public SecurityUserDetails getPrincipal(@CurrentSecurityContext SecurityContext securityContext) {
         return Casts.cast(securityContext.getAuthentication().getDetails());
+    }
+
+    /**
+     * 获取用户信息
+     *
+     * @param type 来源类型
+     * @param id 用户 id
+     *
+     * @return 用户信息
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("getPrincipalProfile")
+    public Object getPrincipalProfile(@RequestParam String type, @RequestParam Integer id) {
+        if (ResourceSource.Console.toString().equals(type)) {
+            return userService.getConsoleUser(id);
+        } else if (ResourceSource.UserCenter.toString().equals(type)) {
+            return userService.getMemberUser(id);
+        } else {
+            throw new SystemException("找不到类型为 [" + type + "] 的用户信息");
+        }
     }
 
     /**
