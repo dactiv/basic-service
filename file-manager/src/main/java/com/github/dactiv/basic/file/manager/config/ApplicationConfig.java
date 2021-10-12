@@ -2,7 +2,6 @@ package com.github.dactiv.basic.file.manager.config;
 
 
 import com.github.dactiv.framework.commons.TimeProperties;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -103,7 +102,7 @@ public class ApplicationConfig {
         /**
          * 保留的历史头像记录总数
          */
-        private Integer historyCount = 10;
+        private Integer historyCount = 5;
 
         /**
          * 用户来源，用于默认服务启动时创建桶使用。

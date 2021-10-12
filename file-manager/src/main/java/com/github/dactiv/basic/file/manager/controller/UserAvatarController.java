@@ -6,10 +6,13 @@ import com.github.dactiv.basic.file.manager.entity.UserAvatarHistory;
 import com.github.dactiv.basic.file.manager.service.FileService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import io.minio.GetObjectResponse;
 import lombok.extern.slf4j.Slf4j;
+import okhttp3.Headers;
 import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +28,7 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Map;
@@ -83,20 +87,14 @@ public class UserAvatarController implements InitializingBean {
             history.getValues().remove(0);
         }
 
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        objectMapper.writeValue(outputStream, history);
-        outputStream.flush();
-
-        byte[] bytes = outputStream.toByteArray();
-        ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(bytes);
-        fileService.upload(history.getFilename(), arrayInputStream, bytes.length, MediaType.APPLICATION_JSON_VALUE, history.getBucketName());
+        saveUserAvatarHistory(history);
 
         fileService.upload(file.getOriginalFilename(), file.getInputStream(), file.getSize(), file.getContentType(), history.getBucketName());
 
         String currentName = MessageFormat.format(applicationConfig.getUserAvatar().getCurrentUseFileToken(), userDetails.getId());
         Map<String, Object> result = fileService.upload(currentName, file.getInputStream(), file.getSize(), file.getContentType(), history.getBucketName());
 
-        return RestResult.ofSuccess("上传完成", result);
+        return RestResult.ofSuccess("上传新头像完成", result);
 
     }
 
@@ -150,6 +148,60 @@ public class UserAvatarController implements InitializingBean {
         headers.setContentType(MediaType.IMAGE_JPEG);
 
         return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
+    }
+
+    @PostMapping("select")
+    @PreAuthorize("isFullyAuthenticated()")
+    public RestResult<Map<String, Object>> select(@CurrentSecurityContext SecurityContext securityContext,
+                                @RequestParam("filename") String filename) throws Exception {
+
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+
+        UserAvatarHistory history = getUserAvatarHistory(userDetails);
+
+        if (!history.getValues().contains(filename)) {
+            throw new SystemException("图片不存在，可能已经被删除。");
+        }
+
+        String currentName = MessageFormat.format(applicationConfig.getUserAvatar().getCurrentUseFileToken(), userDetails.getId());
+
+        GetObjectResponse response = fileService.get(history.getBucketName(), currentName);
+        Headers headers = response.headers();
+        Map<String, Object> result = fileService.upload(currentName, response, IOUtils.toByteArray(response).length, headers.get(HttpHeaders.CONTENT_TYPE), history.getBucketName());
+
+        return RestResult.ofSuccess("选择历史头像成功", result);
+    }
+
+    @PostMapping("delete")
+    @PreAuthorize("isFullyAuthenticated()")
+    public RestResult<?> delete(@CurrentSecurityContext SecurityContext securityContext,
+                                @RequestParam("filename") String filename) throws Exception {
+
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+
+        UserAvatarHistory history = getUserAvatarHistory(userDetails);
+
+        if (!history.getValues().contains(filename)) {
+            throw new SystemException("图片不存在，可能已经被删除。");
+        }
+
+        history.getValues().remove(filename);
+
+        saveUserAvatarHistory(history);
+
+        fileService.delete(history.getBucketName(), filename);
+
+        return RestResult.of("删除历史头像成功");
+    }
+
+    private void saveUserAvatarHistory(UserAvatarHistory history) throws Exception {
+        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+        objectMapper.writeValue(outputStream, history);
+        outputStream.flush();
+
+        byte[] bytes = outputStream.toByteArray();
+        ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(bytes);
+        fileService.upload(history.getFilename(), arrayInputStream, bytes.length, MediaType.APPLICATION_JSON_VALUE, history.getBucketName());
     }
 
     @Override

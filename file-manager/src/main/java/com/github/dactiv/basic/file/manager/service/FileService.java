@@ -247,7 +247,7 @@ public class FileService {
      *
      * @throws Exception 获取错误时抛出
      */
-    public InputStream get(String bucketName, String filename) throws Exception {
+    public GetObjectResponse get(String bucketName, String filename) throws Exception {
         bucketName = bucketName.toLowerCase();
         return minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(filename).build());
     }
