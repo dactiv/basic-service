@@ -52,7 +52,7 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
     private JsonSessionInformationExpiredStrategy jsonSessionInformationExpiredStrategy;
 
     @Autowired
-    private AuthenticationConfig extendProperties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private SpringSessionBackedSessionRegistry<S> sessionBackedSessionRegistry;
@@ -89,7 +89,7 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
 
         httpSecurity
                 .logout()
-                .logoutUrl(extendProperties.getLogoutUrl())
+                .logoutUrl(applicationConfig.getLogoutUrl())
                 .logoutSuccessHandler(jsonLogoutSuccessHandler)
                 .and()
                 .addFilter(filter)

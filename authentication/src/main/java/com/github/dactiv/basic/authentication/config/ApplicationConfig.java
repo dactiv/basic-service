@@ -6,6 +6,7 @@ import com.github.dactiv.framework.spring.security.authentication.service.Defaul
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.NoArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 
@@ -21,8 +22,8 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("authentication.extend")
-public class AuthenticationConfig {
+@ConfigurationProperties("dactiv.authentication.extend")
+public class ApplicationConfig {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
 
@@ -53,6 +54,16 @@ public class AuthenticationConfig {
      * 在次发送短信验证码时，需要 mobileFailureCaptchaType 类型的验证码通过才能发送短信验证码
      */
     private String smsCaptchaParamName = "_smsCaptchaToken";
+
+    /**
+     * 超级管理登陆账户
+     */
+    private String adminUsername = "admin";
+
+    /**
+     * 会员用户初始化缓存配置
+     */
+    private CacheProperties memberUserInitializationCache = new CacheProperties("member:user:initialization:");
 
     /**
      * 错误次数超时间
@@ -93,7 +104,6 @@ public class AuthenticationConfig {
      * 异地区域配置
      */
     private AbnormalArea abnormalArea = new AbnormalArea();
-    ;
 
     /**
      * 注册配置

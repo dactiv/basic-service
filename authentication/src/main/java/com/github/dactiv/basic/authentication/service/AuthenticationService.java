@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
@@ -59,7 +59,7 @@ public class AuthenticationService {
     private MessageService messageService;
 
     @Autowired
-    private AuthenticationConfig properties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private ElasticsearchRestTemplate elasticsearchRestTemplate;
@@ -196,12 +196,12 @@ public class AuthenticationService {
 
         Map<String, Object> param = new LinkedHashMap<>();
 
-        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, properties.getAbnormalArea().getSendType());
+        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, applicationConfig.getAbnormalArea().getSendType());
 
-        param.put("content", properties.getAbnormalArea().getSendContent());
+        param.put("content", applicationConfig.getAbnormalArea().getSendContent());
         param.put("toUserIds", Collections.singletonList(info.getUserId()));
-        param.put("type", properties.getAbnormalArea().getMessageType());
-        param.put("title", properties.getAbnormalArea().getTitle());
+        param.put("type", applicationConfig.getAbnormalArea().getMessageType());
+        param.put("title", applicationConfig.getAbnormalArea().getTitle());
         param.put("data", info.getDevice());
         param.put("isPush", YesOrNo.Yes.getValue());
 
@@ -227,7 +227,7 @@ public class AuthenticationService {
                 new PageRequest(1, 100),
                 Wrappers.
                         <AuthenticationInfo>lambdaQuery()
-                        .le(AuthenticationInfo::getRetryCount, properties.getAbnormalArea().getMaxRetryCount())
+                        .le(AuthenticationInfo::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
                         .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue())
         );
 

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.RestResult;
@@ -31,7 +31,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
     public static final String CAPTCHA_EXECUTE_CODE = "1001";
 
     @Autowired
-    private AuthenticationConfig extendProperties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private AuthenticationProperties properties;
@@ -52,11 +52,11 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
         String type = request.getHeader(properties.getTypeHeaderName());
 
-        if (extendProperties.getCaptchaAuthenticationTypes().contains(type)) {
+        if (applicationConfig.getCaptchaAuthenticationTypes().contains(type)) {
             setAllowableFailureNumber(request, ++number);
         }
 
-        if (number < extendProperties.getAllowableFailureNumber()) {
+        if (number < applicationConfig.getAllowableFailureNumber()) {
             return;
         }
 
@@ -71,12 +71,12 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         // 让客户端在页面生成一个验证码，该验证码为发送短信时需要验证的验证码，方式短信被刷行为。
         if (LoginType.Mobile.toString().equals(loginType)) {
 
-            String token = request.getParameter(extendProperties.getSmsCaptchaParamName());
+            String token = request.getParameter(applicationConfig.getSmsCaptchaParamName());
 
             if (StringUtils.isNotEmpty(token)) {
                 Map<String, Object> buildToken = captchaService.createGenerateCaptchaIntercept(
                         token,
-                        extendProperties.getMobileFailureCaptchaType(),
+                        applicationConfig.getMobileFailureCaptchaType(),
                         DEFAULT_MOBILE_CAPTCHA_TYPE
                 );
 
@@ -85,7 +85,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
         } else {
             Map<String, Object> buildToken = captchaService.generateToken(
-                    extendProperties.getUsernameFailureCaptchaType(),
+                    applicationConfig.getUsernameFailureCaptchaType(),
                     identified
             );
             data.putAll(buildToken);
@@ -104,7 +104,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
     public boolean isCaptchaAuthentication(HttpServletRequest request) {
         Integer number = getAllowableFailureNumber(request);
         String type = request.getParameter(DEFAULT_TYPE_PARAM_NAME);
-        return number > extendProperties.getAllowableFailureNumber() && extendProperties.getCaptchaAuthenticationTypes().contains(type);
+        return number > applicationConfig.getAllowableFailureNumber() && applicationConfig.getCaptchaAuthenticationTypes().contains(type);
     }
 
     /**
@@ -131,7 +131,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
         String key = getAllowableFailureNumberKey(identified);
 
-        TimeProperties properties = extendProperties.getAllowableFailureNumberExpireTime();
+        TimeProperties properties = applicationConfig.getAllowableFailureNumberExpireTime();
 
         redissonClient.getBucket(key).set(number, properties.getValue(), properties.getUnit());
     }
@@ -165,7 +165,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
      * @return 允许认证失败次数 key 名称
      */
     private String getAllowableFailureNumberKey(String identified) {
-        return extendProperties.getAllowableFailureNumberKeyPrefix() + identified;
+        return applicationConfig.getAllowableFailureNumberKeyPrefix() + identified;
     }
 
     /**

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
@@ -48,7 +48,7 @@ public class MemberUserDetailsService implements UserDetailsService {
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
     @Autowired
-    private AuthenticationConfig properties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private UserService userService;
@@ -87,7 +87,7 @@ public class MemberUserDetailsService implements UserDetailsService {
                 user.setPhone(token.getPrincipal().toString());
                 user.setPassword(generateRandomPassword());
 
-                int count = properties.getRegister().getRandomUsernameCount();
+                int count = applicationConfig.getRegister().getRandomUsernameCount();
                 user.setUsername(RandomStringUtils.randomAlphanumeric(count) + user.getPhone());
 
                 user.setStatus(UserStatus.Enabled.getValue());
@@ -118,7 +118,7 @@ public class MemberUserDetailsService implements UserDetailsService {
      * @return 密码
      */
     protected String generateRandomPassword() {
-        int count = properties.getRegister().getRandomUsernameCount();
+        int count = applicationConfig.getRegister().getRandomUsernameCount();
         String key = RandomStringUtils.randomAlphanumeric(count) + System.currentTimeMillis();
         return DigestUtils.md5DigestAsHex(key.getBytes());
     }
@@ -148,12 +148,12 @@ public class MemberUserDetailsService implements UserDetailsService {
             );
 
             String tokenValue = token.getHttpServletRequest().getParameter(
-                    properties.getCaptcha().getTokenParamName()
+                    applicationConfig.getCaptcha().getTokenParamName()
             );
 
-            params.put(properties.getCaptcha().getTokenParamName(), tokenValue);
-            params.put(properties.getCaptcha().getCaptchaParamName(), presentedPassword);
-            params.put(properties.getMobile().getUsernameParamName(), username);
+            params.put(applicationConfig.getCaptcha().getTokenParamName(), tokenValue);
+            params.put(applicationConfig.getCaptcha().getCaptchaParamName(), presentedPassword);
+            params.put(applicationConfig.getMobile().getUsernameParamName(), username);
 
             try {
 
@@ -213,7 +213,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
         userService.saveMemberUser(
                 user,
-                Collections.singletonList(properties.getRegister().getDefaultGroup())
+                Collections.singletonList(applicationConfig.getRegister().getDefaultGroup())
         );
 
         userDetails.setId(user.getId());

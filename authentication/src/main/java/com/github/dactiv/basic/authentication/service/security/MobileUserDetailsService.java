@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security;
 
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
@@ -26,7 +26,6 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 import org.springframework.util.DigestUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -43,7 +42,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
     @Autowired
-    private AuthenticationConfig properties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private RedissonClient redissonClient;
@@ -102,7 +101,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
-        return properties.getMobile().getCache().getName() + username;
+        return applicationConfig.getMobile().getCache().getName() + username;
     }
 
     /**
@@ -165,13 +164,13 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> createMobileAuthenticationResult(MobileUserDetails details) {
 
-        details.setPassword(RandomStringUtils.randomAlphanumeric(properties.getRegister().getRandomPasswordCount()));
+        details.setPassword(RandomStringUtils.randomAlphanumeric(applicationConfig.getRegister().getRandomPasswordCount()));
 
         Map<String, Object> result = Casts.convertValue(details, Map.class);
 
         String token = createReturnToken(details);
 
-        result.put(properties.getMobile().getParamName(), token);
+        result.put(applicationConfig.getMobile().getParamName(), token);
 
         String password = DigestUtils.md5DigestAsHex(
                 (token + details.getUsername() + details.getDeviceIdentified()).getBytes()
@@ -197,11 +196,11 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @param details 移动设备用户明细
      */
     private void saveMobileUserDetails(MobileUserDetails details) {
-        if (Objects.nonNull(properties.getMobile().getCache())) {
+        if (Objects.nonNull(applicationConfig.getMobile().getCache())) {
 
             RBucket<MobileUserDetails> bucket = getMobileUserDetailsBucket(details.getUsername());
 
-            CacheProperties cache = properties.getMobile().getCache();
+            CacheProperties cache = applicationConfig.getMobile().getCache();
 
             if (Objects.nonNull(cache.getExpiresTime())) {
                 bucket.setAsync(details, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
@@ -247,7 +246,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     public CacheProperties getAuthenticationCache(PrincipalAuthenticationToken token) {
         return new CacheProperties(
                 getMobileAuthenticationTokenKey(token.getPrincipal().toString()),
-                properties.getMobile().getCache().getExpiresTime()
+                applicationConfig.getMobile().getCache().getExpiresTime()
         );
     }
 

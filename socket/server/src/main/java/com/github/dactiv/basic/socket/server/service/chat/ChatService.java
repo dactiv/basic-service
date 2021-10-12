@@ -1,11 +1,10 @@
 package com.github.dactiv.basic.socket.server.service.chat;
 
-import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
-import com.github.dactiv.basic.socket.server.config.SocketServerProperties;
+import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
 import com.github.dactiv.basic.socket.server.enitty.Contact;
 import com.github.dactiv.basic.socket.server.enitty.Room;
 import com.github.dactiv.basic.socket.server.receiver.SaveChatMessageReceiver;
@@ -14,7 +13,6 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -34,7 +32,7 @@ import static com.github.dactiv.basic.commons.Constants.SYS_SOCKET_SERVER_RABBIT
 public class ChatService {
 
     @Autowired
-    private SocketServerProperties properties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private SocketServerManager socketServerManager;
@@ -58,8 +56,8 @@ public class ChatService {
         message.setContent(content);
         message.setId(UUID.randomUUID().toString());
         message.setSenderId(senderId);
-        message.setCryptoType(properties.getChat().getCryptoType());
-        message.setCryptoKey(properties.getChat().getCryptoKey());
+        message.setCryptoType(applicationConfig.getChat().getCryptoType());
+        message.setCryptoKey(applicationConfig.getChat().getCryptoKey());
 
         ContactMessage contactMessage = new ContactMessage();
 

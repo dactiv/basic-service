@@ -5,7 +5,6 @@ import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.alibaba.nacos.api.common.Constants;
 import com.alibaba.nacos.api.exception.NacosException;
 import com.alibaba.nacos.api.naming.NamingService;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.corundumstudio.socketio.AuthorizationListener;
 import com.corundumstudio.socketio.HandshakeData;
 import com.corundumstudio.socketio.SocketIOClient;
@@ -17,9 +16,8 @@ import com.github.dactiv.basic.socket.client.entity.SocketMessage;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.entity.SocketUserMessage;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
-import com.github.dactiv.basic.socket.server.config.SocketServerProperties;
+import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
 import com.github.dactiv.basic.socket.server.enitty.Room;
-import com.github.dactiv.basic.socket.server.enumerate.RoomType;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;
@@ -110,7 +108,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     private NacosServiceManager nacosServiceManager;
 
     @Autowired
-    private SocketServerProperties socketServerProperties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private NacosDiscoveryProperties discoveryProperties;
@@ -161,16 +159,16 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         NamingService naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
 
         naming.registerInstance(
-                socketServerProperties.getNacosInstanceName(),
+                applicationConfig.getNacosInstanceName(),
                 discoveryProperties.getGroup(),
                 discoveryProperties.getIp(),
-                socketServerProperties.getPort(),
+                applicationConfig.getPort(),
                 Constants.DEFAULT_CLUSTER_NAME
         );
 
         log.info(
                 "注册链接 socket 服务 {} 到 nacos，端口为: {}",
-                socketServerProperties.getNacosInstanceName(),
+                applicationConfig.getNacosInstanceName(),
                 socketServer.getConfiguration().getPort()
         );
     }
@@ -181,16 +179,16 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         NamingService naming = nacosServiceManager.getNamingService(discoveryProperties.getNacosProperties());
 
         naming.deregisterInstance(
-                socketServerProperties.getNacosInstanceName(),
+                applicationConfig.getNacosInstanceName(),
                 discoveryProperties.getGroup(),
                 discoveryProperties.getIp(),
-                socketServerProperties.getPort(),
+                applicationConfig.getPort(),
                 Constants.DEFAULT_CLUSTER_NAME
         );
 
         log.info(
                 "从 nacos 关闭 链接 socket 服务 {}，端口为: {}",
-                socketServerProperties.getNacosInstanceName(),
+                applicationConfig.getNacosInstanceName(),
                 socketServer.getConfiguration().getPort()
         );
 
@@ -226,7 +224,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
             ResponseEntity<Map<String, Object>> result = Casts.cast(
                     restTemplate.postForEntity(
-                            socketServerProperties.getValidTokenUrl(),
+                            applicationConfig.getValidTokenUrl(),
                             DeviceIdContextRepository.ofHttpEntity(body, deviceIdentified, userId),
                             Map.class
                     )
@@ -294,7 +292,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
             // 设置 socket server 的 id 地址和端口
             user.setSocketServerIp(discoveryProperties.getIp());
-            user.setPort(socketServerProperties.getPort());
+            user.setPort(applicationConfig.getPort());
 
             // 设置当前设备 id
             user.setDeviceIdentified(deviceIdentified);
@@ -435,7 +433,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         List<Room> rooms = roomService.findRoomList(Casts.cast(user.getId(), Integer.class));
         // 如果存在房间，讲客户端假如房间，做广播使用。
         if (CollectionUtils.isEmpty(rooms)) {
-            rooms.forEach(r -> client.joinRoom(socketServerProperties.getRoomPrefix() + r.getId()));
+            rooms.forEach(r -> client.joinRoom(applicationConfig.getRoomPrefix() + r.getId()));
         }
 
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "

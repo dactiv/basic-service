@@ -22,7 +22,7 @@ public class SocketServerConfig {
      * @return socket io 服务
      */
     @Bean
-    public SocketIOServer socketIoServer(SocketServerProperties properties, SocketServerManager socketServerManager) {
+    public SocketIOServer socketIoServer(ApplicationConfig properties, SocketServerManager socketServerManager) {
 
         properties.setAuthorizationListener(socketServerManager);
 

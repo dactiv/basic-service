@@ -4,7 +4,7 @@ import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
@@ -34,7 +34,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -63,7 +62,7 @@ public class PluginResourceService {
     private AuthorizationService authorizationService;
 
     @Autowired
-    private AuthenticationConfig properties;
+    private ApplicationConfig applicationConfig;
 
     private final Map<String, List<PluginInstance>> instanceCache = new LinkedHashMap<>();
 
@@ -216,7 +215,7 @@ public class PluginResourceService {
 
         authorizationService.deleteAuthorizationCache();
 
-        Group group = authorizationService.getGroup(properties.getAdminGroupId());
+        Group group = authorizationService.getGroup(applicationConfig.getAdminGroupId());
 
         // 如果配置了管理员组 线删除同步一次管理员資源
         if (Objects.isNull(group)) {

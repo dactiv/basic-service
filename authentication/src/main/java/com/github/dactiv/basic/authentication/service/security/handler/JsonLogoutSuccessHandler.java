@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.github.dactiv.basic.authentication.config.AuthenticationConfig;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
@@ -16,7 +16,6 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
-import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -32,7 +31,6 @@ import org.springframework.stereotype.Component;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
 
 /**
@@ -59,7 +57,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private final static String DEFAULT_TOKEN_NAME = "token";
 
     @Autowired
-    private AuthenticationConfig authenticationProperties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private CaptchaAuthenticationFailureResponse failureHandler;
@@ -229,7 +227,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     private void postCaptchaData(RestResult<Map<String, Object>> result, HttpServletRequest request) {
         Integer number = failureHandler.getAllowableFailureNumber(request);
 
-        Integer allowableFailureNumber = authenticationProperties.getAllowableFailureNumber();
+        Integer allowableFailureNumber = applicationConfig.getAllowableFailureNumber();
 
         if (number < allowableFailureNumber) {
             return;
@@ -254,7 +252,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
             String token = buildToken.get(DEFAULT_TOKEN_NAME).toString();
 
-            String captchaType = authenticationProperties.getMobileFailureCaptchaType();
+            String captchaType = applicationConfig.getMobileFailureCaptchaType();
 
             Map<String, Object> interceptToken = failureHandler
                     .getCaptchaService()
@@ -268,7 +266,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
             result.getData().putAll(interceptToken);
 
         } else {
-            String captchaType = authenticationProperties.getUsernameFailureCaptchaType();
+            String captchaType = applicationConfig.getUsernameFailureCaptchaType();
 
             Map<String, Object> buildToken = failureHandler
                     .getCaptchaService()

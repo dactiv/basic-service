@@ -5,11 +5,11 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.entity.MemberUserInitialization;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -18,15 +18,12 @@ import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
-import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
@@ -35,7 +32,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.session.SessionInformation;
@@ -49,7 +45,6 @@ import org.springframework.util.DigestUtils;
 
 import java.util.Arrays;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 
 import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
@@ -69,15 +64,6 @@ public class UserService implements InitializingBean {
     @Autowired
     private RedissonClient redissonClient;
 
-    /**
-     * 超级管理登陆账户
-     */
-    @Value("${spring.security.admin.username:admin}")
-    private String adminUsername;
-
-    @Value("${spring.application.member-user.initialization-key-prefix:member:user:initialization:}")
-    private String memberUserInitializationKeyPrefix;
-
     @Autowired
     private ConsoleUserDao consoleUserDao;
 
@@ -95,6 +81,9 @@ public class UserService implements InitializingBean {
 
     @Autowired
     private PasswordEncoder passwordEncoder;
+
+    @Autowired
+    private ApplicationConfig applicationConfig;
 
     /**
      * 获取授权管理服务
@@ -341,7 +330,7 @@ public class UserService implements InitializingBean {
             return;
         }
 
-        if (StringUtils.equals(consoleUser.getUsername(), adminUsername)) {
+        if (StringUtils.equals(consoleUser.getUsername(), applicationConfig.getAdminUsername())) {
             throw new ServiceException("不能删除超级管理员用户");
         }
 
@@ -710,9 +699,7 @@ public class UserService implements InitializingBean {
     public void updateMemberUserInitialization(MemberUserInitialization memberUserInitialization) {
 
         memberUserInitializationDao.updateById(memberUserInitialization);
-
-        String key = getMemberUserInitializationKey(memberUserInitialization.getUserId());
-        redissonClient.getBucket(key).deleteAsync();
+        getMemberUserInitializationBucket(memberUserInitialization.getUserId()).deleteAsync();
 
     }
 
@@ -746,12 +733,15 @@ public class UserService implements InitializingBean {
         return initialization;
     }
 
-    private String getMemberUserInitializationKey(Integer userId) {
-        return memberUserInitializationKeyPrefix + userId;
-    }
-
+    /**
+     * 获取会员用户初始化桶
+     *
+     * @param userId 用户 id
+     *
+     * @return 会员用户初始化桶
+     */
     public RBucket<MemberUserInitialization> getMemberUserInitializationBucket(Integer userId) {
-        return redissonClient.getBucket(getMemberUserInitializationKey(userId));
+        return redissonClient.getBucket(applicationConfig.getMemberUserInitializationCache().getName(userId));
     }
 
     @Override

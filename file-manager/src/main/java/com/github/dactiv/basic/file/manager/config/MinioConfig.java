@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.file.manager;
+package com.github.dactiv.basic.file.manager.config;
 
 import com.github.dactiv.framework.commons.TimeProperties;
 import io.minio.MinioClient;

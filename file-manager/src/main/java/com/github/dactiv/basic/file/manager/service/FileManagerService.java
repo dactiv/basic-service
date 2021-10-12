@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.file.manager.service;
 
-import com.github.dactiv.basic.file.manager.MinioConfig;
+import com.github.dactiv.basic.file.manager.config.MinioConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.TimeProperties;
