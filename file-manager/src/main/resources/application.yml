@@ -12,3 +12,4 @@ dactiv:
       base-packages: com.github.dactiv.basic.file.manager.controller
     permit-uri-ant-matchers:
       - "/actuator/**"
+      - "/user/avatar/get/**"

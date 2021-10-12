@@ -18,8 +18,8 @@
     <dependencies>
 
         <dependency>
-            <groupId>com.github.dactiv.framework</groupId>
-            <artifactId>spring-security</artifactId>
+            <groupId>com.github.dactiv.basic</groupId>
+            <artifactId>commons</artifactId>
         </dependency>
 
         <dependency>

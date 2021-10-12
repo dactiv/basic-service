@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.file.manager.controller;
 
-import com.github.dactiv.basic.file.manager.service.FileManagerService;
+import com.github.dactiv.basic.file.manager.service.FileService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -34,7 +34,7 @@ import java.util.Map;
 public class FileManagerController {
 
     @Autowired
-    private FileManagerService fileManagerService;
+    private FileService fileService;
 
     /**
      * 删除文件
@@ -50,7 +50,7 @@ public class FileManagerController {
     @PreAuthorize("hasAuthority('perms[file_manager:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除文件", parent = "file-manager", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam("bucketName") String bucketName, @RequestParam("filename") String filename) throws Exception {
-        fileManagerService.delete(bucketName, filename);
+        fileService.delete(bucketName, filename);
         return RestResult.of("删除 [" + filename + "] 成功");
     }
 
@@ -69,7 +69,12 @@ public class FileManagerController {
     @Plugin(name = "上传文件", parent = "file-manager", sources = "Console", audit = true)
     public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file, @PathVariable("bucketName") String bucketName) throws Exception {
 
-        Map<String, Object> result = fileManagerService.upload(file, bucketName);
+        Map<String, Object> result = fileService.upload(
+                file.getOriginalFilename(),
+                file.getInputStream(), file.getSize(),
+                file.getContentType(),
+                bucketName
+        );
 
         return RestResult.ofSuccess("上传完成", result);
 
@@ -89,7 +94,7 @@ public class FileManagerController {
     @GetMapping("get/{bucketName}/{filename}")
     @Plugin(name = "获取文件", parent = "file-manager", sources = "System", audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {
-        InputStream is = fileManagerService.get(bucketName, filename);
+        InputStream is = fileService.get(bucketName, filename);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDispositionFormData(SpringMvcUtils.DEFAULT_ATTACHMENT_NAME, filename);
         return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);

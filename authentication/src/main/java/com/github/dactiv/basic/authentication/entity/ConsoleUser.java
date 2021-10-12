@@ -95,12 +95,6 @@ public class ConsoleUser implements NumberIdEntity<Integer> {
     private String realName;
 
     /**
-     * 头像
-     */
-    @Length(max = 64)
-    private String avatar;
-
-    /**
      * 备注
      */
     private String remark;

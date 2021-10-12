@@ -1,5 +1,9 @@
 package com.github.dactiv.basic.file.manager.service;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.JavaType;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dactiv.basic.commons.feign.file.FileManagerService;
 import com.github.dactiv.basic.file.manager.config.ApplicationConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
@@ -7,6 +11,7 @@ import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import io.minio.*;
+import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
@@ -15,8 +20,11 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
+import java.security.InvalidKeyException;
+import java.security.NoSuchAlgorithmException;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -28,7 +36,9 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class FileManagerService {
+public class FileService {
+
+    public static final String[] DEFAULT_IGNORE_FIELDS = {"headers"};
 
     public final static String URL_FIELD_KEY = "url";
 
@@ -37,6 +47,9 @@ public class FileManagerService {
 
     @Autowired
     private MinioClient minioClient;
+
+    @Autowired
+    private ObjectMapper objectMapper;
 
     /**
      * 自动关删除桶里的过期文件
@@ -119,53 +132,77 @@ public class FileManagerService {
     }
 
     /**
+     * 如果桶名称不存在，创建桶。
+     *
+     * @param bucketName 桶名称
+     *
+     * @return 如果桶存在返回 true，否则创建桶后返回 false
+     *
+     * @throws Exception 创建错误时抛出
+     */
+    public boolean makeBucketIfNotExists(String bucketName) throws Exception{
+        String name = bucketName.toLowerCase();
+        boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(name).build());
+
+        if (!found) {
+            minioClient.makeBucket(MakeBucketArgs.builder().bucket(name).build());
+        }
+
+        return found;
+    }
+
+    /**
      * 上传文件
      *
-     * @param file       文件
-     * @param bucketName 放置文件的桶名称
+     * @param name        文件名称
+     * @param file        文件内容
+     * @param contentType 文件类型
+     * @param size        文件大小
+     * @param bucketName  放置文件的桶名称
      *
      * @return reset 结果集
      *
      * @throws Exception 上传错误时抛出
      */
-    public Map<String, Object> upload(MultipartFile file, String bucketName) throws Exception {
+    public Map<String, Object> upload(String name,
+                                      InputStream file,
+                                      long size,
+                                      String contentType,
+                                      String bucketName) throws Exception {
 
-        boolean found = minioClient.bucketExists(BucketExistsArgs.builder().bucket(bucketName).build());
-
-        if (!found) {
-            minioClient.makeBucket(MakeBucketArgs.builder().bucket(bucketName).build());
-        }
-
-        ObjectWriteResponse objectWriteResponse = null;
+        bucketName = bucketName.toLowerCase();
+        makeBucketIfNotExists(bucketName);
+        ObjectWriteResponse response = null;
 
         try {
 
             PutObjectArgs args = PutObjectArgs
                     .builder()
                     .bucket(bucketName)
-                    .object(file.getOriginalFilename())
-                    .stream(file.getInputStream(), file.getSize(), -1)
-                    .contentType(file.getContentType())
+                    .object(name)
+                    .stream(file, size, -1)
+                    .contentType(contentType)
                     .build();
 
-            objectWriteResponse = minioClient.putObject(args);
+            response = minioClient.putObject(args);
 
-            Map<String, Object> result = convertFields(objectWriteResponse, objectWriteResponse.getClass(), "headers");
+            Map<String, Object> result = convertFields(response, response.getClass(), DEFAULT_IGNORE_FIELDS);
 
-            Map<String, String> variableValue = new LinkedHashMap<>(2);
-
-            variableValue.put("bucketName", bucketName);
-            variableValue.put("filename", file.getOriginalFilename());
-
-            String url = Casts.setUrlPathVariableValue(applicationConfig.getDownloadUrl(), variableValue);
+            String url = Casts.setUrlPathVariableValue(
+                    applicationConfig.getDownloadUrl(),
+                    Map.of(
+                            FileManagerService.DEFAULT_BUCKET_NAME, bucketName,
+                            FileManagerService.DEFAULT_FILENAME, name
+                    )
+            );
 
             result.put(URL_FIELD_KEY, url);
 
             return result;
         } catch (Exception e) {
 
-            if (Objects.nonNull(objectWriteResponse)) {
-                delete(bucketName, file.getOriginalFilename());
+            if (Objects.nonNull(response)) {
+                delete(bucketName, name);
             }
 
             throw e;
@@ -182,6 +219,8 @@ public class FileManagerService {
      * @throws Exception 删除错误时抛出
      */
     public void delete(String bucketName, String filename) throws Exception {
+        bucketName = bucketName.toLowerCase();
+
         RemoveObjectArgs args = RemoveObjectArgs
                 .builder()
                 .bucket(bucketName)
@@ -209,7 +248,65 @@ public class FileManagerService {
      * @throws Exception 获取错误时抛出
      */
     public InputStream get(String bucketName, String filename) throws Exception {
+        bucketName = bucketName.toLowerCase();
         return minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(filename).build());
+    }
+
+    /**
+     * 读取桶的文件内容值并将 json 转换为目标类型
+     *
+     * @param bucketName 桶名称
+     * @param filename 文件名称
+     * @param <T> 目标类型
+     *
+     * @return 目标类型对象
+     */
+    public <T> T readJsonValue(String bucketName, String filename, Class<T> targetClass) {
+        try {
+            InputStream inputStream = get(bucketName, filename);
+            return objectMapper.readValue(inputStream, targetClass);
+        } catch (Exception e) {
+            log.warn("获取桶 [" + bucketName+ "] 的 [" + filename + "] 出现异常", e);
+            return null;
+        }
+    }
+
+    /**
+     * 读取桶的文件内容值并将 json 转换为目标类型
+     *
+     * @param bucketName 桶名称
+     * @param filename 文件名称
+     * @param <T> 目标类型
+     *
+     * @return 目标类型对象
+     */
+    public <T> T readJsonValue(String bucketName, String filename, JavaType javaType) {
+        try {
+            InputStream inputStream = get(bucketName, filename);
+            return objectMapper.readValue(inputStream, javaType);
+        } catch (Exception e) {
+            log.warn("获取桶 [" + bucketName+ "] 的 [" + filename + "] 出现异常", e);
+            return null;
+        }
+    }
+
+    /**
+     * 读取桶的文件内容值并将 json 转换为目标类型
+     *
+     * @param bucketName 桶名称
+     * @param filename 文件名称
+     * @param <T> 目标类型
+     *
+     * @return 目标类型对象
+     */
+    public <T> T readJsonValue(String bucketName, String filename, TypeReference<T> typeReference) {
+        try {
+            InputStream inputStream = get(bucketName, filename);
+            return objectMapper.readValue(inputStream, typeReference);
+        } catch (Exception e) {
+            log.warn("获取桶 [" + bucketName+ "] 的 [" + filename + "] 出现异常", e);
+            return null;
+        }
     }
 
     /**

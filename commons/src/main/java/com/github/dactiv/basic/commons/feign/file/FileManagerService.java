@@ -17,6 +17,8 @@ public interface FileManagerService {
 
     String DEFAULT_BUCKET_NAME = "bucketName";
 
+    String DEFAULT_FILENAME = "filename";
+
     /**
      * 获取文件
      *
@@ -25,6 +27,7 @@ public interface FileManagerService {
      *
      * @return 字节流
      */
-    @GetMapping("get/{" + DEFAULT_BUCKET_NAME + "}/{filename}")
-    ResponseEntity<byte[]> get(@PathVariable(DEFAULT_BUCKET_NAME) String bucketName, @PathVariable("filename") String filename);
+    @GetMapping("get/{" + DEFAULT_BUCKET_NAME + "}/{" + DEFAULT_FILENAME + "}")
+    ResponseEntity<byte[]> get(@PathVariable(DEFAULT_BUCKET_NAME) String bucketName,
+                               @PathVariable(DEFAULT_FILENAME) String filename);
 }
