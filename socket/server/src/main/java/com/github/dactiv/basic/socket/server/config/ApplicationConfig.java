@@ -7,9 +7,10 @@ import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 
 /**
- * socket io 服务配置
+ * 全局应用配置
  *
- * @author maurice
+ * @author maurice.chen
+ *
  */
 @Data
 @NoArgsConstructor

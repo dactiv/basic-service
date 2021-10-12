@@ -15,9 +15,10 @@ import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
- * 认证配置
+ * 全局应用配置
  *
  * @author maurice.chen
+ *
  */
 @Data
 @Component

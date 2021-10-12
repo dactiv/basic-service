@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.file.manager.service;
 
-import com.github.dactiv.basic.file.manager.config.MinioConfig;
+import com.github.dactiv.basic.file.manager.config.ApplicationConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -33,7 +33,7 @@ public class FileManagerService {
     public final static String URL_FIELD_KEY = "url";
 
     @Autowired
-    private MinioConfig.MinioProperties minioProperties;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private MinioClient minioClient;
@@ -46,7 +46,7 @@ public class FileManagerService {
     @NacosCronScheduled(cron = "${spring.minio.auto-delete.cron:0 1 * * * ?}", name = "自动清除过期文件服务")
     public void autoDelete() throws Exception {
 
-        Set<String> bucketNameList = minioProperties.getAutoDelete().getExpiration().keySet();
+        Set<String> bucketNameList = applicationConfig.getAutoDelete().getExpiration().keySet();
 
         if (log.isDebugEnabled()) {
             log.debug("开始自动删除桶的过期对象");
@@ -82,7 +82,7 @@ public class FileManagerService {
         Iterable<Result<Item>> iterable = minioClient
                 .listObjects(ListObjectsArgs.builder().bucket(bucket.name()).build());
 
-        TimeProperties time = minioProperties
+        TimeProperties time = applicationConfig
                 .getAutoDelete()
                 .getExpiration()
                 .get(bucket.name());
@@ -157,7 +157,7 @@ public class FileManagerService {
             variableValue.put("bucketName", bucketName);
             variableValue.put("filename", file.getOriginalFilename());
 
-            String url = Casts.setUrlPathVariableValue(minioProperties.getDownloadUrl(), variableValue);
+            String url = Casts.setUrlPathVariableValue(applicationConfig.getDownloadUrl(), variableValue);
 
             result.put(URL_FIELD_KEY, url);
 
