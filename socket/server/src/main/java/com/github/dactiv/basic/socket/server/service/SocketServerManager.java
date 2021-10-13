@@ -255,20 +255,24 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
             }
 
             List<String> resourceAuthorityList = Casts.cast(userResult.get(DEFAULT_RESOURCE_AUTHORITY));
-            user.setResourceAuthorities(
-                    resourceAuthorityList
-                            .stream()
-                            .map(ResourceAuthority::new)
-                            .collect(Collectors.toList())
-            );
+            if(CollectionUtils.isNotEmpty(resourceAuthorityList)) {
+                user.setResourceAuthorities(
+                        resourceAuthorityList
+                                .stream()
+                                .map(ResourceAuthority::new)
+                                .collect(Collectors.toList())
+                );
+            }
 
             List<String> roleAuthorityList = Casts.cast(userResult.get(DEFAULT_ROLE_AUTHORITY));
-            user.setRoleAuthorities(
-                    roleAuthorityList
-                            .stream()
-                            .map(RoleAuthority::new)
-                            .collect(Collectors.toList())
-            );
+            if(CollectionUtils.isNotEmpty(roleAuthorityList)) {
+                user.setRoleAuthorities(
+                        roleAuthorityList
+                                .stream()
+                                .map(RoleAuthority::new)
+                                .collect(Collectors.toList())
+                );
+            }
 
             RBucket<SecurityContext> bucket = securityContextRepository.getSecurityContextBucket(deviceIdentified);
 
@@ -342,8 +346,8 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         token.setDetails(user);
 
         SecurityContext newSecurityContext = new SecurityContextImpl(token);
-
-        Optional<HttpServletRequest> requestOptional = SpringMvcUtils.getHttpServletRequest();
+        bucket.set(newSecurityContext);
+        /*Optional<HttpServletRequest> requestOptional = SpringMvcUtils.getHttpServletRequest();
         Optional<HttpServletResponse> responseOptional = SpringMvcUtils.getHttpServletResponse();
 
         if (requestOptional.isPresent() && responseOptional.isPresent()) {
@@ -360,7 +364,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         } else {
             bucket.set(newSecurityContext);
-        }
+        }*/
 
         if (Objects.nonNull(user.getId())) {
             String name = authenticationProperties.getDeviceId().getCache().getName(user.getId().toString());

@@ -91,7 +91,6 @@ public interface ConsoleUserDao extends BaseMapper<ConsoleUser> {
             "   cu.status, " +
             "   cu.username, " +
             "   cu.real_name, " +
-            "   cu.avatar, " +
             "   cu.remark " +
             "FROM " +
             "   tb_console_user cu " +

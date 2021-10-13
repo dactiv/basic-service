@@ -15,6 +15,7 @@ import io.minio.errors.*;
 import io.minio.messages.Bucket;
 import io.minio.messages.Item;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
@@ -250,6 +251,50 @@ public class FileService {
     public GetObjectResponse get(String bucketName, String filename) throws Exception {
         bucketName = bucketName.toLowerCase();
         return minioClient.getObject(GetObjectArgs.builder().bucket(bucketName).object(filename).build());
+    }
+
+    /**
+     * 拷贝文件
+     *
+     * @param fromBucketName 来源桶
+     * @param fromFilename 来源文件名
+     * @param toBucketName 目的地桶
+     *
+     * @return minio API 调用响应的 ObjectWriteResponse 对象
+     *
+     * @throws Exception 拷贝出错时候抛出
+     */
+    public ObjectWriteResponse copy(String fromBucketName, String fromFilename, String toBucketName) throws Exception {
+        return copy(fromBucketName, fromFilename, toBucketName, null);
+    }
+
+    /**
+     * 拷贝文件
+     *
+     * @param fromBucketName 来源桶
+     * @param fromFilename 来源文件名
+     * @param toBucketName 目的地桶
+     * @param newFilename 新文件名称
+     *
+     * @return minio API 调用响应的 ObjectWriteResponse 对象
+     *
+     * @throws Exception 拷贝出错时候抛出
+     */
+    public ObjectWriteResponse copy(String fromBucketName,
+                                    String fromFilename,
+                                    String toBucketName,
+                                    String newFilename) throws Exception {
+
+        CopyObjectArgs.Builder args = CopyObjectArgs
+                .builder()
+                .bucket(toBucketName.toLowerCase())
+                .source(CopySource.builder().bucket(fromBucketName.toLowerCase()).object(fromFilename).build());
+
+        if (StringUtils.isNotEmpty(newFilename)) {
+            args.object(newFilename);
+        };
+
+        return minioClient.copyObject(args.build());
     }
 
     /**

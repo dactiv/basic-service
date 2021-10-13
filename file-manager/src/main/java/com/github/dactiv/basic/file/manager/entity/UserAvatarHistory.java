@@ -32,9 +32,14 @@ public class UserAvatarHistory extends IdEntity<Integer> {
     private String bucketName;
 
     /**
-     * 文件名称
+     * 历史文件名称
      */
-    private String filename;
+    private String historyFilename;
+
+    /**
+     * 当前头像文件名称
+     */
+    private String currentAvatarFilename;
 
     /**
      * 历史头像名称

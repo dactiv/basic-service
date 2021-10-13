@@ -11,9 +11,11 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import io.minio.GetObjectResponse;
+import io.minio.ObjectWriteResponse;
 import lombok.extern.slf4j.Slf4j;
 import okhttp3.Headers;
 import org.apache.commons.io.IOUtils;
+import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
@@ -87,12 +89,26 @@ public class UserAvatarController implements InitializingBean {
             history.getValues().remove(0);
         }
 
+        history.setCurrentAvatarFilename(file.getOriginalFilename());
+
         saveUserAvatarHistory(history);
 
-        fileService.upload(file.getOriginalFilename(), file.getInputStream(), file.getSize(), file.getContentType(), history.getBucketName());
+        fileService.upload(
+                file.getOriginalFilename(),
+                file.getInputStream(),
+                file.getSize(),
+                file.getContentType(),
+                history.getBucketName()
+        );
 
-        String currentName = MessageFormat.format(applicationConfig.getUserAvatar().getCurrentUseFileToken(), userDetails.getId());
-        Map<String, Object> result = fileService.upload(currentName, file.getInputStream(), file.getSize(), file.getContentType(), history.getBucketName());
+        String currentName = getCurrentAvatarFilename(userDetails);
+        Map<String, Object> result = fileService.upload(
+                currentName,
+                file.getInputStream(),
+                file.getSize(),
+                file.getContentType(),
+                history.getBucketName()
+        );
 
         return RestResult.ofSuccess("上传新头像完成", result);
 
@@ -113,8 +129,11 @@ public class UserAvatarController implements InitializingBean {
      * @return 用户头像历史记录实体
      */
     private UserAvatarHistory getUserAvatarHistory(SecurityUserDetails userDetails) {
-        String bucketName = userDetails.getType() + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
-        String filename = MessageFormat.format(applicationConfig.getUserAvatar().getHistoryFileToken(), userDetails.getId());
+        String bucketName = userDetails.getType() +
+                Casts.DEFAULT_DOT_SYMBOL +
+                applicationConfig.getUserAvatar().getBucketName();
+        String token = applicationConfig.getUserAvatar().getHistoryFileToken();
+        String filename = MessageFormat.format(token, userDetails.getId());
 
         UserAvatarHistory result = fileService.readJsonValue(bucketName, filename, UserAvatarHistory.class);
 
@@ -122,7 +141,7 @@ public class UserAvatarController implements InitializingBean {
 
             result = new UserAvatarHistory();
 
-            result.setFilename(filename);
+            result.setHistoryFilename(filename);
             result.setBucketName(bucketName);
         }
 
@@ -140,7 +159,9 @@ public class UserAvatarController implements InitializingBean {
      * @throws Exception 获取错误时抛出
      */
     @GetMapping("get/{type}/{filename}")
-    public ResponseEntity<byte[]> get(@PathVariable("type") String type, @PathVariable("filename") String filename) throws Exception {
+    public ResponseEntity<byte[]> get(@PathVariable("type") String type,
+                                      @PathVariable("filename") String filename) throws Exception {
+
         String bucketName = type + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
 
         InputStream is = fileService.get(bucketName, filename);
@@ -150,9 +171,18 @@ public class UserAvatarController implements InitializingBean {
         return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
     }
 
+    /**
+     * 选择历史头像
+     *
+     * @param securityContext 安全上下文
+     * @param filename 历史头像文件名称
+     * @return rest 结果集
+     *
+     * @throws Exception 拷贝文件错误时抛出
+     */
     @PostMapping("select")
     @PreAuthorize("isFullyAuthenticated()")
-    public RestResult<Map<String, Object>> select(@CurrentSecurityContext SecurityContext securityContext,
+    public RestResult<?> select(@CurrentSecurityContext SecurityContext securityContext,
                                 @RequestParam("filename") String filename) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -163,15 +193,37 @@ public class UserAvatarController implements InitializingBean {
             throw new SystemException("图片不存在，可能已经被删除。");
         }
 
-        String currentName = MessageFormat.format(applicationConfig.getUserAvatar().getCurrentUseFileToken(), userDetails.getId());
+        String currentName = getCurrentAvatarFilename(userDetails);
+        fileService.copy(history.getBucketName(), filename, history.getBucketName(), currentName);
 
-        GetObjectResponse response = fileService.get(history.getBucketName(), currentName);
-        Headers headers = response.headers();
-        Map<String, Object> result = fileService.upload(currentName, response, IOUtils.toByteArray(response).length, headers.get(HttpHeaders.CONTENT_TYPE), history.getBucketName());
+        history.setCurrentAvatarFilename(filename);
 
-        return RestResult.ofSuccess("选择历史头像成功", result);
+        saveUserAvatarHistory(history);
+
+        return RestResult.of("更换头像成功");
     }
 
+    /**
+     * 获取当前头像文件名称
+     *
+     * @param userDetails 用户明细实体
+     *
+     * @return 当前头像文件名称
+     */
+    private String getCurrentAvatarFilename(SecurityUserDetails userDetails) {
+        String token = applicationConfig.getUserAvatar().getCurrentUseFileToken();
+        return MessageFormat.format(token, userDetails.getId());
+    }
+
+    /**
+     * 删除历史头像
+     *
+     * @param securityContext 安全上下文
+     * @param filename 要删除的文件名称
+     *
+     * @return rest 结果集
+     * @throws Exception 删除错误时候抛出
+     */
     @PostMapping("delete")
     @PreAuthorize("isFullyAuthenticated()")
     public RestResult<?> delete(@CurrentSecurityContext SecurityContext securityContext,
@@ -187,6 +239,10 @@ public class UserAvatarController implements InitializingBean {
 
         history.getValues().remove(filename);
 
+        if (StringUtils.equals(filename, history.getCurrentAvatarFilename())) {
+            history.setCurrentAvatarFilename("");
+        }
+
         saveUserAvatarHistory(history);
 
         fileService.delete(history.getBucketName(), filename);
@@ -194,6 +250,13 @@ public class UserAvatarController implements InitializingBean {
         return RestResult.of("删除历史头像成功");
     }
 
+    /**
+     * 保存用户头像历史记录实体
+     *
+     * @param history 用户头像历史记录实体
+     *
+     * @throws Exception 报错错误时抛出
+     */
     private void saveUserAvatarHistory(UserAvatarHistory history) throws Exception {
         ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
         objectMapper.writeValue(outputStream, history);
@@ -201,7 +264,13 @@ public class UserAvatarController implements InitializingBean {
 
         byte[] bytes = outputStream.toByteArray();
         ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(bytes);
-        fileService.upload(history.getFilename(), arrayInputStream, bytes.length, MediaType.APPLICATION_JSON_VALUE, history.getBucketName());
+        fileService.upload(
+                history.getHistoryFilename(),
+                arrayInputStream,
+                bytes.length,
+                MediaType.APPLICATION_JSON_VALUE,
+                history.getBucketName()
+        );
     }
 
     @Override
