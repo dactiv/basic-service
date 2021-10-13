@@ -2,6 +2,9 @@ package com.github.dactiv.basic.socket.server.config;
 
 import com.corundumstudio.socketio.SocketIOServer;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
+import com.github.dactiv.basic.socket.server.service.SocketUserDetailsContextRepository;
+import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
+import org.redisson.api.RedissonClient;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -43,9 +46,9 @@ public class SocketServerConfig {
      *
      * @return SocketUserDetailsContextRepository
      */
-    /*@Bean
+    @Bean
     public SocketUserDetailsContextRepository socketUserDetailsContextRepository(AuthenticationProperties properties,
                                                                                  RedissonClient redissonClient) {
         return new SocketUserDetailsContextRepository(properties, redissonClient);
-    }*/
+    }
 }
