@@ -346,8 +346,8 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         token.setDetails(user);
 
         SecurityContext newSecurityContext = new SecurityContextImpl(token);
-        bucket.set(newSecurityContext);
-        /*Optional<HttpServletRequest> requestOptional = SpringMvcUtils.getHttpServletRequest();
+
+        Optional<HttpServletRequest> requestOptional = SpringMvcUtils.getHttpServletRequest();
         Optional<HttpServletResponse> responseOptional = SpringMvcUtils.getHttpServletResponse();
 
         if (requestOptional.isPresent() && responseOptional.isPresent()) {
@@ -364,7 +364,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         } else {
             bucket.set(newSecurityContext);
-        }*/
+        }
 
         if (Objects.nonNull(user.getId())) {
             String name = authenticationProperties.getDeviceId().getCache().getName(user.getId().toString());

@@ -87,8 +87,6 @@ public class ChatService {
         );
 
         return message;
-
-        //SocketResultHolder.get().addUnicastMessage(recipientId);
     }
 
     /**

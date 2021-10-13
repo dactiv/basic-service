@@ -1,6 +1,7 @@
 dactiv:
   authentication:
     device-id:
+      overwrite-session: false
       cache:
         name: "socket:server:spring:security:context:"
         expires-time:

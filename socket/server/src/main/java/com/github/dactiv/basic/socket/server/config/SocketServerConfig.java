@@ -34,4 +34,18 @@ public class SocketServerConfig {
 
         return socketIoServer;
     }
+
+    /**
+     * 用 SocketUserDetailsContextRepository 替代 DeviceIdContextRepository
+     *
+     * @param properties 配置信息
+     * @param redissonClient redisson 客户端
+     *
+     * @return SocketUserDetailsContextRepository
+     */
+    /*@Bean
+    public SocketUserDetailsContextRepository socketUserDetailsContextRepository(AuthenticationProperties properties,
+                                                                                 RedissonClient redissonClient) {
+        return new SocketUserDetailsContextRepository(properties, redissonClient);
+    }*/
 }
