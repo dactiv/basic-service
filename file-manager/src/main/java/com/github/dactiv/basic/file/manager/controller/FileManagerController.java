@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.file.manager.controller;
 
+import com.github.dactiv.basic.commons.utils.MinioUtils;
 import com.github.dactiv.basic.file.manager.service.FileService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
@@ -50,7 +51,7 @@ public class FileManagerController {
     @PreAuthorize("hasAuthority('perms[file_manager:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除文件", parent = "file-manager", sources = "Console", audit = true)
     public RestResult<?> delete(@RequestParam("bucketName") String bucketName, @RequestParam("filename") String filename) throws Exception {
-        fileService.delete(bucketName, filename);
+        MinioUtils.delete(bucketName, filename);
         return RestResult.of("删除 [" + filename + "] 成功");
     }
 
@@ -94,7 +95,7 @@ public class FileManagerController {
     @GetMapping("get/{bucketName}/{filename}")
     @Plugin(name = "获取文件", parent = "file-manager", sources = "System", audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("bucketName") String bucketName, @PathVariable("filename") String filename) throws Exception {
-        InputStream is = fileService.get(bucketName, filename);
+        InputStream is = MinioUtils.get(bucketName, filename);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentDispositionFormData(SpringMvcUtils.DEFAULT_ATTACHMENT_NAME, filename);
         return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);

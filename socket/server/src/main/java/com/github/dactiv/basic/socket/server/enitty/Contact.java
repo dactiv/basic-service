@@ -3,11 +3,11 @@ package com.github.dactiv.basic.socket.server.enitty;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.socket.server.enitty.Room;
 import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
-import lombok.*;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;
 import java.util.Date;

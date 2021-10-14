@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.server.service.chat;
 
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -12,6 +13,7 @@ import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
+import org.apache.commons.lang.StringUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,10 +63,16 @@ public class ChatService {
 
         ContactMessage contactMessage = new ContactMessage();
 
+        String lastMessage = RegExUtils.replaceAll(
+                message.getContent(),
+                Constants.REPLACE_HTML_TAG_REX,
+                StringUtils.EMPTY
+        );
+
         contactMessage.setId(senderId);
         contactMessage.setRecipientId(recipientId);
         contactMessage.setLastSendTime(new Date());
-        contactMessage.setLastMessage(RegExUtils.replaceAll(message.getContent(),"<[.[^<]]*>", ""));
+        contactMessage.setLastMessage(lastMessage);
 
         contactMessage.getMessages().add(message);
 
@@ -83,7 +91,6 @@ public class ChatService {
                 SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
                 SaveChatMessageReceiver.DEFAULT_QUEUE_NAME,
                 contactMessage
-
         );
 
         return message;

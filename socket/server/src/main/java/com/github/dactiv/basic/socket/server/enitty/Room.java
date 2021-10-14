@@ -1,9 +1,12 @@
 package com.github.dactiv.basic.socket.server.enitty;
 
-import lombok.*;
-
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
-import com.baomidou.mybatisplus.annotation.*;
 
 
 /**

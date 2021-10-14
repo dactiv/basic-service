@@ -3,7 +3,7 @@ package com.github.dactiv.basic.socket.client;
 import com.github.dactiv.basic.socket.client.entity.ReturnValueSocketResult;
 import com.github.dactiv.basic.socket.client.entity.SocketResult;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.spring.web.SpringWebSupportProperties;
+import com.github.dactiv.framework.spring.web.SpringWebMvcProperties;
 import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;
 import lombok.EqualsAndHashCode;
 import lombok.NonNull;
@@ -30,7 +30,7 @@ public class SocketResultResponseBodyAdvice extends RestResponseBodyAdvice {
     @NonNull
     private SocketClientTemplate socketClientTemplate;
 
-    public SocketResultResponseBodyAdvice(SpringWebSupportProperties properties,
+    public SocketResultResponseBodyAdvice(SpringWebMvcProperties properties,
                                           @NonNull SocketClientTemplate socketClientTemplate) {
         super(properties);
         this.socketClientTemplate = socketClientTemplate;

@@ -6,7 +6,6 @@ import com.github.dactiv.framework.spring.security.authentication.service.Defaul
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
 

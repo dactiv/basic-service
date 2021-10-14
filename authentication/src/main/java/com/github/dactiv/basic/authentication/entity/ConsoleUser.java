@@ -8,7 +8,6 @@ import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.ExcludeView;
-import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

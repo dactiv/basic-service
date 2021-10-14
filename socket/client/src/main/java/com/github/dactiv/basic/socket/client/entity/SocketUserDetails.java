@@ -9,7 +9,6 @@ import lombok.EqualsAndHashCode;
 import nl.basjes.parse.useragent.UserAgent;
 
 import java.util.Date;
-import java.util.Objects;
 
 /**
  * spring security socket 用户明细实现

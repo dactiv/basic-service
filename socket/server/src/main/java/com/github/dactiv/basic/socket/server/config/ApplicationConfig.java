@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server.config;
 
 import com.corundumstudio.socketio.Configuration;
+import com.github.dactiv.basic.commons.config.MinioConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -18,12 +19,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 @ConfigurationProperties("dactiv.socket.server")
 public class ApplicationConfig extends Configuration {
 
-    public static final String DEFAULT_SERVER_ID_PARAM_NAME = "serverId";
-
-    public static final String DEFAULT_NACOS_INSTANCE_NAME = "netty-socket-server";
-
-    public static final String DEFAULT_ROOM_PREFIX = "socket:room:";
-
     /**
      * 校验用户信息地址
      */
@@ -32,12 +27,17 @@ public class ApplicationConfig extends Configuration {
     /**
      * nacos 实例名称
      */
-    private String nacosInstanceName = DEFAULT_NACOS_INSTANCE_NAME;
+    private String nacosInstanceName = "netty-socket-server";
 
     /**
      * 房间名前缀
      */
-    private String roomPrefix = DEFAULT_ROOM_PREFIX;
+    private String roomPrefix = "socket:room:";
+
+    /**
+     * minio 配置
+     */
+    private MinioConfig minio = new MinioConfig();
 
     /**
      * 聊天配置

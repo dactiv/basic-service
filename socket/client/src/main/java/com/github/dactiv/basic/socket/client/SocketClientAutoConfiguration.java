@@ -3,8 +3,8 @@ package com.github.dactiv.basic.socket.client;
 import com.github.dactiv.basic.socket.client.holder.Interceptor.SocketMessageInterceptor;
 import com.github.dactiv.basic.socket.client.holder.SocketMessagePointcutAdvisor;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.web.SpringWebMvcSupportAutoConfiguration;
-import com.github.dactiv.framework.spring.web.SpringWebSupportProperties;
+import com.github.dactiv.framework.spring.web.SpringWebMvcAutoConfiguration;
+import com.github.dactiv.framework.spring.web.SpringWebMvcProperties;
 import org.springframework.boot.autoconfigure.AutoConfigureBefore;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnMissingBean;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
@@ -22,8 +22,8 @@ import org.springframework.web.client.RestTemplate;
  * @author maurice.chen
  */
 @Configuration
-@AutoConfigureBefore(SpringWebMvcSupportAutoConfiguration.class)
-@EnableConfigurationProperties({SpringWebSupportProperties.class, SecurityProperties.class})
+@AutoConfigureBefore(SpringWebMvcAutoConfiguration.class)
+@EnableConfigurationProperties({SpringWebMvcProperties.class, SecurityProperties.class})
 @ConditionalOnProperty(prefix = "dactiv.socket.client", value = "enabled", matchIfMissing = true)
 public class SocketClientAutoConfiguration {
 
@@ -37,7 +37,7 @@ public class SocketClientAutoConfiguration {
     }
 
     @Bean
-    public SocketResultResponseBodyAdvice socketResultResponseBodyAdvice(SpringWebSupportProperties properties,
+    public SocketResultResponseBodyAdvice socketResultResponseBodyAdvice(SpringWebMvcProperties properties,
                                                                          SocketClientTemplate socketClientTemplate) {
         return new SocketResultResponseBodyAdvice(properties, socketClientTemplate);
     }

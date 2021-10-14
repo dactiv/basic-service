@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.config.config;
+package com.github.dactiv.basic.message.config;
 
 import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
@@ -14,7 +14,7 @@ import org.springframework.context.annotation.Configuration;
  * @author maurice.chen
  */
 @Configuration
-public class MybatisPlusConfig {
+public class ApplicationStartupAutoConfig {
 
     @Bean
     public MybatisPlusInterceptor mybatisPlusInterceptor() {

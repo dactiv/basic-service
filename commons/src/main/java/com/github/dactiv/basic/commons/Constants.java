@@ -10,6 +10,11 @@ import com.github.dactiv.framework.commons.Casts;
 public interface Constants {
 
     /**
+     * 替换 HTML 标签正则表达式
+     */
+    String REPLACE_HTML_TAG_REX = "<[.[^<]]*>";
+
+    /**
      * 默认 rabbitmq 的延迟交换机名称
      */
     String RABBITMQ_DELAY_EXCHANGE = "default.delay.exchange";

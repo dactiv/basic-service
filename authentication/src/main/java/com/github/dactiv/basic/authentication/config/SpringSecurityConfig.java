@@ -4,7 +4,7 @@ import com.github.dactiv.basic.authentication.service.security.CaptchaAuthentica
 import com.github.dactiv.basic.authentication.service.security.JsonSessionInformationExpiredStrategy;
 import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
-import com.github.dactiv.framework.spring.security.SpringSecuritySupportAutoConfiguration;
+import com.github.dactiv.framework.spring.security.SpringSecurityAutoConfiguration;
 import com.github.dactiv.framework.spring.security.WebSecurityConfigurerAfterAdapter;
 import com.github.dactiv.framework.spring.security.authentication.AuthenticationTypeTokenResolver;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
@@ -33,7 +33,7 @@ import java.util.List;
  */
 @Configuration
 @EnableGlobalMethodSecurity(prePostEnabled = true, securedEnabled = true)
-@AutoConfigureAfter({SpringSecuritySupportAutoConfiguration.class, RedisHttpSessionConfiguration.class})
+@AutoConfigureAfter({SpringSecurityAutoConfiguration.class, RedisHttpSessionConfiguration.class})
 public class SpringSecurityConfig<S extends Session> implements WebSecurityConfigurerAfterAdapter {
 
     @Autowired

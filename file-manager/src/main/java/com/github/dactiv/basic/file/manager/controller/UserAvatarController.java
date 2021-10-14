@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.file.manager.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dactiv.basic.commons.utils.MinioUtils;
 import com.github.dactiv.basic.file.manager.config.ApplicationConfig;
 import com.github.dactiv.basic.file.manager.entity.UserAvatarHistory;
 import com.github.dactiv.basic.file.manager.service.FileService;
@@ -10,10 +11,7 @@ import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import io.minio.GetObjectResponse;
-import io.minio.ObjectWriteResponse;
 import lombok.extern.slf4j.Slf4j;
-import okhttp3.Headers;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
@@ -30,7 +28,6 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.IOException;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Map;
@@ -135,7 +132,7 @@ public class UserAvatarController implements InitializingBean {
         String token = applicationConfig.getUserAvatar().getHistoryFileToken();
         String filename = MessageFormat.format(token, userDetails.getId());
 
-        UserAvatarHistory result = fileService.readJsonValue(bucketName, filename, UserAvatarHistory.class);
+        UserAvatarHistory result = MinioUtils.readJsonValue(bucketName, filename, UserAvatarHistory.class);
 
         if (Objects.isNull(result)) {
 
@@ -164,7 +161,7 @@ public class UserAvatarController implements InitializingBean {
 
         String bucketName = type + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
 
-        InputStream is = fileService.get(bucketName, filename);
+        InputStream is = MinioUtils.get(bucketName, filename);
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
 
@@ -194,7 +191,7 @@ public class UserAvatarController implements InitializingBean {
         }
 
         String currentName = getCurrentAvatarFilename(userDetails);
-        fileService.copy(history.getBucketName(), filename, history.getBucketName(), currentName);
+        MinioUtils.copy(history.getBucketName(), filename, history.getBucketName(), currentName);
 
         history.setCurrentAvatarFilename(filename);
 
@@ -245,7 +242,7 @@ public class UserAvatarController implements InitializingBean {
 
         saveUserAvatarHistory(history);
 
-        fileService.delete(history.getBucketName(), filename);
+        MinioUtils.delete(history.getBucketName(), filename);
 
         return RestResult.of("删除历史头像成功");
     }
@@ -264,7 +261,7 @@ public class UserAvatarController implements InitializingBean {
 
         byte[] bytes = outputStream.toByteArray();
         ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(bytes);
-        fileService.upload(
+        MinioUtils.upload(
                 history.getHistoryFilename(),
                 arrayInputStream,
                 bytes.length,
@@ -277,7 +274,7 @@ public class UserAvatarController implements InitializingBean {
     public void afterPropertiesSet() throws Exception {
         for (String s : applicationConfig.getUserAvatar().getUserSources()) {
             String bucketName = s + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
-            fileService.makeBucketIfNotExists(bucketName);
+            MinioUtils.makeBucketIfNotExists(bucketName);
         }
     }
 }

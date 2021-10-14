@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.file.manager.config;
 
 
+import com.github.dactiv.basic.commons.config.MinioConfig;
 import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -24,19 +25,9 @@ import java.util.Map;
 public class ApplicationConfig {
 
     /**
-     * 终端地址
+     * minio 配置
      */
-    private String endpoint;
-
-    /**
-     * 访问密钥
-     */
-    private String accessKey;
-
-    /**
-     * 安全密钥
-     */
-    private String secretKey;
+    private MinioConfig minio = new MinioConfig();
 
     /**
      * 下载连接前缀

@@ -4,17 +4,13 @@ import com.github.dactiv.basic.socket.client.SocketClientTemplate;
 import com.github.dactiv.basic.socket.client.entity.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
-import com.github.dactiv.framework.spring.web.SpringWebSupportProperties;
-import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import com.github.dactiv.framework.spring.web.result.filter.holder.FilterResultHolder;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import javax.servlet.http.HttpServletRequest;
 import java.util.Objects;
-import java.util.Optional;
 
 /**
  *
