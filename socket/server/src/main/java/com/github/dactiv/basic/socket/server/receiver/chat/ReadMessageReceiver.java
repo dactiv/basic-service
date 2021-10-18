@@ -1,38 +1,29 @@
-package com.github.dactiv.basic.socket.server.receiver;
+package com.github.dactiv.basic.socket.server.receiver.chat;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
-import com.github.dactiv.basic.socket.server.service.chat.ContactMessage;
+import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
 import com.rabbitmq.client.Channel;
-import io.minio.MinioClient;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.io.IOException;
-
 /**
- * 保存聊天信息 MQ 接收者
+ * 读取消息 MQ 接收者
  *
  * @author maurice.chen
  */
 @Component
-public class SaveChatMessageReceiver implements InitializingBean {
+public class ReadMessageReceiver {
 
-    public static final String DEFAULT_QUEUE_NAME = "save.chat.message";
-
-    @Autowired
-    private MinioClient minioClient;
-
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    /**
+     * MQ 队列名称
+     */
+    public static final String DEFAULT_QUEUE_NAME = "read.chat.message";
 
     @RabbitListener(
             bindings = @QueueBinding(
@@ -41,15 +32,10 @@ public class SaveChatMessageReceiver implements InitializingBean {
                     key = DEFAULT_QUEUE_NAME
             )
     )
-    public void onMessage(@Payload ContactMessage message,
+    public void onMessage(@Payload ReadMessageRequestBody body,
                           Channel channel,
-                          @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+                          @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
         channel.basicAck(tag, false);
-    }
-
-    @Override
-    public void afterPropertiesSet() throws Exception {
-        applicationConfig.getChat().getGlobalMessageBucketName();
     }
 }

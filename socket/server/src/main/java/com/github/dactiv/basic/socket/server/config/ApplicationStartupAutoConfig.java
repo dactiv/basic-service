@@ -1,12 +1,17 @@
 package com.github.dactiv.basic.socket.server.config;
 
+import com.baomidou.mybatisplus.annotation.DbType;
+import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
+import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dactiv.basic.commons.utils.MinioUtils;
+import com.github.dactiv.basic.commons.minio.MinioUtils;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.SocketUserDetailsContextRepository;
-import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
+import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import io.minio.MinioClient;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.InitializingBean;
@@ -79,6 +84,28 @@ public class ApplicationStartupAutoConfig implements InitializingBean {
     public SocketUserDetailsContextRepository socketUserDetailsContextRepository(AuthenticationProperties properties,
                                                                                  RedissonClient redissonClient) {
         return new SocketUserDetailsContextRepository(properties, redissonClient);
+    }
+
+    @Bean
+    public MybatisPlusInterceptor mybatisPlusInterceptor() {
+
+        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
+
+        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
+        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
+
+        return interceptor;
+    }
+
+    @Bean
+    @SuppressWarnings("rawtypes")
+    public MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator() {
+        return new MybatisPlusQueryGenerator();
+    }
+
+    @Bean
+    public CipherAlgorithmService cipherAlgorithmService() {
+        return new CipherAlgorithmService();
     }
 
     @Override

@@ -1,37 +1,25 @@
-package com.github.dactiv.basic.socket.server.enitty;
+package com.github.dactiv.basic.socket.server.service.chat.data;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
-import java.util.ArrayList;
+import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
- * 联系人实体
+ * 全局消息基类
  *
  * @author maurice.chen
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class Contact implements NumberIdEntity<Integer> {
+public class BasicMessage implements Serializable {
 
-    private static final long serialVersionUID = 6466725003068761373L;
-
-    public static final String DEFAULT_MESSAGE_IDS = "messageIds";
-
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
+    private static final long serialVersionUID = 7397284325411371767L;
 
     /**
      * 创建时间
@@ -44,10 +32,8 @@ public class Contact implements NumberIdEntity<Integer> {
     private Date lastSendTime = new Date();
 
     /**
-     * 消息内容
+     * 最后一条信息内容
      */
-    private List<Message> messages = new ArrayList<>();
-
     private String lastMessage;
 
     /**
@@ -78,14 +64,29 @@ public class Contact implements NumberIdEntity<Integer> {
         /**
          * 密钥值
          */
-        @JsonIgnore
+        @Exclude("web")
         private String cryptoKey;
 
         /**
          * 密钥类型
          */
-        @JsonIgnore
+        @Exclude("web")
         private String cryptoType;
+
+        /**
+         * 是否已读
+         */
+        private boolean read = false;
+
+        /**
+         * 已读时间
+         */
+        private Date readTime;
+
+        /**
+         * 消息存在的文件名称
+         */
+        private String filename;
 
     }
 }

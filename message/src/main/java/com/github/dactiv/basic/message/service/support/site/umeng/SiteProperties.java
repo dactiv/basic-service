@@ -12,7 +12,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "message.site.umeng")
+@ConfigurationProperties(prefix = "dactiv.message.site.umeng")
 public class SiteProperties {
     /**
      * 接口调用地址

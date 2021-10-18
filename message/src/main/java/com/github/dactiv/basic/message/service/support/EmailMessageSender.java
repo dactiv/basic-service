@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.commons.feign.file.FileManagerService;
 import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.EmailMessage;
@@ -14,10 +13,13 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
+import io.minio.GetObjectResponse;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.collections.MapUtils;
+import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -31,7 +33,6 @@ import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.io.InputStreamSource;
-import org.springframework.http.ResponseEntity;
 import org.springframework.jndi.JndiLocatorDelegate;
 import org.springframework.mail.javamail.JavaMailSenderImpl;
 import org.springframework.mail.javamail.MimeMessageHelper;
@@ -169,13 +170,13 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
                         byte[] bytes = attachmentCache.get(entity.getBatchId()).get(a.getName());
                         iss = new ByteArrayResource(bytes);
                     } else {
-
-                        ResponseEntity<byte[]> response = fileManagerService.get(
-                                a.getMeta().get(FileManagerService.DEFAULT_BUCKET_NAME).toString(),
+                        FileObject fileObject = FileObject.of(
+                                attachmentConfig.getBucketName(DEFAULT_TYPE),
                                 a.getName()
                         );
+                        GetObjectResponse response = minioTemplate.getObject(fileObject);
 
-                        iss = new ByteArrayResource(Objects.requireNonNull(response.getBody()));
+                        iss = new ByteArrayResource(IOUtils.toByteArray(response));
                     }
 
                     helper.addAttachment(a.getName(), iss);

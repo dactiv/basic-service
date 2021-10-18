@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.file.manager.entity;
+package com.github.dactiv.basic.authentication.entity;
 
 import com.github.dactiv.framework.commons.id.IdEntity;
 import lombok.Data;

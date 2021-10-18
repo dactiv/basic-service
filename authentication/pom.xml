@@ -29,6 +29,11 @@
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
+            <artifactId>minio</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.dactiv.framework</groupId>
             <artifactId>alibaba-nacos</artifactId>
         </dependency>
 

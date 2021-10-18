@@ -4,7 +4,19 @@ info:
   artifact-id: @artifactId@
   group-id: @groupId@
 
+mybatis-plus:
+  type-aliases-package: com.github.dactiv.basic.socket.server.entity
+  configuration:
+    call-setters-on-nulls: on
+  global-config:
+    db-config:
+      id-type: auto
+
 dactiv:
+  spring:
+    web:
+      mvc:
+        base-packages: com.github.dactiv.basic.socket.server
   authentication:
     permit-uri-ant-matchers:
       - "/health/**"

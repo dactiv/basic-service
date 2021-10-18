@@ -83,7 +83,6 @@
         <module>gateway</module>
         <module>captcha</module>
         <module>message</module>
-        <module>file-manager</module>
         <module>commons</module>
         <module>socket</module>
         <module>parent</module>

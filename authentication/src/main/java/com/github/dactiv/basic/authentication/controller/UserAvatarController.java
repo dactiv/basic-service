@@ -1,13 +1,13 @@
-package com.github.dactiv.basic.file.manager.controller;
+package com.github.dactiv.basic.authentication.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dactiv.basic.commons.utils.MinioUtils;
-import com.github.dactiv.basic.file.manager.config.ApplicationConfig;
-import com.github.dactiv.basic.file.manager.entity.UserAvatarHistory;
-import com.github.dactiv.basic.file.manager.service.FileService;
+import com.github.dactiv.basic.authentication.config.ApplicationConfig;
+import com.github.dactiv.basic.authentication.entity.UserAvatarHistory;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.minio.MinioTemplate;
+import com.github.dactiv.framework.minio.data.Bucket;
+import com.github.dactiv.framework.minio.data.FileObject;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -26,8 +26,6 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.InputStream;
 import java.text.MessageFormat;
 import java.util.Map;
@@ -54,10 +52,7 @@ public class UserAvatarController implements InitializingBean {
     private ApplicationConfig applicationConfig;
 
     @Autowired
-    private FileService fileService;
-
-    @Autowired
-    private ObjectMapper objectMapper;
+    private MinioTemplate minioTemplate;
 
     /**
      * 上传头像
@@ -87,27 +82,23 @@ public class UserAvatarController implements InitializingBean {
         }
 
         history.setCurrentAvatarFilename(file.getOriginalFilename());
-
-        saveUserAvatarHistory(history);
-
-        fileService.upload(
-                file.getOriginalFilename(),
+        minioTemplate.writeJsonValue(FileObject.of(history.getBucketName(), history.getHistoryFilename()), history);
+        minioTemplate.upload(
+                FileObject.of(history.getBucketName(), file.getOriginalFilename()),
                 file.getInputStream(),
                 file.getSize(),
-                file.getContentType(),
-                history.getBucketName()
+                file.getContentType()
         );
 
         String currentName = getCurrentAvatarFilename(userDetails);
-        Map<String, Object> result = fileService.upload(
-                currentName,
+        minioTemplate.upload(
+                FileObject.of(history.getBucketName(),currentName),
                 file.getInputStream(),
                 file.getSize(),
-                file.getContentType(),
-                history.getBucketName()
+                file.getContentType()
         );
 
-        return RestResult.ofSuccess("上传新头像完成", result);
+        return RestResult.of("上传新头像完成");
 
     }
 
@@ -129,10 +120,12 @@ public class UserAvatarController implements InitializingBean {
         String bucketName = userDetails.getType() +
                 Casts.DEFAULT_DOT_SYMBOL +
                 applicationConfig.getUserAvatar().getBucketName();
+
         String token = applicationConfig.getUserAvatar().getHistoryFileToken();
         String filename = MessageFormat.format(token, userDetails.getId());
 
-        UserAvatarHistory result = MinioUtils.readJsonValue(bucketName, filename, UserAvatarHistory.class);
+        FileObject fileObject = FileObject.of(bucketName, filename);
+        UserAvatarHistory result = minioTemplate.readJsonValue(fileObject, UserAvatarHistory.class);
 
         if (Objects.isNull(result)) {
 
@@ -161,7 +154,7 @@ public class UserAvatarController implements InitializingBean {
 
         String bucketName = type + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
 
-        InputStream is = MinioUtils.get(bucketName, filename);
+        InputStream is = minioTemplate.getObject(FileObject.of(bucketName, filename));
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.IMAGE_JPEG);
 
@@ -191,11 +184,14 @@ public class UserAvatarController implements InitializingBean {
         }
 
         String currentName = getCurrentAvatarFilename(userDetails);
-        MinioUtils.copy(history.getBucketName(), filename, history.getBucketName(), currentName);
+        minioTemplate.copyObject(
+                FileObject.of(history.getBucketName(), filename),
+                FileObject.of(history.getBucketName(), currentName)
+        );
 
         history.setCurrentAvatarFilename(filename);
 
-        saveUserAvatarHistory(history);
+        minioTemplate.writeJsonValue(FileObject.of(history.getBucketName(), history.getHistoryFilename()), history);
 
         return RestResult.of("更换头像成功");
     }
@@ -240,41 +236,18 @@ public class UserAvatarController implements InitializingBean {
             history.setCurrentAvatarFilename("");
         }
 
-        saveUserAvatarHistory(history);
+        minioTemplate.writeJsonValue(FileObject.of(history.getBucketName(), history.getHistoryFilename()), history);
 
-        MinioUtils.delete(history.getBucketName(), filename);
+        minioTemplate.deleteObject(FileObject.of(history.getBucketName(), filename));
 
         return RestResult.of("删除历史头像成功");
-    }
-
-    /**
-     * 保存用户头像历史记录实体
-     *
-     * @param history 用户头像历史记录实体
-     *
-     * @throws Exception 报错错误时抛出
-     */
-    private void saveUserAvatarHistory(UserAvatarHistory history) throws Exception {
-        ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
-        objectMapper.writeValue(outputStream, history);
-        outputStream.flush();
-
-        byte[] bytes = outputStream.toByteArray();
-        ByteArrayInputStream arrayInputStream = new ByteArrayInputStream(bytes);
-        MinioUtils.upload(
-                history.getHistoryFilename(),
-                arrayInputStream,
-                bytes.length,
-                MediaType.APPLICATION_JSON_VALUE,
-                history.getBucketName()
-        );
     }
 
     @Override
     public void afterPropertiesSet() throws Exception {
         for (String s : applicationConfig.getUserAvatar().getUserSources()) {
             String bucketName = s + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
-            MinioUtils.makeBucketIfNotExists(bucketName);
+            minioTemplate.makeBucketIfNotExists(Bucket.of(bucketName));
         }
     }
 }

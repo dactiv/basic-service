@@ -1,7 +1,8 @@
 package com.github.dactiv.basic.message.service.basic;
 
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
-import com.github.dactiv.basic.commons.feign.file.FileManagerService;
+import com.github.dactiv.basic.message.config.AttachmentConfig;
+import com.github.dactiv.basic.message.entity.Attachment;
 import com.github.dactiv.basic.message.entity.AttachmentMessage;
 import com.github.dactiv.basic.message.entity.BasicMessage;
 import com.github.dactiv.basic.message.entity.BatchMessage;
@@ -14,12 +15,18 @@ import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
+import com.github.dactiv.framework.minio.MinioTemplate;
+import com.github.dactiv.framework.minio.data.FileObject;
+import io.minio.GetObjectResponse;
+import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.io.IOUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.amqp.RabbitProperties;
 import org.springframework.http.HttpStatus;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 批量消息发送的抽象实现，用于对需要创建 tb_batch_message 记录的消息做一个统一处理
@@ -27,6 +34,7 @@ import java.util.*;
  * @param <T> 批量消息数据的泛型实体类型
  * @param <S> 请求的消息数据泛型实体类型
  */
+@Slf4j
 public abstract class BatchMessageSender<T extends BasicMessage, S extends BatchMessage.Body> extends AbstractMessageSender<T> {
 
     public static final String DEFAULT_MESSAGE_COUNT_KEY = "count";
@@ -42,7 +50,13 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      * 文件管理服务
      */
     @Autowired
-    protected FileManagerService fileManagerService;
+    protected MinioTemplate minioTemplate;
+
+    /**
+     * 附件配置信息
+     */
+    @Autowired
+    protected AttachmentConfig attachmentConfig;
 
     /**
      * 会员用户服务
@@ -194,15 +208,23 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
     protected void batchMessageCreated(BatchMessage batchMessage, List<T> bodyResult, List<S> content) {
         Map<String, byte[]> map = attachmentCache.computeIfAbsent(batchMessage.getId(), k -> new LinkedHashMap<>());
 
-        bodyResult
+        List<Attachment> attachments = bodyResult
                 .stream()
                 .filter(t -> AttachmentMessage.class.isAssignableFrom(t.getClass()))
                 .map(t -> Casts.cast(t, AttachmentMessage.class))
                 .flatMap(t -> t.getAttachmentList().stream())
                 .filter(a -> !map.containsKey(a.getName()))
-                .map(a -> fileManagerService.get(a.getMeta().get(FileManagerService.DEFAULT_BUCKET_NAME).toString(), a.getName()))
-                .forEach(r -> map.put(r.getHeaders().getContentDisposition().getFilename(), r.getBody()));
+                .collect(Collectors.toList());
 
+        for (Attachment a : attachments) {
+            FileObject fileObject = FileObject.of(attachmentConfig.getBucketName(getMessageType()), a.getName());
+            try {
+                GetObjectResponse response = minioTemplate.getObject(fileObject);
+                map.put(a.getName(), IOUtils.toByteArray(response));
+            } catch (Exception e) {
+                log.error("读取 [" + a.getName() + "] 附件信息出现", e);
+            }
+        }
     }
 
     /**

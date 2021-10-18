@@ -62,7 +62,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     /**
      * 渠道商
      */
-    @Value("${message.sms.channel}")
+    @Value("${dactiv.message.sms.channel}")
     private String channel;
 
     /**

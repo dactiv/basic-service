@@ -48,8 +48,7 @@ public class SocketServerController {
      * @return rest 结果集
      */
     @PostMapping("joinRoom")
-    @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "加入房间频道", sources = "SocketUser")
+    @PreAuthorize("hasRole('BASIC') || hasRole('ORDINARY')")
     public RestResult<?> joinRoom(@CurrentSecurityContext SecurityContext securityContext,
                                   @RequestParam List<String> rooms) {
 

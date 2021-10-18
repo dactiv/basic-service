@@ -5,6 +5,7 @@ import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.security.authentication.service.DefaultUserDetailsService;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
+import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -104,6 +105,11 @@ public class ApplicationConfig {
      * 异地区域配置
      */
     private AbnormalArea abnormalArea = new AbnormalArea();
+
+    /**
+     * 用户头像配置
+     */
+    private UserAvatar userAvatar = new UserAvatar();
 
     /**
      * 注册配置
@@ -210,6 +216,41 @@ public class ApplicationConfig {
          * 发送失败后的重试次数
          */
         private Integer maxRetryCount = 3;
+    }
+
+    /**
+     * 用户头像配置
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @EqualsAndHashCode
+    @NoArgsConstructor
+    public static class UserAvatar {
+        /**
+         * 桶名称
+         */
+        private String bucketName = "user.avatar";
+
+        /**
+         * 历史文件 token
+         */
+        private String historyFileToken = "user_avatar_history_{0}.json";
+
+        /**
+         * 当前使用的头像名称
+         */
+        private String CurrentUseFileToken = "current_{0}";
+
+        /**
+         * 保留的历史头像记录总数
+         */
+        private Integer historyCount = 5;
+
+        /**
+         * 用户来源，用于默认服务启动时创建桶使用。
+         */
+        private List<String> userSources = Arrays.asList("Console", "UserCenter", "SocketUser");
     }
 
 }

@@ -17,7 +17,7 @@ import java.time.format.DateTimeFormatter;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "message.sms.yimei")
+@ConfigurationProperties(prefix = "dactiv.message.sms.yimei")
 public class SmsProperties {
 
     private static final DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyyMMddHHmmss");

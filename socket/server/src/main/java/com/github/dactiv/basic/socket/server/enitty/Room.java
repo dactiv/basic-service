@@ -3,6 +3,7 @@ package com.github.dactiv.basic.socket.server.enitty;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -20,19 +21,9 @@ import org.apache.ibatis.type.Alias;
 @NoArgsConstructor
 @Alias("room")
 @TableName("tb_room")
-@EqualsAndHashCode(callSuper = true)
-public class Room extends Contact {
+public class Room {
 
     private static final long serialVersionUID = -8032662822919772839L;
-
-    /**
-     * 聊天信息事件名称
-     */
-    public static final String CHAT_MESSAGE_EVENT_NAME = "chat_message";
-    /**
-     * 聊天信息读取事件名称
-     */
-    public static final String CHAT_READ_MESSAGE_EVENT_NAME = "chat_read_message";
 
     /**
     * 主键

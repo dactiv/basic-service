@@ -70,7 +70,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     /**
      * 渠道商
      */
-    @Value("${message.site.channel}")
+    @Value("${dactiv.message.site.channel}")
     private String channel;
 
     /**
