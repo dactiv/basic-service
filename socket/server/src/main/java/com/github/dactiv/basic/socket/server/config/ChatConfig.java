@@ -3,6 +3,7 @@ package com.github.dactiv.basic.socket.server.config;
 
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
+import com.github.dactiv.framework.minio.data.Bucket;
 import io.minio.GetObjectArgs;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -37,7 +38,11 @@ public class ChatConfig {
      */
     private Global global = new Global();
     /**
-     * 单体消息配置
+     * 联系人配置
+     */
+    private Contact contact = new Contact();
+    /**
+     * 消息配置
      */
     private Message message = new Message();
 
@@ -54,7 +59,7 @@ public class ChatConfig {
         /**
          * 桶名称
          */
-        private String bucketName = "chat.global";
+        private Bucket bucket = Bucket.of("socket.server.chat.global");
 
         /**
          * 文件 token
@@ -79,33 +84,10 @@ public class ChatConfig {
     @NoArgsConstructor
     @EqualsAndHashCode
     public static class Contact {
-
-    }
-
-    /**
-     * 消息配置
-     *
-     * @author maurice.chen
-     */
-    @Data
-    @NoArgsConstructor
-    @EqualsAndHashCode
-    public static class Message {
-
         /**
-         * 桶名称
+         * 联系人桶信息
          */
-        private String bucketName = "chat.contact";
-
-        /**
-         * 文件 token
-         */
-        private String fileToken = "info_{0}.json";
-
-        /**
-         * 文件后缀
-         */
-        private String fileSuffix = "yyyyMMddHHmmssms";
+        private Bucket bucket = Bucket.of("socket.server.chat.contact");
 
         /**
          * 常用联系人文件 token
@@ -124,6 +106,32 @@ public class ChatConfig {
                 "socket:server:chat:contact:",
                 new TimeProperties(1, TimeUnit.DAYS)
         );
+    }
+
+    /**
+     * 消息配置
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode
+    public static class Message {
+
+        /**
+         * 消息桶信息
+         */
+        private Bucket bucket = Bucket.of("socket.server.chat.message");
+
+        /**
+         * 文件 token
+         */
+        private String fileToken = "info_{0}.json";
+
+        /**
+         * 文件后缀
+         */
+        private String fileSuffix = "yyyyMMddHHmmssms";
 
         /**
          * 分页大小

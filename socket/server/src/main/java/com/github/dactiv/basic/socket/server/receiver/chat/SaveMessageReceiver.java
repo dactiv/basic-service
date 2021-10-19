@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.socket.server.receiver.chat;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.commons.minio.MinioUtils;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.rabbitmq.client.Channel;
@@ -10,7 +9,6 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;

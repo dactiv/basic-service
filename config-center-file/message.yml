@@ -6,12 +6,12 @@ dactiv:
     auto-delete:
       expiration:
         - name: "message.attachment.email"
-          expirationTime:
-            value: 7
+          expiration-time:
+            value: 30
             unity: DAYS
         - name: "message.attachment.site"
-          expirationTime:
-            value: 7
+          expiration-time:
+            value: 30
             unity: DAYS
   message:
     sms:

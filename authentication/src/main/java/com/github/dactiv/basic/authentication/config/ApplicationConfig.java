@@ -230,7 +230,7 @@ public class ApplicationConfig {
         /**
          * 桶名称
          */
-        private String bucketName = "user.avatar";
+        private String bucketName = "authentication.user.avatar";
 
         /**
          * 历史文件 token

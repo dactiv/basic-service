@@ -15,6 +15,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.minio.data.Bucket;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
@@ -25,6 +26,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -46,7 +48,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessage> {
+public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessage> implements InitializingBean {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
 
@@ -249,5 +251,10 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @Override
     protected List<SiteMessage> getBatchMessageBodyContent(List<SiteMessageBody> result) {
         return result.stream().flatMap(this::createSiteMessageEntity).collect(Collectors.toList());
+    }
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        minioTemplate.makeBucketIfNotExists(Bucket.of(attachmentConfig.getBucketName(getMessageType())));
     }
 }

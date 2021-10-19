@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.socket.server.config;
 
 import com.corundumstudio.socketio.Configuration;
-import com.github.dactiv.basic.commons.config.MinioConfig;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -33,9 +32,4 @@ public class ApplicationConfig extends Configuration {
      * 房间名前缀
      */
     private String roomPrefix = "socket:room:";
-
-    /**
-     * minio 配置
-     */
-    private MinioConfig minio = new MinioConfig();
 }

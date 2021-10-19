@@ -80,14 +80,8 @@
         </dependency>
 
         <dependency>
-            <groupId>io.minio</groupId>
+            <groupId>com.github.dactiv.framework</groupId>
             <artifactId>minio</artifactId>
-        </dependency>
-
-        <dependency>
-            <groupId>com.squareup.okhttp3</groupId>
-            <artifactId>okhttp</artifactId>
-            <version>4.8.1</version>
         </dependency>
 
         <dependency>

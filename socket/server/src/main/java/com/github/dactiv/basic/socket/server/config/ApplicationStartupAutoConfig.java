@@ -5,17 +5,12 @@ import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.OptimisticLockerInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.github.dactiv.basic.commons.minio.MinioUtils;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.SocketUserDetailsContextRepository;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
-import io.minio.MinioClient;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -27,29 +22,7 @@ import org.springframework.context.annotation.Configuration;
  */
 @Configuration
 @EnableConfigurationProperties(ApplicationConfig.class)
-public class ApplicationStartupAutoConfig implements InitializingBean {
-
-    @Autowired
-    private MinioClient minioClient;
-
-    @Autowired(required = false)
-    private ObjectMapper objectMapper;
-
-    /**
-     * minio 客户端
-     *
-     * @param applicationConfig mini 模版
-     *
-     * @return mini 模版
-     */
-    @Bean
-    public MinioClient minioClient(ApplicationConfig applicationConfig) {
-        return MinioClient
-                .builder()
-                .endpoint(applicationConfig.getMinio().getEndpoint())
-                .credentials(applicationConfig.getMinio().getAccessKey(), applicationConfig.getMinio().getSecretKey())
-                .build();
-    }
+public class ApplicationStartupAutoConfig {
 
     /**
      * socket io 服务配置
@@ -106,11 +79,5 @@ public class ApplicationStartupAutoConfig implements InitializingBean {
     @Bean
     public CipherAlgorithmService cipherAlgorithmService() {
         return new CipherAlgorithmService();
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        MinioUtils.setMinioClient(minioClient);
-        MinioUtils.setObjectMapper(objectMapper == null ? new ObjectMapper() : objectMapper);
     }
 }

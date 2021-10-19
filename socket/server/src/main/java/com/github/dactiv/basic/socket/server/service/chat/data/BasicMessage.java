@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.server.service.chat.data;
 
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
 import lombok.Data;
@@ -38,6 +39,8 @@ public class BasicMessage implements Serializable {
 
     /**
      * 消息实体，id 为发送者 id
+     *
+     * @author maurice.chen
      */
     @Data
     @NoArgsConstructor
@@ -83,10 +86,37 @@ public class BasicMessage implements Serializable {
          */
         private Date readTime;
 
+    }
+
+    /**
+     * 带文件名的消息实体，用于存在用户消息时使用
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class UserMessage extends Message {
+
+        private static final long serialVersionUID = -4084857751977048367L;
+
         /**
          * 消息存在的文件名称
          */
         private String filename;
 
+        /**
+         * 创建带文件名的消息实体
+         *
+         * @param message 消息实体
+         * @param filename 存储的文件名称
+         *
+         * @return 带文件名的消息实体
+         */
+        public static UserMessage of(Message message, String filename) {
+            UserMessage userMessage = Casts.of(message, UserMessage.class);
+            userMessage.setFilename(filename);
+            return userMessage;
+        }
     }
 }

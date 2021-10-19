@@ -29,9 +29,14 @@ public class GlobalMessage extends BasicMessage  {
     private String bucketName;
 
     /**
+     * 文件名称
+     */
+    private String filename;
+
+    /**
      * 当前文件名
      */
-    private String currentFile;
+    private String currentMessageFile;
 
     /**
      * 消息文件, key 为文件名, value 为消息总数

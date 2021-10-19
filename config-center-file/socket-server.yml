@@ -1,4 +1,8 @@
 dactiv:
+  minio:
+    endpoint: 终端地址
+    access-key: 访问密钥
+    secret-key: 安全密钥
   authentication:
     device-id:
       overwrite-session: false
@@ -11,10 +15,6 @@ dactiv:
     client:
       enable: false
     server:
-      minio:
-        endpoint: 终端地址
-          access-key: 访问密钥
-          secret-key: 安全密钥
       port: 8800
       valid-token-url: http://localhost:8080/authentication/validMobileUserDetails
 

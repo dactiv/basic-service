@@ -13,6 +13,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
 import io.minio.GetObjectResponse;
@@ -281,8 +282,9 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     }
 
     @Override
-    public void afterPropertiesSet() {
+    public void afterPropertiesSet() throws Exception {
         mailConfig.getAccounts().entrySet().forEach(this::generateMailSender);
+        minioTemplate.makeBucketIfNotExists(Bucket.of(attachmentConfig.getBucketName(getMessageType())));
     }
 
     /**
