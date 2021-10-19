@@ -5,11 +5,11 @@ dactiv:
     secret-key: 私有密钥
     auto-delete:
       expiration:
-        - name: "message.attachment.email"
+        - bucket-name: "message.attachment.email"
           expiration-time:
             value: 30
             unity: DAYS
-        - name: "message.attachment.site"
+        - bucket-name: "message.attachment.site"
           expiration-time:
             value: 30
             unity: DAYS

@@ -34,6 +34,11 @@ public class GlobalMessage extends BasicMessage  {
     private String filename;
 
     /**
+     * 类型
+     */
+    private Integer type;
+
+    /**
      * 当前文件名
      */
     private String currentMessageFile;

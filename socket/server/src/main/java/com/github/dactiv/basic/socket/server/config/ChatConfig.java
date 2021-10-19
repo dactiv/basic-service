@@ -71,7 +71,7 @@ public class ChatConfig {
          */
         private CacheProperties cache = new CacheProperties(
                 "socket:server:chat:global:",
-                new TimeProperties(1, TimeUnit.DAYS)
+                new TimeProperties(7, TimeUnit.DAYS)
         );
     }
 
@@ -87,25 +87,44 @@ public class ChatConfig {
         /**
          * 联系人桶信息
          */
-        private Bucket bucket = Bucket.of("socket.server.chat.contact");
+        private Bucket contactBucket = Bucket.of("socket.server.chat.contact");
+        /**
+         * 常用联系人桶信息
+         */
+        private Bucket recentBucket = Bucket.of("socket.server.chat.contact.recent");
+        /**
+         * 未读消息桶信息
+         */
+        private Bucket unreadBucket = Bucket.of("socket.server.chat.contact.unread");
 
         /**
          * 常用联系人文件 token
          */
-        private String contactFileToken = "contact_{0}_and_{1}.json";
+        private String fileToken = "contact_{0}_and_{1}.json";
 
         /**
          * 近期联系人文件 token
          */
-        private String recentContactFileToken = "recent_contact_{0}.json";
+        private String recentFileToken = "recent_contact_{0}.json";
 
         /**
-         * 缓存配置
+         * 未读消息文件 token
+         */
+        private String unreadMessageFileToken = "unread_message_{0}.json";
+
+        /**
+         * 常用联系人存储个数
+         */
+        private Integer recentCount = 20;
+
+        /**
+         * 全局消息缓存配置
          */
         private CacheProperties cache = new CacheProperties(
                 "socket:server:chat:contact:",
                 new TimeProperties(1, TimeUnit.DAYS)
         );
+
     }
 
     /**

@@ -9,6 +9,8 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.LinkedList;
+import java.util.List;
 
 /**
  * 全局消息基类
@@ -96,7 +98,7 @@ public class BasicMessage implements Serializable {
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
-    public static class UserMessage extends Message {
+    public static class FileMessage extends Message {
 
         private static final long serialVersionUID = -4084857751977048367L;
 
@@ -113,10 +115,27 @@ public class BasicMessage implements Serializable {
          *
          * @return 带文件名的消息实体
          */
-        public static UserMessage of(Message message, String filename) {
-            UserMessage userMessage = Casts.of(message, UserMessage.class);
+        public static FileMessage of(Message message, String filename) {
+            FileMessage userMessage = Casts.of(message, FileMessage.class);
             userMessage.setFilename(filename);
             return userMessage;
         }
+    }
+
+    /**
+     * 响应给用户的消息实体
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class UserMessageBody extends Message {
+
+        private static final long serialVersionUID = -8782946827274914400L;
+        /**
+         * 消息存在的文件名称
+         */
+        private List<String> filenames = new LinkedList<>();
     }
 }

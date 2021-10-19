@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -36,7 +37,7 @@ public class ReadMessageRequestBody implements Serializable {
     private Integer recipientId;
 
     /**
-     * 消息实体 key 为消息存在的文件，value 为消息的 id
+     * 消息实体 key 为消息的 id，value 为消息存在的文件集合
      */
-    private Map<String, String> messages;
+    private Map<String, List<String>> messages;
 }
