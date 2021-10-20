@@ -83,7 +83,7 @@ public class SocketResult implements Serializable {
      * @param message              消息对象
      */
     public void addMultipleUnicastMessage(List<String> deviceIdentifiedList, String event, Object message) {
-        addMultipleUnicastMessage(MultipleUnicastMessage.of(deviceIdentifiedList, event,RestResult.ofSuccess(message)));
+        addMultipleUnicastMessage(MultipleUnicastMessage.of(deviceIdentifiedList, event, RestResult.ofSuccess(message)));
     }
 
     /**

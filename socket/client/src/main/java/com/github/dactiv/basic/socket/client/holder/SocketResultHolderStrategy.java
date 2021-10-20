@@ -15,7 +15,6 @@ public interface SocketResultHolderStrategy {
     void clear();
 
     /**
-     *
      * 获取 socket 结果集
      *
      * @return socket 结果集

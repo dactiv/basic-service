@@ -27,13 +27,13 @@ public class SocketUserDetailsContextRepository extends DeviceIdContextRepositor
     @Override
     public void saveContext(SecurityContext context, HttpServletRequest request, HttpServletResponse response) {
         if (Objects.isNull(context.getAuthentication())) {
-            return ;
+            return;
         }
 
         Object details = context.getAuthentication().getDetails();
 
         if (!SocketUserDetails.class.isAssignableFrom(details.getClass())) {
-            return ;
+            return;
         }
 
         String token = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);

@@ -18,7 +18,6 @@ import java.util.concurrent.TimeUnit;
  * 全局应用配置
  *
  * @author maurice.chen
- *
  */
 @Data
 @Component

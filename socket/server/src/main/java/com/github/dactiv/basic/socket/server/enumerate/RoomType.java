@@ -17,11 +17,11 @@ public enum RoomType implements NameValueEnum<Integer> {
     /**
      * 群聊
      */
-    Group(10,"群聊"),
+    Group(10, "群聊"),
     /**
      * 点对点聊
      */
-    P2P(20,"点对点聊");
+    P2P(20, "点对点聊");
 
     /**
      * 值

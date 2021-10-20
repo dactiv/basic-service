@@ -14,7 +14,6 @@ import org.apache.ibatis.type.Alias;
  * <p>Table: tb_room - 房间信息，用于说明当前用户存在些什么房间。</p>
  *
  * @author maurice
- *
  * @since 2021-10-08 10:36:59
  */
 @Data
@@ -26,8 +25,8 @@ public class Room {
     private static final long serialVersionUID = -8032662822919772839L;
 
     /**
-    * 主键
-    */
+     * 主键
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 

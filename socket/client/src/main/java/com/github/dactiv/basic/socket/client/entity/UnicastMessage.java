@@ -14,7 +14,7 @@ import lombok.*;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UnicastMessage<T> extends SocketMessage<T>{
+public class UnicastMessage<T> extends SocketMessage<T> {
 
     private static final long serialVersionUID = 6202588511755627871L;
 

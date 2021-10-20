@@ -17,7 +17,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class GlobalMessage extends BasicMessage  {
+public class GlobalMessage extends BasicMessage {
 
     private static final long serialVersionUID = 6466725003068761373L;
 

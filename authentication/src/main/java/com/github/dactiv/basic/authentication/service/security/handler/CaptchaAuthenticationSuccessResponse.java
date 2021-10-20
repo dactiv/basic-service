@@ -70,7 +70,7 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
                 Map<String, Object> data;
 
-                if (StringUtils.equals(ResourceSource.UserCenter.toString(),userDetails.getType())) {
+                if (StringUtils.equals(ResourceSource.UserCenter.toString(), userDetails.getType())) {
                     Boolean isNew = Casts.cast(
                             request.getAttribute(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME)
                     );

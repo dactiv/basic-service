@@ -110,7 +110,7 @@ public class BasicMessage implements Serializable {
         /**
          * 创建带文件名的消息实体
          *
-         * @param message 消息实体
+         * @param message  消息实体
          * @param filename 存储的文件名称
          *
          * @return 带文件名的消息实体

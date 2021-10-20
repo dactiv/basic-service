@@ -76,7 +76,6 @@ public class SocketResultHolder {
 
     /**
      * 清除当前 socket 结果集
-     *
      */
     public static void clear() {
         strategy.clear();

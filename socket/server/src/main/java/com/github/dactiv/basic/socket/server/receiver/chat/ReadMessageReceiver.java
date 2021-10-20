@@ -5,9 +5,11 @@ import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
+import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -75,6 +77,14 @@ public class ReadMessageReceiver {
             readMessage(globalMessage, entry, body.getCreationTime());
         }
 
+        Map<Integer, ContactMessage> map = chatService.getUnreadMessageData(body.getRecipientId());
+
+        map.remove(body.getSenderId());
+
+        FileObject fileObject = chatService.getRecentContactFileObject(body.getRecipientId());
+
+        chatService.getMinioTemplate().writeJsonValue(fileObject, map);
+
         channel.basicAck(tag, false);
     }
 
@@ -82,8 +92,8 @@ public class ReadMessageReceiver {
      * 读取消息
      *
      * @param globalMessage 全局消息实体
-     * @param entry 消息主键和文件映射的实体
-     * @param readTime 读取消息时间
+     * @param entry         消息主键和文件映射的实体
+     * @param readTime      读取消息时间
      *
      * @throws Exception 更新失败时抛出
      */
@@ -112,14 +122,19 @@ public class ReadMessageReceiver {
         }
 
         if (StringUtils.isEmpty(filename)) {
-            return ;
+            return;
         }
 
         FileObject fileObject = FileObject.of(globalMessage.getBucketName(), filename);
         List<BasicMessage.FileMessage> messages = chatService.getMinioTemplate().readJsonValue(
                 fileObject,
-                new TypeReference<>() {}
+                new TypeReference<>() {
+                }
         );
+
+        if (CollectionUtils.isEmpty(messages)) {
+            return;
+        }
 
         Optional<BasicMessage.FileMessage> optional = messages
                 .stream()
@@ -127,7 +142,7 @@ public class ReadMessageReceiver {
                 .findFirst();
 
         if (optional.isEmpty()) {
-            return ;
+            return;
         }
 
         BasicMessage.FileMessage fileMessage = optional.get();

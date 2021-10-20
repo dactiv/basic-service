@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.stream.Collectors;
 
 /**
- *
  * 单数据循环单播 socket 消息实现， 用于在存在一个数据内容，发送给多个用户的时候使用
  *
  * @param <T>
@@ -19,7 +18,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 @AllArgsConstructor(staticName = "of")
-public class MultipleUnicastMessage<T> extends SocketMessage<T>{
+public class MultipleUnicastMessage<T> extends SocketMessage<T> {
 
     private static final long serialVersionUID = 6233942402525531392L;
 

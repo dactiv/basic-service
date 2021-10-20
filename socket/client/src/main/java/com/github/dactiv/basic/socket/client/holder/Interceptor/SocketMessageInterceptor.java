@@ -19,7 +19,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.util.*;
 
 /**
- *
  * spring mvc 拦截器的 socket 结果集持有者实现
  *
  * @author maurice.chen

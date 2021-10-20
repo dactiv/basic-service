@@ -18,7 +18,7 @@ import org.springframework.beans.BeanUtils;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class SocketUserMessage<T> extends UnicastMessage<T>{
+public class SocketUserMessage<T> extends UnicastMessage<T> {
 
     private static final long serialVersionUID = 5389291016612742370L;
 

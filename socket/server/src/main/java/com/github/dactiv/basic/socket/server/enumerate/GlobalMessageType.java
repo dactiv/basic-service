@@ -17,7 +17,7 @@ public enum GlobalMessageType implements NameValueEnum<Integer> {
     /**
      * 全局消息
      */
-    Global(10,"全局消息"),
+    Global(10, "全局消息"),
     /**
      * 联系人消息
      */

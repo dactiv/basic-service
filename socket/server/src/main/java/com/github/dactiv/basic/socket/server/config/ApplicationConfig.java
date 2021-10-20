@@ -10,7 +10,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
  * 全局应用配置
  *
  * @author maurice.chen
- *
  */
 @Data
 @NoArgsConstructor

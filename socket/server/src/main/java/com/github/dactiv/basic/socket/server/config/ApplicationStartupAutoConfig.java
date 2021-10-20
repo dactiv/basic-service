@@ -27,7 +27,7 @@ public class ApplicationStartupAutoConfig {
     /**
      * socket io 服务配置
      *
-     * @param applicationConfig          配置信息
+     * @param applicationConfig   配置信息
      * @param socketServerManager socket 服务管理
      *
      * @return socket io 服务
@@ -48,7 +48,7 @@ public class ApplicationStartupAutoConfig {
     /**
      * 用 SocketUserDetailsContextRepository 替代 DeviceIdContextRepository
      *
-     * @param properties 配置信息
+     * @param properties     配置信息
      * @param redissonClient redisson 客户端
      *
      * @return SocketUserDetailsContextRepository

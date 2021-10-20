@@ -13,7 +13,7 @@ public interface MessageSender {
     /**
      * 发送消息
      *
-     * @param socketMessage socket 消息
+     * @param socketMessage  socket 消息
      * @param socketIOServer socket 服务
      */
     void sendMessage(SocketMessage<?> socketMessage, SocketIOServer socketIOServer);

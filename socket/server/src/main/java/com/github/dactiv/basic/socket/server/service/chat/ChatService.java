@@ -240,7 +240,7 @@ public class ChatService implements InitializingBean {
      * @param messages 消息内容
      * @param sourceId 来源 id(发送者用户 id)
      * @param targetId 目标 id(收信者用户 id)
-     * @param global 是否全局消息（由系统保存的历史记录消息）
+     * @param global   是否全局消息（由系统保存的历史记录消息）
      *
      * @throws Exception 存储消息记录失败时抛出
      */
@@ -396,18 +396,27 @@ public class ChatService implements InitializingBean {
         return message;
     }
 
-    private BasicMessage.UserMessageBody createUserMessageBody(BasicMessage.FileMessage m,
+    /**
+     * 创建用户消息体
+     *
+     * @param message        消息实体
+     * @param sourceMessages 来源消息集合
+     * @param globalMessages 全局消息集合
+     *
+     * @return 用户消息体
+     */
+    private BasicMessage.UserMessageBody createUserMessageBody(BasicMessage.FileMessage message,
                                                                List<BasicMessage.FileMessage> sourceMessages,
                                                                List<BasicMessage.FileMessage> globalMessages) {
 
-        BasicMessage.UserMessageBody result = Casts.of(m, BasicMessage.UserMessageBody.class);
-        result.getFilenames().add(m.getFilename());
+        BasicMessage.UserMessageBody result = Casts.of(message, BasicMessage.UserMessageBody.class);
+        result.getFilenames().add(message.getFilename());
 
         BasicMessage.FileMessage sourceUserMessage = sourceMessages
                 .stream()
                 .filter(r -> r.getId().equals(result.getId()))
                 .findFirst()
-                .orElseThrow(() -> new SystemException("找不到 ID 为 [" + m.getId() + "] 的对应来源消息数据"));
+                .orElseThrow(() -> new SystemException("找不到 ID 为 [" + message.getId() + "] 的对应来源消息数据"));
 
         result.getFilenames().add(sourceUserMessage.getFilename());
 
@@ -415,7 +424,7 @@ public class ChatService implements InitializingBean {
                 .stream()
                 .filter(r -> r.getId().equals(result.getId()))
                 .findFirst()
-                .orElseThrow(() -> new SystemException("找不到 ID 为 [" + m.getId() + "] 的对应来源消息数据"));
+                .orElseThrow(() -> new SystemException("找不到 ID 为 [" + message.getId() + "] 的对应来源消息数据"));
 
         result.getFilenames().add(globalMessage.getFilename());
 
@@ -423,46 +432,132 @@ public class ChatService implements InitializingBean {
     }
 
     /**
-     * 添加未读消息
+     * 获取未读消息集合
      *
      * @param userId 用户 id
+     *
+     * @return 未读消息集合
+     */
+    public List<ContactMessage> getUnreadMessage(Integer userId) {
+        Map<Integer, ContactMessage> result = getUnreadMessageData(userId);
+
+        return result
+                .values()
+                .stream()
+                .sorted(Comparator.comparing(BasicMessage::getLastMessage).reversed())
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 添加未读消息
+     *
+     * @param userId         用户 id
      * @param contactMessage 联系人消息
      */
     private void addUnreadMessage(Integer userId, ContactMessage contactMessage) throws Exception {
+        Map<Integer, ContactMessage> map = getUnreadMessageData(userId);
+
+        ContactMessage targetMessage = map.get(contactMessage.getId());
+
+        if (Objects.isNull(targetMessage)) {
+            map.put(userId, contactMessage);
+        } else {
+            targetMessage.getMessages().addAll(contactMessage.getMessages());
+        }
+
+        FileObject fileObject = getUnreadMessageFileObject(userId);
+        minioTemplate.writeJsonValue(fileObject, map);
+    }
+
+    /**
+     * 获取未读消息数据
+     *
+     * @param userId 用户 id
+     *
+     * @return 未读消息数据
+     */
+    public Map<Integer, ContactMessage> getUnreadMessageData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
-        Map<Integer, ContactMessage> map = minioTemplate.readJsonValue(fileObject, new TypeReference<>(){});
+        Map<Integer, ContactMessage> map = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {
+        });
 
         if (MapUtils.isEmpty(map)) {
             map = new LinkedHashMap<>();
         }
 
-        ContactMessage targetMessage = map.get(userId);
+        return map;
+    }
 
-        if (Objects.isNull(targetMessage)) {
-            map.put(userId, contactMessage);
-        }  else {
-            targetMessage.getMessages().addAll(contactMessage.getMessages());
+    /**
+     * 获取未读消息文件对象
+     *
+     * @param userId 用户 id
+     *
+     * @return 未读消息文件对象
+     */
+    public FileObject getUnreadMessageFileObject(Integer userId) {
+        String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
+        return FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
+    }
+
+    /**
+     * 获取常用联系人 id 集合
+     *
+     * @param userId 用户 id
+     *
+     * @return 常用联系人 id 集合
+     */
+    public List<Integer> getRecentContacts(Integer userId) {
+        List<IntegerIdEntity> idEntities = getRecentContactData(userId);
+
+        return idEntities
+                .stream()
+                .sorted(Comparator.comparing(IntegerIdEntity::getCreationTime).reversed())
+                .map(IdEntity::getId)
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取常用联系人数据
+     *
+     * @param userId 用户 id
+     *
+     * @return 常用联系人数据集合
+     */
+    public List<IntegerIdEntity> getRecentContactData(Integer userId) {
+        String filename = MessageFormat.format(chatConfig.getContact().getRecentFileToken(), userId);
+        FileObject fileObject = FileObject.of(chatConfig.getContact().getRecentBucket(), filename);
+        List<IntegerIdEntity> idEntities = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {
+        });
+
+        if (CollectionUtils.isEmpty(idEntities)) {
+            idEntities = new LinkedList<>();
         }
 
+        return idEntities;
+    }
 
-        minioTemplate.writeJsonValue(fileObject, map);
+    /**
+     * 获取常用联系人文件对象
+     *
+     * @param userId 用户 id
+     *
+     * @return 常用联系人文件对象
+     */
+    public FileObject getRecentContactFileObject(Integer userId) {
+        String filename = MessageFormat.format(chatConfig.getContact().getRecentFileToken(), userId);
+        return FileObject.of(chatConfig.getContact().getRecentBucket(), filename);
     }
 
     /**
      * 添加常用联系人
      *
-     * @param userId 用户 id
+     * @param userId    用户 id
      * @param contactId 联系人 id
      */
     public void addRecentContact(Integer userId, Integer contactId) throws Exception {
-        String filename = MessageFormat.format(chatConfig.getContact().getRecentFileToken(), userId);
-        FileObject fileObject = FileObject.of(chatConfig.getContact().getRecentBucket(), filename);
-        List<IntegerIdEntity> idEntities = minioTemplate.readJsonValue(fileObject, new TypeReference<>(){});
-
-        if (CollectionUtils.isEmpty(idEntities)) {
-            idEntities = new LinkedList<>();
-        }
+        List<IntegerIdEntity> idEntities = getRecentContactData(userId);
 
         IntegerIdEntity idEntity = idEntities
                 .stream()
@@ -490,7 +585,7 @@ public class ChatService implements InitializingBean {
 
             idEntities.removeIf(entity -> entity.getId().equals(optional.get().getId()));
         }
-
+        FileObject fileObject = getRecentContactFileObject(userId);
         minioTemplate.writeJsonValue(fileObject, idEntities);
     }
 

@@ -33,7 +33,7 @@ public class ThreadLocalSocketResultHolderStrategy implements SocketResultHolder
 
     @Override
     public void set(SocketResult result) {
-        Objects.requireNonNull(result,"socket result 不能为空");
+        Objects.requireNonNull(result, "socket result 不能为空");
         THREAD_LOCAL.set(result);
     }
 

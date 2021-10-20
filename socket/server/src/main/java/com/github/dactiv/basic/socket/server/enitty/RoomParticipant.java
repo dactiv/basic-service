@@ -16,7 +16,6 @@ import java.util.Date;
  * <p>Table: tb_room_participant - 房间参与者，用于说明某个房间里存在些什么人</p>
  *
  * @author maurice
- *
  * @since 2021-10-08 10:36:59
  */
 @Data
@@ -28,14 +27,14 @@ public class RoomParticipant implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 3092205314058668475L;
     /**
-    * 主键
-    */
+     * 主键
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     /**
-    * 创建时间
-    */
+     * 创建时间
+     */
     private Date creationTime = new Date();
 
     /**

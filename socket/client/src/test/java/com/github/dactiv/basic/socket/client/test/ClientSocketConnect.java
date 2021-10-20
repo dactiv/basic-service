@@ -68,14 +68,14 @@ public class ClientSocketConnect {
         MultiValueMap<String, String> queryMap = new LinkedMultiValueMap<>();
         queryMap.add("did", deviceId);
         queryMap.add("uid", data.get(IdEntity.ID_FIELD_NAME).toString());
-        queryMap.add(RequestAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY,username);
+        queryMap.add(RequestAuthenticationFilter.SPRING_SECURITY_FORM_USERNAME_KEY, username);
         queryMap.add(RequestAuthenticationFilter.SPRING_SECURITY_FORM_PASSWORD_KEY, data.get(Constants.TOKEN).toString());
 
         Thread thread = new Thread(() -> {
 
             IO.Options options = new IO.Options();
             options.query = Casts.castRequestBodyMapToString(queryMap);
-            options.transports = new String[]{WebSocket.NAME};
+            options.transports = new String[] {WebSocket.NAME};
             options.port = 8800;
 
             try {

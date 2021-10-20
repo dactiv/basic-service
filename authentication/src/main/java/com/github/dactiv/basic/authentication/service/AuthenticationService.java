@@ -187,11 +187,11 @@ public class AuthenticationService {
         AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
         if (Objects.isNull(authenticationInfo)) {
-            return ;
+            return;
         }
 
         if (authenticationInfo.equals(info)) {
-            return ;
+            return;
         }
 
         Map<String, Object> param = new LinkedHashMap<>();

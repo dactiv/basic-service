@@ -498,7 +498,8 @@ public class SocketClientTemplate implements DisposableBean {
         HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {});
+        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {
+        });
 
         HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(data, httpHeaders);
 
@@ -542,10 +543,11 @@ public class SocketClientTemplate implements DisposableBean {
             multipleUnicast(result.getMultipleUnicastMessages());
         }
     }
+
     /**
      * 异步发送 socket 结果集
      *
-     * @param result          socket 结果集
+     * @param result socket 结果集
      */
     public void asyncSendSocketResult(SocketResult result) {
         asyncSendSocketResult(result, null);

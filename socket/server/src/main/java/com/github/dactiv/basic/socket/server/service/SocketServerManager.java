@@ -249,13 +249,13 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
             }
 
             SocketUserDetails user = Casts.convertValue(userResult, SocketUserDetails.class);
-            if(!UserStatus.Enabled.getValue().equals(userResult.get(RestResult.DEFAULT_STATUS_NAME))) {
+            if (!UserStatus.Enabled.getValue().equals(userResult.get(RestResult.DEFAULT_STATUS_NAME))) {
                 log.warn("ID 为 [" + userId + "] 的用户非启用");
                 return false;
             }
 
             List<String> resourceAuthorityList = Casts.cast(userResult.get(DEFAULT_RESOURCE_AUTHORITY));
-            if(CollectionUtils.isNotEmpty(resourceAuthorityList)) {
+            if (CollectionUtils.isNotEmpty(resourceAuthorityList)) {
                 user.setResourceAuthorities(
                         resourceAuthorityList
                                 .stream()
@@ -265,7 +265,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
             }
 
             List<String> roleAuthorityList = Casts.cast(userResult.get(DEFAULT_ROLE_AUTHORITY));
-            if(CollectionUtils.isNotEmpty(roleAuthorityList)) {
+            if (CollectionUtils.isNotEmpty(roleAuthorityList)) {
                 user.setRoleAuthorities(
                         roleAuthorityList
                                 .stream()
@@ -424,7 +424,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         if (Objects.isNull(user)) {
             client.disconnect();
-            return ;
+            return;
         }
 
         // 设置链接状态为已连接
@@ -456,7 +456,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         SecurityContext securityContext = bucket.get();
 
         if (Objects.isNull(securityContext)) {
-            return ;
+            return;
         }
 
         SocketUserDetails user = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -469,7 +469,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         // 删除用户明细信息
         userDetailsRBucket.deleteAsync();
 
-        log.info("IP: {} UUID: {} 设备断开连接 ,用户为: {}" , client.getRemoteAddress().toString(), uuid, user.getId());
+        log.info("IP: {} UUID: {} 设备断开连接 ,用户为: {}", client.getRemoteAddress().toString(), uuid, user.getId());
 
     }
 

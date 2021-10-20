@@ -92,7 +92,7 @@ public class UserAvatarController implements InitializingBean {
 
         String currentName = getCurrentAvatarFilename(userDetails);
         minioTemplate.upload(
-                FileObject.of(history.getBucketName(),currentName),
+                FileObject.of(history.getBucketName(), currentName),
                 file.getInputStream(),
                 file.getSize(),
                 file.getContentType()
@@ -141,7 +141,7 @@ public class UserAvatarController implements InitializingBean {
     /**
      * 获取用户头像
      *
-     * @param type 用户类型
+     * @param type     用户类型
      * @param filename 文件名
      *
      * @return 头像 byte 数组
@@ -165,7 +165,8 @@ public class UserAvatarController implements InitializingBean {
      * 选择历史头像
      *
      * @param securityContext 安全上下文
-     * @param filename 历史头像文件名称
+     * @param filename        历史头像文件名称
+     *
      * @return rest 结果集
      *
      * @throws Exception 拷贝文件错误时抛出
@@ -212,9 +213,10 @@ public class UserAvatarController implements InitializingBean {
      * 删除历史头像
      *
      * @param securityContext 安全上下文
-     * @param filename 要删除的文件名称
+     * @param filename        要删除的文件名称
      *
      * @return rest 结果集
+     *
      * @throws Exception 删除错误时候抛出
      */
     @PostMapping("delete")

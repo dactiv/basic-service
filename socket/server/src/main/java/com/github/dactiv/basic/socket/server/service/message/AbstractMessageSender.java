@@ -29,7 +29,7 @@ public abstract class AbstractMessageSender<T extends SocketMessage<?>> implemen
 
         if (Objects.isNull(clientOperations)) {
             log.warn("找不到 [" + socketIOServer + "] 的客户端操作");
-            return ;
+            return;
         }
 
         String json = Casts.writeValueAsString(message.getMessage());
@@ -45,8 +45,8 @@ public abstract class AbstractMessageSender<T extends SocketMessage<?>> implemen
      * 后置设置
      *
      * @param clientOperations 客户端操作
-     * @param message 继承与 {@link SocketMessage} 的子类
-     * @param json {@link SocketMessage#getMessage()} 的 json 字符串
+     * @param message          继承与 {@link SocketMessage} 的子类
+     * @param json             {@link SocketMessage#getMessage()} 的 json 字符串
      */
     protected void afterSetting(ClientOperations clientOperations, T message, String json) {
 

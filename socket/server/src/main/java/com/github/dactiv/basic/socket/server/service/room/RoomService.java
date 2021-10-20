@@ -136,7 +136,7 @@ public class RoomService {
      * 查找 table : tb_room 实体分页数据
      *
      * @param pageable 分页请求
-     * @param wrapper 过滤条件
+     * @param wrapper  过滤条件
      *
      * @return 分页实体
      *
@@ -151,6 +151,7 @@ public class RoomService {
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
+
     /**
      * 根据用户 id 获取房间集合
      *
@@ -165,7 +166,7 @@ public class RoomService {
     /**
      * 根据用户 id 获取房间集合
      *
-     * @param userId 用户 id
+     * @param userId  用户 id
      * @param wrapper 查询条件
      *
      * @return 房间集合
@@ -277,7 +278,7 @@ public class RoomService {
      * 查找 table : tb_room_participant 实体分页数据
      *
      * @param pageable 分页请求
-     * @param wrapper 过滤条件
+     * @param wrapper  过滤条件
      *
      * @return 分页实体
      *
