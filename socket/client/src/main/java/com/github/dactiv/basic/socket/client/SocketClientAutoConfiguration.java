@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.client;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.socket.client.holder.Interceptor.SocketMessageInterceptor;
 import com.github.dactiv.basic.socket.client.holder.SocketMessagePointcutAdvisor;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
@@ -43,8 +44,10 @@ public class SocketClientAutoConfiguration {
     }
 
     @Bean
-    public SocketMessageInterceptor socketMessageInterceptor(SocketClientTemplate socketClientTemplate) {
-        return new SocketMessageInterceptor(socketClientTemplate);
+    public SocketMessageInterceptor socketMessageInterceptor(SocketClientTemplate socketClientTemplate,
+                                                             SocketResultResponseBodyAdvice responseBodyAdvice) {
+
+        return SocketMessageInterceptor.of(socketClientTemplate, responseBodyAdvice);
     }
 
     @Bean

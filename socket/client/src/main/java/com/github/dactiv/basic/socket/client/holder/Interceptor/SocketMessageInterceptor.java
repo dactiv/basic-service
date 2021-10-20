@@ -1,16 +1,22 @@
 package com.github.dactiv.basic.socket.client.holder.Interceptor;
 
 import com.github.dactiv.basic.socket.client.SocketClientTemplate;
+import com.github.dactiv.basic.socket.client.SocketResultResponseBodyAdvice;
 import com.github.dactiv.basic.socket.client.entity.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
+import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import com.github.dactiv.framework.spring.web.result.filter.holder.FilterResultHolder;
+import lombok.AllArgsConstructor;
+import lombok.Setter;
+import lombok.extern.slf4j.Slf4j;
 import org.aopalliance.intercept.MethodInterceptor;
 import org.aopalliance.intercept.MethodInvocation;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.core.annotation.AnnotationUtils;
 
-import java.util.Objects;
+import javax.servlet.http.HttpServletRequest;
+import java.util.*;
 
 /**
  *
@@ -18,13 +24,14 @@ import java.util.Objects;
  *
  * @author maurice.chen
  */
+@Slf4j
+@Setter
+@AllArgsConstructor(staticName = "of")
 public class SocketMessageInterceptor implements MethodInterceptor {
 
     private final SocketClientTemplate socketClientTemplate;
 
-    public SocketMessageInterceptor(SocketClientTemplate socketClientTemplate) {
-        this.socketClientTemplate = socketClientTemplate;
-    }
+    private final SocketResultResponseBodyAdvice responseBodyAdvice;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -35,24 +42,30 @@ public class SocketMessageInterceptor implements MethodInterceptor {
             return invocation.proceed();
         }
 
-        //SocketResultHolder.create();
-
         try {
 
             Object returnValue = invocation.proceed();
 
             SocketResult socketResult = SocketResultHolder.get();
 
+            List<String> filterResultIds = new LinkedList<>(FilterResultHolder.get());
+
             if (StringUtils.isNotEmpty(message.value())) {
-                FilterResultHolder.set(message.value());
+                String id = message.value();
+                boolean ignoreOtherIds = message.ignoreOtherIds();
+
+                if (!ignoreOtherIds) {
+                    filterResultIds = Collections.singletonList(id);
+                } else {
+                    filterResultIds.add(id);
+                }
             }
 
-            socketClientTemplate.asyncSendSocketResult(socketResult);
+            socketClientTemplate.asyncSendSocketResult(socketResult, filterResultIds);
 
             return returnValue;
         } finally {
             SocketResultHolder.clear();
-            FilterResultHolder.clear();
         }
     }
 }

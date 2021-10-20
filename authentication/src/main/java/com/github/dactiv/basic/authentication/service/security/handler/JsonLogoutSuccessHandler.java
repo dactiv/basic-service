@@ -274,6 +274,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
             result.getData().putAll(buildToken);
         }
+        // FIXME 添加一个数据加密密钥给客户端对一些敏感数据进行加密，如聊天信息。
         result.setExecuteCode(CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE);
     }
 }

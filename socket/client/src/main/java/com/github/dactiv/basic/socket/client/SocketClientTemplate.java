@@ -1,15 +1,15 @@
 package com.github.dactiv.basic.socket.client;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.socket.client.entity.*;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.FeignAuthenticationConfiguration;
-import lombok.AllArgsConstructor;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NonNull;
+import com.github.dactiv.framework.spring.web.result.filter.holder.FilterResultHolder;
+import lombok.*;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -19,6 +19,7 @@ import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.security.core.parameters.P;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.RestTemplate;
 
@@ -30,9 +31,8 @@ import java.util.stream.Collectors;
  *
  * @author maurice.chen
  */
-@Data
+@Setter
 @Slf4j
-@EqualsAndHashCode
 @AllArgsConstructor(staticName = "of")
 public class SocketClientTemplate implements DisposableBean {
 
@@ -85,18 +85,37 @@ public class SocketClientTemplate implements DisposableBean {
      * @param broadcastMessage 多播 socket 消息对象
      */
     public void asyncBroadcast(BroadcastMessage<?> broadcastMessage) {
-        asyncBroadcast(broadcastMessage, new LogListenableFutureCallback<>());
+        asyncBroadcast(broadcastMessage, null);
+    }
+
+    /**
+     * 异步广播消息
+     *
+     * @param broadcastMessage 多播 socket 消息对象
+     * @param filterResultIds  过滤结果集 id 集合
+     */
+    public void asyncBroadcast(BroadcastMessage<?> broadcastMessage, List<String> filterResultIds) {
+        asyncBroadcast(broadcastMessage, filterResultIds, new LogListenableFutureCallback<>());
     }
 
     /**
      * 异步广播消息
      *
      * @param broadcastMessage 多播 socket 消息对象集合
+     * @param filterResultIds  过滤结果集 id 集合
      * @param listenable       回调监听器
      */
     public void asyncBroadcast(BroadcastMessage<?> broadcastMessage,
+                               List<String> filterResultIds,
                                ListenableFutureCallback<Map<String, Object>> listenable) {
-        taskExecutor.submitListenable(() -> broadcast(broadcastMessage)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+                    return broadcast(broadcastMessage);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -105,18 +124,37 @@ public class SocketClientTemplate implements DisposableBean {
      * @param broadcastMessages 多播 socket 消息对象集合
      */
     public void asyncBroadcast(List<BroadcastMessage<?>> broadcastMessages) {
-        asyncBroadcast(broadcastMessages, new LogListenableFutureCallback<>());
+        asyncBroadcast(broadcastMessages, null);
     }
 
     /**
      * 异步广播消息
      *
      * @param broadcastMessages 多播 socket 消息对象集合
+     * @param filterResultIds   过滤结果集 id 集合
+     */
+    public void asyncBroadcast(List<BroadcastMessage<?>> broadcastMessages, List<String> filterResultIds) {
+        asyncBroadcast(broadcastMessages, filterResultIds, new LogListenableFutureCallback<>());
+    }
+
+    /**
+     * 异步广播消息
+     *
+     * @param broadcastMessages 多播 socket 消息对象集合
+     * @param filterResultIds   过滤结果集 id 集合
      * @param listenable        回调监听器
      */
     public void asyncBroadcast(List<BroadcastMessage<?>> broadcastMessages,
+                               List<String> filterResultIds,
                                ListenableFutureCallback<List<Map<String, Object>>> listenable) {
-        taskExecutor.submitListenable(() -> broadcast(broadcastMessages)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+                    return broadcast(broadcastMessages);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -179,18 +217,37 @@ public class SocketClientTemplate implements DisposableBean {
      * @param unicastMessage 多播 socket 消息对象
      */
     public void asyncUnicast(UnicastMessage<?> unicastMessage) {
-        asyncUnicast(unicastMessage, new LogListenableFutureCallback<>());
+        asyncUnicast(unicastMessage, null);
     }
 
     /**
      * 异步单播信息
      *
-     * @param unicastMessage 多播 socket 消息对象集合
-     * @param listenable     回调监听器
+     * @param unicastMessage  多播 socket 消息对象
+     * @param filterResultIds 过滤结果集 id 集合
+     */
+    public void asyncUnicast(UnicastMessage<?> unicastMessage, List<String> filterResultIds) {
+        asyncUnicast(unicastMessage, filterResultIds, new LogListenableFutureCallback<>());
+    }
+
+    /**
+     * 异步单播信息
+     *
+     * @param unicastMessage  多播 socket 消息对象集合
+     * @param filterResultIds 过滤结果集 id 集合
+     * @param listenable      回调监听器
      */
     public void asyncUnicast(UnicastMessage<?> unicastMessage,
+                             List<String> filterResultIds,
                              ListenableFutureCallback<Map<String, Object>> listenable) {
-        taskExecutor.submitListenable(() -> unicast(unicastMessage)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+                    return unicast(unicastMessage);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -199,18 +256,37 @@ public class SocketClientTemplate implements DisposableBean {
      * @param unicastMessages 单播 socket 消息对象集合
      */
     public void asyncUnicast(List<UnicastMessage<?>> unicastMessages) {
-        asyncUnicast(unicastMessages, new LogListenableFutureCallback<>());
+        asyncUnicast(unicastMessages, null);
     }
 
     /**
      * 异步单播信息
      *
      * @param unicastMessages 单播 socket 消息对象集合
+     * @param filterResultIds 过滤结果集 id 集合
+     */
+    public void asyncUnicast(List<UnicastMessage<?>> unicastMessages, List<String> filterResultIds) {
+        asyncUnicast(unicastMessages, filterResultIds, new LogListenableFutureCallback<>());
+    }
+
+    /**
+     * 异步单播信息
+     *
+     * @param unicastMessages 单播 socket 消息对象集合
+     * @param filterResultIds 过滤结果集 id 集合
      * @param listenable      回调监听器
      */
     public void asyncUnicast(List<UnicastMessage<?>> unicastMessages,
+                             List<String> filterResultIds,
                              ListenableFutureCallback<List<Map<String, Object>>> listenable) {
-        taskExecutor.submitListenable(() -> unicast(unicastMessages)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+                    return unicast(unicastMessages);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -296,18 +372,38 @@ public class SocketClientTemplate implements DisposableBean {
      * @param multipleUnicastMessage 单数据循环单播 socket 消息
      */
     public void asyncMultipleUnicast(MultipleUnicastMessage<?> multipleUnicastMessage) {
-        asyncMultipleUnicast(multipleUnicastMessage, new LogListenableFutureCallback<>());
+        asyncMultipleUnicast(multipleUnicastMessage, null);
     }
 
     /**
      * 异步单数据循环单播
      *
      * @param multipleUnicastMessage 单数据循环单播 socket 消息
+     * @param filterResultIds        过滤结果集 id 集合
+     */
+    public void asyncMultipleUnicast(MultipleUnicastMessage<?> multipleUnicastMessage, List<String> filterResultIds) {
+        asyncMultipleUnicast(multipleUnicastMessage, filterResultIds, new LogListenableFutureCallback<>());
+    }
+
+    /**
+     * 异步单数据循环单播
+     *
+     * @param multipleUnicastMessage 单数据循环单播 socket 消息
+     * @param filterResultIds        过滤结果集 id 集合
      * @param listenable             回调监听器
      */
     public void asyncMultipleUnicast(MultipleUnicastMessage<?> multipleUnicastMessage,
+                                     List<String> filterResultIds,
                                      ListenableFutureCallback<Map<String, Object>> listenable) {
-        taskExecutor.submitListenable(() -> multipleUnicast(multipleUnicastMessage)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+
+                    return multipleUnicast(multipleUnicastMessage);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -316,18 +412,38 @@ public class SocketClientTemplate implements DisposableBean {
      * @param multipleUnicastMessages 单播 socket 消息对象集合
      */
     public void asyncMultipleUnicast(List<MultipleUnicastMessage<?>> multipleUnicastMessages) {
-        asyncMultipleUnicast(multipleUnicastMessages, new LogListenableFutureCallback<>());
+        asyncMultipleUnicast(multipleUnicastMessages, null);
     }
 
     /**
      * 异步单数据循环单播
      *
      * @param multipleUnicastMessages 单播 socket 消息对象集合
+     * @param filterResultIds         过滤结果集 id 集合
+     */
+    public void asyncMultipleUnicast(List<MultipleUnicastMessage<?>> multipleUnicastMessages,
+                                     List<String> filterResultIds) {
+        asyncMultipleUnicast(multipleUnicastMessages, filterResultIds, new LogListenableFutureCallback<>());
+    }
+
+    /**
+     * 异步单数据循环单播
+     *
+     * @param multipleUnicastMessages 单播 socket 消息对象集合
+     * @param filterResultIds         过滤结果集 id 集合
      * @param listenable              回调监听器
      */
     public void asyncMultipleUnicast(List<MultipleUnicastMessage<?>> multipleUnicastMessages,
+                                     List<String> filterResultIds,
                                      ListenableFutureCallback<List<Map<String, Object>>> listenable) {
-        taskExecutor.submitListenable(() -> multipleUnicast(multipleUnicastMessages)).addCallback(listenable);
+        taskExecutor
+                .submitListenable(() -> {
+                    if (CollectionUtils.isNotEmpty(filterResultIds)) {
+                        FilterResultHolder.set(filterResultIds);
+                    }
+                    return multipleUnicast(multipleUnicastMessages);
+                })
+                .addCallback(listenable);
     }
 
     /**
@@ -347,9 +463,9 @@ public class SocketClientTemplate implements DisposableBean {
      *
      * @param ip     socket 服务 ip 地址
      * @param type   消息类型: unicastUser: 根据用户所在服务器单播，
-     *                       unicast: 根据设备识别单播，
-     *                       broadcast: 广播,
-     *                       multipleUnicast: 同数据结果，单播多客户端
+     *               unicast: 根据设备识别单播，
+     *               broadcast: 广播,
+     *               multipleUnicast: 同数据结果，单播多客户端
      * @param values socket 消息集合
      *
      * @return {@link RestResult} 的 map 映射集合
@@ -382,7 +498,9 @@ public class SocketClientTemplate implements DisposableBean {
         HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        HttpEntity<List<? extends SocketMessage<?>>> entity = new HttpEntity<>(values, httpHeaders);
+        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {});
+
+        HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(data, httpHeaders);
 
         List<Map<String, Object>> result = new LinkedList<>();
 
@@ -392,7 +510,8 @@ public class SocketClientTemplate implements DisposableBean {
                     url,
                     HttpMethod.POST,
                     entity,
-                    new ParameterizedTypeReference<>() {}
+                    new ParameterizedTypeReference<>() {
+                    }
             );
 
             if (Objects.nonNull(response.getBody())) {
@@ -423,24 +542,33 @@ public class SocketClientTemplate implements DisposableBean {
             multipleUnicast(result.getMultipleUnicastMessages());
         }
     }
+    /**
+     * 异步发送 socket 结果集
+     *
+     * @param result          socket 结果集
+     */
+    public void asyncSendSocketResult(SocketResult result) {
+        asyncSendSocketResult(result, null);
+    }
 
     /**
      * 异步发送 socket 结果集
      *
-     * @param result socket 结果集
+     * @param result          socket 结果集
+     * @param filterResultIds 过滤结果集 id 集合
      */
-    public void asyncSendSocketResult(SocketResult result) {
+    public void asyncSendSocketResult(SocketResult result, List<String> filterResultIds) {
 
         if (CollectionUtils.isNotEmpty(result.getUnicastMessages())) {
-            asyncUnicast(result.getUnicastMessages());
+            asyncUnicast(result.getUnicastMessages(), filterResultIds);
         }
 
         if (CollectionUtils.isNotEmpty(result.getBroadcastMessages())) {
-            asyncBroadcast(result.getBroadcastMessages());
+            asyncBroadcast(result.getBroadcastMessages(), filterResultIds);
         }
 
         if (CollectionUtils.isNotEmpty(result.getMultipleUnicastMessages())) {
-            asyncMultipleUnicast(result.getMultipleUnicastMessages());
+            asyncMultipleUnicast(result.getMultipleUnicastMessages(), filterResultIds);
         }
     }
 

@@ -325,13 +325,13 @@ public class ChatService implements InitializingBean {
         message.setCryptoType(chatConfig.getCryptoType());
         message.setCryptoKey(chatConfig.getCryptoKey());
 
-        List<BasicMessage.FileMessage> sourceMessages = addHistoryMessage(
+        List<BasicMessage.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
                 senderId,
                 recipientId,
                 false
         );
-        List<BasicMessage.FileMessage> targetMessages = addHistoryMessage(
+        List<BasicMessage.FileMessage> targetUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
                 recipientId,
                 senderId,
@@ -360,23 +360,28 @@ public class ChatService implements InitializingBean {
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
 
-        // 构造响应给目标用户的消息内容
-        ContactMessage targetMessage = Casts.of(contactMessage, ContactMessage.class);
-        List<BasicMessage.UserMessageBody> userMessageBodies = targetMessages
+        List<BasicMessage.UserMessageBody> userMessageBodies = targetUserMessages
                 .stream()
-                .map(m -> this.createUserMessageBody(m, sourceMessages, globalMessages))
+                .map(m -> this.createUserMessageBody(m, sourceUserMessages, globalMessages))
                 .peek(m -> m.setContent(message.getContent()))
                 .collect(Collectors.toList());
-        targetMessage.getMessages().addAll(userMessageBodies);
+
+        // 构造响应给目标用户的消息内容
+        ContactMessage recipientMessage = Casts.of(contactMessage, ContactMessage.class);
+        // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
+        // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
+        // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
+        recipientMessage.setMessages(new ArrayList<>());
+        recipientMessage.getMessages().addAll(userMessageBodies);
         // 保存未读记录
-        addUnreadMessage(recipientId, targetMessage);
+        addUnreadMessage(recipientId, recipientMessage);
 
         // 如果当前用户在线，推送消息到客户端
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
                     CHAT_MESSAGE_EVENT_NAME,
-                    targetMessage
+                    recipientMessage
             );
         }
 

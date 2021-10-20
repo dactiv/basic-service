@@ -21,4 +21,11 @@ public @interface SocketMessage {
      * @return id
      */
     String value() default "";
+
+    /**
+     * 是否忽略其他 id 值
+     *
+     * @return true 是，否则 false
+     */
+    boolean ignoreOtherIds() default false;
 }
