@@ -34,6 +34,11 @@ public class ChatConfig {
      */
     private String cryptoKey = "+ZxmXBvLTtCNv0r56Sgxfg==";
     /**
+     * 分片文件后缀
+     */
+    private String shardFileSuffix = "yyyyMMdd";
+
+    /**
      * 全局文件消息配置
      */
     private Global global = new Global();
@@ -64,7 +69,7 @@ public class ChatConfig {
         /**
          * 文件 token
          */
-        private String fileToken = "global_message_{0}_and_{1}.json";
+        private String fileToken = "global_message_{0}_and_{1}_{2}.json";
 
         /**
          * 缓存配置
@@ -100,7 +105,7 @@ public class ChatConfig {
         /**
          * 常用联系人文件 token
          */
-        private String fileToken = "contact_{0}_and_{1}.json";
+        private String fileToken = "contact_{0}_and_{1}_{2}.json";
 
         /**
          * 近期联系人文件 token

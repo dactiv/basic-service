@@ -125,7 +125,10 @@ public class ChatService implements InitializingBean {
      * @return 全局消息
      */
     public GlobalMessage getGlobalMessage(Integer sourceId, Integer targetId, boolean global) {
-        String filename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getShardFileSuffix());
+        String suffix = LocalDateTime.now().format(formatter);
+
+        String filename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId, suffix);
 
         Bucket minioBucket = chatConfig.getContact().getContactBucket();
 
@@ -133,7 +136,7 @@ public class ChatService implements InitializingBean {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
 
-            filename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
+            filename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max, suffix);
             minioBucket = chatConfig.getGlobal().getBucket();
         }
 
