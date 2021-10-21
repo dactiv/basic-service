@@ -11,7 +11,7 @@ import org.springframework.util.Assert;
 import java.util.Objects;
 
 /**
- * 首相的消息附送实现
+ * 抽象的消息附送实现
  *
  * @param <T> 继承与 {@link SocketMessage} 的子类
  */

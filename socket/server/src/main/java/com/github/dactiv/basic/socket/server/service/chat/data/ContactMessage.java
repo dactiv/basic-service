@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ContactMessage extends BasicMessage implements NumberIdEntity<Integer> {
+public class ContactMessage<T extends BasicMessage.Message> extends BasicMessage implements NumberIdEntity<Integer> {
     private static final long serialVersionUID = 6725391155534568648L;
 
     /**
@@ -34,5 +34,5 @@ public class ContactMessage extends BasicMessage implements NumberIdEntity<Integ
     /**
      * 消息内容
      */
-    private List<Message> messages = new ArrayList<>();
+    private List<T> messages = new ArrayList<>();
 }

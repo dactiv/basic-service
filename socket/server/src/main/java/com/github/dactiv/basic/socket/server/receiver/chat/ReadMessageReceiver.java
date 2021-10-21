@@ -71,18 +71,24 @@ public class ReadMessageReceiver {
                 true
         );
 
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = chatService.getUnreadMessageData(
+                body.getRecipientId()
+        );
+
         for (Map.Entry<String, List<String>> entry : body.getMessages().entrySet()) {
             readMessage(sourceUserMessage, entry, body.getCreationTime());
             readMessage(targetUserMessage, entry, body.getCreationTime());
             readMessage(globalMessage, entry, body.getCreationTime());
+
+            ContactMessage<BasicMessage.UserMessageBody> message = map.get(body.getSenderId());
+            message.getMessages().removeIf(m -> m.getId().equals(entry.getKey()));
+
+            if (CollectionUtils.isEmpty(message.getMessages())) {
+                map.remove(body.getSenderId());
+            }
         }
 
-        Map<Integer, ContactMessage> map = chatService.getUnreadMessageData(body.getRecipientId());
-
-        map.remove(body.getSenderId());
-
-        FileObject fileObject = chatService.getRecentContactFileObject(body.getRecipientId());
-
+        FileObject fileObject = chatService.getUnreadMessageFileObject(body.getRecipientId());
         chatService.getMinioTemplate().writeJsonValue(fileObject, map);
 
         channel.basicAck(tag, false);
@@ -125,7 +131,7 @@ public class ReadMessageReceiver {
             return;
         }
 
-        FileObject fileObject = FileObject.of(globalMessage.getBucketName(), filename);
+        FileObject fileObject = FileObject.of(chatService.getChatConfig().getMessage().getBucket(), filename);
         List<BasicMessage.FileMessage> messages = chatService.getMinioTemplate().readJsonValue(
                 fileObject,
                 new TypeReference<>() {

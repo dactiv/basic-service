@@ -8,6 +8,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.audit.Auditable;
@@ -37,6 +38,7 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import java.time.Instant;
 import java.util.Date;
+import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -157,17 +159,18 @@ public class SecurityController {
      * 获取用户信息
      *
      * @param type 来源类型
-     * @param id   用户 id
+     * @param ids   用户 id
      *
      * @return 用户信息
      */
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("getPrincipalProfile")
-    public Object getPrincipalProfile(@RequestParam String type, @RequestParam Integer id) {
+    @RequestMapping(value = "getPrincipalProfile", method = {RequestMethod.GET, RequestMethod.POST})
+    public List<? extends NumberIdEntity<Integer>> getPrincipalProfile(@RequestParam String type,
+                                                                       @RequestParam List<Integer> ids) {
         if (ResourceSource.Console.toString().equals(type)) {
-            return userService.getConsoleUser(id);
+            return userService.getConsoleUsers(ids);
         } else if (ResourceSource.UserCenter.toString().equals(type)) {
-            return userService.getMemberUser(id);
+            return userService.getMemberUsers(ids);
         } else {
             throw new SystemException("找不到类型为 [" + type + "] 的用户信息");
         }

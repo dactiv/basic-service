@@ -69,6 +69,7 @@ public class ChatService implements InitializingBean {
      */
     public static final String CHAT_READ_MESSAGE_EVENT_NAME = "chat_read_message";
 
+    @Getter
     @Autowired
     private ChatConfig chatConfig;
 
@@ -198,7 +199,9 @@ public class ChatService implements InitializingBean {
         String globalFilename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
 
         if (GlobalMessageType.Global.getValue().equals(global.getType())) {
-            globalFilename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), sourceId, targetId);
+            Integer min = Math.min(sourceId, targetId);
+            Integer max = Math.max(sourceId, targetId);
+            globalFilename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
         }
 
         String filename = createHistoryMessageFilename(globalFilename);
@@ -227,7 +230,7 @@ public class ChatService implements InitializingBean {
      *
      * @return 新的历史消息文件名称
      */
-    private String createHistoryMessageFilename(String filename) {
+    public String createHistoryMessageFilename(String filename) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
         String target = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
         String suffix = target + WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + LocalDateTime.now().format(formatter);
@@ -347,7 +350,7 @@ public class ChatService implements InitializingBean {
 
         SocketUserDetails userDetails = socketServerManager.getSocketUserDetails(recipientId);
 
-        ContactMessage contactMessage = new ContactMessage();
+        ContactMessage<BasicMessage.Message> contactMessage = new ContactMessage<>();
 
         String lastMessage = RegExUtils.replaceAll(
                 message.getContent(),
@@ -367,7 +370,8 @@ public class ChatService implements InitializingBean {
                 .collect(Collectors.toList());
 
         // 构造响应给目标用户的消息内容
-        ContactMessage recipientMessage = Casts.of(contactMessage, ContactMessage.class);
+        //noinspection unchecked
+        ContactMessage<BasicMessage.UserMessageBody> recipientMessage = Casts.of(contactMessage, ContactMessage.class);
         // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
         // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
         // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
@@ -438,8 +442,8 @@ public class ChatService implements InitializingBean {
      *
      * @return 未读消息集合
      */
-    public List<ContactMessage> getUnreadMessage(Integer userId) {
-        Map<Integer, ContactMessage> result = getUnreadMessageData(userId);
+    public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(Integer userId) {
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> result = getUnreadMessageData(userId);
 
         return result
                 .values()
@@ -454,13 +458,13 @@ public class ChatService implements InitializingBean {
      * @param userId         用户 id
      * @param contactMessage 联系人消息
      */
-    private void addUnreadMessage(Integer userId, ContactMessage contactMessage) throws Exception {
-        Map<Integer, ContactMessage> map = getUnreadMessageData(userId);
+    private void addUnreadMessage(Integer userId, ContactMessage<BasicMessage.UserMessageBody> contactMessage) throws Exception {
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = getUnreadMessageData(userId);
 
-        ContactMessage targetMessage = map.get(contactMessage.getId());
+        ContactMessage<BasicMessage.UserMessageBody> targetMessage = map.get(contactMessage.getId());
 
         if (Objects.isNull(targetMessage)) {
-            map.put(userId, contactMessage);
+            map.put(contactMessage.getId(), contactMessage);
         } else {
             targetMessage.getMessages().addAll(contactMessage.getMessages());
         }
@@ -476,11 +480,14 @@ public class ChatService implements InitializingBean {
      *
      * @return 未读消息数据
      */
-    public Map<Integer, ContactMessage> getUnreadMessageData(Integer userId) {
+    public Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessageData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
-        Map<Integer, ContactMessage> map = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {
-        });
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = minioTemplate.readJsonValue(
+                fileObject,
+                new TypeReference<>() {
+                }
+        );
 
         if (MapUtils.isEmpty(map)) {
             map = new LinkedHashMap<>();

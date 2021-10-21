@@ -363,6 +363,17 @@ public class UserService implements InitializingBean {
     }
 
     /**
+     * 获取系统用户集合
+     *
+     * @param ids 主键 id 集合
+     *
+     * @return 系统用户集合
+     */
+    public List<ConsoleUser> getConsoleUsers(List<Integer> ids) {
+        return consoleUserDao.selectList(Wrappers.<ConsoleUser>lambdaQuery().in(ConsoleUser::getId, ids));
+    }
+
+    /**
      * 获取系统用户
      *
      * @param username 登陆账户
@@ -630,6 +641,17 @@ public class UserService implements InitializingBean {
 
         return memberUser;
 
+    }
+
+    /**
+     * 获取会员用户集合
+     *
+     * @param ids 主键 id 集合
+     *
+     * @return 会员用户集合
+     */
+    public List<MemberUser> getMemberUsers(List<Integer> ids) {
+        return memberUserDao.selectList(Wrappers.<MemberUser>lambdaQuery().in(MemberUser::getId, ids));
     }
 
     /**

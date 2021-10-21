@@ -1,6 +1,8 @@
 package com.github.dactiv.basic.socket.server.controller;
 
 import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
+import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.framework.commons.Casts;
@@ -84,6 +86,21 @@ public class ChatController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         return chatService.getRecentContacts(userId);
+    }
+
+    /**
+     * 获取未读消息
+     *
+     * @param securityContext 安全上下文
+     *
+     * @return 未读消息集合
+     */
+    @GetMapping("getUnreadMessages")
+    @PreAuthorize("isAuthenticated()")
+    public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+        return chatService.getUnreadMessages(userId);
     }
 
 }
