@@ -20,15 +20,21 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
+import com.github.dactiv.framework.commons.page.Page;
+import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.commons.page.ScrollPage;
+import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.algorithm.Base64;
 import com.github.dactiv.framework.crypto.algorithm.ByteSource;
+import com.github.dactiv.framework.crypto.algorithm.CodecUtils;
 import com.github.dactiv.framework.crypto.algorithm.cipher.CipherService;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import lombok.Getter;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RegExUtils;
@@ -42,6 +48,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.WebDataBinder;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDateTime;
@@ -56,6 +63,7 @@ import static com.github.dactiv.basic.commons.Constants.SYS_SOCKET_SERVER_RABBIT
  *
  * @author maurice.chen
  */
+@Slf4j
 @Service
 @Transactional(rollbackFor = Exception.class)
 public class ChatService implements InitializingBean {
@@ -90,6 +98,89 @@ public class ChatService implements InitializingBean {
     private MinioTemplate minioTemplate;
 
     /**
+     * 获取消息分页
+     *
+     * @param userId      用户 id
+     * @param targetId    目标用户 id
+     * @param pageRequest 分页请求
+     *
+     * @return 分页信息
+     */
+    public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(Integer userId,
+                                                                       Integer targetId,
+                                                                       Integer time,
+                                                                       ScrollPageRequest pageRequest) {
+
+        GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
+
+        List<GlobalMessage.FileMessage> messages = new LinkedList<>();
+
+        List<String> historyFiles = globalMessage
+                .getMessageFileMap()
+                .keySet()
+                .stream()
+                .filter(s -> getHistoryFileCreationTime(s) <= time)
+                .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
+                .collect(Collectors.toList());
+
+        for (int i = historyFiles.indexOf(globalMessage.getCurrentMessageFile()); i == 0; i--) {
+            FileObject fileObject = FileObject.of(
+                    chatConfig.getMessage().getBucket(),
+                    globalMessage.getCurrentMessageFile()
+            );
+
+            List<GlobalMessage.FileMessage> fileMessageList = minioTemplate.readJsonValue(
+                    fileObject,
+                    new TypeReference<>() {
+                    }
+            );
+
+            List<GlobalMessage.FileMessage> temps = fileMessageList
+                    .stream()
+                    .sorted(Comparator.comparing(BasicMessage.Message::getCreationTime).reversed())
+                    .collect(Collectors.toList());
+
+            boolean complete = false;
+            for (GlobalMessage.FileMessage fileMessage : temps) {
+                decryptMessageContent(fileMessage);
+                messages.add(fileMessage);
+                if (messages.size() >= pageRequest.getSize()) {
+                    complete = true;
+                    break;
+                }
+            }
+
+            if (complete) {
+                break;
+            }
+
+        }
+
+        return new ScrollPage<>(pageRequest, messages);
+    }
+
+    /**
+     * 解密消息内容
+     *
+     * @param message 文件消息
+     */
+    private void decryptMessageContent(BasicMessage.FileMessage message) {
+        CipherService cipherService = cipherAlgorithmService.getCipherService(message.getCryptoType());
+        String content = message.getContent();
+        String key = message.getCryptoKey();
+
+        byte[] bytes = cipherService.decrypt(Base64.decode(content), Base64.decode(key)).obtainBytes();
+
+        try {
+            message.setContent(new String(bytes, CodecUtils.DEFAULT_ENCODING));
+        } catch (UnsupportedEncodingException e) {
+            String msg = "对内容为 [" + content + "] 的消息通过密钥 [" +
+                    key + "] 使用 [" + message.getCryptoType() + "] 解密失败";
+            log.warn(msg, e);
+        }
+    }
+
+    /**
      * 获取 redis 全局消息桶
      *
      * @param filename 文件名称
@@ -118,17 +209,15 @@ public class ChatService implements InitializingBean {
     /**
      * 获取全局消息
      *
-     * @param sourceId 来源 id(发送者用户 id)
-     * @param targetId 目标 id(收信者用户 id)
+     * @param sourceId 来源 id (发送者用户 id)
+     * @param targetId 目标 id (收信者用户 id)
      * @param global   是否全局消息（由系统保存的历史记录消息）
      *
      * @return 全局消息
      */
     public GlobalMessage getGlobalMessage(Integer sourceId, Integer targetId, boolean global) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getShardFileSuffix());
-        String suffix = LocalDateTime.now().format(formatter);
 
-        String filename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId, suffix);
+        String filename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
 
         Bucket minioBucket = chatConfig.getContact().getContactBucket();
 
@@ -136,7 +225,7 @@ public class ChatService implements InitializingBean {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
 
-            filename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max, suffix);
+            filename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
             minioBucket = chatConfig.getGlobal().getBucket();
         }
 
@@ -200,16 +289,31 @@ public class ChatService implements InitializingBean {
      */
     private String createHistoryMessageFile(GlobalMessage global, Integer sourceId, Integer targetId) throws Exception {
         String globalFilename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
+        Integer historyFileCount = chatConfig.getContact().getHistoryMessageFileCount();
 
         if (GlobalMessageType.Global.getValue().equals(global.getType())) {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
             globalFilename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
+            historyFileCount = chatConfig.getGlobal().getHistoryMessageFileCount();
         }
 
         String filename = createHistoryMessageFilename(globalFilename);
         global.setCurrentMessageFile(filename);
         global.getMessageFileMap().put(filename, 0);
+
+        if (global.getMessageFileMap().size() > historyFileCount) {
+            Optional<String> optional = global
+                    .getMessageFileMap()
+                    .keySet()
+                    .stream()
+                    .min(Comparator.comparing(this::getHistoryFileCreationTime));
+
+            if (optional.isPresent()) {
+                String minKey = optional.get();
+                global.getMessageFileMap().remove(minKey);
+            }
+        }
 
         Bucket bucket = chatConfig.getContact().getContactBucket();
 
@@ -224,6 +328,18 @@ public class ChatService implements InitializingBean {
         minioTemplate.writeJsonValue(messageFileObject, new LinkedList<BasicMessage.Message>());
 
         return filename;
+    }
+
+    /**
+     * 获取消息历史文件创建时间
+     *
+     * @param filename 文件名称
+     *
+     * @return 创建时间戳
+     */
+    private Long getHistoryFileCreationTime(String filename) {
+        String time = StringUtils.substringBetween(filename, "_", ".json");
+        return Long.parseLong(time);
     }
 
     /**
@@ -283,6 +399,11 @@ public class ChatService implements InitializingBean {
                 new TypeReference<>() {
                 }
         );
+
+        if (CollectionUtils.isEmpty(senderMessageList)) {
+            senderMessageList = new ArrayList<>();
+        }
+
         senderMessageList.addAll(fileMessageList);
         minioTemplate.writeJsonValue(messageFileObject, senderMessageList);
 
@@ -365,6 +486,7 @@ public class ChatService implements InitializingBean {
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
+        contactMessage.getMessages().add(message);
 
         List<BasicMessage.UserMessageBody> userMessageBodies = targetUserMessages
                 .stream()
@@ -372,27 +494,28 @@ public class ChatService implements InitializingBean {
                 .peek(m -> m.setContent(message.getContent()))
                 .collect(Collectors.toList());
 
-        // 构造响应给目标用户的消息内容
+        // 构造未读消息内容，用于已读时能够更改所有文件的状态为已读
         //noinspection unchecked
         ContactMessage<BasicMessage.UserMessageBody> recipientMessage = Casts.of(contactMessage, ContactMessage.class);
         // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
         // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
         // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
-        recipientMessage.setMessages(new ArrayList<>());
-        recipientMessage.getMessages().addAll(userMessageBodies);
+        recipientMessage.setMessages(userMessageBodies);
         // 保存未读记录
         addUnreadMessage(recipientId, recipientMessage);
 
         // 如果当前用户在线，推送消息到客户端
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
+            //noinspection unchecked
+            ContactMessage<BasicMessage.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
+            unicastMessage.setMessages(targetUserMessages);
+            unicastMessage.getMessages().forEach(this::decryptMessageContent);
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
                     CHAT_MESSAGE_EVENT_NAME,
-                    recipientMessage
+                    unicastMessage
             );
         }
-
-        contactMessage.getMessages().add(message);
 
         amqpTemplate.convertAndSend(
                 SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
@@ -400,7 +523,7 @@ public class ChatService implements InitializingBean {
                 contactMessage
         );
 
-        return message;
+        return sourceUserMessages.iterator().next();
     }
 
     /**
@@ -616,7 +739,7 @@ public class ChatService implements InitializingBean {
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessages().values()
+                            GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
         }

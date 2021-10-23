@@ -21,10 +21,8 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 读取消息 MQ 接收者
@@ -53,109 +51,55 @@ public class ReadMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        GlobalMessage sourceUserMessage = chatService.getGlobalMessage(
-                body.getSenderId(),
-                body.getRecipientId(),
-                false
-        );
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
 
-        GlobalMessage targetUserMessage = chatService.getGlobalMessage(
-                body.getRecipientId(),
-                body.getSenderId(),
-                false
-        );
+        ContactMessage<BasicMessage.UserMessageBody> message = map.get(body.getSenderId());
 
-        GlobalMessage globalMessage = chatService.getGlobalMessage(
-                body.getSenderId(),
-                body.getRecipientId(),
-                true
-        );
-
-        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = chatService.getUnreadMessageData(
-                body.getRecipientId()
-        );
-
-        for (Map.Entry<String, List<String>> entry : body.getMessages().entrySet()) {
-            readMessage(sourceUserMessage, entry, body.getCreationTime());
-            readMessage(targetUserMessage, entry, body.getCreationTime());
-            readMessage(globalMessage, entry, body.getCreationTime());
-
-            ContactMessage<BasicMessage.UserMessageBody> message = map.get(body.getSenderId());
-            message.getMessages().removeIf(m -> m.getId().equals(entry.getKey()));
-
-            if (CollectionUtils.isEmpty(message.getMessages())) {
-                map.remove(body.getSenderId());
-            }
+        if (Objects.nonNull(message) && CollectionUtils.isNotEmpty(message.getMessages())) {
+            readMessage(body.getMessageIds(), message.getMessages(), body.getCreationTime());
         }
-
-        FileObject fileObject = chatService.getUnreadMessageFileObject(body.getRecipientId());
-        chatService.getMinioTemplate().writeJsonValue(fileObject, map);
 
         channel.basicAck(tag, false);
     }
 
-    /**
-     * 读取消息
-     *
-     * @param globalMessage 全局消息实体
-     * @param entry         消息主键和文件映射的实体
-     * @param readTime      读取消息时间
-     *
-     * @throws Exception 更新失败时抛出
-     */
-    private void readMessage(GlobalMessage globalMessage,
-                             Map.Entry<String, List<String>> entry,
-                             Date readTime) throws Exception {
+    private void readMessage(List<String> ids, List<BasicMessage.UserMessageBody> messages, Date readTime) throws Exception {
+        List<BasicMessage.UserMessageBody> userMessageBodies = messages
+                .stream()
+                .filter(umb -> ids.contains(umb.getId()))
+                .collect(Collectors.toList());
 
-        String filename = "";
-
-        if (entry.getValue().contains(globalMessage.getCurrentMessageFile())) {
-            filename = globalMessage.getCurrentMessageFile();
+        if (CollectionUtils.isEmpty(userMessageBodies)) {
+            return;
         }
 
-        if (StringUtils.isEmpty(filename)) {
+        for (BasicMessage.UserMessageBody userMessageBody : userMessageBodies) {
 
-            Optional<String> optional = globalMessage
-                    .getMessageFileMap()
-                    .keySet()
-                    .stream()
-                    .filter(s -> entry.getValue().contains(s))
-                    .findFirst();
+            for (String filename : userMessageBody.getFilenames()) {
 
-            if (optional.isPresent()) {
-                filename = optional.get();
+                FileObject messageFileObject = FileObject.of(
+                        chatService.getChatConfig().getMessage().getBucket(),
+                        filename
+                );
+
+                List<BasicMessage.FileMessage> messageList = chatService.getMinioTemplate().readJsonValue(
+                        messageFileObject,
+                        new TypeReference<>() {
+                        }
+                );
+
+                Optional<BasicMessage.FileMessage> messageOptional = messageList
+                        .stream()
+                        .filter(m -> m.getId().equals(userMessageBody.getId()))
+                        .findFirst();
+
+                if (messageOptional.isPresent()) {
+                    BasicMessage.FileMessage fileMessage = messageOptional.get();
+                    fileMessage.setRead(true);
+                    fileMessage.setReadTime(readTime);
+                }
+
+                chatService.getMinioTemplate().writeJsonValue(messageFileObject, messageList);
             }
         }
-
-        if (StringUtils.isEmpty(filename)) {
-            return;
-        }
-
-        FileObject fileObject = FileObject.of(chatService.getChatConfig().getMessage().getBucket(), filename);
-        List<BasicMessage.FileMessage> messages = chatService.getMinioTemplate().readJsonValue(
-                fileObject,
-                new TypeReference<>() {
-                }
-        );
-
-        if (CollectionUtils.isEmpty(messages)) {
-            return;
-        }
-
-        Optional<BasicMessage.FileMessage> optional = messages
-                .stream()
-                .filter(m -> m.getId().equals(entry.getKey()))
-                .findFirst();
-
-        if (optional.isEmpty()) {
-            return;
-        }
-
-        BasicMessage.FileMessage fileMessage = optional.get();
-
-        fileMessage.setRead(true);
-        fileMessage.setReadTime(readTime);
-
-        chatService.getMinioTemplate().writeJsonValue(fileObject, messages);
     }
 }

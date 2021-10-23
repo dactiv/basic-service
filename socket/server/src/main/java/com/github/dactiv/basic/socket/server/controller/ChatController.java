@@ -7,6 +7,8 @@ import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.page.ScrollPage;
+import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -65,8 +67,8 @@ public class ChatController {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        Integer recipientId = Casts.cast(userDetails.getId());
-        body.setRecipientId(recipientId);
+        Integer readUserId = Casts.cast(userDetails.getId());
+        body.setRecipientId(readUserId);
 
         chatService.readMessage(body);
 
@@ -101,6 +103,29 @@ public class ChatController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         return chatService.getUnreadMessages(userId);
+    }
+
+    /**
+     * 获取历史消息分页
+     *
+     * @param securityContext 安全上下文
+     * @param targetId 目标用户 id（对方用户 id）
+     * @param time 时间节点
+     * @param pageRequest 分页请求
+     *
+     * @return 滚动分页结果
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("getHistoryMessagePage")
+    public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
+                                                                       @RequestParam Integer targetId,
+                                                                       @RequestParam Integer time,
+                                                                       ScrollPageRequest pageRequest) {
+
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        return chatService.getHistoryMessagePage(userId, targetId, time, pageRequest);
     }
 
 }

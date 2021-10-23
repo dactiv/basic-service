@@ -33,10 +33,6 @@ public class ChatConfig {
      * 加解密密钥
      */
     private String cryptoKey = "+ZxmXBvLTtCNv0r56Sgxfg==";
-    /**
-     * 分片文件后缀
-     */
-    private String shardFileSuffix = "yyyyMMdd";
 
     /**
      * 全局文件消息配置
@@ -67,9 +63,14 @@ public class ChatConfig {
         private Bucket bucket = Bucket.of("socket.server.chat.global");
 
         /**
+         * 保存历史聊天消息的文件数量
+         */
+        private Integer historyMessageFileCount = 100;
+
+        /**
          * 文件 token
          */
-        private String fileToken = "global_message_{0}_and_{1}_{2}.json";
+        private String fileToken = "global_message_{0}_and_{1}.json";
 
         /**
          * 缓存配置
@@ -103,9 +104,14 @@ public class ChatConfig {
         private Bucket unreadBucket = Bucket.of("socket.server.chat.contact.unread");
 
         /**
+         * 保存历史聊天消息的文件数量
+         */
+        private Integer historyMessageFileCount = 3000;
+
+        /**
          * 常用联系人文件 token
          */
-        private String fileToken = "contact_{0}_and_{1}_{2}.json";
+        private String fileToken = "contact_{0}_and_{1}.json";
 
         /**
          * 近期联系人文件 token
@@ -165,6 +171,6 @@ public class ChatConfig {
         /**
          * 每个文件存储的信息大小
          */
-        private Integer batchSize = 1000;
+        private Integer batchSize = 10000;
     }
 }
