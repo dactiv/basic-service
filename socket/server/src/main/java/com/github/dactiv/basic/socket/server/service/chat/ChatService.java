@@ -20,8 +20,6 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
@@ -51,8 +49,6 @@ import org.springframework.web.bind.WebDataBinder;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -108,7 +104,7 @@ public class ChatService implements InitializingBean {
      */
     public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(Integer userId,
                                                                        Integer targetId,
-                                                                       Integer time,
+                                                                       Date time,
                                                                        ScrollPageRequest pageRequest) {
 
         GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
@@ -119,7 +115,7 @@ public class ChatService implements InitializingBean {
                 .getMessageFileMap()
                 .keySet()
                 .stream()
-                .filter(s -> getHistoryFileCreationTime(s) <= time)
+                .filter(s -> getHistoryFileCreationTime(s) <= time.getTime())
                 .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
                 .collect(Collectors.toList());
 
@@ -338,7 +334,10 @@ public class ChatService implements InitializingBean {
      * @return 创建时间戳
      */
     private Long getHistoryFileCreationTime(String filename) {
-        String time = StringUtils.substringBetween(filename, "_", ".json");
+        String time = StringUtils.substringBefore(
+                StringUtils.substringAfterLast(filename, "_"),
+                ".json"
+        );
         return Long.parseLong(time);
     }
 
@@ -350,9 +349,8 @@ public class ChatService implements InitializingBean {
      * @return 新的历史消息文件名称
      */
     public String createHistoryMessageFilename(String filename) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
         String target = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
-        String suffix = target + WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + LocalDateTime.now().format(formatter);
+        String suffix = target + WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + System.currentTimeMillis();
         return MessageFormat.format(chatConfig.getMessage().getFileToken(), suffix);
     }
 
@@ -592,6 +590,8 @@ public class ChatService implements InitializingBean {
         if (Objects.isNull(targetMessage)) {
             map.put(contactMessage.getId(), contactMessage);
         } else {
+            targetMessage.setLastSendTime(contactMessage.getLastSendTime());
+            targetMessage.setLastMessage(contactMessage.getLastMessage());
             targetMessage.getMessages().addAll(contactMessage.getMessages());
         }
 

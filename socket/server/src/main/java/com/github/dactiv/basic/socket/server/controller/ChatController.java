@@ -11,11 +11,14 @@ import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.format.annotation.NumberFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -119,7 +122,7 @@ public class ChatController {
     @PostMapping("getHistoryMessagePage")
     public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                                        @RequestParam Integer targetId,
-                                                                       @RequestParam Integer time,
+                                                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
                                                                        ScrollPageRequest pageRequest) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());

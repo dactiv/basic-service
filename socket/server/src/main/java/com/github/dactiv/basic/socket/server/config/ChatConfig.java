@@ -159,11 +159,6 @@ public class ChatConfig {
         private String fileToken = "info_{0}.json";
 
         /**
-         * 文件后缀
-         */
-        private String fileSuffix = "yyyyMMddHHmmssms";
-
-        /**
          * 分页大小
          */
         private Integer pageSize = 30;

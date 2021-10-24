@@ -9,6 +9,7 @@ import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -21,6 +22,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -51,21 +53,28 @@ public class ReadMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
-
-        ContactMessage<BasicMessage.UserMessageBody> message = map.get(body.getSenderId());
-
-        if (Objects.nonNull(message) && CollectionUtils.isNotEmpty(message.getMessages())) {
-            readMessage(body.getMessageIds(), message.getMessages(), body.getCreationTime());
-        }
+        readMessage(body);
 
         channel.basicAck(tag, false);
     }
 
-    private void readMessage(List<String> ids, List<BasicMessage.UserMessageBody> messages, Date readTime) throws Exception {
-        List<BasicMessage.UserMessageBody> userMessageBodies = messages
+    private void readMessage(ReadMessageRequestBody body) throws Exception {
+        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
+
+        if (MapUtils.isEmpty(map)) {
+            return ;
+        }
+
+        ContactMessage<BasicMessage.UserMessageBody> message = map.get(body.getSenderId());
+
+        if (Objects.isNull(message)) {
+            return ;
+        }
+
+        List<BasicMessage.UserMessageBody> userMessageBodies = message
+                .getMessages()
                 .stream()
-                .filter(umb -> ids.contains(umb.getId()))
+                .filter(umb -> body.getMessageIds().contains(umb.getId()))
                 .collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(userMessageBodies)) {
@@ -95,11 +104,25 @@ public class ReadMessageReceiver {
                 if (messageOptional.isPresent()) {
                     BasicMessage.FileMessage fileMessage = messageOptional.get();
                     fileMessage.setRead(true);
-                    fileMessage.setReadTime(readTime);
+                    fileMessage.setReadTime(body.getCreationTime());
                 }
 
                 chatService.getMinioTemplate().writeJsonValue(messageFileObject, messageList);
             }
         }
+        message.getMessages().removeIf(m -> userMessageBodies.stream().anyMatch(umb -> umb.getId().equals(m.getId())));
+
+        if (CollectionUtils.isEmpty(message.getMessages())) {
+            map.remove(body.getSenderId());
+        }
+
+        String filename = MessageFormat.format(
+                chatService.getChatConfig().getContact().getUnreadMessageFileToken(),
+                body.getRecipientId()
+        );
+
+        FileObject fileObject = FileObject.of(chatService.getChatConfig().getContact().getUnreadBucket(), filename);
+        chatService.getMinioTemplate().writeJsonValue(fileObject, map);
     }
+
 }
