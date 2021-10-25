@@ -182,7 +182,7 @@ public class AuthenticationService {
                         .ne(AuthenticationInfo::getId, info.getId())
         );
 
-        Iterator<AuthenticationInfo> iterator = page.getContent().iterator();
+        Iterator<AuthenticationInfo> iterator = page.getElements().iterator();
 
         AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
@@ -233,7 +233,7 @@ public class AuthenticationService {
 
         LOGGER.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
 
-        page.getContent().forEach(this::onAuthenticationSuccess);
+        page.getElements().forEach(this::onAuthenticationSuccess);
 
     }
 

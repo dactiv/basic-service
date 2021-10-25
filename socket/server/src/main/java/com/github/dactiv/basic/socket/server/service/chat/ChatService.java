@@ -15,6 +15,7 @@ import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
+import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessagePage;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -49,6 +50,11 @@ import org.springframework.web.bind.WebDataBinder;
 import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -100,22 +106,22 @@ public class ChatService implements InitializingBean {
      * @param targetId    目标用户 id
      * @param pageRequest 分页请求
      *
-     * @return 分页信息
+     * @return 全局消息分页
      */
-    public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(Integer userId,
-                                                                       Integer targetId,
-                                                                       Date time,
-                                                                       ScrollPageRequest pageRequest) {
+    public GlobalMessagePage getHistoryMessagePage(Integer userId,
+                                                   Integer targetId,
+                                                   Date time,
+                                                   ScrollPageRequest pageRequest) {
 
         GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
 
         List<GlobalMessage.FileMessage> messages = new LinkedList<>();
-
+        LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
         List<String> historyFiles = globalMessage
                 .getMessageFileMap()
                 .keySet()
                 .stream()
-                .filter(s -> getHistoryFileCreationTime(s) <= time.getTime())
+                .filter(s -> this.isHistoryMessageFileBeforeCurrentTime(s, dateTime))
                 .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
                 .collect(Collectors.toList());
 
@@ -152,7 +158,32 @@ public class ChatService implements InitializingBean {
 
         }
 
-        return new ScrollPage<>(pageRequest, messages);
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
+        List<Date> timeFrame  = globalMessage
+                .getMessageFileMap()
+                .keySet()
+                .stream()
+                .map(this::getHistoryFileCreationTime)
+                .map(k -> LocalDateTime.parse(k, formatter))
+                .map(ldt -> Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()))
+                .collect(Collectors.toList());
+
+        return GlobalMessagePage.of(pageRequest, messages, timeFrame);
+    }
+
+    /**
+     * 判断历史消息文件是否小于指定时间
+     *
+     * @param filename 文件名称
+     * @param time 时间
+     *
+     * @return true 是，否则 false
+     */
+    private boolean isHistoryMessageFileBeforeCurrentTime(String filename, LocalDateTime time) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
+        String text = getHistoryFileCreationTime(filename);
+        LocalDateTime creationTime = LocalDateTime.parse(text, formatter);
+        return creationTime.isBefore(time);
     }
 
     /**
@@ -262,7 +293,13 @@ public class ChatService implements InitializingBean {
         if (MapUtils.isNotEmpty(global.getMessageFileMap())) {
             filename = global.getCurrentMessageFile();
             Integer count = global.getMessageFileMap().get(filename);
-            if (count + 1 > chatConfig.getMessage().getBatchSize()) {
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
+            String text = getHistoryFileCreationTime(filename);
+
+            LocalDate before = LocalDate.parse(text, formatter);
+            LocalDate now = LocalDate.now();
+
+            if (count > chatConfig.getMessage().getBatchSize() || ChronoUnit.DAYS.between(before, now) >= 1) {
                 filename = createHistoryMessageFile(global, sourceId, targetId);
             }
         } else {
@@ -333,12 +370,11 @@ public class ChatService implements InitializingBean {
      *
      * @return 创建时间戳
      */
-    private Long getHistoryFileCreationTime(String filename) {
-        String time = StringUtils.substringBefore(
+    private String getHistoryFileCreationTime(String filename) {
+        return StringUtils.substringBefore(
                 StringUtils.substringAfterLast(filename, "_"),
                 ".json"
         );
-        return Long.parseLong(time);
     }
 
     /**
@@ -349,8 +385,9 @@ public class ChatService implements InitializingBean {
      * @return 新的历史消息文件名称
      */
     public String createHistoryMessageFilename(String filename) {
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
         String target = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
-        String suffix = target + WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + System.currentTimeMillis();
+        String suffix = target + WebDataBinder.DEFAULT_FIELD_MARKER_PREFIX + LocalDateTime.now().format(formatter);
         return MessageFormat.format(chatConfig.getMessage().getFileToken(), suffix);
     }
 

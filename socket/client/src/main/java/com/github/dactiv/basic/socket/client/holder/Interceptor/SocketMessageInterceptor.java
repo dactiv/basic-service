@@ -6,6 +6,7 @@ import com.github.dactiv.basic.socket.client.entity.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;
 import com.github.dactiv.framework.spring.web.result.filter.holder.FilterResultHolder;
 import lombok.AllArgsConstructor;
 import lombok.Setter;
@@ -30,7 +31,7 @@ public class SocketMessageInterceptor implements MethodInterceptor {
 
     private final SocketClientTemplate socketClientTemplate;
 
-    private final SocketResultResponseBodyAdvice responseBodyAdvice;
+    private final RestResponseBodyAdvice responseBodyAdvice;
 
     @Override
     public Object invoke(MethodInvocation invocation) throws Throwable {
@@ -48,6 +49,16 @@ public class SocketMessageInterceptor implements MethodInterceptor {
             SocketResult socketResult = SocketResultHolder.get();
 
             List<String> filterResultIds = new LinkedList<>(FilterResultHolder.get());
+
+            Optional<HttpServletRequest> optional = SpringMvcUtils.getHttpServletRequest();
+
+            if (optional.isPresent()) {
+                HttpServletRequest httpServletRequest = optional.get();
+                String id = responseBodyAdvice.getFilterResultId(httpServletRequest);
+                if (StringUtils.isNotEmpty(id) && !filterResultIds.contains(id)) {
+                    filterResultIds.add(id);
+                }
+            }
 
             if (StringUtils.isNotEmpty(message.value())) {
                 String id = message.value();
