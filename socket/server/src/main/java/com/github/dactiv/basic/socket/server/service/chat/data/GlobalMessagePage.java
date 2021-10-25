@@ -29,6 +29,16 @@ public class GlobalMessagePage extends ScrollPage<GlobalMessage.FileMessage> {
     private List<Date> timeFrame;
 
     /**
+     * 最后发送消息
+     */
+    private String lastMessage;
+
+    /**
+     * 最后发送时间
+     */
+    private Date lastSendTime;
+
+    /**
      * 全局消息分页
      *
      * @param pageRequest 分页请求

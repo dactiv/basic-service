@@ -168,7 +168,12 @@ public class ChatService implements InitializingBean {
                 .map(ldt -> Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()))
                 .collect(Collectors.toList());
 
-        return GlobalMessagePage.of(pageRequest, messages, timeFrame);
+        GlobalMessagePage result = GlobalMessagePage.of(pageRequest, messages, timeFrame);
+
+        result.setLastMessage(globalMessage.getLastMessage());
+        result.setLastSendTime(globalMessage.getLastSendTime());
+
+        return result;
     }
 
     /**

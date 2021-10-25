@@ -5,6 +5,7 @@ import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
+import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessagePage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.ScrollPage;
@@ -120,10 +121,10 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessagePage")
-    public ScrollPage<GlobalMessage.FileMessage> getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
-                                                                       @RequestParam Integer targetId,
-                                                                       @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
-                                                                       ScrollPageRequest pageRequest) {
+    public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
+                                                   @RequestParam Integer targetId,
+                                                   @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
+                                                   ScrollPageRequest pageRequest) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
