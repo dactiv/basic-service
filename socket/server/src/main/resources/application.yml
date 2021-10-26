@@ -25,4 +25,5 @@ dactiv:
       - "/multipleUnicast/**"
       - "/unicast/**"
       - "/actuator/**"
-
+  enumerate:
+    base-packages: com.github.dactiv.basic.socket.server.enumerate

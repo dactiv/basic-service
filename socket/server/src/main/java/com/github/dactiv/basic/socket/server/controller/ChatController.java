@@ -11,6 +11,8 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.format.annotation.NumberFormat;
@@ -29,6 +31,14 @@ import java.util.List;
  */
 @RestController
 @RequestMapping("chat")
+@Plugin(
+        name = "聊天管理",
+        id = "chat",
+        parent = "socket-server",
+        icon = "icon-message",
+        type = ResourceType.Security,
+        sources = "Console"
+)
 public class ChatController {
 
     @Autowired
@@ -45,6 +55,7 @@ public class ChatController {
      */
     @PostMapping("sendMessage")
     @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "发送消息", sources = "SocketUser")
     public RestResult<?> sendMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestParam Integer recipientId,
                                      @RequestParam String content) throws Exception {
@@ -66,8 +77,9 @@ public class ChatController {
      */
     @PostMapping("readMessage")
     @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "读取消息", sources = "SocketUser")
     public RestResult<?> readMessage(@CurrentSecurityContext SecurityContext securityContext,
-                                     @RequestBody ReadMessageRequestBody body) {
+                                     @RequestBody ReadMessageRequestBody body) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -88,6 +100,7 @@ public class ChatController {
      */
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "获取常用联系人", sources = "SocketUser")
     public List<Integer> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -103,6 +116,8 @@ public class ChatController {
      */
     @GetMapping("getUnreadMessages")
     @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "获取常用联系人", sources = "SocketUser")
+    @Deprecated
     public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -121,6 +136,7 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessagePage")
+    @Plugin(name = "获取历史消息分页", sources = "SocketUser")
     public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                    @RequestParam Integer targetId,
                                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,

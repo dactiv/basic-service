@@ -2,6 +2,7 @@ package com.github.dactiv.basic.socket.server.service.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.socket.client.SocketClientTemplate;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -139,20 +140,15 @@ public class ChatService implements InitializingBean {
 
             List<GlobalMessage.FileMessage> temps = fileMessageList
                     .stream()
+                    .filter(f -> f.getCreationTime().before(time))
                     .sorted(Comparator.comparing(BasicMessage.Message::getCreationTime).reversed())
+                    .limit(pageRequest.getSize())
+                    .peek(this::decryptMessageContent)
                     .collect(Collectors.toList());
 
-            boolean complete = false;
-            for (GlobalMessage.FileMessage fileMessage : temps) {
-                decryptMessageContent(fileMessage);
-                messages.add(fileMessage);
-                if (messages.size() >= pageRequest.getSize()) {
-                    complete = true;
-                    break;
-                }
-            }
+            messages.addAll(temps);
 
-            if (complete) {
+            if (messages.size() >= pageRequest.getSize()) {
                 break;
             }
 
@@ -544,14 +540,21 @@ public class ChatService implements InitializingBean {
         // 保存未读记录
         addUnreadMessage(recipientId, recipientMessage);
 
+        //noinspection unchecked
+        ContactMessage<BasicMessage.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
+        unicastMessage.setMessages(targetUserMessages);
+        unicastMessage.getMessages().forEach(this::decryptMessageContent);
+
         // 如果当前用户在线，推送消息到客户端
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
-            //noinspection unchecked
-            ContactMessage<BasicMessage.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
-            unicastMessage.setMessages(targetUserMessages);
-            unicastMessage.getMessages().forEach(this::decryptMessageContent);
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
+                    CHAT_MESSAGE_EVENT_NAME,
+                    unicastMessage
+            );
+        } else {
+            socketServerManager.saveTempMessage(
+                    recipientId,
                     CHAT_MESSAGE_EVENT_NAME,
                     unicastMessage
             );
@@ -624,6 +627,7 @@ public class ChatService implements InitializingBean {
      * @param userId         用户 id
      * @param contactMessage 联系人消息
      */
+    @Deprecated
     private void addUnreadMessage(Integer userId, ContactMessage<BasicMessage.UserMessageBody> contactMessage) throws Exception {
         Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = getUnreadMessageData(userId);
 
@@ -648,6 +652,7 @@ public class ChatService implements InitializingBean {
      *
      * @return 未读消息数据
      */
+    @Deprecated
     public Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessageData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
@@ -671,6 +676,7 @@ public class ChatService implements InitializingBean {
      *
      * @return 未读消息文件对象
      */
+    @Deprecated
     public FileObject getUnreadMessageFileObject(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
         return FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
@@ -770,7 +776,7 @@ public class ChatService implements InitializingBean {
      * @param body 读取消息 request body
      */
     @SocketMessage
-    public void readMessage(ReadMessageRequestBody body) {
+    public void readMessage(ReadMessageRequestBody body) throws Exception {
 
         SocketUserDetails userDetails = socketServerManager.getSocketUserDetails(body.getSenderId());
 
@@ -778,6 +784,15 @@ public class ChatService implements InitializingBean {
 
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
+                    CHAT_READ_MESSAGE_EVENT_NAME,
+                    Map.of(
+                            IdEntity.ID_FIELD_NAME, body.getRecipientId(),
+                            GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessageIds()
+                    )
+            );
+        } else {
+            socketServerManager.saveTempMessage(
+                    body.getSenderId(),
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),

@@ -7,7 +7,9 @@ import com.github.dactiv.basic.socket.client.entity.UnicastMessage;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.security.access.prepost.PreAuthorize;
@@ -15,7 +17,9 @@ import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -116,6 +120,59 @@ public class SocketServerController {
                 .peek(r -> socketServerManager.sendMessage(r))
                 .map(r -> RestResult.ofSuccess("单播 socket 成功", r.getMessage().getData()))
                 .collect(Collectors.toList());
+    }
+
+    /**
+     * 获取临时消息
+     *
+     * @param securityContext 安全上下文
+     * @param types 消息类型集合
+     *
+     * @return 临时消息 map
+     */
+    @PostMapping("getTempMessageMap")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "获取临时消息", sources = "SocketUser")
+    public Map<String, List<Object>> getTempMessageMap(@CurrentSecurityContext SecurityContext securityContext,
+                                                       @RequestParam List<String> types) {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        Map<String, List<Object>> result = new LinkedHashMap<>();
+
+        for (String type : types) {
+            List<Object> objects = socketServerManager.getTempMessages(userId, type);
+
+            if (CollectionUtils.isEmpty(objects)) {
+                continue;
+            }
+            result.put(type, objects);
+        }
+
+        return result;
+    }
+
+    /**
+     * 清除临时消息
+     *
+     * @param securityContext 安全上下文
+     * @param types 消息类型集合
+     *
+     * @return rest 结果集
+     */
+    @PostMapping("clearTempMessage")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "清除临时消息", sources = "SocketUser")
+    public RestResult<?> clearTempMessage(@CurrentSecurityContext SecurityContext securityContext,
+                                          @RequestParam List<String> types) throws Exception {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        for (String type : types) {
+            socketServerManager.clearTempMessage(userId, type);
+        }
+
+        return RestResult.of("清除临时消息成功");
     }
 
 }

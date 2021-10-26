@@ -11,6 +11,7 @@ import com.corundumstudio.socketio.SocketIOClient;
 import com.corundumstudio.socketio.SocketIOServer;
 import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.socket.client.SocketClientTemplate;
 import com.github.dactiv.basic.socket.client.entity.SocketMessage;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
@@ -22,6 +23,8 @@ import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.minio.MinioTemplate;
+import com.github.dactiv.framework.minio.data.FileObject;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -40,6 +43,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContext;
@@ -51,6 +55,7 @@ import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
+import java.text.MessageFormat;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -121,6 +126,9 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
     @Autowired
     private RedissonClient redissonClient;
+
+    @Autowired
+    private MinioTemplate minioTemplate;
 
     /**
      * 发送消息
@@ -474,14 +482,88 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     }
 
     /**
+     * 清除临时消息
+     *
+     * @param userId 用户 id
+     * @param type 消息类型
+     *
+     * @throws Exception 清除临时消息
+     */
+    public void clearTempMessage(Integer userId, String type) throws Exception {
+        String filename = MessageFormat.format(applicationConfig.getTempMessageFileToken(), userId, type);
+        minioTemplate.deleteObject(FileObject.of(applicationConfig.getTempMessageBucket(), filename));
+    }
+
+    /**
+     * 获取临时消息
+     *
+     * @param userId 用户 id
+     * @param type 消息类型
+     *
+     * @return 临时消息集合
+     */
+    public List<Object> getTempMessages(Integer userId, String type) {
+        String filename = MessageFormat.format(applicationConfig.getTempMessageFileToken(), userId, type);
+
+        List<Object> result = minioTemplate.readJsonValue(
+                FileObject.of(applicationConfig.getTempMessageBucket(), filename),
+                new TypeReference<>() {
+                }
+        );
+
+        if (CollectionUtils.isEmpty(result)) {
+            result = new LinkedList<>();
+        }
+
+        return result;
+    }
+
+    /**
+     * 保存临时消息
+     *
+     * @param userId 用户 id
+     * @param type 消息类型
+     * @param tempMessage 临时消息集合
+     *
+     * @throws Exception 保存错误时抛出
+     */
+    @Async
+    public void saveTempMessage(Integer userId, String type, Object tempMessage) throws Exception {
+        if (Objects.isNull(tempMessage)) {
+            return ;
+        }
+        saveTempMessages(userId, type, Collections.singletonList(tempMessage));
+    }
+
+    /**
+     * 保存临时消息
+     *
+     * @param userId 用户 id
+     * @param type 消息类型
+     * @param tempMessages 临时消息集合
+     *
+     * @throws Exception 保存错误时抛出
+     */
+    @Async
+    public void saveTempMessages(Integer userId, String type, List<Object> tempMessages) throws Exception {
+        if (CollectionUtils.isEmpty(tempMessages)) {
+            return ;
+        }
+        String filename = MessageFormat.format(applicationConfig.getTempMessageFileToken(), userId, type);
+        List<Object> objects = getTempMessages(userId, type);
+        objects.addAll(tempMessages);
+        minioTemplate.writeJsonValue(FileObject.of(applicationConfig.getTempMessageBucket(), filename), tempMessages);
+    }
+
+    /**
      * 获取 socket 用户明细
      *
-     * @param id 用户 id
+     * @param userId 用户 id
      *
      * @return socket 用户明细
      */
-    public SocketUserDetails getSocketUserDetails(Integer id) {
-        String name = authenticationProperties.getDeviceId().getCache().getName(id.toString());
+    public SocketUserDetails getSocketUserDetails(Integer userId) {
+        String name = authenticationProperties.getDeviceId().getCache().getName(userId.toString());
         RBucket<SocketUserDetails> userDetailsRBucket = redissonClient.getBucket(name);
 
         return userDetailsRBucket.get();
