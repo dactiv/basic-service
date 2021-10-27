@@ -552,7 +552,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         String filename = MessageFormat.format(applicationConfig.getTempMessageFileToken(), userId, type);
         List<Object> objects = getTempMessages(userId, type);
         objects.addAll(tempMessages);
-        minioTemplate.writeJsonValue(FileObject.of(applicationConfig.getTempMessageBucket(), filename), tempMessages);
+        minioTemplate.writeJsonValue(FileObject.of(applicationConfig.getTempMessageBucket(), filename), objects);
     }
 
     /**

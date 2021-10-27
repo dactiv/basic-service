@@ -36,7 +36,7 @@ public class ApplicationConfig extends Configuration {
     /**
      * 临时消息桶，用于存储发送不成功的消息内容
      */
-    private Bucket tempMessageBucket = Bucket.of("socket.server.message");
+    private Bucket tempMessageBucket = Bucket.of("socket.server.temp.message");
 
     /**
      * 临时消息文件 token
