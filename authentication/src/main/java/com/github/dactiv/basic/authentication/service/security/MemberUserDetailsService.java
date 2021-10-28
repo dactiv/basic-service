@@ -65,7 +65,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
         String type = token.getHttpServletRequest().getParameter(DEFAULT_AUTHENTICATION_TYPE_PARAM_NAME);
 
-        if (StringUtils.isEmpty(type)) {
+        if (StringUtils.isBlank(type)) {
             throw new BadCredentialsException("用户名或密码错误");
         }
 

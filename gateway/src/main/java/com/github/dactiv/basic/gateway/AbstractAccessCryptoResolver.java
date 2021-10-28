@@ -108,13 +108,13 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
             String fieldName = StringUtils.substringBefore(trimString, accessCryptoConfig.getParamNameValueDelimiter());
 
-            if (StringUtils.isEmpty(fieldName)) {
+            if (StringUtils.isBlank(fieldName)) {
                 return;
             }
 
             String fieldValue = StringUtils.substringAfter(trimString, accessCryptoConfig.getParamNameValueDelimiter());
 
-            if (StringUtils.isEmpty(fieldValue)) {
+            if (StringUtils.isBlank(fieldValue)) {
                 return;
             }
 

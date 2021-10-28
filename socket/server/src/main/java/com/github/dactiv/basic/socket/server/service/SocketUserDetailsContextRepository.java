@@ -38,7 +38,7 @@ public class SocketUserDetailsContextRepository extends DeviceIdContextRepositor
 
         String token = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
-        if (StringUtils.isEmpty(token)) {
+        if (StringUtils.isBlank(token)) {
             return;
         }
 

@@ -474,7 +474,7 @@ public class SocketClientTemplate implements DisposableBean {
 
         List<String> urls = new LinkedList<>();
 
-        if (StringUtils.isNotEmpty(ip)) {
+        if (StringUtils.isNotBlank(ip)) {
 
             List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
 

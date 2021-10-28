@@ -73,7 +73,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
             String token = request.getParameter(applicationConfig.getSmsCaptchaParamName());
 
-            if (StringUtils.isNotEmpty(token)) {
+            if (StringUtils.isNotBlank(token)) {
                 Map<String, Object> buildToken = captchaService.createGenerateCaptchaIntercept(
                         token,
                         applicationConfig.getMobileFailureCaptchaType(),

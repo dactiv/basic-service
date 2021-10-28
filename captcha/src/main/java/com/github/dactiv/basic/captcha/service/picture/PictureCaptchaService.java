@@ -66,7 +66,7 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
 
         Object value;
 
-        if (StringUtils.isNotEmpty(deviceIdentified)) {
+        if (StringUtils.isNotBlank(deviceIdentified)) {
             headers.setContentType(MediaType.APPLICATION_JSON);
 
             Map<String, Object> data = new LinkedHashMap<>();

@@ -29,7 +29,7 @@ public class UnicastMessageSender extends AbstractMessageSender<UnicastMessage<?
     protected ClientOperations getClientOperations(UnicastMessage<?> message, SocketIOServer socketIOServer) {
         String deviceIdentified = message.getDeviceIdentified();
 
-        if (StringUtils.isNotEmpty(deviceIdentified)) {
+        if (StringUtils.isNotBlank(deviceIdentified)) {
             return socketIOServer.getClient(UUID.fromString(deviceIdentified));
         }
 

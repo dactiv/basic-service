@@ -55,12 +55,12 @@ public class SocketMessageInterceptor implements MethodInterceptor {
             if (optional.isPresent()) {
                 HttpServletRequest httpServletRequest = optional.get();
                 String id = responseBodyAdvice.getFilterResultId(httpServletRequest);
-                if (StringUtils.isNotEmpty(id) && !filterResultIds.contains(id)) {
+                if (StringUtils.isNotBlank(id) && !filterResultIds.contains(id)) {
                     filterResultIds.add(id);
                 }
             }
 
-            if (StringUtils.isNotEmpty(message.value())) {
+            if (StringUtils.isNotBlank(message.value())) {
                 String id = message.value();
                 boolean ignoreOtherIds = message.ignoreOtherIds();
 

@@ -89,7 +89,7 @@ public class SimplePictureCaptchaGenerator implements PictureCaptchaGenerator {
             imgCaptcha.setCodeLength(DEFAULT_CODE_LENGTH);
         }
 
-        if (StringUtils.isEmpty(imgCaptcha.getFontStyle())) {
+        if (StringUtils.isBlank(imgCaptcha.getFontStyle())) {
             imgCaptcha.setFontStyle(DEFAULT_FONT_STYLE);
         }
 

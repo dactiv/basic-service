@@ -27,10 +27,8 @@ public class BroadcastMessageSender extends AbstractMessageSender<BroadcastMessa
 
         String room = message.getRoom();
 
-        if (StringUtils.isNotEmpty(room)) {
-
+        if (StringUtils.isNotBlank(room)) {
             broadcastOperations = socketIOServer.getRoomOperations(room);
-
         }
 
         return broadcastOperations;
@@ -43,7 +41,7 @@ public class BroadcastMessageSender extends AbstractMessageSender<BroadcastMessa
                 "发送广播消息 [类型: {}, 数据: {}] 到 [{}] 频道成功",
                 message.getEvent(),
                 json,
-                StringUtils.isNotEmpty(message.getRoom()) ? message.getRoom() : "全网");
+                StringUtils.isNotBlank(message.getRoom()) ? message.getRoom() : "全网");
     }
 
     @Override

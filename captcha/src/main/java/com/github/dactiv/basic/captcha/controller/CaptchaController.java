@@ -77,7 +77,7 @@ public class CaptchaController {
                                     @RequestParam(required = false) String deviceIdentified) {
 
 
-        if (StringUtils.isEmpty(deviceIdentified)) {
+        if (StringUtils.isBlank(deviceIdentified)) {
             deviceIdentified = SpringMvcUtils.getDeviceIdentified();
         }
 

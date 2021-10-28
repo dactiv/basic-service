@@ -161,7 +161,7 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
         // 获取存储在 redis 的绑定 token
         C exist = getCaptcha(buildToken);
 
-        if (StringUtils.isNotEmpty(getUsernameParamName())) {
+        if (StringUtils.isNotBlank(getUsernameParamName())) {
 
             String username = exist.getUsername();
             String requestUsername = request.getParameter(getUsernameParamName());
@@ -314,11 +314,11 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
         captcha.setExpireTime(getCaptchaExpireTime());
         captcha.setCaptcha(result.getCaptchaValue());
 
-        if (StringUtils.isNotEmpty(getUsernameParamName())) {
+        if (StringUtils.isNotBlank(getUsernameParamName())) {
 
             String username = request.getParameter(getUsernameParamName());
 
-            if (StringUtils.isEmpty(username)) {
+            if (StringUtils.isBlank(username)) {
                 return new RestResult<>(
                         getUsernameParamName() + "参数不能为空",
                         HttpStatus.TOO_MANY_REQUESTS.value(),

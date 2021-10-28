@@ -173,7 +173,7 @@ public class UserService implements InitializingBean {
      */
     public void insertConsoleUser(ConsoleUser consoleUser) {
 
-        if (StringUtils.isEmpty(consoleUser.getPassword())) {
+        if (StringUtils.isBlank(consoleUser.getPassword())) {
             throw new ServiceException("登陆密码不能为空");
         }
 
@@ -476,7 +476,7 @@ public class UserService implements InitializingBean {
      */
     public void insertMemberUser(MemberUser memberUser) {
 
-        if (StringUtils.isEmpty(memberUser.getPassword())) {
+        if (StringUtils.isBlank(memberUser.getPassword())) {
             throw new ServiceException("登陆密码不能为空");
         }
 

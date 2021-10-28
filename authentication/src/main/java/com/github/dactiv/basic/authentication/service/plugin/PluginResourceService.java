@@ -387,7 +387,7 @@ public class PluginResourceService {
             target.setParentId(null);
         }
 
-        if (StringUtils.isEmpty(target.getApplicationName())) {
+        if (StringUtils.isBlank(target.getApplicationName())) {
             target.setApplicationName(instance.getServiceName());
         }
 

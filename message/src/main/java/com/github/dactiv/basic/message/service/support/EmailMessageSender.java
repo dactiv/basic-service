@@ -323,7 +323,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
         String jndiName = StringUtils.defaultIfEmpty(mailProperties.getJndiName(), mailConfig.getJndiName());
 
-        if (StringUtils.isNotEmpty(jndiName)) {
+        if (StringUtils.isNotBlank(jndiName)) {
             try {
                 Session session = JndiLocatorDelegate.createDefaultResourceRefLocator().lookup(jndiName, Session.class);
                 mailSender.setSession(session);

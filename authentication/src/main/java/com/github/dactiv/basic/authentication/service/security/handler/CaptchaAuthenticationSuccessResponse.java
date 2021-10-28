@@ -66,7 +66,7 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
             String identified = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
-            if (StringUtils.isNotEmpty(identified)) {
+            if (StringUtils.isNotBlank(identified)) {
 
                 Map<String, Object> data;
 
