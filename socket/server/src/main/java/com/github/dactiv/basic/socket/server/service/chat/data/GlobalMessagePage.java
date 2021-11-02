@@ -24,11 +24,6 @@ public class GlobalMessagePage extends ScrollPage<GlobalMessage.FileMessage> {
     private static final long serialVersionUID = -321127303631279127L;
 
     /**
-     * 时间范围
-     */
-    private List<Date> timeFrame;
-
-    /**
      * 最后发送消息
      */
     private String lastMessage;
@@ -43,13 +38,10 @@ public class GlobalMessagePage extends ScrollPage<GlobalMessage.FileMessage> {
      *
      * @param pageRequest 分页请求
      * @param elements    分页元素集合
-     * @param timeFrame   时间范围
      */
     public GlobalMessagePage(ScrollPageRequest pageRequest,
-                             List<GlobalMessage.FileMessage> elements,
-                             List<Date> timeFrame) {
+                             List<GlobalMessage.FileMessage> elements) {
         super(pageRequest, elements);
-        this.timeFrame = timeFrame;
     }
 
     /**
@@ -57,14 +49,12 @@ public class GlobalMessagePage extends ScrollPage<GlobalMessage.FileMessage> {
      *
      * @param pageRequest 分页请求
      * @param elements    分页元素集合
-     * @param timeFrame   时间范围
      *
      * @return 全局消息分页
      */
     public static GlobalMessagePage of(ScrollPageRequest pageRequest,
-                                       List<GlobalMessage.FileMessage> elements,
-                                       List<Date> timeFrame) {
-        return new GlobalMessagePage(pageRequest, elements, timeFrame);
+                                       List<GlobalMessage.FileMessage> elements) {
+        return new GlobalMessagePage(pageRequest, elements);
     }
 
 }

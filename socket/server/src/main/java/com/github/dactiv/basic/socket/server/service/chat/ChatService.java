@@ -126,12 +126,8 @@ public class ChatService implements InitializingBean {
                 .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
                 .collect(Collectors.toList());
 
-        for (int i = historyFiles.indexOf(globalMessage.getCurrentMessageFile()); i == 0; i--) {
-            FileObject fileObject = FileObject.of(
-                    chatConfig.getMessage().getBucket(),
-                    globalMessage.getCurrentMessageFile()
-            );
-
+        for (String file : historyFiles) {
+            FileObject fileObject = FileObject.of(chatConfig.getMessage().getBucket(), file);
             List<GlobalMessage.FileMessage> fileMessageList = minioTemplate.readJsonValue(
                     fileObject,
                     new TypeReference<>() {
@@ -142,7 +138,7 @@ public class ChatService implements InitializingBean {
                     .stream()
                     .filter(f -> f.getCreationTime().before(time))
                     .sorted(Comparator.comparing(BasicMessage.Message::getCreationTime).reversed())
-                    .limit(pageRequest.getSize())
+                    .limit(pageRequest.getSize() - messages.size())
                     .peek(this::decryptMessageContent)
                     .collect(Collectors.toList());
 
@@ -154,8 +150,26 @@ public class ChatService implements InitializingBean {
 
         }
 
+        GlobalMessagePage result = GlobalMessagePage.of(pageRequest, messages);
+
+        result.setLastMessage(globalMessage.getLastMessage());
+        result.setLastSendTime(globalMessage.getLastSendTime());
+
+        return result;
+    }
+
+    /**
+     * 获取历史消息日期集合
+     *
+     * @param userId 用户 id
+     * @param targetId 目标用户 id
+     *
+     * @return 历史消息日期集合
+     */
+    public List<Date> getHistoryMessageDateList(Integer userId, Integer targetId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
-        List<Date> timeFrame  = globalMessage
+        GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
+        return  globalMessage
                 .getMessageFileMap()
                 .keySet()
                 .stream()
@@ -163,13 +177,6 @@ public class ChatService implements InitializingBean {
                 .map(k -> LocalDateTime.parse(k, formatter))
                 .map(ldt -> Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()))
                 .collect(Collectors.toList());
-
-        GlobalMessagePage result = GlobalMessagePage.of(pageRequest, messages, timeFrame);
-
-        result.setLastMessage(globalMessage.getLastMessage());
-        result.setLastSendTime(globalMessage.getLastSendTime());
-
-        return result;
     }
 
     /**

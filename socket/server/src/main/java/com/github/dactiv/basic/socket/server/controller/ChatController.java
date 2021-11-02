@@ -148,4 +148,23 @@ public class ChatController {
         return chatService.getHistoryMessagePage(userId, targetId, time, pageRequest);
     }
 
+    /**
+     * 获取历史消息日期集合
+     *
+     * @param securityContext 安全上下文
+     * @param targetId 目标用户 id（对方用户 id）
+     *
+     * @return 历史消息日期集合
+     */
+    @PreAuthorize("isAuthenticated()")
+    @PostMapping("getHistoryMessageDateList")
+    @Plugin(name = "获取历史消息分页", sources = "SocketUser")
+    public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
+                                                @RequestParam Integer targetId) {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        return chatService.getHistoryMessageDateList(userId, targetId);
+    }
+
 }
