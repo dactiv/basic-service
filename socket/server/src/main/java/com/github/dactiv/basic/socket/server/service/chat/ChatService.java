@@ -2,27 +2,23 @@ package com.github.dactiv.basic.socket.server.service.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.socket.client.SocketClientTemplate;
 import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
 import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.enumerate.ContactType;
 import com.github.dactiv.basic.socket.server.enumerate.GlobalMessageType;
 import com.github.dactiv.basic.socket.server.receiver.chat.ReadMessageReceiver;
 import com.github.dactiv.basic.socket.server.receiver.chat.SaveMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
-import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
-import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.algorithm.Base64;
@@ -44,6 +40,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.bind.WebDataBinder;
@@ -260,7 +257,7 @@ public class ChatService implements InitializingBean {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
 
-            filename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
+            filename = MessageFormat.format(chatConfig.getGlobal().getPersonFileToken(), min, max);
             minioBucket = chatConfig.getGlobal().getBucket();
         }
 
@@ -335,7 +332,7 @@ public class ChatService implements InitializingBean {
         if (GlobalMessageType.Global.getValue().equals(global.getType())) {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
-            globalFilename = MessageFormat.format(chatConfig.getGlobal().getFileToken(), min, max);
+            globalFilename = MessageFormat.format(chatConfig.getGlobal().getPersonFileToken(), min, max);
             historyFileCount = chatConfig.getGlobal().getHistoryMessageFileCount();
         }
 
@@ -409,7 +406,10 @@ public class ChatService implements InitializingBean {
      *
      * @throws Exception 存储消息记录失败时抛出
      */
-    public List<BasicMessage.FileMessage> addHistoryMessage(List<GlobalMessage.Message> messages, Integer sourceId, Integer targetId, boolean global) throws Exception {
+    public List<BasicMessage.FileMessage> addHistoryMessage(List<GlobalMessage.Message> messages,
+                                                            Integer sourceId,
+                                                            Integer targetId,
+                                                            boolean global) throws Exception {
 
         GlobalMessage globalMessage = getGlobalMessage(sourceId, targetId, global);
         String filename = getGlobalMessageCurrentFilename(globalMessage, sourceId, targetId);
@@ -526,6 +526,7 @@ public class ChatService implements InitializingBean {
         );
 
         contactMessage.setId(senderId);
+        contactMessage.setType(ContactType.Person.getValue());
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
@@ -696,13 +697,12 @@ public class ChatService implements InitializingBean {
      *
      * @return 常用联系人 id 集合
      */
-    public List<Integer> getRecentContacts(Integer userId) {
-        List<IntegerIdEntity> idEntities = getRecentContactData(userId);
+    public List<RecentContact> getRecentContacts(Integer userId) {
+        List<RecentContact> idEntities = getRecentContactData(userId);
 
         return idEntities
                 .stream()
                 .sorted(Comparator.comparing(IntegerIdEntity::getCreationTime).reversed())
-                .map(IdEntity::getId)
                 .collect(Collectors.toList());
     }
 
@@ -713,17 +713,16 @@ public class ChatService implements InitializingBean {
      *
      * @return 常用联系人数据集合
      */
-    public List<IntegerIdEntity> getRecentContactData(Integer userId) {
+    public List<RecentContact> getRecentContactData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getRecentFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getRecentBucket(), filename);
-        List<IntegerIdEntity> idEntities = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {
-        });
+        List<RecentContact> recentContacts = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {});
 
-        if (CollectionUtils.isEmpty(idEntities)) {
-            idEntities = new LinkedList<>();
+        if (CollectionUtils.isEmpty(recentContacts)) {
+            recentContacts = new LinkedList<>();
         }
 
-        return idEntities;
+        return recentContacts;
     }
 
     /**
@@ -743,27 +742,29 @@ public class ChatService implements InitializingBean {
      *
      * @param userId    用户 id
      * @param contactId 联系人 id
+     * @param type 联系人类型
      */
-    public void addRecentContact(Integer userId, Integer contactId) throws Exception {
-        List<IntegerIdEntity> idEntities = getRecentContactData(userId);
+    public void addRecentContact(Integer userId, Integer contactId, ContactType type) throws Exception {
+        List<RecentContact> recentContacts = getRecentContactData(userId);
 
-        IntegerIdEntity idEntity = idEntities
+        RecentContact recentContact = recentContacts
                 .stream()
-                .filter(i -> i.getId().equals(contactId))
+                .filter(i -> i.getId().equals(contactId) && i.getType().equals(type.getValue()))
                 .findFirst()
                 .orElse(null);
 
-        if (Objects.nonNull(idEntity)) {
-            idEntity.setCreationTime(new Date());
+        if (Objects.nonNull(recentContact)) {
+            recentContact.setCreationTime(new Date());
         } else {
-            idEntity = new IntegerIdEntity();
-            idEntity.setId(contactId);
-            idEntities.add(idEntity);
+            recentContact = new RecentContact();
+            recentContact.setId(contactId);
+            recentContact.setType(type.getValue());
+            recentContacts.add(recentContact);
         }
 
-        for (int i = 0; i < idEntities.size() - chatConfig.getContact().getRecentCount(); i++) {
+        for (int i = 0; i < recentContacts.size() - chatConfig.getContact().getRecentCount(); i++) {
 
-            Optional<IntegerIdEntity> optional = idEntities
+            Optional<RecentContact> optional = recentContacts
                     .stream()
                     .min(Comparator.comparing(IntegerIdEntity::getCreationTime));
 
@@ -771,10 +772,10 @@ public class ChatService implements InitializingBean {
                 break;
             }
 
-            idEntities.removeIf(entity -> entity.getId().equals(optional.get().getId()));
+            recentContacts.removeIf(entity -> entity.getId().equals(optional.get().getId()));
         }
         FileObject fileObject = getRecentContactFileObject(userId);
-        minioTemplate.writeJsonValue(fileObject, idEntities);
+        minioTemplate.writeJsonValue(fileObject, recentContacts);
     }
 
     /**
@@ -794,6 +795,7 @@ public class ChatService implements InitializingBean {
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),
+                            IdentityNamingStrategy.TYPE_KEY, ContactType.Person.getValue(),
                             GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );

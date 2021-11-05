@@ -27,12 +27,12 @@ public interface RoomDao extends BaseMapper<Room> {
 
     @Select("<script>" +
             "SELECT " +
-            "   id, " +
-            "   name, " +
-            "   creation_time, " +
-            "   last_message_time, " +
-            "   type, " +
-            "   remark " +
+            "   tb_room.id, " +
+            "   tb_room.name, " +
+            "   tb_room.creation_time, " +
+            "   tb_room.last_message_time, " +
+            "   tb_room.type, " +
+            "   tb_room.remark " +
             "FROM " +
             "   tb_room " +
             "INNER JOIN " +

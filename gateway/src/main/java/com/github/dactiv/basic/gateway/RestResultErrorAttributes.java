@@ -24,7 +24,7 @@ import java.util.Map;
  * @author maurice.chen
  */
 @Component
-public class RestResultAttributes extends DefaultErrorAttributes {
+public class RestResultErrorAttributes extends DefaultErrorAttributes {
 
     @Override
     @SuppressWarnings("unchecked")

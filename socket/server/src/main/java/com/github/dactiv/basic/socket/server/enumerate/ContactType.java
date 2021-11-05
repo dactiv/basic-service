@@ -6,22 +6,23 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 消息类型
+ * 联系人类型
  *
  * @author maurice.chen
  */
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum RoomType implements NameValueEnum<Integer> {
+public enum ContactType implements NameValueEnum<Integer> {
 
     /**
-     * 群聊
+     * 参与者
      */
-    Group(10, "群聊"),
+    Person(10, "人员"),
+
     /**
-     * 点对点聊
+     * 拥有者
      */
-    P2P(20, "点对点聊");
+    Group(20, "群组");
 
     /**
      * 值
@@ -32,5 +33,4 @@ public enum RoomType implements NameValueEnum<Integer> {
      * 名称
      */
     private String name;
-
 }

@@ -140,9 +140,20 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     }
 
     /**
+     * 加入房间
+     *
+     * @param userDetails socket 用户明细
+     * @param room 房间名称
+     */
+    public void joinRoom(SocketUserDetails userDetails, String room) {
+        joinRoom(userDetails, Collections.singletonList(room));
+    }
+
+    /**
      * 加入聊天房间频道
      *
      * @param userDetails socket 用户明细
+     * @param rooms 房间名称集合
      */
     public void joinRoom(SocketUserDetails userDetails, List<String> rooms) {
 
@@ -445,7 +456,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         List<Room> rooms = roomService.findRoomList(Casts.cast(user.getId(), Integer.class));
         // 如果存在房间，讲客户端假如房间，做广播使用。
         if (CollectionUtils.isEmpty(rooms)) {
-            rooms.forEach(r -> client.joinRoom(applicationConfig.getRoomPrefix() + r.getId()));
+            rooms.forEach(r -> client.joinRoom(r.getId().toString()));
         }
 
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "

@@ -1,11 +1,8 @@
 package com.github.dactiv.basic.socket.server.controller;
 
 import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
+import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
-import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessagePage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.ScrollPage;
@@ -101,7 +98,7 @@ public class ChatController {
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "获取常用联系人", sources = "SocketUser")
-    public List<Integer> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
+    public List<RecentContact> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         return chatService.getRecentContacts(userId);

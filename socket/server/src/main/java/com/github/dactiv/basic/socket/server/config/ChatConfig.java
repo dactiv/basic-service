@@ -68,9 +68,11 @@ public class ChatConfig {
         private Integer historyMessageFileCount = 100;
 
         /**
-         * 文件 token
+         * 用户对用户的文件 token
          */
-        private String fileToken = "global_message_{0}_and_{1}.json";
+        private String personFileToken = "global_message_{0}_and_{1}.json";
+
+        private String groupFileToken = "global_group_message_{0}.json";
 
         /**
          * 缓存配置

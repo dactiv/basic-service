@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server.receiver.chat;
 
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.socket.server.enumerate.ContactType;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
 import com.rabbitmq.client.Channel;
@@ -37,12 +38,12 @@ public class SaveMessageReceiver {
                     key = DEFAULT_QUEUE_NAME
             )
     )
-    public void onMessage(@Payload ContactMessage contactMessage,
+    public void onMessage(@Payload ContactMessage<?> contactMessage,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
         // 添加双方常用联系人信息
-        chatService.addRecentContact(contactMessage.getId(), contactMessage.getTargetId());
-        chatService.addRecentContact(contactMessage.getTargetId(), contactMessage.getId());
+        chatService.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactType.Person);
+        chatService.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactType.Person);
 
         channel.basicAck(tag, false);
 

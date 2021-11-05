@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.server.service.chat.data;
 
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
@@ -69,13 +70,13 @@ public class BasicMessage implements Serializable {
         /**
          * 密钥值
          */
-        @Exclude("web")
+        @Exclude(Constants.WEB_FILTER_RESULT_ID)
         private String cryptoKey;
 
         /**
          * 密钥类型
          */
-        @Exclude("web")
+        @Exclude(Constants.WEB_FILTER_RESULT_ID)
         private String cryptoType;
 
         /**

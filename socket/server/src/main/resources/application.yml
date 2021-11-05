@@ -18,6 +18,12 @@ dactiv:
       mvc:
         base-packages: com.github.dactiv.basic.socket.server
   authentication:
+    plugin:
+      base-packages: com.github.dactiv.basic.socket.server.controller
+      parent:
+        socket:
+          name: 'socket 服务管理'
+          icon: 'icon-plug-socket'
     permit-uri-ant-matchers:
       - "/health/**"
       - "/joinRoom/**"

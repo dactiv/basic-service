@@ -26,6 +26,13 @@ public class ContactMessage<T extends BasicMessage.Message> extends BasicMessage
     private Integer id;
 
     /**
+     * 联系人类型
+     *
+     * @see com.github.dactiv.basic.socket.server.enumerate.ContactType
+     */
+    private Integer type;
+
+    /**
      * 目标用户 id
      */
     @JsonIgnore

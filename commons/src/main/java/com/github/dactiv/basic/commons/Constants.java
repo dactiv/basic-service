@@ -9,6 +9,8 @@ import com.github.dactiv.framework.commons.Casts;
  */
 public interface Constants {
 
+    String WEB_FILTER_RESULT_ID = "web";
+
     /**
      * 替换 HTML 标签正则表达式
      */

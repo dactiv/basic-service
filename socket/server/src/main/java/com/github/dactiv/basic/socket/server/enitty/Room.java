@@ -4,10 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.spring.security.authentication.service.DefaultUserDetailsService;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
+
+import java.util.Date;
 
 
 /**
@@ -20,7 +24,7 @@ import org.apache.ibatis.type.Alias;
 @NoArgsConstructor
 @Alias("room")
 @TableName("tb_room")
-public class Room {
+public class Room implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = -8032662822919772839L;
 
@@ -31,9 +35,19 @@ public class Room {
     private Integer id;
 
     /**
+     * 创建时间
+     */
+    private Date creationTime = new Date();
+
+    /**
      * 名称
      */
     private String name;
+
+    /**
+     * 类型
+     */
+    private String type = DefaultUserDetailsService.DEFAULT_TYPES;
 
     /**
      * 备注
