@@ -4,6 +4,7 @@ import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
@@ -13,7 +14,6 @@ import com.github.dactiv.framework.spring.security.authentication.rememberme.Coo
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;

@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.message.entity.SmsMessage;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
@@ -7,11 +8,14 @@ import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -32,7 +36,7 @@ import java.util.stream.Collectors;
         parent = "message",
         icon = "icon-sms",
         type = ResourceType.Menu,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class SmsMessageController {
 
@@ -54,8 +58,8 @@ public class SmsMessageController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取短信消息分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[sms:page]')")
+    @Plugin(name = "获取短信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<SmsMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSmsMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -69,7 +73,7 @@ public class SmsMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[sms:get]')")
-    @Plugin(name = "获取短信消息实体信息", sources = "Console")
+    @Plugin(name = "获取短信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public SmsMessage get(@RequestParam Integer id) {
         return messageService.getSmsMessage(id);
     }
@@ -81,8 +85,10 @@ public class SmsMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[sms:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除短信消息实体", sources = "Console", audit = true)
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
+    @Plugin(name = "删除短信消息实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Idempotent(key = "idempotent:message:sms:delete:[#securityContext.authentication.details.id]")
+    public RestResult<?> delete(@RequestParam List<Integer> ids,
+                                @CurrentSecurityContext SecurityContext securityContext) {
         messageService.deleteSmsMessage(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
@@ -93,7 +99,7 @@ public class SmsMessageController {
      * @return 余额实体集合
      */
     @GetMapping("balance")
-    @Plugin(name = "获取短信余额", sources = "Console")
+    @Plugin(name = "获取短信余额", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[sms:balance]')")
     public List<SmsBalance> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());

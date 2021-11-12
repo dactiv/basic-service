@@ -4,7 +4,6 @@ package com.github.dactiv.basic.socket.server.config;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.minio.data.Bucket;
-import io.minio.GetObjectArgs;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

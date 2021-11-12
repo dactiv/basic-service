@@ -4,7 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -12,13 +14,12 @@ import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
-import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -41,7 +42,7 @@ import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 @Alias("group")
 @NoArgsConstructor
 @EqualsAndHashCode
-@TableName("tb_group")
+@TableName(value = "tb_group", autoResultMap = true)
 @IncludeView(value = SOCKET_RESULT_ID, properties = {"id", "name", "parentId"})
 public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
 
@@ -50,7 +51,12 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
     /**
      * 创建 socket 事件名称
      */
-    public static final String SAVE_SOCKET_EVENT_NAME = "save_group";
+    public static final String CREATE_SOCKET_EVENT_NAME = "create_group";
+
+    /**
+     * 更新 socket 事件名称
+     */
+    public static final String UPDATE_SOCKET_EVENT_NAME = "update_group";
     /**
      * 删除 socket 事件名称
      */
@@ -83,11 +89,14 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
     private String authority;
 
     /**
-     * 来源:Front.前端、Console.管理后台、UserCenter.用户中心、System.系统、Mobile.移动端、All.全部
+     * 来源
+     *
+     * @see Plugin#sources()
      */
     @NotEmpty
     @Length(max = 128)
-    private String source;
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private List<String> sources = new LinkedList<>();
 
     /**
      * 父类 id
@@ -114,6 +123,12 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
     @NotNull
     @Range(min = 0, max = 1)
     private Integer status;
+
+    /**
+     * 资源 id 集合
+     */
+    @TableField(typeHandler = JacksonTypeHandler.class)
+    private Map<String, List<Integer>> resourceMap = new LinkedHashMap<>();
 
     /**
      * 备注
@@ -171,10 +186,10 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * @return String
      */
     public List<String> getSourceName() {
-        return Arrays.stream(StringUtils.split(source, SpringMvcUtils.COMMA_STRING))
-                .map(StringUtils::trim)
-                .map(s -> NameEnumUtils.getName(s, ResourceSource.class))
-                .collect(Collectors.toList());
+        if (CollectionUtils.isEmpty(this.sources)){
+            return null;
+        }
+        return this.sources.stream().map(s -> NameEnumUtils.getName(s, ResourceSource.class)).collect(Collectors.toList());
     }
 
 }

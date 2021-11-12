@@ -3,6 +3,7 @@ package com.github.dactiv.basic.authentication.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
@@ -33,7 +34,7 @@ import java.util.stream.Collectors;
         parent = "system",
         icon = "icon-group",
         type = ResourceType.Menu,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class GroupController {
 
@@ -47,8 +48,8 @@ public class GroupController {
      * 获取所有用户组
      */
     @PostMapping("find")
-    @Plugin(name = "查询全部", sources = "Console")
     @PreAuthorize("hasAuthority('perms[group:find]')")
+    @Plugin(name = "查询全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public List<Group> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
         List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -61,23 +62,6 @@ public class GroupController {
     }
 
     /**
-     * 获取用户的用户组集合
-     *
-     * @param userId 当前用户
-     *
-     * @return 用户组实体集合
-     */
-    @PreAuthorize("isAuthenticated()")
-    @GetMapping("getConsoleUserGroups")
-    @Plugin(name = "获取用户组信息", sources = "Console")
-    public List<Integer> getConsoleUserGroups(@RequestParam Integer userId) {
-
-        List<Group> groupList = authorizationService.getConsoleUserGroups(userId);
-
-        return groupList.stream().map(Group::getId).collect(Collectors.toList());
-    }
-
-    /**
      * 获取用户组
      *
      * @param id 主键值
@@ -85,7 +69,7 @@ public class GroupController {
      * @return 用户组实体
      */
     @GetMapping("get")
-    @Plugin(name = "获取信息", sources = "Console")
+    @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[group:get]')")
     public Group get(@RequestParam Integer id) {
         return authorizationService.getGroup(id);
@@ -96,18 +80,16 @@ public class GroupController {
      *
      * @param entity          用户组实体
      * @param securityContext 安全上下文
-     * @param resourceIds     资源 id 集合
      *
      * @return 消息结果集
      */
     @PostMapping("save")
-    @Plugin(name = "保存", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
+    @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
-    public RestResult<Integer> save(@Valid Group entity,
-                                    @CurrentSecurityContext SecurityContext securityContext,
-                                    @RequestParam(required = false) List<Integer> resourceIds) {
-        authorizationService.saveGroup(entity, resourceIds);
+    public RestResult<Integer> save(@Valid @RequestBody Group entity,
+                                    @CurrentSecurityContext SecurityContext securityContext) {
+        authorizationService.saveGroup(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
@@ -119,9 +101,11 @@ public class GroupController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @Plugin(name = "删除", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[group:delete]') and isFullyAuthenticated()")
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
+    @Plugin(name = "删除", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Idempotent(key = "idempotent:authentication:group:delete:[#securityContext.authentication.details.id]")
+    public RestResult<?> delete(@RequestParam List<Integer> ids,
+                                @CurrentSecurityContext SecurityContext securityContext) {
 
         authorizationService.deleteGroup(ids);
 
@@ -137,7 +121,7 @@ public class GroupController {
      */
     @GetMapping("isAuthorityUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断权限值是否唯一", sources = "Console")
+    @Plugin(name = "判断权限值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
 
         return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
@@ -152,7 +136,7 @@ public class GroupController {
      */
     @GetMapping("isNameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断组名称是否唯一", sources = "Console")
+    @Plugin(name = "判断组名称是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
         return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getName, name)).isEmpty();
     }

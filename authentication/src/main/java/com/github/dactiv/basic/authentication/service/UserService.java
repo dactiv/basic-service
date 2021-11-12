@@ -8,10 +8,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
-import com.github.dactiv.basic.authentication.dao.MemberUserInitializationDao;
-import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.entity.MemberUser;
-import com.github.dactiv.basic.authentication.entity.MemberUserInitialization;
+import com.github.dactiv.basic.authentication.entity.*;
+import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
+import com.github.dactiv.basic.authentication.service.security.IdRoleAuthority;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.CacheProperties;
@@ -24,9 +24,10 @@ import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
+import com.github.dactiv.framework.spring.security.entity.ResourceAuthority;
+import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
+import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
-import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -43,13 +44,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
-import java.util.Arrays;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
-import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.Console;
-import static com.github.dactiv.framework.spring.security.enumerate.ResourceSource.UserCenter;
+import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 
 /**
  * 认证管理服务
@@ -71,13 +71,13 @@ public class UserService implements InitializingBean {
     private MemberUserDao memberUserDao;
 
     @Autowired
-    private MemberUserInitializationDao memberUserInitializationDao;
-
-    @Autowired
     private SpringSessionBackedSessionRegistry<? extends Session> sessionBackedSessionRegistry;
 
     @Autowired
     private AuthorizationService authorizationService;
+
+    @Autowired
+    private PluginResourceService pluginResourceService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -94,76 +94,87 @@ public class UserService implements InitializingBean {
         return authorizationService;
     }
 
+    /**
+     * 设置系统用户权限信息
+     *
+     * @param user 系统用户
+     * @param userDetails 当前的安全用户明细
+     */
+    public void setSystemUserAuthorities(SystemUser user, SecurityUserDetails userDetails) {
+        List<RoleAuthority> roleAuthorities = user
+                .getGroups()
+                .stream()
+                .map(IdRoleAuthority::toRoleAuthority)
+                .collect(Collectors.toList());
+        userDetails.setRoleAuthorities(roleAuthorities);
+
+        // 构造用户的组资源
+        List<Resource> userResource = user
+                .getGroups()
+                .stream()
+                .map(IdRoleAuthority::getId)
+                .map(id -> authorizationService.getGroup(id))
+                .flatMap(g -> getResourcesStream(g.getResourceMap()))
+                .collect(Collectors.toList());
+
+        // 构造用户的独立资源
+        userResource.addAll(getResourcesStream(user.getResourceMap()).collect(Collectors.toList()));
+        // 构造对应 spring security 的资源内容
+        List<ResourceAuthority> resourceAuthorities = userResource
+                .stream()
+                .flatMap(this::createResourceAuthoritiesStream)
+                .collect(Collectors.toList());
+
+        userDetails.setResourceAuthorities(resourceAuthorities);
+    }
+
+    private Stream<Resource> getResourcesStream(Map<String, List<Integer>> resourceMap) {
+        List<Resource> result = new LinkedList<>();
+        for (Map.Entry<String, List<Integer>> entry : resourceMap.entrySet()) {
+            List<Resource> resources = pluginResourceService.getResources(entry.getKey());
+
+            List<Resource> findResources = resources
+                    .stream()
+                    .filter(r -> entry.getValue().contains(r.getId()))
+                    .filter(r -> r.getSources().stream().noneMatch(ResourceSource.DEFAULT_IGNORE_SOURCE_VALUES::contains))
+                    .collect(Collectors.toList());
+
+            result.addAll(findResources);
+        }
+
+        return result.stream();
+    }
+
+    private Stream<ResourceAuthority> createResourceAuthoritiesStream(Resource resource) {
+        String[] permissions = StringUtils.substringsBetween(
+                resource.getAuthority(),
+                ResourceAuthority.DEFAULT_RESOURCE_PREFIX,
+                ResourceAuthority.DEFAULT_RESOURCE_SUFFIX
+        );
+
+        return Arrays
+                .stream(permissions)
+                .map(ResourceAuthority::getPermissionValue)
+                .map(p -> new ResourceAuthority(p, resource.getName(), resource.getValue()));
+    }
+
     // -------------------------------- 系统用户管理 -------------------------------- //
 
     /**
      * 保存系统用户
      *
-     * @param consoleUser 系统用户实体
-     */
-    public void saveConsoleUser(ConsoleUser consoleUser) {
-        if (Objects.isNull(consoleUser.getId())) {
-            insertConsoleUser(consoleUser);
-        } else {
-            updateConsoleUser(consoleUser);
-        }
-    }
-
-    /**
-     * 保存系统用户
-     *
-     * @param entity   用户实体
-     * @param groupIds 对应组的主键值
-     */
-    public void saveConsoleUser(ConsoleUser entity, List<Integer> groupIds) {
-
-        saveConsoleUser(entity);
-
-        if (groupIds != null) {
-
-            boolean isAllConsoleGroup = groupIds
-                    .stream()
-                    .map(authorizationService::getGroup)
-                    .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), SpringMvcUtils.COMMA_STRING)))
-                    .anyMatch(s -> !StringUtils.equals(s, Console.toString()));
-
-            if (isAllConsoleGroup) {
-                throw new ServiceException("当前存在不是[" + Console.getName() + "]的信息，无法保存用户");
-            }
-
-            consoleUserDao.deleteGroupAssociation(entity.getId());
-
-            if (!groupIds.isEmpty()) {
-                consoleUserDao.insertGroupAssociation(entity.getId(), groupIds);
-            }
-        }
-
-        expireUserSession(entity.getUsername());
-    }
-
-    /**
-     * 保存系统用户
-     *
      * @param entity      用户实体
-     * @param groupIds    对应组的主键值
-     * @param resourceIds 对应资源主键值
      */
     @SocketMessage(SOCKET_RESULT_ID)
-    public void saveConsoleUser(ConsoleUser entity, List<Integer> groupIds, List<Integer> resourceIds) {
+    public void saveConsoleUser(ConsoleUser entity) {
 
-        saveConsoleUser(entity, groupIds);
-
-        if (resourceIds != null) {
-            consoleUserDao.deleteResourceAssociation(entity.getId());
-
-            if (!resourceIds.isEmpty()) {
-                consoleUserDao.insertResourceAssociation(entity.getId(), resourceIds);
-            }
+        if(Objects.isNull(entity.getId())) {
+            insertConsoleUser(entity);
+        } else {
+            updateConsoleUser(entity);
         }
 
         expireUserSession(entity.getUsername());
-
-        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.SAVE_SOCKET_EVENT_NAME, entity);
     }
 
     /**
@@ -171,6 +182,7 @@ public class UserService implements InitializingBean {
      *
      * @param consoleUser 系统用户实体
      */
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     public void insertConsoleUser(ConsoleUser consoleUser) {
 
         if (StringUtils.isBlank(consoleUser.getPassword())) {
@@ -187,13 +199,17 @@ public class UserService implements InitializingBean {
             throw new ServiceException("登陆账户【" + consoleUser.getUsername() + "】已存在");
         }
 
-        PasswordEncoder passwordEncoder = authorizationService.getUserDetailsService(Console).getPasswordEncoder();
+        PasswordEncoder passwordEncoder = authorizationService
+                .getUserDetailsService(ResourceSource.Console)
+                .getPasswordEncoder();
 
         String encodePassword = passwordEncoder.encode(consoleUser.getPassword());
 
         consoleUser.setPassword(encodePassword);
 
         consoleUserDao.insert(consoleUser);
+
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.CREATE_SOCKET_EVENT_NAME, consoleUser);
     }
 
     /**
@@ -201,16 +217,18 @@ public class UserService implements InitializingBean {
      *
      * @param consoleUser 系统用户实体
      */
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     public void updateConsoleUser(ConsoleUser consoleUser) {
         consoleUserDao.updateById(consoleUser);
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
-                Console.toString()
+                ResourceSource.Console.toString()
         );
 
-        deleteRedisCache(Console, token);
+        deleteRedisCache(ResourceSource.Console, token);
 
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.UPDATE_SOCKET_EVENT_NAME, consoleUser);
     }
 
     private void deleteRedisCache(ResourceSource source, PrincipalAuthenticationToken token) {
@@ -259,7 +277,7 @@ public class UserService implements InitializingBean {
      */
     public void updateConsoleUserPassword(ConsoleUser consoleUser, String oldPassword, String newPassword) {
 
-        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(Console);
+        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(ResourceSource.Console);
 
         PasswordEncoder passwordEncoder = userDetailsService.getPasswordEncoder();
 
@@ -276,7 +294,7 @@ public class UserService implements InitializingBean {
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
-                Console.toString()
+                ResourceSource.Console.toString()
         );
 
         CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
@@ -303,7 +321,7 @@ public class UserService implements InitializingBean {
      *
      * @param ids 主键 id 集合
      */
-    @SocketMessage
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     public void deleteConsoleUsers(List<Integer> ids) {
         ids.forEach(this::deleteConsoleUser);
     }
@@ -313,10 +331,11 @@ public class UserService implements InitializingBean {
      *
      * @param id 主键 id
      */
-    @SocketMessage
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     public void deleteConsoleUser(Integer id) {
         ConsoleUser consoleUser = getConsoleUser(id);
         deleteConsoleUser(consoleUser);
+
     }
 
     /**
@@ -324,7 +343,7 @@ public class UserService implements InitializingBean {
      *
      * @param consoleUser 用户实体
      */
-    @SocketMessage
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     public void deleteConsoleUser(ConsoleUser consoleUser) {
         if (consoleUser == null) {
             return;
@@ -334,20 +353,15 @@ public class UserService implements InitializingBean {
             throw new ServiceException("不能删除超级管理员用户");
         }
 
-        consoleUserDao.deleteGroupAssociation(consoleUser.getId());
-        consoleUserDao.deleteResourceAssociation(consoleUser.getId());
         consoleUserDao.deleteById(consoleUser.getId());
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 new UsernamePasswordAuthenticationToken(consoleUser.getUsername(), null),
-                Console.toString()
+                ResourceSource.Console.toString()
         );
 
-
-        deleteRedisCache(Console, token);
-
+        deleteRedisCache(ResourceSource.Console, token);
         expireUserSession(token.getType() + ":" + token.getPrincipal().toString());
-
         SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.DELETE_SOCKET_EVENT_NAME, consoleUser.getId());
     }
 
@@ -414,17 +428,6 @@ public class UserService implements InitializingBean {
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
 
-    /**
-     * 通过用户组查询系统用户集合
-     *
-     * @param groupId 组 id
-     *
-     * @return 系统用户集合
-     */
-    public List<ConsoleUser> findConsoleUserByGroupId(String groupId) {
-        return consoleUserDao.findByGroupId(groupId);
-    }
-
     // -------------------------------- 会员用户管理 -------------------------------- //
 
     /**
@@ -437,34 +440,6 @@ public class UserService implements InitializingBean {
             insertMemberUser(memberUser);
         } else {
             updateMemberUser(memberUser);
-        }
-    }
-
-    /**
-     * 保存会员用户
-     *
-     * @param entity   用户实体
-     * @param groupIds 对应组的主键值
-     */
-    public void saveMemberUser(MemberUser entity, List<Integer> groupIds) {
-
-        saveMemberUser(entity);
-
-        boolean isAllMemberGroup = groupIds
-                .stream()
-                .map(authorizationService::getGroup)
-                .flatMap(g -> Arrays.stream(StringUtils.split(g.getSource(), SpringMvcUtils.COMMA_STRING)))
-                .anyMatch(s -> !StringUtils.equals(s, UserCenter.toString()));
-
-        if (isAllMemberGroup) {
-            throw new ServiceException("当前存在不是[" + UserCenter.getName() + "]的信息，无法保存用户");
-        }
-
-        memberUserDao.deleteGroupAssociation(entity.getId());
-
-        if (!groupIds.isEmpty()) {
-
-            memberUserDao.insertGroupAssociation(entity.getId(), groupIds);
         }
     }
 
@@ -492,19 +467,14 @@ public class UserService implements InitializingBean {
             throw new ServiceException("邮箱号码【" + memberUser.getEmail() + "】已存在");
         }
 
-        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(UserCenter);
+        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(ResourceSource.UserCenter);
 
         String encodePassword = userDetailsService.getPasswordEncoder().encode(memberUser.getPassword());
 
         memberUser.setPassword(encodePassword);
-
+        memberUser.setInitialization(new MemberUserInitialization());
         memberUserDao.insert(memberUser);
 
-        MemberUserInitialization memberUserInitialization = new MemberUserInitialization();
-
-        memberUserInitialization.setUserId(memberUser.getId());
-
-        insertMemberUserInitialization(memberUserInitialization);
     }
 
     /**
@@ -531,9 +501,9 @@ public class UserService implements InitializingBean {
 
         MemberUser memberUser = getMemberUser(id);
 
-        MemberUserInitialization initialization = getMemberUserInitialization(id);
+        MemberUserInitialization initialization = memberUser.getInitialization();
 
-        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(UserCenter);
+        UserDetailsService userDetailsService = authorizationService.getUserDetailsService(ResourceSource.UserCenter);
 
         if (YesOrNo.No.getValue().equals(initialization.getModifyPassword())) {
 
@@ -543,7 +513,6 @@ public class UserService implements InitializingBean {
 
         } else {
             initialization.setModifyPassword(YesOrNo.Yes.getValue());
-            updateMemberUserInitialization(initialization);
         }
 
         memberUser.setPassword(userDetailsService.getPasswordEncoder().encode(newPassword));
@@ -553,10 +522,9 @@ public class UserService implements InitializingBean {
                 Wrappers
                         .<MemberUser>lambdaUpdate()
                         .set(MemberUser::getPassword, memberUser.getPassword())
+                        .set(MemberUser::getInitialization, memberUser.getInitialization())
                         .eq(MemberUser::getId, memberUser.getId())
         );
-
-        deleteMemberUserAuthenticationCache(memberUser);
 
         expireUserSession(memberUser.getUsername());
     }
@@ -593,7 +561,7 @@ public class UserService implements InitializingBean {
 
         MemberUser memberUser = getMemberUser(id);
 
-        MemberUserInitialization initialization = getMemberUserInitialization(id);
+        MemberUserInitialization initialization = memberUser.getInitialization();
 
         if (YesOrNo.Yes.getValue().equals(initialization.getModifyUsername())) {
             throw new ServiceException("不能多次修改登录账户");
@@ -619,11 +587,7 @@ public class UserService implements InitializingBean {
 
         initialization.setModifyUsername(YesOrNo.Yes.getValue());
 
-        updateMemberUserInitialization(initialization);
-
         updateMemberUser(memberUser);
-
-        deleteMemberUserAuthenticationCache(memberUser);
     }
 
     /**
@@ -637,7 +601,7 @@ public class UserService implements InitializingBean {
 
         MemberUser memberUser = memberUserDao.selectById(id);
 
-        memberUser.setInitialization(getMemberUserInitialization(id));
+        memberUser.setInitialization(new MemberUserInitialization());
 
         return memberUser;
 
@@ -703,68 +667,6 @@ public class UserService implements InitializingBean {
     }
 
     // -------------------------------- 会员用户初始化信息管理 -------------------------------- //
-
-    /**
-     * 新增用户初始化实体
-     *
-     * @param memberUserInitialization 用户初始化实体
-     */
-    public void insertMemberUserInitialization(MemberUserInitialization memberUserInitialization) {
-        memberUserInitializationDao.insert(memberUserInitialization);
-    }
-
-    /**
-     * 更新用户初始化实体
-     *
-     * @param memberUserInitialization 用户初始化实体
-     */
-    public void updateMemberUserInitialization(MemberUserInitialization memberUserInitialization) {
-
-        memberUserInitializationDao.updateById(memberUserInitialization);
-        getMemberUserInitializationBucket(memberUserInitialization.getUserId()).deleteAsync();
-
-    }
-
-    /**
-     * 获取用户初始化实体
-     *
-     * @param userId 用户 id
-     *
-     * @return 用户初始化实体
-     */
-    public MemberUserInitialization getMemberUserInitialization(Integer userId) {
-
-        RBucket<MemberUserInitialization> bucket = getMemberUserInitializationBucket(userId);
-
-        MemberUserInitialization value = bucket.get();
-
-        if (Objects.nonNull(value)) {
-            return value;
-        }
-
-        MemberUserInitialization initialization = memberUserInitializationDao.selectOne(
-                Wrappers
-                        .<MemberUserInitialization>lambdaQuery()
-                        .eq(MemberUserInitialization::getUserId, userId)
-        );
-
-        if (initialization != null) {
-            bucket.setAsync(initialization);
-        }
-
-        return initialization;
-    }
-
-    /**
-     * 获取会员用户初始化桶
-     *
-     * @param userId 用户 id
-     *
-     * @return 会员用户初始化桶
-     */
-    public RBucket<MemberUserInitialization> getMemberUserInitializationBucket(Integer userId) {
-        return redissonClient.getBucket(applicationConfig.getMemberUserInitializationCache().getName(userId));
-    }
 
     @Override
     public void afterPropertiesSet() {

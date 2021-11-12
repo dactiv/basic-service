@@ -1,9 +1,7 @@
 package com.github.dactiv.basic.socket.server.service.chat.data;
 
-import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
-import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

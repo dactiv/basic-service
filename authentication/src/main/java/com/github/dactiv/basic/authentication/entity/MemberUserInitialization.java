@@ -14,11 +14,11 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotNull;
+import java.io.Serializable;
 import java.util.Date;
 
 /**
- * <p>用户初始化实体类</p>
- * <p>Table: tb_member_user_initialization - 用户初始化表</p>
+ * 用户初始化实体类
  *
  * @author maurice
  * @since 2020-04-13 10:14:45
@@ -26,9 +26,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-@Alias("memberUserInitialization")
-@TableName("tb_member_user_initialization")
-public class MemberUserInitialization implements NumberIdEntity<Integer> {
+public class MemberUserInitialization implements Serializable {
 
     private static final long serialVersionUID = 1714564243745969863L;
     /**

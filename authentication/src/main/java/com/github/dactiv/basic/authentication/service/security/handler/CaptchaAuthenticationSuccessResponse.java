@@ -6,12 +6,12 @@ import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoRe
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessResponse;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import nl.basjes.parse.useragent.UserAgent;

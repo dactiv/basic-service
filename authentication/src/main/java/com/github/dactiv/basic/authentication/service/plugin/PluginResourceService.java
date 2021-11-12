@@ -1,32 +1,24 @@
 package com.github.dactiv.basic.authentication.service.plugin;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
-import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
-import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
-import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceSubscribeEvent;
 import com.github.dactiv.framework.nacos.event.NacosSpringEventManager;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
-import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
@@ -35,7 +27,6 @@ import org.springframework.web.client.RestTemplate;
 
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 /**
  * 插件資源管理
@@ -61,10 +52,12 @@ public class PluginResourceService {
     @Autowired
     private AuthorizationService authorizationService;
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    @Autowired(required = false)
+    private List<PluginResourceInterceptor> pluginResourceInterceptor;
 
     private final Map<String, List<PluginInstance>> instanceCache = new LinkedHashMap<>();
+
+    private final List<Resource> resources = new LinkedList<>();
 
     /**
      * 获取实例 info
@@ -177,67 +170,26 @@ public class PluginResourceService {
             log.debug("开始绑定[" + applicationName + "]资源信息，当前版本为:" + instance.getVersion());
         }
 
-        // 获取一次旧的资源，在递归完最新的资源后，把所有未匹配旧的资源全部删除掉
-        List<Resource> oldResourceList = authorizationService.findResources(
-                Wrappers
-                        .<Resource>lambdaQuery()
-                        .eq(Resource::getApplicationName, applicationName)
-                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
-        );
-
         List<PluginInfo> pluginList = createPluginInfoListFromInfo(instance.getInfo());
         // 启用資源得到新的資源集合
         List<Resource> newResourceList = pluginList
                 .stream()
-                .flatMap(p -> createResourceStream(p, instance))
-                .flatMap(this::enabledApplicationResource)
+                .map(p -> createResource(p, instance,null))
                 .collect(Collectors.toList());
 
-        // 通过新的資源集合将 id 去重，得到新的資源 id
-        List<Integer> newResourceIds = newResourceList
-                .stream()
-                .map(Resource::getId)
-                .distinct()
-                .collect(Collectors.toList());
-
-        // 将新資源和旧資源进行对比，把旧的資源删除。
-        List<Integer> oldResourceIds = oldResourceList
-                .stream()
-                .map(Resource::getId)
-                .filter(id -> !newResourceIds.contains(id))
-                .collect(Collectors.toList());
-
-        oldResourceIds.forEach(id -> authorizationService.deleteResource(id));
+        resources.removeIf(r -> r.getApplicationName().equals(instance.getServiceName()));
+        resources.addAll(newResourceList);
 
         if (log.isDebugEnabled()) {
             log.debug("绑定 [" + applicationName + "] 资源信息完成");
         }
 
-        authorizationService.deleteAuthorizationCache();
-
-        Group group = authorizationService.getGroup(applicationConfig.getAdminGroupId());
-
-        // 如果配置了管理员组 线删除同步一次管理员資源
-        if (Objects.isNull(group)) {
-            return;
+        if (CollectionUtils.isNotEmpty(pluginResourceInterceptor)) {
+            pluginResourceInterceptor
+                    .stream()
+                    .filter(i -> i.isSupport(instance))
+                    .forEach(i -> i.postSyncPlugin(instance, newResourceList));
         }
-
-        List<Resource> groupResources = authorizationService.getGroupResources(group.getId(), applicationName);
-        // 获取当前组对该应用持有的的資源 id
-        List<Integer> currentGroupResourceIds = groupResources
-                .stream()
-                .map(Resource::getId)
-                .distinct()
-                .collect(Collectors.toList());
-        // 根据组来源去遍历所有新資源里匹配的记录，并去除当前组里存在的資源，得到新的组資源 id 集合
-        List<Resource> newGroupResource = newResourceList
-                .stream()
-                .filter(r -> authorizationService.isAdminGroupSource(group, r.getSource()))
-                .filter(r -> !currentGroupResourceIds.contains(r.getId()))
-                .collect(Collectors.toList());
-
-        // 增加新資源
-        authorizationService.addGroupResource(group, newGroupResource);
     }
 
     /**
@@ -292,99 +244,21 @@ public class PluginResourceService {
     }
 
     /**
-     * 启用资源
-     *
-     * @param resource 资源信息
-     *
-     * @return 流集合
-     */
-    private Stream<Resource> enabledApplicationResource(Resource resource) {
-
-        // 获取目标资源
-        Resource target = getTargetResource(resource);
-        // 保存
-        authorizationService.saveResource(target);
-
-        List<Resource> result = resource.getChildren()
-                .stream()
-                .map(c -> Casts.cast(c, Resource.class))
-                .peek(c -> c.setParentId(target.getId()))
-                .flatMap(this::enabledApplicationResource)
-                .collect(Collectors.toList());
-
-        result.add(target);
-
-        return result.stream();
-    }
-
-    /**
-     * 获取目标资源，如果 resource 在数据库理存在数据，将获取数据库的记录，并用 resource 数据替换一次
-     *
-     * @param resource 当前资源
-     *
-     * @return 目标资源
-     */
-    private Resource getTargetResource(Resource resource) {
-        // 根据唯一条件查询目标资源
-        Resource target = authorizationService.fineOneResource(resource.getUniqueWrapper());
-
-        if (Objects.isNull(target)) {
-            target = resource;
-        } else {
-
-            // 如果数据库存在记录，将resource数据替换一次数据获取出来的值
-            BeanUtils.copyProperties(
-                    resource,
-                    target,
-                    IdEntity.ID_FIELD_NAME,
-                    NumberIdEntity.CREATION_TIME_FIELD_NAME,
-                    PluginInfo.DEFAULT_CHILDREN_NAME,
-                    PluginInfo.DEFAULT_SOURCE_NAME
-            );
-        }
-
-        return target;
-    }
-
-    /**
-     * 创建资源
-     *
-     * @param entry    插件信息
-     * @param instance 插件实例
-     *
-     * @return 流集合
-     */
-    private Stream<Resource> createResourceStream(Tree<String, PluginInfo> entry,
-                                                  PluginInstance instance) {
-
-        PluginInfo plugin = Casts.cast(entry);
-
-        return Arrays.stream(StringUtils.split(plugin.getSource(), SpringMvcUtils.COMMA_STRING))
-                .map(source -> createResource(source, plugin, instance));
-    }
-
-    /**
      * 创建資源
      *
-     * @param source   資源来源
      * @param plugin   插件信息
      * @param instance 服务信息
+     * @param parent   夫类资源
      *
      * @return 新的資源
      */
-    private Resource createResource(String source, PluginInfo plugin, PluginInstance instance) {
+    private Resource createResource(PluginInfo plugin, PluginInstance instance, Resource parent) {
         Resource target = Casts.of(plugin, Resource.class, PluginInfo.DEFAULT_CHILDREN_NAME);
-
-        target.setSource(ResourceSource.All.toString().equals(source) ? ResourceSource.Console.toString() : source);
-
-        // 设置 target 变量的子节点
-        plugin.getChildren()
-                .stream()
-                .flatMap(c -> createResourceStream(c, instance))
-                .forEach(r -> target.getChildren().add(r));
 
         if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
             target.setParentId(null);
+        } else if (Objects.nonNull(parent)){
+            target.setParentId(parent.getId());
         }
 
         if (StringUtils.isBlank(target.getApplicationName())) {
@@ -395,9 +269,15 @@ public class PluginResourceService {
             target.setVersion(instance.getVersion().toString());
         }
 
+        target.setId(target.hashCode());
         target.setCode(plugin.getId());
-        target.setStatus(DisabledOrEnabled.Enabled.getValue());
         target.setId(null);
+
+        // 设置 target 变量的子节点
+        plugin.getChildren()
+                .stream()
+                .map(c -> createResource(Casts.cast(c, PluginInfo.class), instance, target))
+                .forEach(r -> target.getChildren().add(r));
 
         return target;
     }
@@ -408,21 +288,8 @@ public class PluginResourceService {
      * @param applicationName 资源名称
      */
     public void disabledApplicationResource(String applicationName) {
-
+        resources.removeIf(r -> r.getApplicationName().equals(applicationName));
         // 查询所有符合条件的资源,并设置为禁用状态
-        List<Resource> resources = authorizationService.findResources(
-                Wrappers
-                        .<Resource>lambdaQuery()
-                        .eq(Resource::getApplicationName, applicationName)
-                        .in(Resource::getSource, Resource.DEFAULT_ALL_SOURCE_VALUES)
-                        .eq(Resource::getStatus, DisabledOrEnabled.Enabled.getValue())
-        );
-
-        resources
-                .stream()
-                .peek(resource -> resource.setStatus(DisabledOrEnabled.Disabled.getValue()))
-                .forEach(r -> authorizationService.saveResource(r));
-
         authorizationService.deleteAuthorizationCache();
 
     }
@@ -465,4 +332,33 @@ public class PluginResourceService {
         nacosSpringEventManager.scanThenSubscribeService();
     }
 
+    /**
+     * 获取资源集合
+     *
+     * @param applicationName 应用名称
+     * @param sources         符合来源的记录
+     *
+     * @return 资源集合
+     */
+    public List<Resource> getResources(String applicationName, String... sources) {
+        List<Resource> result = resources;
+
+        if (StringUtils.isNotBlank(applicationName)) {
+            result = result
+                    .stream()
+                    .filter(r -> r.getApplicationName().equals(applicationName))
+                    .collect(Collectors.toList());
+        }
+
+        if (ArrayUtils.isNotEmpty(sources)) {
+            List<String> sourceList = Arrays.asList(sources);
+
+            result = result
+                    .stream()
+                    .filter(r -> r.getSources().stream().anyMatch(sourceList::contains))
+                    .collect(Collectors.toList());
+        }
+
+        return result;
+    }
 }

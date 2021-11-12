@@ -3,6 +3,7 @@ package com.github.dactiv.basic.authentication.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -36,7 +37,7 @@ import java.util.Objects;
         parent = "system",
         icon = "icon-system-user",
         type = ResourceType.Menu,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class ConsoleUserController {
 
@@ -55,24 +56,10 @@ public class ConsoleUserController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "查询分页", sources = "Console")
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
+    @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<ConsoleUser> page(PageRequest pageRequest, HttpServletRequest request) {
         return userService.findConsoleUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
-    }
-
-    /**
-     * 通过用户组 id 查询系统用户集合
-     *
-     * @param groupId 用户组 id
-     *
-     * @return 系统用户集合
-     */
-    @GetMapping("findByGroup")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "通过用户组 id 查询系统用户集合", sources = "System")
-    public List<ConsoleUser> findByGroup(@RequestParam String groupId) {
-        return userService.findConsoleUserByGroupId(groupId);
     }
 
     /**
@@ -84,7 +71,7 @@ public class ConsoleUserController {
      */
     @GetMapping("get")
     @PreAuthorize("hasRole('BASIC')")
-    @Plugin(name = "获取信息", sources = "System")
+    @Plugin(name = "获取信息", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
     public ConsoleUser get(@RequestParam Integer id) {
         return userService.getConsoleUser(id);
     }
@@ -92,22 +79,18 @@ public class ConsoleUserController {
     /**
      * 保存系统用户实体
      *
-     * @param entity      系统用户实体
-     * @param groupIds    用户组 ID 集合
-     * @param resourceIds 用户组资源 ID 集合
+     * @param entity 系统用户实体
      *
      * @return 消息结果集
      */
     @PostMapping("save")
-    @Plugin(name = "保存", sources = "Console", audit = true)
+    @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
-    public RestResult<Integer> save(@Valid ConsoleUser entity,
-                                    @CurrentSecurityContext SecurityContext securityContext,
-                                    @RequestParam(required = false) List<Integer> groupIds,
-                                    @RequestParam(required = false) List<Integer> resourceIds) {
+    public RestResult<Integer> save(@Valid @RequestBody ConsoleUser entity,
+                                    @CurrentSecurityContext SecurityContext securityContext) {
 
-        userService.saveConsoleUser(entity, groupIds, resourceIds);
+        userService.saveConsoleUser(entity);
 
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
@@ -120,9 +103,11 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @Plugin(name = "删除", sources = "Console", audit = true)
+    @Plugin(name = "删除", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
+    @Idempotent(key = "idempotent:authentication:user:delete:[#securityContext.authentication.details.id]")
+    public RestResult<?> delete(@RequestParam List<Integer> ids,
+                                @CurrentSecurityContext SecurityContext securityContext) {
 
         userService.deleteConsoleUsers(ids);
 
@@ -137,7 +122,7 @@ public class ConsoleUserController {
      * @param newPassword     新密码
      */
     @PostMapping("updatePassword")
-    @Plugin(name = "修改密码", sources = "Console", audit = true)
+    @Plugin(name = "修改密码", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:updatePassword]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:update-password:[#securityContext.authentication.details.id]")
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
@@ -161,7 +146,7 @@ public class ConsoleUserController {
      */
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断登录账户是否唯一", sources = "Console")
+    @Plugin(name = "判断登录账户是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isUsernameUnique(@RequestParam String username) {
         return Objects.isNull(userService.getConsoleUserByUsername(username));
     }
@@ -175,7 +160,7 @@ public class ConsoleUserController {
      */
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断邮件是否唯一", sources = "Console")
+    @Plugin(name = "判断邮件是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
         return userService.findConsoleUsers(new LambdaQueryWrapper<ConsoleUser>().eq(ConsoleUser::getEmail, email)).isEmpty();
     }

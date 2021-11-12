@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
@@ -9,7 +10,6 @@ import com.github.dactiv.framework.spring.security.authentication.token.Principa
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import nl.basjes.parse.useragent.UserAgent;

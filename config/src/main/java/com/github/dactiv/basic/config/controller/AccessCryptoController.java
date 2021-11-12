@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.config.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.commons.RestResult;
@@ -33,7 +34,7 @@ import java.util.List;
         parent = "config",
         icon = "icon-crypto-currency-bitcoin-imac",
         type = ResourceType.Menu,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class AccessCryptoController {
 
@@ -53,7 +54,7 @@ public class AccessCryptoController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[access_crypto:page]')")
-    @Plugin(name = "获取访问加解密分页", sources = "Console")
+    @Plugin(name = "获取访问加解密分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<ConfigAccessCrypto> page(PageRequest pageRequest, HttpServletRequest request) {
         return accessCryptoService.findAccessCryptoPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -67,7 +68,7 @@ public class AccessCryptoController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[access_crypto:get]')")
-    @Plugin(name = "获取访问加解密实体信息", sources = "Console")
+    @Plugin(name = "获取访问加解密实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public AccessCrypto get(@RequestParam Integer id) {
         return accessCryptoService.getAccessCrypto(id);
     }
@@ -78,8 +79,8 @@ public class AccessCryptoController {
      * @param entity 访问加解密实体
      */
     @PostMapping("save")
-    @Plugin(name = "保存访问加解密实体", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[access_crypto:save]') and isFullyAuthenticated()")
+    @Plugin(name = "保存访问加解密实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
@@ -93,9 +94,11 @@ public class AccessCryptoController {
      * @param ids 主键值集合
      */
     @PostMapping("delete")
-    @Plugin(name = "删除访问加解密实体", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[access_crypto:delete]') and isFullyAuthenticated()")
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
+    @Plugin(name = "删除访问加解密实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
+    public RestResult<?> delete(@RequestParam List<Integer> ids,
+                                @CurrentSecurityContext SecurityContext securityContext) {
         accessCryptoService.deleteAccessCrypto(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }

@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.socket.server.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.server.controller.room.RoomResponseBody;
 import com.github.dactiv.basic.socket.server.enitty.Room;
 import com.github.dactiv.basic.socket.server.service.room.RoomService;
@@ -29,7 +30,7 @@ import java.util.List;
         parent = "socket-server",
         icon = "icon-chat-room",
         type = ResourceType.Security,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class RoomController {
 
@@ -47,7 +48,7 @@ public class RoomController {
      */
     @PostMapping("createRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @Plugin(name = "创建房间", sources = "SocketUser")
+    @Plugin(name = "创建房间", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> createRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     Room room,
                                     @RequestParam List<Integer> userIds) {
@@ -69,7 +70,7 @@ public class RoomController {
      */
     @GetMapping("getCurrentPrincipalRooms")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取当前用户房间集合", sources = "SocketUser")
+    @Plugin(name = "获取当前用户房间集合", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public List<RoomResponseBody> getCurrentPrincipalRooms(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());

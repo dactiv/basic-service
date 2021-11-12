@@ -1,11 +1,13 @@
 package com.github.dactiv.basic.message.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -34,7 +36,7 @@ import java.util.Map;
         parent = "message",
         icon = "icon-notification",
         type = ResourceType.Menu,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class SiteMessageController {
 
@@ -54,7 +56,7 @@ public class SiteMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[site:page]')")
-    @Plugin(name = "获取站内信消息分页", sources = "Console")
+    @Plugin(name = "获取站内信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<SiteMessage> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSiteMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -68,7 +70,10 @@ public class SiteMessageController {
      */
     @GetMapping("unreadQuantity")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "按类型分组获取站内信未读数量", sources = {"Mobile", "UserCenter"})
+    @Plugin(
+            name = "按类型分组获取站内信未读数量",
+            sources = {ResourceSource.MOBILE_SOURCE_VALUE, ResourceSource.USER_CENTER_SOURCE_VALUE}
+    )
     public List<Map<String, Object>> unreadQuantity(@CurrentSecurityContext SecurityContext securityContext) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -88,7 +93,13 @@ public class SiteMessageController {
      */
     @PostMapping("read")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "阅读站内信", sources = {"Mobile", "UserCenter"}, audit = true)
+    @Plugin(name = "阅读站内信",
+            sources = {
+                    ResourceSource.MOBILE_SOURCE_VALUE,
+                    ResourceSource.USER_CENTER_SOURCE_VALUE
+            },
+            audit = true
+    )
     public RestResult<?> read(@RequestParam(required = false) List<String> types,
                               @CurrentSecurityContext SecurityContext securityContext) {
 
@@ -110,7 +121,7 @@ public class SiteMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[site:get]')")
-    @Plugin(name = "获取站内信消息实体信息", sources = "Console")
+    @Plugin(name = "获取站内信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public SiteMessage get(@RequestParam Integer id) {
         return messageService.getSiteMessage(id);
     }
@@ -123,9 +134,11 @@ public class SiteMessageController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @Plugin(name = "删除站内信消息实体", sources = "Console", audit = true)
     @PreAuthorize("hasAuthority('perms[site:delete]') and isFullyAuthenticated()")
-    public RestResult<?> delete(@RequestParam List<Integer> ids) {
+    @Plugin(name = "删除站内信消息实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Idempotent(key = "idempotent:message:site:delete:[#securityContext.authentication.details.id]")
+    public RestResult<?> delete(@RequestParam List<Integer> ids,
+                                @CurrentSecurityContext SecurityContext securityContext) {
         messageService.deleteSiteMessage(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }

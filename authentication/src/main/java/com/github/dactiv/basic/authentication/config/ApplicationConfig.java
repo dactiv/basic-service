@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.authentication.config;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.security.authentication.service.DefaultUserDetailsService;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

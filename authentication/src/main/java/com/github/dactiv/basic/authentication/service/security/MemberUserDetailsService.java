@@ -3,7 +3,9 @@ package com.github.dactiv.basic.authentication.service.security;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -12,12 +14,12 @@ import com.github.dactiv.framework.spring.security.authentication.UserDetailsSer
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.data.annotation.Id;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -43,7 +45,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
     private static final String DEFAULT_AUTHENTICATION_TYPE_PARAM_NAME = "type";
 
-    private static final String IS_MOBILE_PATTERN_STRING = "^[1](([3|5|8][\\d])|([4][4,5,6,7,8,9])|([6][2,5,6,7])|([7][^9])|([9][1,8,9]))[\\d]{8}$";
+    public static final String IS_MOBILE_PATTERN_STRING = "^[1](([3|5|8][\\d])|([4][4,5,6,7,8,9])|([6][2,5,6,7])|([7][^9])|([9][1,8,9]))[\\d]{8}$";
 
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
@@ -71,7 +73,13 @@ public class MemberUserDetailsService implements UserDetailsService {
 
         MemberUser user = userService.getMemberUserByIdentified(token.getPrincipal().toString());
 
-        if (user == null) {
+        if (Objects.isNull(user)) {
+
+            user = new MemberUser();
+
+            user.setPhone(token.getPrincipal().toString());
+            user.setPassword(generateRandomPassword());
+            user.setStatus(UserStatus.Enabled.getValue());
 
             if (ResourceSource.Mobile.toString().equals(type)) {
 
@@ -82,26 +90,10 @@ public class MemberUserDetailsService implements UserDetailsService {
                     throw new BadCredentialsException("手机号码不正确");
                 }
 
-                user = new MemberUser();
-
-                user.setPhone(token.getPrincipal().toString());
-                user.setPassword(generateRandomPassword());
-
                 int count = applicationConfig.getRegister().getRandomUsernameCount();
                 user.setUsername(RandomStringUtils.randomAlphanumeric(count) + user.getPhone());
 
-                user.setStatus(UserStatus.Enabled.getValue());
-
-            } else if (ResourceSource.AnonymousUser.toString().equals(type)) {
-
-                user = new MemberUser();
-
-                user.setUsername(token.getPrincipal().toString());
-                user.setPassword(getPasswordEncoder().encode(token.getCredentials().toString()));
-
-                user.setStatus(UserStatus.Enabled.getValue());
-
-            } else {
+            } else if (!ResourceSource.AnonymousUser.toString().equals(type)) {
                 throw new UsernameNotFoundException("用户名或密码错误");
             }
 
@@ -211,13 +203,16 @@ public class MemberUserDetailsService implements UserDetailsService {
         user.setPassword(userDetails.getPassword());
         user.setStatus(userDetails.getStatus());
 
-        userService.saveMemberUser(
-                user,
-                Collections.singletonList(applicationConfig.getRegister().getDefaultGroup())
+        Group group = userService.getAuthorizationService().getGroup(applicationConfig.getRegister().getDefaultGroup());
+        user.setGroups(
+                Collections.singletonList(
+                        IdRoleAuthority.of(group.getId(), group.getName(), group.getAuthority()
+                        )
+                )
         );
 
+        userService.saveMemberUser(user);
         userDetails.setId(user.getId());
-
         token.getHttpServletRequest().setAttribute(DEFAULT_IS_NEW_MEMBER_KEY_NAME, true);
 
         return user;
@@ -226,18 +221,8 @@ public class MemberUserDetailsService implements UserDetailsService {
     @Override
     public Collection<? extends GrantedAuthority> getPrincipalAuthorities(SecurityUserDetails userDetails) {
         Integer userId = Casts.cast(userDetails.getId());
-
-        List<Group> groups = userService
-                .getAuthorizationService()
-                .getMemberUserGroups(userId);
-
-        userDetails.setRoleAuthorities(
-                groups
-                        .stream()
-                        .map(g -> new RoleAuthority(g.getName(), g.getAuthority()))
-                        .collect(Collectors.toList())
-        );
-
+        MemberUser memberUser = userService.getMemberUser(userId);
+        userService.setSystemUserAuthorities(memberUser, userDetails);
         return userDetails.getAuthorities();
     }
 

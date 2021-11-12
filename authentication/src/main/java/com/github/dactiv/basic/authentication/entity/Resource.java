@@ -1,31 +1,27 @@
 package com.github.dactiv.basic.authentication.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
-import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotEmpty;
-import javax.validation.constraints.NotNull;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+import java.util.stream.Collectors;
 
 /**
  * <p>资源实体类</p>
@@ -36,40 +32,12 @@ import java.util.*;
  */
 @Data
 @Alias("resource")
-@EqualsAndHashCode
 @NoArgsConstructor
 @TableName("tb_resource")
-public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource> {
+@EqualsAndHashCode(callSuper = false)
+public class Resource extends IdEntity<Integer> implements Tree<Integer, Resource> {
 
     private static final long serialVersionUID = 4709419291009298510L;
-
-    /**
-     * 所有自动配置的可用来源
-     */
-    public static final List<String> DEFAULT_ALL_SOURCE_VALUES = Arrays.asList(
-            ResourceSource.All.toString(),
-            ResourceSource.Console.toString(),
-            ResourceSource.Front.toString(),
-            ResourceSource.Mobile.toString(),
-            ResourceSource.UserCenter.toString(),
-            ResourceSource.System.toString()
-    );
-
-    public static final List<String> DEFAULT_CONTAIN_SOURCE_VALUES = Arrays.asList(
-            ResourceSource.All.toString(),
-            ResourceSource.System.toString()
-    );
-
-    /**
-     * 主键
-     */
-    @TableId(value = "id", type = IdType.AUTO)
-    private Integer id;
-
-    /**
-     * 创建时间
-     */
-    private Date creationTime = new Date();
 
     /**
      * 名称
@@ -79,19 +47,20 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
     private String name;
 
     /**
-     * 唯一识别
-     */
-    @NotEmpty
-    @Length(max = 128)
-    private String code;
-
-    /**
      * 应用名称
      */
     @NotEmpty
     @Length(max = 64)
     @EqualsAndHashCode.Include
     private String applicationName;
+
+    /**
+     * 唯一识别
+     */
+    @NotEmpty
+    @Length(max = 128)
+    @EqualsAndHashCode.Include
+    private String code;
 
     /**
      * 类型:MENU.菜单类型、SECURITY.安全类型
@@ -107,7 +76,7 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
     @NotEmpty
     @Length(max = 16)
     @EqualsAndHashCode.Include
-    private String source;
+    private List<String> sources;
 
     /**
      * 版本号
@@ -140,13 +109,6 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
     private Integer parentId;
 
     /**
-     * 状态:0.禁用、1.启用
-     */
-    @NotNull
-    @Range(min = 0, max = 1)
-    private Integer status;
-
-    /**
      * 顺序值
      */
     @Range(min = 0, max = 999)
@@ -177,17 +139,11 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
      *
      * @return String
      */
-    public String getSourceName() {
-        return NameEnumUtils.getName(this.source, ResourceSource.class);
-    }
-
-    /**
-     * 获取状态名称
-     *
-     * @return String
-     */
-    public String getStatusName() {
-        return NameValueEnumUtils.getName(this.status, DisabledOrEnabled.class);
+    public List<String> getSourcesName() {
+        if (CollectionUtils.isEmpty(this.sources)){
+            return null;
+        }
+        return this.sources.stream().map(s -> NameEnumUtils.getName(s, ResourceSource.class)).collect(Collectors.toList());
     }
 
     @Override
@@ -200,28 +156,5 @@ public class Resource implements NumberIdEntity<Integer>, Tree<Integer, Resource
     public boolean isChildren(Tree<Integer, Resource> parent) {
         Resource resource = Casts.cast(parent);
         return Objects.equals(resource.getId(), this.getParent());
-    }
-
-    @JsonIgnore
-    public Wrapper<Resource> getUniqueWrapper() {
-        LambdaQueryWrapper<Resource> wrapper = Wrappers.lambdaQuery();
-
-        if (Objects.nonNull(this.code) && !"".equals(this.code)) {
-            wrapper.eq(Resource::getCode, this.code);
-        }
-        if (Objects.nonNull(this.applicationName) && !"".equals(this.applicationName)) {
-            wrapper.eq(Resource::getApplicationName, this.applicationName);
-        }
-        if (Objects.nonNull(this.type) && !"".equals(this.type)) {
-            wrapper.eq(Resource::getType, this.type);
-        }
-        if (Objects.nonNull(this.source) && !"".equals(this.source)) {
-            wrapper.eq(Resource::getSource, this.source);
-        }
-        if (Objects.nonNull(this.parentId)) {
-            wrapper.eq(Resource::getParentId, this.parentId);
-        }
-
-        return wrapper;
     }
 }

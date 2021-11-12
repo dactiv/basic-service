@@ -25,29 +25,4 @@ import java.util.List;
 @Repository
 public interface MemberUserDao extends BaseMapper<MemberUser> {
 
-    /**
-     * 删除会员用户组关联
-     *
-     * @param id 用户主键 ID
-     */
-    @Delete("<script>DELETE FROM tb_group_member_user WHERE user_id = #{id}</script>")
-    void deleteGroupAssociation(@Param("id") Integer id);
-
-    /**
-     * 新增会员用户组关联
-     *
-     * @param id       用户主键 ID
-     * @param groupIds 用户组主键ID集合
-     */
-    @Insert(
-            "<script>" +
-            "INSERT INTO " +
-            "   tb_group_member_user(user_id,group_id) " +
-            "VALUES " +
-            "<foreach collection='groupIds' item='groupId' separator=','>" +
-            "    (#{id}, #{groupId}) " +
-            "</foreach>" +
-            "</script>"
-    )
-    void insertGroupAssociation(@Param("id") Integer id, @Param("groupIds") List<Integer> groupIds);
 }

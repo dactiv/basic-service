@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
 import com.github.dactiv.basic.authentication.service.AuthenticationService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -37,8 +38,8 @@ public class AuthenticationInfoController {
      * @return 分页实体
      */
     @PostMapping("page")
-    @Plugin(name = "获取认证信息表分页", parent = "audit", sources = "Console")
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
+    @Plugin(name = "获取认证信息表分页", parent = "audit", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<AuthenticationInfo> page(PageRequest pageRequest, HttpServletRequest request) {
 
         return authenticationService.findAuthenticationInfoPage(

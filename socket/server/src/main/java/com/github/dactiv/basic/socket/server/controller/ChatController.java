@@ -1,18 +1,17 @@
 package com.github.dactiv.basic.socket.server.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
+import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.format.annotation.DateTimeFormat;
-import org.springframework.format.annotation.NumberFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -34,7 +33,7 @@ import java.util.List;
         parent = "socket-server",
         icon = "icon-message",
         type = ResourceType.Security,
-        sources = "Console"
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE
 )
 public class ChatController {
 
@@ -52,7 +51,7 @@ public class ChatController {
      */
     @PostMapping("sendMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "发送消息", sources = "SocketUser")
+    @Plugin(name = "发送消息", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> sendMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestParam Integer recipientId,
                                      @RequestParam String content) throws Exception {
@@ -74,7 +73,7 @@ public class ChatController {
      */
     @PostMapping("readMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "读取消息", sources = "SocketUser")
+    @Plugin(name = "读取消息", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> readMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestBody ReadMessageRequestBody body) throws Exception {
 
@@ -97,7 +96,7 @@ public class ChatController {
      */
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = "SocketUser")
+    @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public List<RecentContact> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -111,10 +110,10 @@ public class ChatController {
      *
      * @return 未读消息集合
      */
+    @Deprecated
     @GetMapping("getUnreadMessages")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = "SocketUser")
-    @Deprecated
+    @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -133,7 +132,7 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessagePage")
-    @Plugin(name = "获取历史消息分页", sources = "SocketUser")
+    @Plugin(name = "获取历史消息分页", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                    @RequestParam Integer targetId,
                                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
@@ -155,7 +154,7 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessageDateList")
-    @Plugin(name = "获取历史消息分页", sources = "SocketUser")
+    @Plugin(name = "获取历史消息分页", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
     public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
                                                 @RequestParam Integer targetId) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());

@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.service.support.site.umeng;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
 import com.github.dactiv.basic.message.entity.SiteMessage;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
@@ -13,7 +14,6 @@ import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayload
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;

@@ -8,7 +8,6 @@ import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;
 import io.socket.client.IO;
@@ -49,7 +48,7 @@ public class ClientSocketConnect {
 
         HttpHeaders httpHeaders = new HttpHeaders();
 
-        httpHeaders.add(AuthenticationProperties.SECURITY_FORM_TYPE_HEADER_NAME, ResourceSource.Console.toString());
+        httpHeaders.add(AuthenticationProperties.SECURITY_FORM_TYPE_HEADER_NAME, "Console");
         httpHeaders.add(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME, deviceId);
         httpHeaders.add(RestResponseBodyAdvice.DEFAULT_NOT_FORMAT_ATTR_NAME, "true");
 

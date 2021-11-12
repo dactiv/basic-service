@@ -2,9 +2,11 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.UserAvatarHistory;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
@@ -43,7 +45,7 @@ import java.util.Objects;
         name = "用户头像管理",
         id = "user-avatar",
         type = ResourceType.Security,
-        sources = "Console",
+        sources = ResourceSource.CONSOLE_SOURCE_VALUE,
         parent = "file-manager"
 )
 public class UserAvatarController implements InitializingBean {
@@ -64,8 +66,9 @@ public class UserAvatarController implements InitializingBean {
      * @throws Exception 上传错误时抛出
      */
     @PostMapping("upload")
-    @Plugin(name = "上传头像", parent = "user-avatar", sources = "System", audit = true)
     @PreAuthorize("hasAuthority('perms[user_avatar:upload]') and isFullyAuthenticated()")
+    @Plugin(name = "上传头像", parent = "user-avatar", sources = ResourceSource.SYSTEM_SOURCE_VALUE, audit = true)
+    @Idempotent(key = "idempotent:authentication:user:avatar:upload:[#securityContext.authentication.details.id]")
     public RestResult<Map<String, Object>> upload(@CurrentSecurityContext SecurityContext securityContext,
                                                   @RequestParam("file") MultipartFile file) throws Exception {
 
@@ -221,6 +224,7 @@ public class UserAvatarController implements InitializingBean {
      */
     @PostMapping("delete")
     @PreAuthorize("isFullyAuthenticated()")
+    @Idempotent(key = "idempotent:authentication:user:avatar:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@CurrentSecurityContext SecurityContext securityContext,
                                 @RequestParam("filename") String filename) throws Exception {
 

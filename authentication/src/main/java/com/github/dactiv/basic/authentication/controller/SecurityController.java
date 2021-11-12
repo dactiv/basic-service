@@ -4,6 +4,7 @@ import com.github.dactiv.basic.authentication.entity.MemberUser;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -17,7 +18,6 @@ import com.github.dactiv.framework.spring.security.audit.StringIdEntity;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceSource;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -75,7 +75,14 @@ public class SecurityController {
      */
     @PostMapping("audit")
     @PreAuthorize("hasAuthority('perms[audit:page]')")
-    @Plugin(name = "操作审计", id = "audit", icon = "icon-audit", parent = "system", type = ResourceType.Menu, sources = "Console")
+    @Plugin(
+            name = "操作审计",
+            id = "audit",
+            icon = "icon-audit",
+            parent = "system",
+            type = ResourceType.Menu,
+            sources = ResourceSource.CONSOLE_SOURCE_VALUE
+    )
     public Page<AuditEvent> audit(PageRequest pageRequest,
                                   @RequestParam(required = false) String principal,
                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
@@ -102,7 +109,7 @@ public class SecurityController {
      */
     @GetMapping("getAudit")
     @PreAuthorize("hasAuthority('perms[audit:get]')")
-    @Plugin(name = "获取操作审计", parent = "audit", sources = "Console")
+    @Plugin(name = "获取操作审计", parent = "audit", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public AuditEvent getAudit(@RequestParam(required = false) String id,
                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after) {
 

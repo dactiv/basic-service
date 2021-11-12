@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.controller;
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -37,11 +38,10 @@ public class SenderController {
      *
      * @return 消息结果集
      */
-    @SuppressWarnings("unchecked")
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
-    @Plugin(name = "发送消息", id = "send", parent = "message", sources = "System")
     @Idempotent(key = "idempotent:message:send:[#securityContext.authentication.details.id]")
     @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
+    @Plugin(name = "发送消息", id = "send", parent = "message", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
     public RestResult<Object> send(@RequestBody Map<String, Object> body,
                                    @CurrentSecurityContext SecurityContext securityContext) throws Exception {
 

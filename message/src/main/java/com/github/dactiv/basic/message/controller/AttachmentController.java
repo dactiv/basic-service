@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.message.controller;
 
 
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.message.config.AttachmentConfig;
-import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.minio.MinioTemplate;
@@ -116,7 +116,7 @@ public class AttachmentController {
      */
     @GetMapping("get/{type}/{filename}")
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[attachment:get]')")
-    @Plugin(name = "获取文件", sources = "System", audit = true)
+    @Plugin(name = "获取文件", sources = ResourceSource.SYSTEM_SOURCE_VALUE, audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("type") String type, @PathVariable("filename") String filename) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),

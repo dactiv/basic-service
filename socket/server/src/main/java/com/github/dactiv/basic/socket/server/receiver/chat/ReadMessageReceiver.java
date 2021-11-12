@@ -6,12 +6,10 @@ import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestB
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.basic.socket.server.service.chat.data.BasicMessage;
 import com.github.dactiv.basic.socket.server.service.chat.data.ContactMessage;
-import com.github.dactiv.basic.socket.server.service.chat.data.GlobalMessage;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -23,7 +21,10 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
