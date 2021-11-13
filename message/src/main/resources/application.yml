@@ -12,10 +12,15 @@ dactiv:
   authentication:
     plugin:
       base-packages: com.github.dactiv.basic.message.controller
+      generate-sources:
+        - "Console"
+        - "All"
+        - "System"
       parent:
         message:
           name: '消息管理'
           icon: 'icon-message'
+          sources: "Console"
     audit:
       type: elasticsearch
     permit-uri-ant-matchers:

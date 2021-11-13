@@ -58,7 +58,7 @@ public class ConsoleUserDetailsService implements UserDetailsService {
                 status
         );
 
-        userService.setSystemUserAuthorities(user, userDetails);
+        userService.getAuthorizationService().setSystemUserAuthorities(user, userDetails);
 
         return userDetails;
     }

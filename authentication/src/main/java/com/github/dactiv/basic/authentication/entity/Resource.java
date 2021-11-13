@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @TableName("tb_resource")
 @EqualsAndHashCode(callSuper = false)
-public class Resource extends IdEntity<Integer> implements Tree<Integer, Resource> {
+public class Resource extends IdEntity<String> implements Tree<String, Resource> {
 
     private static final long serialVersionUID = 4709419291009298510L;
 
@@ -106,7 +106,7 @@ public class Resource extends IdEntity<Integer> implements Tree<Integer, Resourc
      * 父类 id
      */
     @EqualsAndHashCode.Include
-    private Integer parentId;
+    private String parentId;
 
     /**
      * 顺序值
@@ -123,7 +123,7 @@ public class Resource extends IdEntity<Integer> implements Tree<Integer, Resourc
      * 子节点
      */
     @TableField(exist = false)
-    private List<Tree<Integer, Resource>> children = new ArrayList<>();
+    private List<Tree<String, Resource>> children = new ArrayList<>();
 
     /**
      * 获取类型名称
@@ -148,12 +148,12 @@ public class Resource extends IdEntity<Integer> implements Tree<Integer, Resourc
 
     @Override
     @JsonIgnore
-    public Integer getParent() {
+    public String getParent() {
         return getParentId();
     }
 
     @Override
-    public boolean isChildren(Tree<Integer, Resource> parent) {
+    public boolean isChildren(Tree<String, Resource> parent) {
         Resource resource = Casts.cast(parent);
         return Objects.equals(resource.getId(), this.getParent());
     }

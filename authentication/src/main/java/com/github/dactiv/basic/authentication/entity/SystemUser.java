@@ -5,7 +5,6 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.authentication.service.security.IdRoleAuthority;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
@@ -74,13 +73,13 @@ public class SystemUser implements NumberIdEntity<Integer> {
      * 所属组集合
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<IdRoleAuthority> groups = new LinkedList<>();
+    private List<Map<String, Object>> groupsInfo = new LinkedList<>();
 
     /**
      * 独立权限资源 id 集合
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private Map<String, List<Integer>> resourceMap = new LinkedHashMap<>();
+    private Map<String, List<String>> resourceMap = new LinkedHashMap<>();
 
     /**
      * 获取用户状态名称

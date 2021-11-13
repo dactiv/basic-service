@@ -20,10 +20,15 @@ dactiv:
   authentication:
     plugin:
       base-packages: com.github.dactiv.basic.socket.server.controller
+      generate-sources:
+        - "Console"
+        - "All"
+        - "System"
       parent:
         socket:
-          name: 'socket 服务管理'
-          icon: 'icon-plug-socket'
+          name: "socket 服务管理"
+          icon: "icon-plug-socket"
+          sources: "Console"
     permit-uri-ant-matchers:
       - "/health/**"
       - "/joinRoom/**"

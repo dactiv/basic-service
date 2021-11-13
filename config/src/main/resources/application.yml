@@ -20,10 +20,15 @@ dactiv:
       type: elasticsearch
     plugin:
       base-packages: com.github.dactiv.basic.config.controller
+      generate-sources:
+        - "Console"
+        - "All"
+        - "System"
       parent:
         config:
           name: '配置管理'
           icon: 'icon-un-config-o'
+          sources: "Console"
     permit-uri-ant-matchers:
       - "/findDataDictionaries/**"
       - "/getServiceEnumerate/**"
@@ -34,4 +39,5 @@ dactiv:
   enumerate:
     base-packages:
       - com.github.dactiv.framework.commons.enumerate
-      - com.github.dactiv.framework.spring.security
+      - com.github.dactiv.framework.spring.security.enumerate
+      - com.github.dactiv.basic.commons.enumeration

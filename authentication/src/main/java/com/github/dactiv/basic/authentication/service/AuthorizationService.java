@@ -2,19 +2,30 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.entity.SystemUser;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
+import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.CacheProperties;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.provider.RequestAuthenticationProvider;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
+import com.github.dactiv.framework.spring.security.entity.ResourceAuthority;
+import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
+import lombok.Getter;
+import org.apache.commons.collections4.MapUtils;
+import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -23,11 +34,9 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 
@@ -50,6 +59,7 @@ public class AuthorizationService {
     @Autowired
     private RedissonClient redissonClient;
 
+    @Getter
     @Autowired
     private PluginResourceService pluginResourceService;
 
@@ -58,7 +68,6 @@ public class AuthorizationService {
      */
     @Value("${spring.security.admin.group-id:1}")
     private Integer adminGroupId;
-
 
     /**
      * 获取账户认证的用户明细服务
@@ -88,6 +97,36 @@ public class AuthorizationService {
         return authenticationProvider.getUserDetailsServices();
     }
 
+    /**
+     * 获取资源集合
+     *
+     * @param applicationName 应用名称
+     * @param sources         符合来源的记录
+     *
+     * @return 资源集合
+     */
+    public List<Resource> getResources(String applicationName, String... sources) {
+        List<Resource> result = pluginResourceService.getResources();
+
+        if (StringUtils.isNotBlank(applicationName)) {
+            result = result
+                    .stream()
+                    .filter(r -> r.getApplicationName().equals(applicationName))
+                    .collect(Collectors.toList());
+        }
+
+        if (ArrayUtils.isNotEmpty(sources)) {
+            List<String> sourceList = Arrays.asList(sources);
+
+            result = result
+                    .stream()
+                    .filter(r -> r.getSources().stream().anyMatch(sourceList::contains))
+                    .collect(Collectors.toList());
+        }
+
+        return result;
+    }
+
     // -------------------------------- 组管理 -------------------------------- //
 
     /**
@@ -100,13 +139,16 @@ public class AuthorizationService {
 
         List<Resource> groupResource = getGroupResource(group);
 
-        List<String> noneMatchSource = groupResource
+        List<String> noneMatchSources = groupResource
                 .stream()
+                .filter(r -> r.getSources().stream().noneMatch(s -> group.getSources().contains(s)))
+                .distinct()
                 .flatMap(r -> r.getSources().stream().filter(s -> !group.getSources().contains(s)))
+                .map(s -> NameEnumUtils.getName(s, ResourceSource.class))
                 .collect(Collectors.toList());
 
-        if (!noneMatchSource.isEmpty()) {
-            throw new ServiceException("组来源 [" + group.getSourceName() + "] 不能保存属于 [" + noneMatchSource + "] 的资源");
+        if (!noneMatchSources.isEmpty()) {
+            throw new ServiceException("组来源 " + group.getSourcesName() + " 不能保存属于 " + noneMatchSources + " 的资源");
         }
 
         if (Objects.isNull(group.getId())) {
@@ -125,8 +167,8 @@ public class AuthorizationService {
      */
     private List<Resource> getGroupResource(Group group) {
         List<Resource> result = new LinkedList<>();
-        for (Map.Entry<String, List<Integer>> entry: group.getResourceMap().entrySet()) {
-            List<Resource> resources = pluginResourceService.getResources(entry.getKey());
+        for (Map.Entry<String, List<String>> entry: group.getResourceMap().entrySet()) {
+            List<Resource> resources = getResources(entry.getKey());
             List<Resource> findResources = resources
                     .stream()
                     .filter(r -> entry.getValue().contains(r.getId()))
@@ -260,5 +302,111 @@ public class AuthorizationService {
         CacheProperties cache = userDetailsService.getAuthorizationCache(token);
 
         redissonClient.getBucket(cache.getName()).deleteAsync();
+    }
+
+    /**
+     * 获取系统用户资源
+     *
+     * @param user 系统用户
+     * @param type 资源类型
+     * @param sourceContains 资源来源
+     *
+     * @return 系统用户资源集合
+     */
+    public List<Resource> getSystemUserResource(SystemUser user, String type, List<String> sourceContains) {
+        List<Resource> userResource = getSystemUserResource(user);
+
+        return userResource
+                .stream()
+                .filter(r -> r.getType().equals(type))
+                .filter(r -> r.getSources().stream().anyMatch(sourceContains::contains))
+                .collect(Collectors.toList());
+    }
+
+    /**
+     * 设置系统用户权限信息
+     *
+     * @param user 系统用户
+     * @param userDetails 当前的安全用户明细
+     */
+    public void setSystemUserAuthorities(SystemUser user, SecurityUserDetails userDetails) {
+        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
+        userDetails.getRoleAuthorities().addAll(roleAuthorities);
+        // 构造用户的组资源
+        List<Resource> userResource = getSystemUserResource(user);
+        // 构造对应 spring security 的资源内容
+        List<ResourceAuthority> resourceAuthorities = userResource
+                .stream()
+                .flatMap(this::createResourceAuthoritiesStream)
+                .collect(Collectors.toList());
+
+        userDetails.setResourceAuthorities(resourceAuthorities);
+    }
+
+    /**
+     * 获取系统用户资源
+     *
+     * @param user 系统用户
+     *
+     * @return 系统用户资源
+     */
+    public List<Resource> getSystemUserResource(SystemUser user) {
+        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
+        // 构造用户的组资源
+        List<Resource> userResource = roleAuthorities
+                .stream()
+                .map(IdRoleAuthority::getId)
+                .map(this::getGroup)
+                .flatMap(g -> getResourcesStream(g.getResourceMap()))
+                .collect(Collectors.toList());
+
+        // 构造用户的独立资源
+        userResource.addAll(getResourcesStream(user.getResourceMap()).collect(Collectors.toList()));
+
+        return userResource;
+    }
+
+    private Stream<Resource> getResourcesStream(Map<String, List<String>> resourceMap) {
+
+        if (MapUtils.isEmpty(resourceMap)) {
+            return Stream.empty();
+        }
+
+        List<Resource> result = new LinkedList<>();
+
+        for (Map.Entry<String, List<String>> entry : resourceMap.entrySet()) {
+            List<Resource> resources = getResources(entry.getKey());
+
+            List<Resource> findResources = resources
+                    .stream()
+                    .filter(r -> entry.getValue().contains(r.getId()))
+                    .filter(r -> r.getSources().stream().noneMatch(ResourceSource.DEFAULT_IGNORE_SOURCE_VALUES::contains))
+                    .collect(Collectors.toList());
+
+            result.addAll(findResources);
+        }
+
+        return result.stream();
+    }
+
+    private Stream<ResourceAuthority> createResourceAuthoritiesStream(Resource resource) {
+        if (StringUtils.isBlank(resource.getAuthority())) {
+            return Stream.empty();
+        }
+
+        String[] permissions = StringUtils.substringsBetween(
+                resource.getAuthority(),
+                ResourceAuthority.DEFAULT_RESOURCE_PREFIX,
+                ResourceAuthority.DEFAULT_RESOURCE_SUFFIX
+        );
+
+        if (ArrayUtils.isEmpty(permissions)) {
+            return Stream.empty();
+        }
+
+        return Arrays
+                .stream(permissions)
+                .map(ResourceAuthority::getPermissionValue)
+                .map(p -> new ResourceAuthority(p, resource.getName(), resource.getValue()));
     }
 }

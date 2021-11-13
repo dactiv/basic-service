@@ -1,10 +1,11 @@
 package com.github.dactiv.basic.authentication.service.security;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
-import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.Casts;
@@ -12,14 +13,12 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
-import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.annotation.Id;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationServiceException;
 import org.springframework.security.authentication.BadCredentialsException;
@@ -32,7 +31,6 @@ import org.springframework.util.DigestUtils;
 
 import java.util.*;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 
 /**
  * 会员用户明细服务实现
@@ -204,12 +202,9 @@ public class MemberUserDetailsService implements UserDetailsService {
         user.setStatus(userDetails.getStatus());
 
         Group group = userService.getAuthorizationService().getGroup(applicationConfig.getRegister().getDefaultGroup());
-        user.setGroups(
-                Collections.singletonList(
-                        IdRoleAuthority.of(group.getId(), group.getName(), group.getAuthority()
-                        )
-                )
-        );
+        IdRoleAuthority roleAuthority = new IdRoleAuthority(group.getId(), group.getName(), group.getAuthority());
+        List<IdRoleAuthority> roleAuthorities = Collections.singletonList(roleAuthority);
+        user.setGroupsInfo(Casts.convertValue(roleAuthorities, new TypeReference<>() {}));
 
         userService.saveMemberUser(user);
         userDetails.setId(user.getId());
@@ -222,7 +217,7 @@ public class MemberUserDetailsService implements UserDetailsService {
     public Collection<? extends GrantedAuthority> getPrincipalAuthorities(SecurityUserDetails userDetails) {
         Integer userId = Casts.cast(userDetails.getId());
         MemberUser memberUser = userService.getMemberUser(userId);
-        userService.setSystemUserAuthorities(memberUser, userDetails);
+        userService.getAuthorizationService().setSystemUserAuthorities(memberUser, userDetails);
         return userDetails.getAuthorities();
     }
 

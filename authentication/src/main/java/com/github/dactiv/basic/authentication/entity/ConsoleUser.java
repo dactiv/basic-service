@@ -19,8 +19,8 @@ import javax.validation.constraints.NotEmpty;
 @Data
 @NoArgsConstructor
 @Alias("consoleUser")
-@TableName("tb_console_user")
 @EqualsAndHashCode(callSuper = true)
+@TableName(value = "tb_console_user", autoResultMap = true)
 public class ConsoleUser extends SystemUser {
 
     private static final long serialVersionUID = 542256170672538050L;

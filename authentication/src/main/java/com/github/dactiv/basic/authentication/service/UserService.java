@@ -9,8 +9,6 @@ import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.entity.*;
-import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
-import com.github.dactiv.basic.authentication.service.security.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
@@ -24,9 +22,6 @@ import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
-import com.github.dactiv.framework.spring.security.entity.ResourceAuthority;
-import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
-import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
@@ -45,8 +40,6 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
@@ -77,9 +70,6 @@ public class UserService implements InitializingBean {
     private AuthorizationService authorizationService;
 
     @Autowired
-    private PluginResourceService pluginResourceService;
-
-    @Autowired
     private PasswordEncoder passwordEncoder;
 
     @Autowired
@@ -92,70 +82,6 @@ public class UserService implements InitializingBean {
      */
     public AuthorizationService getAuthorizationService() {
         return authorizationService;
-    }
-
-    /**
-     * 设置系统用户权限信息
-     *
-     * @param user 系统用户
-     * @param userDetails 当前的安全用户明细
-     */
-    public void setSystemUserAuthorities(SystemUser user, SecurityUserDetails userDetails) {
-        List<RoleAuthority> roleAuthorities = user
-                .getGroups()
-                .stream()
-                .map(IdRoleAuthority::toRoleAuthority)
-                .collect(Collectors.toList());
-        userDetails.setRoleAuthorities(roleAuthorities);
-
-        // 构造用户的组资源
-        List<Resource> userResource = user
-                .getGroups()
-                .stream()
-                .map(IdRoleAuthority::getId)
-                .map(id -> authorizationService.getGroup(id))
-                .flatMap(g -> getResourcesStream(g.getResourceMap()))
-                .collect(Collectors.toList());
-
-        // 构造用户的独立资源
-        userResource.addAll(getResourcesStream(user.getResourceMap()).collect(Collectors.toList()));
-        // 构造对应 spring security 的资源内容
-        List<ResourceAuthority> resourceAuthorities = userResource
-                .stream()
-                .flatMap(this::createResourceAuthoritiesStream)
-                .collect(Collectors.toList());
-
-        userDetails.setResourceAuthorities(resourceAuthorities);
-    }
-
-    private Stream<Resource> getResourcesStream(Map<String, List<Integer>> resourceMap) {
-        List<Resource> result = new LinkedList<>();
-        for (Map.Entry<String, List<Integer>> entry : resourceMap.entrySet()) {
-            List<Resource> resources = pluginResourceService.getResources(entry.getKey());
-
-            List<Resource> findResources = resources
-                    .stream()
-                    .filter(r -> entry.getValue().contains(r.getId()))
-                    .filter(r -> r.getSources().stream().noneMatch(ResourceSource.DEFAULT_IGNORE_SOURCE_VALUES::contains))
-                    .collect(Collectors.toList());
-
-            result.addAll(findResources);
-        }
-
-        return result.stream();
-    }
-
-    private Stream<ResourceAuthority> createResourceAuthoritiesStream(Resource resource) {
-        String[] permissions = StringUtils.substringsBetween(
-                resource.getAuthority(),
-                ResourceAuthority.DEFAULT_RESOURCE_PREFIX,
-                ResourceAuthority.DEFAULT_RESOURCE_SUFFIX
-        );
-
-        return Arrays
-                .stream(permissions)
-                .map(ResourceAuthority::getPermissionValue)
-                .map(p -> new ResourceAuthority(p, resource.getName(), resource.getValue()));
     }
 
     // -------------------------------- 系统用户管理 -------------------------------- //

@@ -69,8 +69,8 @@ public class GroupController {
      * @return 用户组实体
      */
     @GetMapping("get")
-    @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[group:get]')")
+    @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Group get(@RequestParam Integer id) {
         return authorizationService.getGroup(id);
     }

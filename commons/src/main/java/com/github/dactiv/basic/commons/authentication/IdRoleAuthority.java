@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.security;
+package com.github.dactiv.basic.commons.authentication;
 
 import com.github.dactiv.framework.commons.id.BasicIdentification;
 import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
@@ -25,22 +25,8 @@ public class IdRoleAuthority extends RoleAuthority implements BasicIdentificatio
      */
     private Integer id;
 
-    /**
-     * 名称
-     */
-    private String name;
-
-    /**
-     * 权限信息
-     */
-    private String authority;
-
-    /**
-     * 转换 RoleAuthority
-     *
-     * @return RoleAuthority
-     */
-    public RoleAuthority toRoleAuthority() {
-        return new RoleAuthority(name, authority);
+    public IdRoleAuthority(Integer id, String name, String authority) {
+        super(name, authority);
+        this.id = id;
     }
 }

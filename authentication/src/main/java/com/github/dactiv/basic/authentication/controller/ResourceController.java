@@ -1,18 +1,27 @@
 package com.github.dactiv.basic.authentication.controller;
 
+import com.github.dactiv.basic.authentication.entity.ConsoleUser;
 import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.annotation.CurrentSecurityContext;
+import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.Arrays;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 资源控制器
@@ -33,7 +42,7 @@ public class ResourceController {
 
 
     @Autowired
-    private PluginResourceService pluginResourceService;
+    private UserService userService;
 
     /**
      * 查找资源
@@ -45,9 +54,49 @@ public class ResourceController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public List<Resource> find(@RequestParam(required = false) boolean mergeTree) {
+    public List<Resource> find(@RequestParam(required = false) boolean mergeTree,
+                               String applicationName,
+                               List<String> sources) {
 
-        List<Resource> resourceList = pluginResourceService.getResources(null);
+        List<Resource> resourceList = userService
+                .getAuthorizationService()
+                .getResources(applicationName, sources.toArray(new String[0]));
+
+        if (mergeTree) {
+            return TreeUtils.buildGenericTree(resourceList);
+        } else {
+            return resourceList;
+        }
+    }
+
+    /**
+     * 获取当前用户资源
+     *
+     * @param securityContext 安全上下文
+     * @param mergeTree       是否合并树形 true，是 否则 false
+     *
+     * @return 资源实体集合
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("getConsolePrincipalResources")
+    @Plugin(name = "获取当前用户资源", sources = "Console")
+    public List<Resource> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
+                                                       @RequestParam(required = false) String type,
+                                                       @RequestParam(required = false) boolean mergeTree) {
+
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+
+        List<String> sourceContains = Arrays.asList(
+                userDetails.getType(),
+                ResourceSource.All.toString(),
+                ResourceSource.System.toString()
+        );
+
+        ConsoleUser consoleUser = userService.getConsoleUser(Casts.cast(userDetails.getId(), Integer.class));
+
+        List<Resource> resourceList = userService
+                .getAuthorizationService()
+                .getSystemUserResource(consoleUser, type, sourceContains);
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);
@@ -66,9 +115,10 @@ public class ResourceController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
     @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Resource get(@RequestParam Integer id) {
+    public Resource get(@RequestParam String id) {
 
-        return pluginResourceService
+        return userService
+                .getAuthorizationService()
                 .getResources(null)
                 .stream()
                 .filter(r -> r.getId().equals(id))
@@ -87,7 +137,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     public RestResult<?> syncPluginResource() {
 
-        pluginResourceService.resubscribeAllService();
+        userService.getAuthorizationService().getPluginResourceService().resubscribeAllService();
 
         return RestResult.of("同步数据完成");
     }

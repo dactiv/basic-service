@@ -20,12 +20,18 @@ dactiv:
       type: elasticsearch
     plugin:
       base-packages: com.github.dactiv.basic.authentication.controller
+      generate-sources:
+        - "Console"
+        - "All"
+        - "System"
       parent:
         system:
-          name: '系统管理'
-          icon: 'icon-setting'
+          name: "系统管理"
+          icon: "icon-setting"
+          sources: "Console"
     permit-uri-ant-matchers:
       - "/prepare/**"
       - "/login/**"
       - "/logout/**"
       - "/actuator/**"
+

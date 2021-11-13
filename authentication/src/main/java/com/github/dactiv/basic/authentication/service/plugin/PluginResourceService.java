@@ -8,6 +8,7 @@ import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.tree.Tree;
+import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
@@ -23,8 +24,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
 
+import java.nio.charset.StandardCharsets;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -177,18 +180,17 @@ public class PluginResourceService {
                 .map(p -> createResource(p, instance,null))
                 .collect(Collectors.toList());
 
+        List<Resource> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
+
         resources.removeIf(r -> r.getApplicationName().equals(instance.getServiceName()));
-        resources.addAll(newResourceList);
+        resources.addAll(unmergeResourceList);
 
         if (log.isDebugEnabled()) {
             log.debug("绑定 [" + applicationName + "] 资源信息完成");
         }
 
         if (CollectionUtils.isNotEmpty(pluginResourceInterceptor)) {
-            pluginResourceInterceptor
-                    .stream()
-                    .filter(i -> i.isSupport(instance))
-                    .forEach(i -> i.postSyncPlugin(instance, newResourceList));
+            pluginResourceInterceptor.forEach(i -> i.postSyncPlugin(instance, unmergeResourceList));
         }
     }
 
@@ -269,9 +271,8 @@ public class PluginResourceService {
             target.setVersion(instance.getVersion().toString());
         }
 
-        target.setId(target.hashCode());
         target.setCode(plugin.getId());
-        target.setId(null);
+        target.setId(DigestUtils.md5DigestAsHex(String.valueOf(target.hashCode()).getBytes(StandardCharsets.UTF_8)));
 
         // 设置 target 变量的子节点
         plugin.getChildren()
@@ -285,13 +286,15 @@ public class PluginResourceService {
     /**
      * 禁用资源
      *
-     * @param applicationName 资源名称
+     * @param nacosService nacos 服务信息
      */
-    public void disabledApplicationResource(String applicationName) {
-        resources.removeIf(r -> r.getApplicationName().equals(applicationName));
+    public void disabledApplicationResource(NacosService nacosService) {
+        resources.removeIf(r -> r.getApplicationName().equals(nacosService.getName()));
         // 查询所有符合条件的资源,并设置为禁用状态
         authorizationService.deleteAuthorizationCache();
-
+        if (CollectionUtils.isNotEmpty(pluginResourceInterceptor)) {
+            pluginResourceInterceptor.forEach(i -> i.postDisabledApplicationResource(nacosService));
+        }
     }
 
     /**
@@ -315,7 +318,7 @@ public class PluginResourceService {
         NacosService nacosService = Casts.cast(event.getSource());
 
         if (CollectionUtils.isEmpty(nacosService.getInstances())) {
-            disabledApplicationResource(nacosService.getName());
+            disabledApplicationResource(nacosService);
             return;
         }
 
@@ -335,30 +338,9 @@ public class PluginResourceService {
     /**
      * 获取资源集合
      *
-     * @param applicationName 应用名称
-     * @param sources         符合来源的记录
-     *
      * @return 资源集合
      */
-    public List<Resource> getResources(String applicationName, String... sources) {
-        List<Resource> result = resources;
-
-        if (StringUtils.isNotBlank(applicationName)) {
-            result = result
-                    .stream()
-                    .filter(r -> r.getApplicationName().equals(applicationName))
-                    .collect(Collectors.toList());
-        }
-
-        if (ArrayUtils.isNotEmpty(sources)) {
-            List<String> sourceList = Arrays.asList(sources);
-
-            result = result
-                    .stream()
-                    .filter(r -> r.getSources().stream().anyMatch(sourceList::contains))
-                    .collect(Collectors.toList());
-        }
-
-        return result;
+    public List<Resource> getResources() {
+        return this.resources;
     }
 }

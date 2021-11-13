@@ -128,7 +128,7 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * 资源 id 集合
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private Map<String, List<Integer>> resourceMap = new LinkedHashMap<>();
+    private Map<String, List<String>> resourceMap = new LinkedHashMap<>();
 
     /**
      * 备注
@@ -185,7 +185,7 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      *
      * @return String
      */
-    public List<String> getSourceName() {
+    public List<String> getSourcesName() {
         if (CollectionUtils.isEmpty(this.sources)){
             return null;
         }

@@ -7,7 +7,9 @@ import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.plugin.PluginInstance;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceInterceptor;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.nacos.event.NacosService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.Objects;
@@ -18,6 +20,7 @@ import java.util.stream.Collectors;
  *
  * @author maurice.chen
  */
+@Component
 public class SyncAdminGroupResourceInterceptor implements PluginResourceInterceptor {
 
     @Autowired
@@ -25,11 +28,6 @@ public class SyncAdminGroupResourceInterceptor implements PluginResourceIntercep
 
     @Autowired
     private AuthorizationService authorizationService;
-
-    @Override
-    public boolean isSupport(PluginInstance instance) {
-        return true;
-    }
 
     @Override
     public void postSyncPlugin(PluginInstance instance, List<Resource> newResourceList) {
@@ -41,13 +39,28 @@ public class SyncAdminGroupResourceInterceptor implements PluginResourceIntercep
         if (Objects.isNull(group)) {
             return;
         }
-        // 覆盖当前资源的应用资源
-        group.getResourceMap().put(
-                instance.getServiceName(),
-                newResourceList.stream().map(IdEntity::getId).collect(Collectors.toList())
-        );
 
+        List<String> newResourceIds = newResourceList
+                .stream()
+                .filter(r -> r.getSources().stream().anyMatch(s -> group.getSources().contains(s)))
+                .map(IdEntity::getId)
+                .collect(Collectors.toList());
+        // 覆盖当前应用的资源
+        group.getResourceMap().put(instance.getServiceName(), newResourceIds);
         authorizationService.saveGroup(group);
 
+    }
+
+    @Override
+    public void postDisabledApplicationResource(NacosService nacosService) {
+        Group group = authorizationService.getGroup(applicationConfig.getAdminGroupId());
+
+        // 如果配置了管理员组 线删除同步一次管理员資源
+        if (Objects.isNull(group)) {
+            return;
+        }
+        // 移除当前应用的资源
+        group.getResourceMap().remove(nacosService.getName());
+        authorizationService.saveGroup(group);
     }
 }
