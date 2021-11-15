@@ -58,8 +58,14 @@ public class PluginResourceService {
     @Autowired(required = false)
     private List<PluginResourceInterceptor> pluginResourceInterceptor;
 
+    /**
+     * 服务实例缓存，用于记录当前的插件信息是否需要更新资源
+     */
     private final Map<String, List<PluginInstance>> instanceCache = new LinkedHashMap<>();
 
+    /**
+     * 当前插件的所有资源集合
+     */
     private final List<Resource> resources = new LinkedList<>();
 
     /**
@@ -341,6 +347,10 @@ public class PluginResourceService {
      * @return 资源集合
      */
     public List<Resource> getResources() {
-        return this.resources;
+        return this
+                .resources
+                .stream()
+                .map(r -> Casts.of(r, Resource.class, PluginInfo.DEFAULT_CHILDREN_NAME))
+                .collect(Collectors.toList());
     }
 }

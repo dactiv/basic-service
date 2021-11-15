@@ -107,24 +107,18 @@ public class AuthorizationService {
      */
     public List<Resource> getResources(String applicationName, String... sources) {
         List<Resource> result = pluginResourceService.getResources();
+        Stream<Resource> stream = result.stream();
 
         if (StringUtils.isNotBlank(applicationName)) {
-            result = result
-                    .stream()
-                    .filter(r -> r.getApplicationName().equals(applicationName))
-                    .collect(Collectors.toList());
+            stream = stream.filter(r -> r.getApplicationName().equals(applicationName));
         }
 
         if (ArrayUtils.isNotEmpty(sources)) {
             List<String> sourceList = Arrays.asList(sources);
-
-            result = result
-                    .stream()
-                    .filter(r -> r.getSources().stream().anyMatch(sourceList::contains))
-                    .collect(Collectors.toList());
+            stream = stream.filter(r -> r.getSources().stream().anyMatch(sourceList::contains));
         }
 
-        return result;
+        return stream.sorted(Comparator.comparing(Resource::getSort)).collect(Collectors.toList());
     }
 
     // -------------------------------- 组管理 -------------------------------- //

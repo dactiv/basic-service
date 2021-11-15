@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
 import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.entity.SystemUser;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
@@ -13,14 +14,14 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.Arrays;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -55,8 +56,12 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public List<Resource> find(@RequestParam(required = false) boolean mergeTree,
-                               String applicationName,
-                               List<String> sources) {
+                               @RequestParam(required = false) String applicationName,
+                               @RequestParam(required = false) List<String> sources) {
+
+        if (CollectionUtils.isEmpty(sources)) {
+            sources = new LinkedList<>();
+        }
 
         List<Resource> resourceList = userService
                 .getAuthorizationService()
@@ -67,6 +72,22 @@ public class ResourceController {
         } else {
             return resourceList;
         }
+    }
+
+    /**
+     * 获取用户关联资源实体集合
+     *
+     * @param userId 用户主键值
+     *
+     * @return 资源实体集合
+     */
+    @PreAuthorize("isAuthenticated()")
+    @GetMapping("getConsoleUserResources")
+    @Plugin(name = "获取用户资源 id 集合", sources = "Console")
+    public List<String> getConsoleUserResources(@RequestParam Integer userId) {
+        SystemUser systemUser = userService.getConsoleUser(userId);
+        Set<Map.Entry<String, List<String>>> entrySet = systemUser.getResourceMap().entrySet();
+        return entrySet.stream().flatMap(e -> e.getValue().stream()).collect(Collectors.toList());
     }
 
     /**

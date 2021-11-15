@@ -9,6 +9,7 @@ import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
+import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -35,7 +36,7 @@ import java.util.stream.Collectors;
 @NoArgsConstructor
 @TableName("tb_resource")
 @EqualsAndHashCode(callSuper = false)
-public class Resource extends IdEntity<String> implements Tree<String, Resource> {
+public class Resource extends IdEntity<String> implements Tree<String, Resource>, Cloneable {
 
     private static final long serialVersionUID = 4709419291009298510L;
 
@@ -71,7 +72,9 @@ public class Resource extends IdEntity<String> implements Tree<String, Resource>
     private String type;
 
     /**
-     * 来源:Front.前端、Console.管理后台、UserCenter.用户中心、System.系统、Mobile.移动端、All.全部
+     * 来源
+     *
+     * @see ResourceSource
      */
     @NotEmpty
     @Length(max = 16)

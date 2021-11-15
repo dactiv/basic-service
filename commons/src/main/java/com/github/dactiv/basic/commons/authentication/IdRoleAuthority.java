@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
  */
 @Data
 @NoArgsConstructor
-@AllArgsConstructor(staticName = "of")
+@AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
 public class IdRoleAuthority extends RoleAuthority implements BasicIdentification<Integer> {
 
