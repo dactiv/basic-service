@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.config.dao.DataDictionaryDao;
 import com.github.dactiv.basic.config.dao.DictionaryTypeDao;
 import com.github.dactiv.basic.config.entity.DataDictionary;
@@ -13,7 +13,7 @@ import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -118,7 +118,7 @@ public class DictionaryService {
      */
     public Page<DataDictionary> findDataDictionariesPage(PageRequest pageRequest, Wrapper<DataDictionary> wrapper) {
 
-        PageDto<DataDictionary> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<DataDictionary> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 

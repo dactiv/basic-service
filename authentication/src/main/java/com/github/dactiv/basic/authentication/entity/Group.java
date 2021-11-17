@@ -94,7 +94,6 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * @see Plugin#sources()
      */
     @NotEmpty
-    @Length(max = 128)
     @TableField(typeHandler = JacksonTypeHandler.class)
     private List<String> sources = new LinkedList<>();
 

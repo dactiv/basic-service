@@ -11,7 +11,7 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;

@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
+import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
@@ -18,6 +19,7 @@ import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.security.authentication.AnonymousAuthenticationToken;
@@ -52,9 +54,15 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     public final static String DEFAULT_IS_AUTHENTICATION_NAME = "authentication";
 
     /**
+     * 当前运行的服务信息
+     */
+    private final static String DEFAULT_SERVICES_NAME = "services";
+
+    /**
      * 默认的 token 名称
      */
     private final static String DEFAULT_TOKEN_NAME = "token";
+
 
     @Autowired
     private ApplicationConfig applicationConfig;
@@ -73,6 +81,9 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
     @Autowired
     private CookieRememberService cookieRememberService;
+
+    @Autowired
+    private DiscoveryClient discoveryClient;
 
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
@@ -159,8 +170,8 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
     public RestResult<Map<String, Object>> createUnauthorizedResult(HttpServletRequest request) {
 
         RestResult<Map<String, Object>> result = createRestResult(request);
-
         postCaptchaData(result, request);
+        result.getData().put(DEFAULT_SERVICES_NAME, discoveryClient.getServices());
 
         return result;
     }

@@ -346,21 +346,34 @@ public class AuthorizationService {
      */
     public List<Resource> getSystemUserResource(SystemUser user) {
         List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
-        // 构造用户的组资源
-        List<Resource> userResource = roleAuthorities
+
+        // 通过 id 获取组信息
+        List<Group> groups = roleAuthorities
                 .stream()
                 .map(IdRoleAuthority::getId)
                 .map(this::getGroup)
-                .flatMap(g -> getResourcesStream(g.getResourceMap()))
+                .collect(Collectors.toList());
+
+        // 获取组来源，用于过滤组的资源里有存在不同的资源来源细腻些
+        List<String> groupSources = groups
+                .stream()
+                .flatMap(g -> g.getSources().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
+        // 构造用户的组资源
+        List<Resource> userResource = groups
+                .stream()
+                .flatMap(g -> getResourcesStream(g.getResourceMap(), groupSources))
                 .collect(Collectors.toList());
 
         // 构造用户的独立资源
-        userResource.addAll(getResourcesStream(user.getResourceMap()).collect(Collectors.toList()));
+        userResource.addAll(getResourcesStream(user.getResourceMap(), groupSources).collect(Collectors.toList()));
 
         return userResource;
     }
 
-    private Stream<Resource> getResourcesStream(Map<String, List<String>> resourceMap) {
+    private Stream<Resource> getResourcesStream(Map<String, List<String>> resourceMap, List<String> sources) {
 
         if (MapUtils.isEmpty(resourceMap)) {
             return Stream.empty();
@@ -374,7 +387,7 @@ public class AuthorizationService {
             List<Resource> findResources = resources
                     .stream()
                     .filter(r -> entry.getValue().contains(r.getId()))
-                    .filter(r -> r.getSources().stream().noneMatch(ResourceSource.DEFAULT_IGNORE_SOURCE_VALUES::contains))
+                    .filter(r -> r.getSources().stream().anyMatch(sources::contains))
                     .collect(Collectors.toList());
 
             result.addAll(findResources);

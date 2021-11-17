@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.config.dao.AccessCryptoDao;
 import com.github.dactiv.basic.config.dao.AccessCryptoPredicateDao;
 import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
@@ -18,7 +18,7 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.redisson.api.RFuture;
 import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
@@ -159,7 +159,7 @@ public class AccessCryptoService implements InitializingBean {
      */
     public Page<ConfigAccessCrypto> findAccessCryptoPage(PageRequest pageRequest, Wrapper<ConfigAccessCrypto> wrapper) {
 
-        PageDto<ConfigAccessCrypto> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<ConfigAccessCrypto> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 

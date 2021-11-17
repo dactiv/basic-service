@@ -101,24 +101,4 @@ public enum ResourceSource implements NameEnum {
      */
     public static final String ALL_SOURCE_VALUE = "All";
 
-    /**
-     * 所有自动配置的可用来源值集合
-     */
-    public static final List<String> DEFAULT_ALL_SOURCE_VALUES = Arrays.asList(
-            ResourceSource.All.toString(),
-            ResourceSource.Console.toString(),
-            ResourceSource.Front.toString(),
-            ResourceSource.Mobile.toString(),
-            ResourceSource.UserCenter.toString(),
-            ResourceSource.System.toString()
-    );
-
-    /**
-     * 所有可忽略的来源值集合
-     */
-    public static final List<String> DEFAULT_IGNORE_SOURCE_VALUES = Arrays.asList(
-            ResourceSource.All.toString(),
-            ResourceSource.System.toString()
-    );
-
 }

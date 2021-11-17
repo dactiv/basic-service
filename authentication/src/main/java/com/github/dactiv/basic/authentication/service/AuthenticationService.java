@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
@@ -21,7 +21,7 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -158,7 +158,7 @@ public class AuthenticationService {
      */
     public Page<AuthenticationInfo> findAuthenticationInfoPage(PageRequest pageRequest, Wrapper<AuthenticationInfo> wrapper) {
 
-        PageDto<AuthenticationInfo> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<AuthenticationInfo> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
         IPage<AuthenticationInfo> result = authenticationInfoDao.selectPage(page, wrapper);

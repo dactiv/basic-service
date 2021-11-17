@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
+import com.github.dactiv.basic.authentication.entity.Resource;
 import com.github.dactiv.basic.authentication.service.UserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
@@ -12,7 +13,7 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -70,8 +71,8 @@ public class ConsoleUserController {
      * @return 用户实体
      */
     @GetMapping("get")
-    @PreAuthorize("hasRole('BASIC')")
-    @Plugin(name = "获取信息", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
+    @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[console_user:get]')")
+    @Plugin(name = "获取信息", sources = {ResourceSource.SYSTEM_SOURCE_VALUE, ResourceSource.CONSOLE_SOURCE_VALUE})
     public ConsoleUser get(@RequestParam Integer id) {
         return userService.getConsoleUser(id);
     }

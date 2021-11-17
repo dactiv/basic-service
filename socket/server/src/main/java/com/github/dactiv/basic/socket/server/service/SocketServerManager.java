@@ -342,9 +342,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         Objects.requireNonNull(user.getDeviceIdentified(), "设备 id 识别不能为空");
 
         String deviceIdentified = user.getDeviceIdentified();
-
         RBucket<SecurityContext> bucket = securityContextRepository.getSecurityContextBucket(deviceIdentified);
-
         SecurityContext securityContext = bucket.get();
 
         PrincipalAuthenticationToken token;
@@ -372,7 +370,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         if (requestOptional.isPresent() && responseOptional.isPresent()) {
 
             HttpServletRequest request = requestOptional.get();
-
             String requestDeviceIdentified = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
 
             if (requestDeviceIdentified.equals(deviceIdentified)) {
@@ -430,9 +427,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     public void onConnect(SocketIOClient client) {
 
         String deviceIdentified = client.getHandshakeData().getSingleUrlParam(DEFAULT_CLIENT_IDENTIFIED_PARAM_NAME);
-
         SecurityContext securityContext = securityContextRepository.getSecurityContextBucket(deviceIdentified).get();
-
         if (Objects.isNull(securityContext)) {
             log.warn("在认证通过后连接 socket 时出现获取用户信息为 null 的情况, deviceIdentified 为:" + deviceIdentified);
             client.sendEvent(SERVER_DISCONNECT_EVENT_NAME, Casts.writeValueAsString(RestResult.of("找不到当前认证的用户")));
@@ -440,7 +435,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         }
 
         SocketUserDetails user = Casts.cast(securityContext.getAuthentication().getDetails());
-
         if (Objects.isNull(user)) {
             client.disconnect();
             return;

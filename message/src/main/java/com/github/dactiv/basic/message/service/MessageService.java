@@ -3,7 +3,7 @@ package com.github.dactiv.basic.message.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.message.dao.BatchMessageDao;
 import com.github.dactiv.basic.message.dao.SmsMessageDao;
 import com.github.dactiv.basic.message.entity.BatchMessage;
@@ -12,7 +12,7 @@ import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -233,7 +233,7 @@ public class MessageService {
      * @return 分页实体
      */
     public Page<SmsMessage> findSmsMessagePage(PageRequest pageRequest, Wrapper<SmsMessage> wrapper) {
-        PageDto<SmsMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<SmsMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 

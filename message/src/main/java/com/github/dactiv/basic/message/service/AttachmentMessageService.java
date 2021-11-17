@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.message.dao.AttachmentDao;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
 import com.github.dactiv.basic.message.dao.SiteMessageDao;
@@ -18,7 +18,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -271,7 +271,7 @@ public class AttachmentMessageService {
      */
     public Page<EmailMessage> findEmailMessagePage(PageRequest pageRequest, Wrapper<EmailMessage> wrapper) {
 
-        PageDto<EmailMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<EmailMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
@@ -385,7 +385,7 @@ public class AttachmentMessageService {
      * @return 分页实体
      */
     public Page<SiteMessage> findSiteMessagePage(PageRequest pageRequest, Wrapper<SiteMessage> wrapper) {
-        PageDto<SiteMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<SiteMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 

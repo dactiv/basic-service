@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDto;
+import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.dao.MemberUserDao;
@@ -22,7 +22,7 @@ import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
-import com.github.dactiv.framework.spring.web.filter.generator.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -345,7 +345,7 @@ public class UserService implements InitializingBean {
      */
     public Page<ConsoleUser> findConsoleUserPage(PageRequest pageRequest, Wrapper<ConsoleUser> wrapper) {
 
-        PageDto<ConsoleUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<ConsoleUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
@@ -583,7 +583,7 @@ public class UserService implements InitializingBean {
      */
     public Page<MemberUser> findMemberUserPage(PageRequest pageRequest, Wrapper<MemberUser> wrapper) {
 
-        PageDto<MemberUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<MemberUser> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
