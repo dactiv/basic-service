@@ -6,14 +6,14 @@ SET FOREIGN_KEY_CHECKS = 0;
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_access_crypto`;
 CREATE TABLE `tb_access_crypto` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键 id',
+  `id` int(20) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
   `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
   `name` varchar(32) NOT NULL COMMENT '名称',
   `type` varchar(32) NOT NULL COMMENT '类型',
   `value` varchar(256) NOT NULL COMMENT '值',
-  `request_decrypt` tinyint NOT NULL COMMENT '是否请求解密，0.否, 1.是',
-  `response_encrypt` tinyint NOT NULL COMMENT '是否响应加密，0.否, 1.是',
-  `enabled` tinyint NOT NULL COMMENT '是否启用，1.是，0.否',
+  `request_decrypt` tinyint(4) NOT NULL COMMENT '是否请求解密，0.否, 1.是',
+  `response_encrypt` tinyint(4) NOT NULL COMMENT '是否响应加密，0.否, 1.是',
+  `enabled` tinyint(4) NOT NULL COMMENT '是否启用，1.是，0.否',
   `remark` varchar(128) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `ix_value` (`value`) USING BTREE
@@ -24,12 +24,12 @@ CREATE TABLE `tb_access_crypto` (
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_access_crypto_predicate`;
 CREATE TABLE `tb_access_crypto_predicate` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键 id',
+  `id` int(20) NOT NULL AUTO_INCREMENT COMMENT '主键 id',
   `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
   `name` varchar(32) NOT NULL COMMENT '名称',
   `value` varchar(256) NOT NULL COMMENT '值',
   `remark` varchar(128) DEFAULT NULL COMMENT '备注',
-  `access_crypto_id` int NOT NULL COMMENT '访问加解密 id',
+  `access_crypto_id` int(20) NOT NULL COMMENT '访问加解密 id',
   PRIMARY KEY (`id`) USING BTREE,
   KEY `ix_access_crypto_id` (`access_crypto_id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='访问加解密条件表';
@@ -39,16 +39,16 @@ CREATE TABLE `tb_access_crypto_predicate` (
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_data_dictionary`;
 CREATE TABLE `tb_data_dictionary` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `id` int(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
   `code` varchar(256) NOT NULL COMMENT '键名称',
   `name` varchar(64) NOT NULL COMMENT '名称',
   `level` varchar(32) DEFAULT NULL COMMENT '等级',
   `value` text NOT NULL COMMENT '值',
-  `enabled` tinyint DEFAULT '1' COMMENT '状态:0.禁用,1.启用',
-  `type_id` int NOT NULL COMMENT '对应字典类型',
-  `parent_id` int DEFAULT NULL COMMENT '根节点为 null',
-  `sort` tinyint DEFAULT NULL COMMENT '顺序值',
+  `enabled` tinyint(4) DEFAULT '1' COMMENT '状态:0.禁用,1.启用',
+  `type_id` int(20) NOT NULL COMMENT '对应字典类型',
+  `parent_id` int(20) DEFAULT NULL COMMENT '根节点为 null',
+  `sort` tinyint(4) DEFAULT NULL COMMENT '顺序值',
   `remark` varchar(256) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_code` (`code`) USING BTREE,
@@ -61,11 +61,11 @@ CREATE TABLE `tb_data_dictionary` (
 -- ----------------------------
 DROP TABLE IF EXISTS `tb_dictionary_type`;
 CREATE TABLE `tb_dictionary_type` (
-  `id` int NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+  `id` int(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
   `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
   `code` varchar(128) NOT NULL COMMENT '键名称',
   `name` varchar(64) NOT NULL COMMENT '类型名称',
-  `parent_id` int DEFAULT NULL COMMENT '父字典类型,根节点为 null',
+  `parent_id` int(20) DEFAULT NULL COMMENT '父字典类型,根节点为 null',
   `remark` varchar(128) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE KEY `uk_type` (`code`) USING BTREE
