@@ -18,7 +18,7 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.redisson.api.RFuture;
 import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;

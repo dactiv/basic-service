@@ -3,13 +3,14 @@ package com.github.dactiv.basic.authentication.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.entity.Group;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -39,7 +40,7 @@ import java.util.stream.Collectors;
 public class GroupController {
 
     @Autowired
-    private AuthorizationService authorizationService;
+    private GroupService groupService;
 
     @Autowired
     private MybatisPlusQueryGenerator<Group> queryGenerator;
@@ -52,7 +53,7 @@ public class GroupController {
     @Plugin(name = "查询全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public List<Group> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
-        List<Group> groupList = authorizationService.findGroups(queryGenerator.getQueryWrapperByHttpRequest(request));
+        List<Group> groupList = groupService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(groupList);
@@ -72,7 +73,7 @@ public class GroupController {
     @PreAuthorize("hasAuthority('perms[group:get]')")
     @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Group get(@RequestParam Integer id) {
-        return authorizationService.getGroup(id);
+        return groupService.get(id);
     }
 
     /**
@@ -89,7 +90,7 @@ public class GroupController {
     @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody Group entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
-        authorizationService.saveGroup(entity);
+        groupService.save(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
@@ -107,7 +108,7 @@ public class GroupController {
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
 
-        authorizationService.deleteGroup(ids);
+        groupService.deleteById(ids);
 
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
@@ -124,7 +125,7 @@ public class GroupController {
     @Plugin(name = "判断权限值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
 
-        return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
+        return groupService.find(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
     }
 
     /**
@@ -138,6 +139,6 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断组名称是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
-        return authorizationService.findGroups(Wrappers.<Group>lambdaQuery().eq(Group::getName, name)).isEmpty();
+        return groupService.find(Wrappers.<Group>lambdaQuery().eq(Group::getName, name)).isEmpty();
     }
 }

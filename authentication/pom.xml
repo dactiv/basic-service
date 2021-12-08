@@ -38,13 +38,13 @@
         </dependency>
 
         <dependency>
-            <groupId>com.baomidou</groupId>
-            <artifactId>mybatis-plus-boot-starter</artifactId>
+            <groupId>com.github.dactiv.framework</groupId>
+            <artifactId>mybatis</artifactId>
         </dependency>
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
-            <artifactId>spring-web-mvc-query-mybatis-plus</artifactId>
+            <artifactId>mybatis-plus</artifactId>
         </dependency>
 
         <dependency>

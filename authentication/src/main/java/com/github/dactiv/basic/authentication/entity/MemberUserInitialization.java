@@ -1,12 +1,10 @@
 package com.github.dactiv.basic.authentication.entity;
 
-import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableId;
-import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.annotation.Version;
+import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -59,12 +57,14 @@ public class MemberUserInitialization implements Serializable {
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer modifyPassword = YesOrNo.No.getValue();
+    @TableField(typeHandler = NameValueEnumTypeHandler.class)
+    private YesOrNo modifyPassword = YesOrNo.No;
 
     /**
      * 是否可更新登录账户：1.是、0.否
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer modifyUsername = YesOrNo.No.getValue();
+    @TableField(typeHandler = NameValueEnumTypeHandler.class)
+    private YesOrNo modifyUsername = YesOrNo.No;
 }

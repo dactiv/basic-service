@@ -1,30 +1,25 @@
 package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
+
 import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
+import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
-import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
@@ -39,23 +34,22 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 /**
- * 认证信息表管理服务
  *
- * @deprecated 重新写这个
- * @author maurice
- * @since 2020-06-01 08:20:59
+ * tb_authentication_info 的业务逻辑
+ *
+ * <p>Table: tb_authentication_info - 认证信息表</p>
+ *
+ * @see AuthenticationInfo
+ *
+ * @author maurice.chen
+ *
+ * @since 2021-11-25 02:42:57
  */
 @Slf4j
 @Service
 @RefreshScope
-@Deprecated
 @Transactional(rollbackFor = Exception.class)
-public class AuthenticationService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(AuthenticationService.class);
-
-    @Autowired
-    private AuthenticationInfoDao authenticationInfoDao;
+public class AuthenticationInfoService extends BasicService<AuthenticationInfoDao, AuthenticationInfo> {
 
     @Autowired
     private MessageService messageService;
@@ -73,68 +67,6 @@ public class AuthenticationService {
     );
 
     /**
-     * 保存认证信息表实体
-     *
-     * @param authenticationInfo 认证信息表实体
-     */
-    public void saveAuthenticationInfo(AuthenticationInfo authenticationInfo) {
-        if (Objects.isNull(authenticationInfo.getId())) {
-            insertAuthenticationInfo(authenticationInfo);
-        } else {
-            updateAuthenticationInfo(authenticationInfo);
-        }
-    }
-
-    /**
-     * 新增认证信息表实体
-     *
-     * @param authenticationInfo 认证信息表实体
-     */
-    public void insertAuthenticationInfo(AuthenticationInfo authenticationInfo) {
-        authenticationInfoDao.insert(authenticationInfo);
-    }
-
-    /**
-     * 更新认证信息表实体
-     *
-     * @param authenticationInfo 认证信息表实体
-     */
-    public void updateAuthenticationInfo(AuthenticationInfo authenticationInfo) {
-        authenticationInfoDao.updateById(authenticationInfo);
-    }
-
-    /**
-     * 删除认证信息表实体
-     *
-     * @param id 主键 id
-     */
-    public void deleteAuthenticationInfo(Integer id) {
-        authenticationInfoDao.deleteById(id);
-    }
-
-    /**
-     * 删除认证信息表实体
-     *
-     * @param ids 主键 id 集合
-     */
-    public void deleteAuthenticationInfo(List<Integer> ids) {
-        for (Integer id : ids) {
-            deleteAuthenticationInfo(id);
-        }
-    }
-
-    /**
-     * 获取认证信息表实体
-     *
-     * @param id 主键 id
-     *
-     * @return 认证信息表实体
-     */
-    public AuthenticationInfo getAuthenticationInfo(Integer id) {
-        return authenticationInfoDao.selectById(id);
-    }
-
-    /**
      * 获取最后一条认证信息表实体
      *
      * @param userId 用户 id
@@ -143,29 +75,10 @@ public class AuthenticationService {
      * @return 认证信息表实体
      */
     public AuthenticationInfo getLastAuthenticationInfo(Integer userId, List<String> types) {
-        return authenticationInfoDao.selectOne(Wrappers
-                .<AuthenticationInfo>lambdaQuery()
+        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
                 .eq(AuthenticationInfo::getUserId, userId)
-                .in(AuthenticationInfo::getType, types)
-        );
-    }
-
-    /**
-     * 查找认证信息表实体分页数据
-     *
-     * @param pageRequest 分页请求
-     * @param wrapper     查询包装器
-     *
-     * @return 分页实体
-     */
-    public Page<AuthenticationInfo> findAuthenticationInfoPage(PageRequest pageRequest, Wrapper<AuthenticationInfo> wrapper) {
-
-        PageDTO<AuthenticationInfo> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
-        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
-
-        IPage<AuthenticationInfo> result = authenticationInfoDao.selectPage(page, wrapper);
-
-        return MybatisPlusQueryGenerator.convertResultPage(result);
+                .in(AuthenticationInfo::getType, types);
+        return findOne(wrapper);
     }
 
     /**
@@ -175,14 +88,12 @@ public class AuthenticationService {
      */
     public void validAuthenticationInfo(AuthenticationInfo info) {
 
-        Page<AuthenticationInfo> page = findAuthenticationInfoPage(
-                new PageRequest(0, 1),
-                Wrappers.
-                        <AuthenticationInfo>lambdaQuery()
-                        .eq(AuthenticationInfo::getUserId, info.getUserId())
-                        .in(AuthenticationInfo::getType, Collections.singletonList(info.getType()))
-                        .ne(AuthenticationInfo::getId, info.getId())
-        );
+        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
+                .eq(AuthenticationInfo::getUserId, info.getUserId())
+                .in(AuthenticationInfo::getType, Collections.singletonList(info.getType()))
+                .ne(AuthenticationInfo::getId, info.getId());
+
+        Page<AuthenticationInfo> page = findPage(new PageRequest(0, 1), wrapper);
 
         Iterator<AuthenticationInfo> iterator = page.getElements().iterator();
 
@@ -224,16 +135,13 @@ public class AuthenticationService {
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
     @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", waitTime = @Time(0L))
     public void syncAuthenticationInfo() {
+        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
+                .le(AuthenticationInfo::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
+                .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue());
 
-        Page<AuthenticationInfo> page = findAuthenticationInfoPage(
-                new PageRequest(1, 100),
-                Wrappers.
-                        <AuthenticationInfo>lambdaQuery()
-                        .le(AuthenticationInfo::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
-                        .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue())
-        );
+        Page<AuthenticationInfo> page = findPage(new PageRequest(1, 100), wrapper);
 
-        LOGGER.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
+        log.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
 
         page.getElements().forEach(this::onAuthenticationSuccess);
 
@@ -265,10 +173,9 @@ public class AuthenticationService {
         } catch (Exception e) {
             info.setSyncStatus(ExecuteStatus.Failure.getValue());
             info.setRemark(e.getMessage());
-            LOGGER.error("解析 ID 为 [" + info.getUserId() + "]的用户认证信息数据出错", e);
+            log.error("解析 ID 为 [" + info.getUserId() + "]的用户认证信息数据出错", e);
         }
 
-        saveAuthenticationInfo(info);
+        save(info);
     }
-
 }

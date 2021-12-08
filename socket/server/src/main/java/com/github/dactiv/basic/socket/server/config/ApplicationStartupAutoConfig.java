@@ -9,7 +9,7 @@ import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.SocketUserDetailsContextRepository;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.redisson.api.RedissonClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;

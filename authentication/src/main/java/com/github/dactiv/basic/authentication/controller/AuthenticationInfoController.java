@@ -1,12 +1,12 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
-import com.github.dactiv.basic.authentication.service.AuthenticationService;
+import com.github.dactiv.basic.authentication.service.AuthenticationInfoService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -23,7 +23,7 @@ import java.util.List;
 public class AuthenticationInfoController {
 
     @Autowired
-    private AuthenticationService authenticationService;
+    private AuthenticationInfoService authenticationInfoService;
 
     @Autowired
     private MybatisPlusQueryGenerator<?> queryGenerator;
@@ -41,7 +41,7 @@ public class AuthenticationInfoController {
     @Plugin(name = "获取认证信息表分页", parent = "audit", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<AuthenticationInfo> page(PageRequest pageRequest, HttpServletRequest request) {
 
-        return authenticationService.findAuthenticationInfoPage(
+        return authenticationInfoService.findPage(
                 pageRequest,
                 queryGenerator.getQueryWrapperByHttpRequest(request)
         );
@@ -58,7 +58,6 @@ public class AuthenticationInfoController {
     @PreAuthorize("hasRole('BASIC')")
     @GetMapping("getLastAuthenticationInfo")
     public AuthenticationInfo getLastAuthenticationInfo(@RequestParam Integer userId, @RequestParam List<String> types) {
-
-        return authenticationService.getLastAuthenticationInfo(userId, types);
+        return authenticationInfoService.getLastAuthenticationInfo(userId, types);
     }
 }

@@ -31,6 +31,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
+import org.springframework.security.core.session.SessionInformation;
+import org.springframework.session.Session;
+import org.springframework.session.security.SpringSessionBackedSessionRegistry;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -69,6 +72,19 @@ public class AuthorizationService {
     @Value("${spring.security.admin.group-id:1}")
     private Integer adminGroupId;
 
+    @Autowired
+    private SpringSessionBackedSessionRegistry<? extends Session> sessionBackedSessionRegistry;
+
+    /**
+     * 将用户的所有 session 设置为超时
+     *
+     * @param user 用户实体
+     */
+    public void expireSystemUserSession(Object user) {
+        List<SessionInformation> sessions = sessionBackedSessionRegistry.getAllSessions(user, false);
+        sessions.forEach(SessionInformation::expireNow);
+    }
+
     /**
      * 获取账户认证的用户明细服务
      *
@@ -79,7 +95,7 @@ public class AuthorizationService {
     public UserDetailsService getUserDetailsService(ResourceSource source) {
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
-                null,
+                "",
                 source.toString()
         );
 
@@ -119,6 +135,30 @@ public class AuthorizationService {
         }
 
         return stream.sorted(Comparator.comparing(Resource::getSort)).collect(Collectors.toList());
+    }
+
+    public void deleteSystemUseAuthenticationCache(ResourceSource source, PrincipalAuthenticationToken token) {
+
+        UserDetailsService userDetailsService = getUserDetailsService(source);
+
+        deleteSystemUseAuthenticationCache(userDetailsService, token);
+    }
+
+    private void deleteSystemUseAuthenticationCache(UserDetailsService userDetailsService,
+                                                   PrincipalAuthenticationToken token) {
+        CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
+
+        if (Objects.nonNull(authenticationCache)) {
+
+            redissonClient.getBucket(authenticationCache.getName()).deleteAsync();
+        }
+
+        CacheProperties authorizationCache = userDetailsService.getAuthorizationCache(token);
+
+        if (Objects.nonNull(authorizationCache)) {
+
+            redissonClient.getBucket(authorizationCache.getName()).deleteAsync();
+        }
     }
 
     // -------------------------------- 组管理 -------------------------------- //

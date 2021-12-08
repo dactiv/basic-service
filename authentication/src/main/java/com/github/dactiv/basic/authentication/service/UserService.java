@@ -22,7 +22,7 @@ import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -46,11 +46,12 @@ import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 
 /**
  * 认证管理服务
- *
+ * @deprecated 这个没什么卵用了。
  * @author maurice
  */
 @Service
 @RefreshScope
+@Deprecated
 @Transactional(rollbackFor = Exception.class)
 public class UserService implements InitializingBean {
 

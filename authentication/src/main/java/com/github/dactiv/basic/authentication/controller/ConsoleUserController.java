@@ -1,19 +1,20 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.entity.Resource;
-import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -24,6 +25,8 @@ import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
 import java.util.Objects;
+
+import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 
 /**
  * 系统用户控制器
@@ -43,7 +46,7 @@ import java.util.Objects;
 public class ConsoleUserController {
 
     @Autowired
-    private UserService userService;
+    private ConsoleUserService consoleUserService;
 
     @Autowired
     private MybatisPlusQueryGenerator<ConsoleUser> queryGenerator;
@@ -60,7 +63,7 @@ public class ConsoleUserController {
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
     @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<ConsoleUser> page(PageRequest pageRequest, HttpServletRequest request) {
-        return userService.findConsoleUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return consoleUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -74,7 +77,7 @@ public class ConsoleUserController {
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[console_user:get]')")
     @Plugin(name = "获取信息", sources = {ResourceSource.SYSTEM_SOURCE_VALUE, ResourceSource.CONSOLE_SOURCE_VALUE})
     public ConsoleUser get(@RequestParam Integer id) {
-        return userService.getConsoleUser(id);
+        return consoleUserService.get(id);
     }
 
     /**
@@ -85,13 +88,22 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("save")
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody ConsoleUser entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
 
-        userService.saveConsoleUser(entity);
+        boolean isNew = Objects.isNull(entity.getId());
+
+        consoleUserService.save(entity);
+
+        if (isNew) {
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.CREATE_SOCKET_EVENT_NAME, entity);
+        } else {
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.UPDATE_SOCKET_EVENT_NAME, entity);
+        }
 
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
@@ -104,14 +116,15 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("delete")
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     @Plugin(name = "删除", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
 
-        userService.deleteConsoleUsers(ids);
-
+        consoleUserService.deleteById(ids, false);
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.DELETE_SOCKET_EVENT_NAME, ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
@@ -133,7 +146,7 @@ public class ConsoleUserController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
         Integer userId = Casts.cast(userDetails.getId());
-        userService.updateConsoleUserPassword(userId, oldPassword, newPassword);
+        consoleUserService.updateConsoleUserPassword(userId, oldPassword, newPassword);
 
         return RestResult.of("修改密码成功");
     }
@@ -149,7 +162,7 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断登录账户是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isUsernameUnique(@RequestParam String username) {
-        return Objects.isNull(userService.getConsoleUserByUsername(username));
+        return Objects.isNull(consoleUserService.getByUsername(username));
     }
 
     /**
@@ -163,7 +176,8 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断邮件是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
-        return userService.findConsoleUsers(new LambdaQueryWrapper<ConsoleUser>().eq(ConsoleUser::getEmail, email)).isEmpty();
+        Wrapper<ConsoleUser> wrapper = consoleUserService.lambdaQuery().eq(ConsoleUser::getEmail, email);
+        return consoleUserService.find(wrapper).isEmpty();
     }
 
 }

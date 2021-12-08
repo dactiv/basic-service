@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
@@ -29,6 +29,10 @@ import java.util.*;
 public class SystemUser implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 750742816513263456L;
+    /**
+     * 密码字段名称
+     */
+    public static final String PASSWORD_FIELD_NAME = "password";
     /**
      * 主键
      */
@@ -85,6 +89,6 @@ public class SystemUser implements NumberIdEntity<Integer> {
      * @return 用户状态名称
      */
     public String getStatusName() {
-        return NameValueEnumUtils.getName(status, UserStatus.class);
+        return ValueEnumUtils.getName(status, UserStatus.class);
     }
 }

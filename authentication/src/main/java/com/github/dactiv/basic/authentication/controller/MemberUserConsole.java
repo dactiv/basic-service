@@ -2,7 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.entity.MemberUser;
-import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -12,7 +12,7 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.spring.web.query.mybatis.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -41,7 +41,7 @@ import java.util.List;
 public class MemberUserConsole {
 
     @Autowired
-    private UserService userService;
+    private MemberUserService memberUserService;
 
     @Autowired
     private MybatisPlusQueryGenerator<MemberUser> queryGenerator;
@@ -58,7 +58,7 @@ public class MemberUserConsole {
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
     @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<MemberUser> page(PageRequest pageRequest, HttpServletRequest request) {
-        return userService.findMemberUserPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return memberUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -72,7 +72,7 @@ public class MemberUserConsole {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "查询分页", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
     public List<MemberUser> find(HttpServletRequest request) {
-        return userService.findMemberUsers(queryGenerator.getQueryWrapperByHttpRequest(request));
+        return memberUserService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -85,7 +85,7 @@ public class MemberUserConsole {
     @GetMapping("get")
     @PreAuthorize("isAuthenticated()")
     public MemberUser get(@RequestParam Integer id) {
-        return userService.getMemberUser(id);
+        return memberUserService.get(id);
     }
 
     /**
@@ -116,7 +116,7 @@ public class MemberUserConsole {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
         Integer userId = Casts.cast(userDetails.getId());
-        userService.updateMemberUserPassword(userId, oldPassword, newPassword);
+        memberUserService.updateMemberUserPassword(userId, oldPassword, newPassword);
 
         return RestResult.of("修改成功");
     }
@@ -143,7 +143,7 @@ public class MemberUserConsole {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
-        userService.updateMemberUserUsername(userId, newUsername);
+        memberUserService.updateMemberUserUsername(userId, newUsername);
 
         return RestResult.of("修改成功");
     }
@@ -158,7 +158,7 @@ public class MemberUserConsole {
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isUsernameUnique(@RequestParam String username) {
-        return userService.findMemberUsers(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getUsername, username)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getUsername, username)).isEmpty();
     }
 
     /**
@@ -171,7 +171,7 @@ public class MemberUserConsole {
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isEmailUnique(@RequestParam String email) {
-        return userService.findMemberUsers(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getEmail, email)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getEmail, email)).isEmpty();
     }
 
     /**
@@ -184,7 +184,7 @@ public class MemberUserConsole {
     @GetMapping("isPhoneUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isPhoneUnique(@RequestParam String phone) {
-        return userService.findMemberUsers(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getPhone, phone)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getPhone, phone)).isEmpty();
     }
 
 }
