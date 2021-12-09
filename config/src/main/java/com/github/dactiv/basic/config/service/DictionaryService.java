@@ -1,23 +1,11 @@
 package com.github.dactiv.basic.config.service;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.baomidou.mybatisplus.core.metadata.OrderItem;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
-import com.github.dactiv.basic.config.dao.DataDictionaryDao;
-import com.github.dactiv.basic.config.dao.DictionaryTypeDao;
+import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.entity.DataDictionary;
 import com.github.dactiv.basic.config.entity.DictionaryType;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.id.IdEntity;
-import com.github.dactiv.framework.commons.page.Page;
-import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
+import lombok.Getter;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -30,102 +18,27 @@ import java.util.Objects;
  * @author maurice
  */
 @Service
-@RefreshScope
 @Transactional(rollbackFor = Exception.class)
 public class DictionaryService {
 
-    @Autowired
-    private DataDictionaryDao dataDictionaryDao;
+    @Getter
+    private final DataDictionaryService dataDictionaryService;
 
-    @Autowired
-    private DictionaryTypeDao dictionaryTypeDao;
+    @Getter
+    private final DictionaryTypeService dictionaryTypeService;
 
-    @Value("${spring.application.dictionary.separator:.}")
-    public String dictionarySeparator;
+    private final ApplicationConfig config;
+
+    public DictionaryService(DataDictionaryService dataDictionaryService,
+                             DictionaryTypeService dictionaryTypeService,
+                             ApplicationConfig config) {
+        this.dataDictionaryService = dataDictionaryService;
+        this.dictionaryTypeService = dictionaryTypeService;
+        this.config = config;
+    }
 
     // ----------------------------------------- 数据字典管理 ----------------------------------------- //
 
-    /**
-     * 获取数据字典
-     *
-     * @param id 数据字典 ID
-     *
-     * @return 字典实体
-     */
-    public DataDictionary getDataDictionary(Integer id) {
-        return dataDictionaryDao.selectById(id);
-    }
-
-    /**
-     * 获取数据字典
-     *
-     * @param code 字典代码
-     *
-     * @return 字典实体
-     */
-    public DataDictionary getDataDictionaryByCode(String code) {
-        return dataDictionaryDao.selectOne(Wrappers.<DataDictionary>lambdaQuery().eq(DataDictionary::getCode, code));
-    }
-
-    /**
-     * 获取数据字典集合
-     *
-     * @param parentId 父类 id
-     *
-     * @return 字典实体集合
-     */
-    public List<DataDictionary> getDataDictionariesByParentId(Integer parentId) {
-        return findDataDictionaries(
-                Wrappers
-                        .<DataDictionary>lambdaQuery()
-                        .eq(DataDictionary::getParentId, parentId)
-        );
-    }
-
-    /**
-     * 获取数据字典集合
-     *
-     * @param typeId 字典类型 id
-     *
-     * @return 字典实体集合
-     */
-    public List<DataDictionary> getDataDictionariesByTypeId(Integer typeId) {
-        return findDataDictionaries(
-                Wrappers
-                        .<DataDictionary>lambdaQuery()
-                        .eq(DataDictionary::getTypeId, typeId)
-        );
-    }
-
-    /**
-     * 查找数据字典
-     *
-     * @param wrapper 包装器
-     *
-     * @return 数据字典集合
-     */
-    public List<DataDictionary> findDataDictionaries(Wrapper<DataDictionary> wrapper) {
-        return dataDictionaryDao.selectList(wrapper);
-    }
-
-    /**
-     * 查找数据字典分页信息
-     *
-     * @param pageRequest 分页请求
-     * @param wrapper     包装器
-     *
-     * @return 分页实体
-     */
-    public Page<DataDictionary> findDataDictionariesPage(PageRequest pageRequest, Wrapper<DataDictionary> wrapper) {
-
-        PageDTO<DataDictionary> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
-
-        page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
-
-        IPage<DataDictionary> result = dataDictionaryDao.selectPage(page, wrapper);
-
-        return MybatisPlusQueryGenerator.convertResultPage(result);
-    }
 
     /**
      * 保存数据字典
@@ -150,18 +63,18 @@ public class DictionaryService {
 
         setDataDictionaryParentCode(entity, updateKeyPath);
 
-        DataDictionary dataDictionary = getDataDictionary(entity.getId());
+        DataDictionary dataDictionary = dataDictionaryService.get(entity.getId());
 
         if (!entity.getCode().equals(dataDictionary.getCode())) {
 
-            DataDictionary exist = getDataDictionaryByCode(entity.getCode());
+            DataDictionary exist = dataDictionaryService.getByCode(entity.getCode());
 
             if (Objects.nonNull(exist)) {
                 String msg = entity.getCode() + "键已被数据字典[" + exist.getName() + "]使用，无法更改";
                 throw new ServiceException(msg);
             }
 
-            List<DataDictionary> dataDictionaries = getDataDictionariesByParentId(dataDictionary.getId());
+            List<DataDictionary> dataDictionaries = dataDictionaryService.findByParentId(dataDictionary.getId());
 
             for (DataDictionary dd : dataDictionaries) {
                 String newKey = StringUtils.replace(dd.getCode(), dataDictionary.getCode(), entity.getCode());
@@ -170,7 +83,7 @@ public class DictionaryService {
             }
         }
 
-        dataDictionaryDao.updateById(entity);
+        dataDictionaryService.updateById(entity);
     }
 
     /**
@@ -180,7 +93,7 @@ public class DictionaryService {
      */
     public void insertDataDictionary(DataDictionary entity) {
 
-        DictionaryType type = getDictionaryType(entity.getTypeId());
+        DictionaryType type = dictionaryTypeService.get(entity.getTypeId());
 
         if (Objects.isNull(type)) {
             throw new ServiceException("找不到 ID 为 [" + entity.getTypeId() + "] 的字典类型");
@@ -188,13 +101,13 @@ public class DictionaryService {
 
         setDataDictionaryParentCode(entity, true);
 
-        DataDictionary dataDictionary = getDataDictionaryByCode(entity.getCode());
+        DataDictionary dataDictionary = dataDictionaryService.getByCode(entity.getCode());
 
         if (Objects.nonNull(dataDictionary)) {
             throw new ServiceException("键为 [" + entity.getCode() + "] 已存在");
         }
 
-        dataDictionaryDao.insert(entity);
+        dataDictionaryService.insert(entity);
     }
 
     /**
@@ -212,94 +125,23 @@ public class DictionaryService {
         if (Objects.nonNull(entity.getParentId())) {
 
             DataDictionary parent = Objects.requireNonNull(
-                    getDataDictionary(entity.getParentId()),
+                    dataDictionaryService.get(entity.getParentId()),
                     "找不到ID为 [" + entity.getParentId() + "] 的父类信息"
             );
 
-            if (!entity.getCode().startsWith(parent.getCode() + dictionarySeparator)) {
-                entity.setCode(parent.getCode() + dictionarySeparator + entity.getCode());
+            if (!entity.getCode().startsWith(parent.getCode() + config.getDictionary().getSeparator())) {
+                entity.setCode(parent.getCode() + config.getDictionary().getSeparator() + entity.getCode());
             }
 
         } else {
-            DictionaryType dictionaryType = getDictionaryType(entity.getTypeId());
-            if (!entity.getCode().startsWith(dictionaryType.getCode() + dictionarySeparator)) {
-                entity.setCode(dictionaryType.getCode() + dictionarySeparator + entity.getCode());
+            DictionaryType dictionaryType = dictionaryTypeService.get(entity.getTypeId());
+            if (!entity.getCode().startsWith(dictionaryType.getCode() + config.getDictionary().getSeparator())) {
+                entity.setCode(dictionaryType.getCode() + config.getDictionary().getSeparator() + entity.getCode());
             }
         }
     }
 
-    /**
-     * 删除字典值
-     *
-     * @param ids 字典实体
-     */
-    public void deleteDataDictionaries(List<Integer> ids) {
-        for (Integer id : ids) {
-            deleteDataDictionary(id);
-        }
-    }
-
-    /**
-     * 根据父字典值删除字典值
-     *
-     * @param id 字典实体
-     */
-    private void deleteDataDictionary(Integer id) {
-
-        List<DataDictionary> dataDictionaries = getDataDictionariesByParentId(id);
-
-        for (DataDictionary dataDictionary : dataDictionaries) {
-            deleteDataDictionary(dataDictionary.getId());
-        }
-
-        dataDictionaryDao.deleteById(id);
-    }
-
     // ----------------------------------------- 字典类型管理 ----------------------------------------- //
-
-    /**
-     * 获取字典类型实体
-     *
-     * @param id 主键 ID
-     *
-     * @return 字典类型实体
-     */
-    public DictionaryType getDictionaryType(Integer id) {
-        return dictionaryTypeDao.selectById(id);
-    }
-
-    /**
-     * 获取字典类型实体
-     *
-     * @param code 代码
-     *
-     * @return 字典类型实体
-     */
-    public DictionaryType getDictionaryTypeByCode(String code) {
-        return dictionaryTypeDao.selectOne(Wrappers.<DictionaryType>lambdaQuery().eq(DictionaryType::getCode, code));
-    }
-
-    /**
-     * 获取字典类型实体
-     *
-     * @param parentId 父类 id
-     *
-     * @return 字典类型实体
-     */
-    public List<DictionaryType> getDictionaryTypesByParentId(Integer parentId) {
-        return dictionaryTypeDao.selectList(Wrappers.<DictionaryType>lambdaQuery().eq(DictionaryType::getParentId, parentId));
-    }
-
-    /**
-     * 查找字典类型
-     *
-     * @param wrapper 包装器
-     *
-     * @return 字典类型集合
-     */
-    public List<DictionaryType> findDictionaryTypes(Wrapper<DictionaryType> wrapper) {
-        return dictionaryTypeDao.selectList(wrapper);
-    }
 
     /**
      * 保存字典类型实体
@@ -323,11 +165,11 @@ public class DictionaryService {
 
         setDictionaryTypeParentCode(entity, true);
 
-        if (Objects.nonNull(getDictionaryTypeByCode(entity.getCode()))) {
+        if (Objects.nonNull(dictionaryTypeService.getByCode(entity.getCode()))) {
             throw new ServiceException("键为 [" + entity.getCode() + "] 已存在");
         }
 
-        dictionaryTypeDao.insert(entity);
+        dictionaryTypeService.insert(entity);
     }
 
     /**
@@ -345,12 +187,12 @@ public class DictionaryService {
         if (Objects.nonNull(entity.getParentId())) {
 
             DictionaryType parent = Objects.requireNonNull(
-                    getDictionaryType(entity.getParentId()),
+                    dictionaryTypeService.get(entity.getParentId()),
                     "找不到ID为 [" + entity.getParentId() + "] 的父类信息"
             );
 
-            if (!entity.getCode().startsWith(parent.getCode() + dictionarySeparator)) {
-                entity.setCode(parent.getCode() + dictionarySeparator + entity.getCode());
+            if (!entity.getCode().startsWith(parent.getCode() + config.getDictionary().getSeparator())) {
+                entity.setCode(parent.getCode() + config.getDictionary().getSeparator() + entity.getCode());
             }
 
         }
@@ -366,18 +208,18 @@ public class DictionaryService {
 
         setDictionaryTypeParentCode(entity, updateKeyPath);
 
-        DictionaryType dictionaryType = getDictionaryType(entity.getId());
+        DictionaryType dictionaryType = dictionaryTypeService.get(entity.getId());
 
         if (!dictionaryType.getCode().equals(entity.getCode())) {
 
-            DictionaryType exist = getDictionaryTypeByCode(entity.getCode());
+            DictionaryType exist = dictionaryTypeService.getByCode(entity.getCode());
 
             if (Objects.nonNull(exist)) {
                 String msg = entity.getCode() + "键已被字典类型[" + exist.getName() + "]使用，无法更改";
                 throw new ServiceException(msg);
             }
 
-            List<DictionaryType> dictionaryTypes = getDictionaryTypesByParentId(dictionaryType.getId());
+            List<DictionaryType> dictionaryTypes = dictionaryTypeService.getByParentId(dictionaryType.getId());
 
             for (DictionaryType dt : dictionaryTypes) {
                 String newKey = StringUtils.replace(dt.getCode(), dictionaryType.getCode(), entity.getCode());
@@ -385,7 +227,7 @@ public class DictionaryService {
                 updateDictionaryType(dt, false);
             }
 
-            List<DataDictionary> dataDictionaries = getDataDictionariesByTypeId(entity.getId());
+            List<DataDictionary> dataDictionaries = dataDictionaryService.findByTypeId(entity.getId());
 
             for (DataDictionary dataDictionary : dataDictionaries) {
                 String newKey = StringUtils.replace(dataDictionary.getCode(), dictionaryType.getCode(), entity.getCode());
@@ -394,41 +236,7 @@ public class DictionaryService {
             }
         }
 
-        dictionaryTypeDao.updateById(entity);
+        dictionaryTypeService.updateById(entity);
     }
-
-    /**
-     * 删除字典类型
-     *
-     * @param ids 要删除的字典ID集合
-     */
-    public void deleteDictionaryTypes(List<Integer> ids) {
-        for (Integer id : ids) {
-            deleteDictionaryType(id);
-        }
-    }
-
-    /**
-     * 根据字典类型
-     *
-     * @param id 字典ID
-     */
-    private void deleteDictionaryType(Integer id) {
-
-        List<DictionaryType> dictionaryTypes = getDictionaryTypesByParentId(id);
-
-        for (DictionaryType dictionaryType : dictionaryTypes) {
-            deleteDictionaryType(dictionaryType.getId());
-        }
-
-        List<DataDictionary> dataDictionaries = getDataDictionariesByTypeId(id);
-
-        for (DataDictionary dataDictionary : dataDictionaries) {
-            deleteDataDictionary(dataDictionary.getId());
-        }
-
-        dictionaryTypeDao.deleteById(id);
-    }
-
 
 }

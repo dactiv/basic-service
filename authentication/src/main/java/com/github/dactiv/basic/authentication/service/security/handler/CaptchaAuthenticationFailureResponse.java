@@ -30,17 +30,23 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
 
     public static final String CAPTCHA_EXECUTE_CODE = "1001";
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private AuthenticationProperties properties;
+    private final AuthenticationProperties properties;
 
-    @Autowired
-    private CaptchaService captchaService;
+    private final CaptchaService captchaService;
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
+
+    public CaptchaAuthenticationFailureResponse(ApplicationConfig applicationConfig,
+                                                AuthenticationProperties properties,
+                                                CaptchaService captchaService,
+                                                RedissonClient redissonClient) {
+        this.applicationConfig = applicationConfig;
+        this.properties = properties;
+        this.captchaService = captchaService;
+        this.redissonClient = redissonClient;
+    }
 
     @Override
     public void setting(RestResult<Map<String, Object>> result, HttpServletRequest request) {

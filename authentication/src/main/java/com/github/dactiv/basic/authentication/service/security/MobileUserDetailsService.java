@@ -1,11 +1,15 @@
 package com.github.dactiv.basic.authentication.service.security;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.GroupService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
+import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
@@ -18,7 +22,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.authentication.DisabledException;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -41,14 +44,21 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
     private final static Logger LOGGER = LoggerFactory.getLogger(MobileUserDetailsService.class);
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final RedissonClient redissonClient;
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final PasswordEncoder passwordEncoder;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    public MobileUserDetailsService(ApplicationConfig applicationConfig,
+                                    AuthorizationService userService,
+                                    GroupService groupService,
+                                    MemberUserService memberUserService,
+                                    PasswordEncoder passwordEncoder,
+                                    CaptchaService captchaService,
+                                    RedissonClient redissonClient) {
+        super(applicationConfig, userService, groupService, memberUserService, passwordEncoder, captchaService);
+        this.redissonClient = redissonClient;
+        this.passwordEncoder = passwordEncoder;
+    }
 
     @Override
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
@@ -63,7 +73,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
         if (!value.getStatus().equals(UserStatus.Enabled.getValue())) {
             throw new DisabledException("你的账户已被"
-                    + NameValueEnumUtils.getName(value.getStatus(), UserStatus.class)
+                    + ValueEnumUtils.getName(value.getStatus(), UserStatus.class)
                     + ", 无法认证");
         }
 
@@ -101,7 +111,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @return key 名称
      */
     public String getMobileAuthenticationTokenKey(String username) {
-        return applicationConfig.getMobile().getCache().getName() + username;
+        return getApplicationConfig().getMobile().getCache().getName() + username;
     }
 
     /**
@@ -113,7 +123,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      *
      * @return 移动端的用户明细实现
      */
-    public MobileUserDetails createMobileUserDetails(MemberUser user,
+    public MobileUserDetails createMobileUserDetails(MemberUserEntity user,
                                                      String identified,
                                                      UserAgent device) {
 
@@ -164,13 +174,14 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     @SuppressWarnings("unchecked")
     public Map<String, Object> createMobileAuthenticationResult(MobileUserDetails details) {
 
-        details.setPassword(RandomStringUtils.randomAlphanumeric(applicationConfig.getRegister().getRandomPasswordCount()));
+        int randomPasswordCount = getApplicationConfig().getRegister().getRandomPasswordCount();
+        details.setPassword(RandomStringUtils.randomAlphanumeric(randomPasswordCount));
 
         Map<String, Object> result = Casts.convertValue(details, Map.class);
 
         String token = createReturnToken(details);
 
-        result.put(applicationConfig.getMobile().getParamName(), token);
+        result.put(getApplicationConfig().getMobile().getParamName(), token);
 
         String password = DigestUtils.md5DigestAsHex(
                 (token + details.getUsername() + details.getDeviceIdentified()).getBytes()
@@ -196,11 +207,11 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
      * @param details 移动设备用户明细
      */
     private void saveMobileUserDetails(MobileUserDetails details) {
-        if (Objects.nonNull(applicationConfig.getMobile().getCache())) {
+        if (Objects.nonNull(getApplicationConfig().getMobile().getCache())) {
 
             RBucket<MobileUserDetails> bucket = getMobileUserDetailsBucket(details.getUsername());
 
-            CacheProperties cache = applicationConfig.getMobile().getCache();
+            CacheProperties cache = getApplicationConfig().getMobile().getCache();
 
             if (Objects.nonNull(cache.getExpiresTime())) {
                 bucket.setAsync(details, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
@@ -246,7 +257,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
     public CacheProperties getAuthenticationCache(PrincipalAuthenticationToken token) {
         return new CacheProperties(
                 getMobileAuthenticationTokenKey(token.getPrincipal().toString()),
-                applicationConfig.getMobile().getCache().getExpiresTime()
+                getApplicationConfig().getMobile().getCache().getExpiresTime()
         );
     }
 

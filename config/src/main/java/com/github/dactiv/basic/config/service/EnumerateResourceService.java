@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.config.enumerate;
+package com.github.dactiv.basic.config.service;
 
 
 import com.alibaba.nacos.api.naming.pojo.Instance;

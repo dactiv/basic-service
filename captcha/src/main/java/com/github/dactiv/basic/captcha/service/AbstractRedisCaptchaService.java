@@ -64,8 +64,19 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      */
     private final Class<C> captchaClass;
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
+
+    private final Validator validator;
+
+    public AbstractRedisCaptchaService(RedissonClient redissonClient,
+                                       Validator validator) {
+        this.redissonClient = redissonClient;
+        this.validator = validator;
+
+        Type type = this.getClass().getGenericSuperclass();
+        this.entityClass = (Class<E>) ((ParameterizedType) type).getActualTypeArguments()[0];
+        this.captchaClass = (Class<C>) ((ParameterizedType) type).getActualTypeArguments()[1];
+    }
 
     /**
      * 存储在 redis 的绑定 token key 名称
@@ -78,22 +89,6 @@ public abstract class AbstractRedisCaptchaService<E, C extends ExpiredCaptcha> i
      */
     @Value("${spring.application.captcha.token.build.param-name-suffix:captchaToken}")
     private String tokenParamNameSuffix;
-
-    @Qualifier("mvcValidator")
-    @Autowired(required = false)
-    private Validator validator;
-
-    /**
-     * 抽象的验证码服务实现
-     */
-    public AbstractRedisCaptchaService() {
-
-        Type type = this.getClass().getGenericSuperclass();
-
-        this.entityClass = (Class<E>) ((ParameterizedType) type).getActualTypeArguments()[0];
-
-        this.captchaClass = (Class<C>) ((ParameterizedType) type).getActualTypeArguments()[1];
-    }
 
     @Override
     public BuildToken generateToken(String deviceIdentified) {

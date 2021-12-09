@@ -1,7 +1,6 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.model;
 
 import com.baomidou.mybatisplus.annotation.TableField;
-import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
@@ -9,12 +8,10 @@ import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
-import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 
@@ -32,11 +29,9 @@ import java.util.stream.Collectors;
  * @since 2020-04-13 09:48:05
  */
 @Data
-@Alias("resource")
 @NoArgsConstructor
-@TableName("tb_resource")
 @EqualsAndHashCode(callSuper = false)
-public class Resource extends IdEntity<String> implements Tree<String, Resource>, Cloneable {
+public class ResourceModel extends IdEntity<String> implements Tree<String, ResourceModel> {
 
     private static final long serialVersionUID = 4709419291009298510L;
 
@@ -69,7 +64,7 @@ public class Resource extends IdEntity<String> implements Tree<String, Resource>
     @NotEmpty
     @Length(max = 16)
     @EqualsAndHashCode.Include
-    private String type;
+    private ResourceType type;
 
     /**
      * 来源
@@ -79,7 +74,7 @@ public class Resource extends IdEntity<String> implements Tree<String, Resource>
     @NotEmpty
     @Length(max = 16)
     @EqualsAndHashCode.Include
-    private List<String> sources;
+    private List<ResourceSource> sources;
 
     /**
      * 版本号
@@ -126,28 +121,7 @@ public class Resource extends IdEntity<String> implements Tree<String, Resource>
      * 子节点
      */
     @TableField(exist = false)
-    private List<Tree<String, Resource>> children = new ArrayList<>();
-
-    /**
-     * 获取类型名称
-     *
-     * @return String
-     */
-    public String getTypeName() {
-        return NameEnumUtils.getName(this.type, ResourceType.class);
-    }
-
-    /**
-     * 获取类型名称
-     *
-     * @return String
-     */
-    public List<String> getSourcesName() {
-        if (CollectionUtils.isEmpty(this.sources)){
-            return null;
-        }
-        return this.sources.stream().map(s -> NameEnumUtils.getName(s, ResourceSource.class)).collect(Collectors.toList());
-    }
+    private List<Tree<String, ResourceModel>> children = new ArrayList<>();
 
     @Override
     @JsonIgnore
@@ -156,8 +130,8 @@ public class Resource extends IdEntity<String> implements Tree<String, Resource>
     }
 
     @Override
-    public boolean isChildren(Tree<String, Resource> parent) {
-        Resource resource = Casts.cast(parent);
+    public boolean isChildren(Tree<String, ResourceModel> parent) {
+        ResourceModel resource = Casts.cast(parent);
         return Objects.equals(resource.getId(), this.getParent());
     }
 }

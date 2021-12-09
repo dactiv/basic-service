@@ -1,9 +1,10 @@
 package com.github.dactiv.basic.authentication.service.plugin.support;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.entity.Group;
-import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
+import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.authentication.service.plugin.PluginInstance;
 import com.github.dactiv.basic.authentication.service.plugin.PluginResourceInterceptor;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -23,17 +24,19 @@ import java.util.stream.Collectors;
 @Component
 public class SyncAdminGroupResourceInterceptor implements PluginResourceInterceptor {
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private AuthorizationService authorizationService;
+    private final GroupService groupService;
+
+    public SyncAdminGroupResourceInterceptor(ApplicationConfig applicationConfig, GroupService groupService) {
+        this.applicationConfig = applicationConfig;
+        this.groupService = groupService;
+    }
 
     @Override
-    public void postSyncPlugin(PluginInstance instance, List<Resource> newResourceList) {
-        authorizationService.deleteAuthorizationCache();
+    public void postSyncPlugin(PluginInstance instance, List<ResourceModel> newResourceList) {
 
-        Group group = authorizationService.getGroup(applicationConfig.getAdminGroupId());
+        GroupEntity group = groupService.get(applicationConfig.getAdminGroupId());
 
         // 如果配置了管理员组 线删除同步一次管理员資源
         if (Objects.isNull(group)) {
@@ -47,13 +50,13 @@ public class SyncAdminGroupResourceInterceptor implements PluginResourceIntercep
                 .collect(Collectors.toList());
         // 覆盖当前应用的资源
         group.getResourceMap().put(instance.getServiceName(), newResourceIds);
-        authorizationService.saveGroup(group);
+        groupService.save(group);
 
     }
 
     @Override
     public void postDisabledApplicationResource(NacosService nacosService) {
-        Group group = authorizationService.getGroup(applicationConfig.getAdminGroupId());
+        GroupEntity group = groupService.get(applicationConfig.getAdminGroupId());
 
         // 如果配置了管理员组 线删除同步一次管理员資源
         if (Objects.isNull(group)) {
@@ -61,6 +64,6 @@ public class SyncAdminGroupResourceInterceptor implements PluginResourceIntercep
         }
         // 移除当前应用的资源
         group.getResourceMap().remove(nacosService.getName());
-        authorizationService.saveGroup(group);
+        groupService.save(group);
     }
 }

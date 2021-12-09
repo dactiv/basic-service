@@ -2,22 +2,23 @@ package com.github.dactiv.basic.authentication.service.security;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.entity.Group;
-import com.github.dactiv.basic.authentication.entity.MemberUser;
-import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
+import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.service.GroupService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
+import lombok.Getter;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationServiceException;
@@ -47,17 +48,34 @@ public class MemberUserDetailsService implements UserDetailsService {
 
     public static final String DEFAULT_IS_NEW_MEMBER_KEY_NAME = "isNewMember";
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    @Getter
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private UserService userService;
+    @Getter
+    private final AuthorizationService authorizationService;
 
-    @Autowired
-    private PasswordEncoder passwordEncoder;
+    private final GroupService groupService;
 
-    @Autowired
-    private CaptchaService captchaService;
+    @Getter
+    private final MemberUserService memberUserService;
+
+    private final PasswordEncoder passwordEncoder;
+
+    private final CaptchaService captchaService;
+
+    public MemberUserDetailsService(ApplicationConfig applicationConfig,
+                                    AuthorizationService userService,
+                                    GroupService groupService,
+                                    MemberUserService memberUserService,
+                                    PasswordEncoder passwordEncoder,
+                                    CaptchaService captchaService) {
+        this.applicationConfig = applicationConfig;
+        this.authorizationService = userService;
+        this.groupService = groupService;
+        this.memberUserService = memberUserService;
+        this.passwordEncoder = passwordEncoder;
+        this.captchaService = captchaService;
+    }
 
     @Override
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
@@ -69,15 +87,15 @@ public class MemberUserDetailsService implements UserDetailsService {
             throw new BadCredentialsException("用户名或密码错误");
         }
 
-        MemberUser user = userService.getMemberUserByIdentified(token.getPrincipal().toString());
+        MemberUserEntity user = memberUserService.getByIdentified(token.getPrincipal().toString());
 
         if (Objects.isNull(user)) {
 
-            user = new MemberUser();
+            user = new MemberUserEntity();
 
             user.setPhone(token.getPrincipal().toString());
             user.setPassword(generateRandomPassword());
-            user.setStatus(UserStatus.Enabled.getValue());
+            user.setStatus(UserStatus.Enabled);
 
             if (ResourceSource.Mobile.toString().equals(type)) {
 
@@ -96,10 +114,7 @@ public class MemberUserDetailsService implements UserDetailsService {
             }
 
         }
-
-        UserStatus status = NameValueEnumUtils.parse(user.getStatus(), UserStatus.class);
-
-        return new SecurityUserDetails(user.getId(), user.getUsername(), user.getPassword(), status);
+        return new SecurityUserDetails(user.getId(), user.getUsername(), user.getPassword(), user.getStatus());
     }
 
     /**
@@ -180,7 +195,7 @@ public class MemberUserDetailsService implements UserDetailsService {
      *
      * @return 新的会员用户
      */
-    private MemberUser createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails) {
+    private MemberUserEntity createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails) {
         return createMemberUser(token, userDetails, null);
     }
 
@@ -193,20 +208,20 @@ public class MemberUserDetailsService implements UserDetailsService {
      *
      * @return 新的会员用户
      */
-    private MemberUser createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails, String phone) {
-        MemberUser user = new MemberUser();
+    private MemberUserEntity createMemberUser(RequestAuthenticationToken token, SecurityUserDetails userDetails, String phone) {
+        MemberUserEntity user = new MemberUserEntity();
 
         user.setPhone(phone);
         user.setUsername(userDetails.getUsername());
         user.setPassword(userDetails.getPassword());
         user.setStatus(userDetails.getStatus());
 
-        Group group = userService.getAuthorizationService().getGroup(applicationConfig.getRegister().getDefaultGroup());
+        GroupEntity group = groupService.get(applicationConfig.getRegister().getDefaultGroup());
         IdRoleAuthority roleAuthority = new IdRoleAuthority(group.getId(), group.getName(), group.getAuthority());
         List<IdRoleAuthority> roleAuthorities = Collections.singletonList(roleAuthority);
         user.setGroupsInfo(Casts.convertValue(roleAuthorities, new TypeReference<>() {}));
 
-        userService.saveMemberUser(user);
+        memberUserService.save(user);
         userDetails.setId(user.getId());
         token.getHttpServletRequest().setAttribute(DEFAULT_IS_NEW_MEMBER_KEY_NAME, true);
 
@@ -216,8 +231,8 @@ public class MemberUserDetailsService implements UserDetailsService {
     @Override
     public Collection<? extends GrantedAuthority> getPrincipalAuthorities(SecurityUserDetails userDetails) {
         Integer userId = Casts.cast(userDetails.getId());
-        MemberUser memberUser = userService.getMemberUser(userId);
-        userService.getAuthorizationService().setSystemUserAuthorities(memberUser, userDetails);
+        MemberUserEntity memberUser = memberUserService.get(userId);
+        authorizationService.setSystemUserAuthorities(memberUser, userDetails);
         return userDetails.getAuthorities();
     }
 
@@ -231,7 +246,7 @@ public class MemberUserDetailsService implements UserDetailsService {
         return passwordEncoder;
     }
 
-    public UserService getUserService() {
-        return userService;
+    public AuthorizationService getAuthorizationService() {
+        return authorizationService;
     }
 }

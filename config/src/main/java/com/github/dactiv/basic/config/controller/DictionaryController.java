@@ -40,11 +40,15 @@ import java.util.Objects;
 )
 public class DictionaryController {
 
-    @Autowired
-    private DictionaryService dictionaryService;
+    private final DictionaryService dictionaryService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator;
+    private final MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator;
+
+    public DictionaryController(DictionaryService dictionaryService,
+                                MybatisPlusQueryGenerator<?> mybatisPlusQueryGenerator) {
+        this.dictionaryService = dictionaryService;
+        this.mybatisPlusQueryGenerator = mybatisPlusQueryGenerator;
+    }
 
     // ----------------------------------------------- 数据字典管理 ----------------------------------------------- //
 
@@ -60,7 +64,7 @@ public class DictionaryController {
     @PreAuthorize("hasAuthority('perms[data_dictionary:page]')")
     @Plugin(name = "获取数据字典分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<DataDictionary> getDataDictionaryPage(PageRequest pageRequest, HttpServletRequest request) {
-        return dictionaryService.findDataDictionariesPage(
+        return dictionaryService.getDataDictionaryService().findPage(
                 pageRequest,
                 mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
         );
@@ -80,7 +84,7 @@ public class DictionaryController {
     public List<DataDictionary> findDataDictionary(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
 
-        List<DataDictionary> dataDictionaries = dictionaryService.findDataDictionaries(
+        List<DataDictionary> dataDictionaries = dictionaryService.getDataDictionaryService().find(
                 mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
         );
 
@@ -102,7 +106,7 @@ public class DictionaryController {
     @GetMapping("isDataDictionaryCodeUnique")
     @Plugin(name = "判断数据字典唯一识别值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isDataDictionaryCodeUnique(@RequestParam String code) {
-        return Objects.isNull(dictionaryService.getDataDictionaryByCode(code));
+        return Objects.isNull(dictionaryService.getDataDictionaryService().getByCode(code));
     }
 
     /**
@@ -116,7 +120,7 @@ public class DictionaryController {
     @PreAuthorize("hasAuthority('perms[data_dictionary:get]')")
     @Plugin(name = "获取数据字典实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public DataDictionary getDataDictionary(@RequestParam Integer id) {
-        return dictionaryService.getDataDictionary(id);
+        return dictionaryService.getDataDictionaryService().get(id);
     }
 
     /**
@@ -145,7 +149,7 @@ public class DictionaryController {
     @Idempotent(key = "idempotent:config:data-dictionary:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> deleteDataDictionary(@RequestParam List<Integer> ids,
                                               @CurrentSecurityContext SecurityContext securityContext) {
-        dictionaryService.deleteDataDictionaries(ids);
+        dictionaryService.getDataDictionaryService().deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
@@ -165,7 +169,7 @@ public class DictionaryController {
     public List<DictionaryType> findDictionaryType(HttpServletRequest request,
                                                    @RequestParam(required = false) boolean mergeTree) {
 
-        List<DictionaryType> dictionaryTypes = dictionaryService.findDictionaryTypes(
+        List<DictionaryType> dictionaryTypes = dictionaryService.getDictionaryTypeService().find(
                 mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
         );
 
@@ -187,7 +191,7 @@ public class DictionaryController {
     @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[dictionary_type:get]')")
     public DictionaryType getDictionaryType(@RequestParam Integer id) {
-        return dictionaryService.getDictionaryType(id);
+        return dictionaryService.getDictionaryTypeService().get(id);
     }
 
     /**
@@ -202,7 +206,7 @@ public class DictionaryController {
     @Plugin(name = "判断字类型典唯一识别值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
 
-        return Objects.isNull(dictionaryService.getDictionaryTypeByCode(code));
+        return Objects.isNull(dictionaryService.getDictionaryTypeService().getByCode(code));
     }
 
     /**
@@ -231,7 +235,7 @@ public class DictionaryController {
     @Idempotent(key = "idempotent:config:dictionary-type:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids,
                                               @CurrentSecurityContext SecurityContext securityContext) {
-        dictionaryService.deleteDictionaryTypes(ids);
+        dictionaryService.getDictionaryTypeService().deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 

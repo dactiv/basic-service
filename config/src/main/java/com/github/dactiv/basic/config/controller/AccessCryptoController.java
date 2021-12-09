@@ -6,12 +6,10 @@ import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -38,11 +36,15 @@ import java.util.List;
 )
 public class AccessCryptoController {
 
-    @Autowired
-    private AccessCryptoService accessCryptoService;
+    private final AccessCryptoService accessCryptoService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator;
+    private final MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator;
+
+    public AccessCryptoController(AccessCryptoService accessCryptoService,
+                                  MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator) {
+        this.accessCryptoService = accessCryptoService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 获取访问加解密分页信息
@@ -56,7 +58,7 @@ public class AccessCryptoController {
     @PreAuthorize("hasAuthority('perms[access_crypto:page]')")
     @Plugin(name = "获取访问加解密分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public Page<ConfigAccessCrypto> page(PageRequest pageRequest, HttpServletRequest request) {
-        return accessCryptoService.findAccessCryptoPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return accessCryptoService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -69,8 +71,19 @@ public class AccessCryptoController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[access_crypto:get]')")
     @Plugin(name = "获取访问加解密实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public AccessCrypto get(@RequestParam Integer id) {
-        return accessCryptoService.getAccessCrypto(id);
+    public ConfigAccessCrypto get(@RequestParam Integer id) {
+        return accessCryptoService.get(id);
+    }
+
+    /**
+     * 获取所有通讯加解密
+     *
+     * @return 通讯加解密 集合
+     */
+    @GetMapping("getAll")
+    @PreAuthorize("hasRole('BASIC')")
+    public List<ConfigAccessCrypto> getAll(){
+        return accessCryptoService.getAll();
     }
 
     /**
@@ -84,7 +97,7 @@ public class AccessCryptoController {
     @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
-        accessCryptoService.saveAccessCrypto(entity);
+        accessCryptoService.save(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
@@ -99,7 +112,7 @@ public class AccessCryptoController {
     @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
-        accessCryptoService.deleteAccessCrypto(ids);
+        accessCryptoService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 }

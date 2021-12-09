@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.github.dactiv.framework.commons.id.IdEntity;
 import lombok.Data;
@@ -17,7 +17,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class UserAvatarHistory extends IdEntity<Integer> {
+public class UserAvatarHistoryEntity extends IdEntity<Integer> {
 
     private static final long serialVersionUID = -856691872498409024L;
 

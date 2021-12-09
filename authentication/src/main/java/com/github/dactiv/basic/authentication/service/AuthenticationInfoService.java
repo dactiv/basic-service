@@ -1,11 +1,9 @@
 package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
-import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
-
+import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.annotation.Time;
@@ -20,7 +18,6 @@ import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
 import org.springframework.data.elasticsearch.core.IndexOperations;
@@ -39,7 +36,7 @@ import java.util.*;
  *
  * <p>Table: tb_authentication_info - 认证信息表</p>
  *
- * @see AuthenticationInfo
+ * @see AuthenticationInfoEntity
  *
  * @author maurice.chen
  *
@@ -49,22 +46,27 @@ import java.util.*;
 @Service
 @RefreshScope
 @Transactional(rollbackFor = Exception.class)
-public class AuthenticationInfoService extends BasicService<AuthenticationInfoDao, AuthenticationInfo> {
+public class AuthenticationInfoService extends BasicService<AuthenticationInfoDao, AuthenticationInfoEntity> {
 
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private ElasticsearchRestTemplate elasticsearchRestTemplate;
+    private final ElasticsearchRestTemplate elasticsearchRestTemplate;
 
     private final DateIndexGenerator dateIndexGenerator = new DateIndexGenerator(
-            AuthenticationInfo.DEFAULT_INDEX,
+            AuthenticationInfoEntity.DEFAULT_INDEX,
             "-",
             NumberIdEntity.CREATION_TIME_FIELD_NAME
     );
+
+    public AuthenticationInfoService(MessageService messageService,
+                                     ApplicationConfig applicationConfig,
+                                     ElasticsearchRestTemplate elasticsearchRestTemplate) {
+        this.messageService = messageService;
+        this.applicationConfig = applicationConfig;
+        this.elasticsearchRestTemplate = elasticsearchRestTemplate;
+    }
 
     /**
      * 获取最后一条认证信息表实体
@@ -74,10 +76,10 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
      *
      * @return 认证信息表实体
      */
-    public AuthenticationInfo getLastAuthenticationInfo(Integer userId, List<String> types) {
-        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
-                .eq(AuthenticationInfo::getUserId, userId)
-                .in(AuthenticationInfo::getType, types);
+    public AuthenticationInfoEntity getLastAuthenticationInfo(Integer userId, List<String> types) {
+        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+                .eq(AuthenticationInfoEntity::getUserId, userId)
+                .in(AuthenticationInfoEntity::getType, types);
         return findOne(wrapper);
     }
 
@@ -86,18 +88,18 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
      *
      * @param info 认证信息
      */
-    public void validAuthenticationInfo(AuthenticationInfo info) {
+    public void validAuthenticationInfo(AuthenticationInfoEntity info) {
 
-        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
-                .eq(AuthenticationInfo::getUserId, info.getUserId())
-                .in(AuthenticationInfo::getType, Collections.singletonList(info.getType()))
-                .ne(AuthenticationInfo::getId, info.getId());
+        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+                .eq(AuthenticationInfoEntity::getUserId, info.getUserId())
+                .in(AuthenticationInfoEntity::getType, Collections.singletonList(info.getType()))
+                .ne(AuthenticationInfoEntity::getId, info.getId());
 
-        Page<AuthenticationInfo> page = findPage(new PageRequest(0, 1), wrapper);
+        Page<AuthenticationInfoEntity> page = findPage(new PageRequest(0, 1), wrapper);
 
-        Iterator<AuthenticationInfo> iterator = page.getElements().iterator();
+        Iterator<AuthenticationInfoEntity> iterator = page.getElements().iterator();
 
-        AuthenticationInfo authenticationInfo = iterator.hasNext() ? iterator.next() : null;
+        AuthenticationInfoEntity authenticationInfo = iterator.hasNext() ? iterator.next() : null;
 
         if (Objects.isNull(authenticationInfo)) {
             return;
@@ -135,11 +137,11 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
     @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", waitTime = @Time(0L))
     public void syncAuthenticationInfo() {
-        Wrapper<AuthenticationInfo> wrapper = lambdaQuery()
-                .le(AuthenticationInfo::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
-                .ne(AuthenticationInfo::getSyncStatus, ExecuteStatus.Success.getValue());
+        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+                .le(AuthenticationInfoEntity::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
+                .ne(AuthenticationInfoEntity::getSyncStatus, ExecuteStatus.Success.getValue());
 
-        Page<AuthenticationInfo> page = findPage(new PageRequest(1, 100), wrapper);
+        Page<AuthenticationInfoEntity> page = findPage(new PageRequest(1, 100), wrapper);
 
         log.info("开始同步" + page.getNumberOfElements() + "认证信息到 es");
 
@@ -147,7 +149,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
     }
 
-    public void onAuthenticationSuccess(AuthenticationInfo info) {
+    public void onAuthenticationSuccess(AuthenticationInfoEntity info) {
         try {
 
             info.setSyncStatus(ExecuteStatus.Failure.getValue());

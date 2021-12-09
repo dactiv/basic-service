@@ -34,6 +34,11 @@ public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate implement
     private Integer id;
 
     /**
+     * 访问加解密 id
+     */
+    private Integer accessCryptoId;
+
+    /**
      * 创建时间
      */
     private Date creationTime = new Date();

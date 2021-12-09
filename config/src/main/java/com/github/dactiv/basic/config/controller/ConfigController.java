@@ -4,13 +4,14 @@ package com.github.dactiv.basic.config.controller;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
 import com.github.dactiv.basic.config.entity.DataDictionary;
-import com.github.dactiv.basic.config.enumerate.EnumerateResourceService;
-import com.github.dactiv.basic.config.service.AccessCryptoProperties;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
+import com.github.dactiv.basic.config.service.EnumerateResourceService;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
@@ -33,7 +34,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -58,29 +58,42 @@ public class ConfigController {
 
     public static final String DEFAULT_EVN_URI = "actuator/env";
 
-    @Autowired
-    private DictionaryService dictionaryService;
+    private final DictionaryService dictionaryService;
 
-    @Autowired
-    private AccessCryptoService accessCryptoService;
+    private final AccessCryptoService accessCryptoService;
 
-    @Autowired
-    private EnumerateResourceService enumerateResourceService;
+    private final EnumerateResourceService enumerateResourceService;
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
 
-    @Autowired
-    private CryptoAlgorithm accessTokenAlgorithm;
+    private final CryptoAlgorithm accessTokenAlgorithm;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
+    private final DiscoveryClient discoveryClient;
 
-    @Autowired
-    private AccessCryptoProperties properties;
+    private final ApplicationConfig properties;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+
+    private final CipherAlgorithmService cipherAlgorithmService = new CipherAlgorithmService();
+
+    public ConfigController(DictionaryService dictionaryService,
+                            AccessCryptoService accessCryptoService,
+                            EnumerateResourceService enumerateResourceService,
+                            RedissonClient redissonClient,
+                            CryptoAlgorithm accessTokenAlgorithm,
+                            DiscoveryClient discoveryClient,
+                            ApplicationConfig properties,
+                            RestTemplate restTemplate) {
+
+        this.dictionaryService = dictionaryService;
+        this.accessCryptoService = accessCryptoService;
+        this.enumerateResourceService = enumerateResourceService;
+        this.redissonClient = redissonClient;
+        this.accessTokenAlgorithm = accessTokenAlgorithm;
+        this.discoveryClient = discoveryClient;
+        this.properties = properties;
+        this.restTemplate = restTemplate;
+    }
 
     /**
      * 获取数据字典
@@ -102,7 +115,7 @@ public class ConfigController {
             wrapper.eq(DataDictionary::getCode, name);
         }
 
-        return dictionaryService.findDataDictionaries(wrapper);
+        return dictionaryService.getDataDictionaryService().find(wrapper);
 
     }
 
@@ -116,7 +129,7 @@ public class ConfigController {
     @GetMapping("findAccessCrypto")
     public Map<String, Object> findAccessCrypto(@RequestParam String type) {
 
-        List<ConfigAccessCrypto> accessCryptoList = accessCryptoService.findAccessCryptoList(
+        List<ConfigAccessCrypto> accessCryptoList = accessCryptoService.find(
                 Wrappers
                         .<ConfigAccessCrypto>lambdaQuery()
                         .eq(AccessCrypto::getType, type)
@@ -223,13 +236,12 @@ public class ConfigController {
             log.debug("正在生成 access token, 当前 token 为:" + token + ", 客户端密钥为:" + key);
         }
 
-        RsaCipherService rsa = accessCryptoService.getCipherAlgorithmService().getCipherService("RSA");
+        RsaCipherService rsa = cipherAlgorithmService.getCipherService("RSA");
         // 解析出客户端发给来的密钥
         ByteSource publicKey = rsa.decrypt(Base64.decode(key), privateToken.getKey().obtainBytes());
 
         // 根据请求解密算法模型创建块密码服务
-        AbstractBlockCipherService cipherService = accessCryptoService
-                .getCipherAlgorithmService().getCipherService(accessTokenAlgorithm);
+        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(accessTokenAlgorithm);
 
         // 生成请求解密访问 token 密钥
         ByteSource requestAccessCryptoKey = new SimpleByteSource(cipherService.generateKey().getEncoded());

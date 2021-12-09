@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -28,7 +28,7 @@ import java.util.Map;
 @EqualsAndHashCode
 @NoArgsConstructor
 @TableName("tb_authentication_info")
-public class AuthenticationInfo implements NumberIdEntity<Integer> {
+public class AuthenticationInfoEntity implements NumberIdEntity<Integer> {
 
     public static final String DEFAULT_INDEX = "authentication-info";
 

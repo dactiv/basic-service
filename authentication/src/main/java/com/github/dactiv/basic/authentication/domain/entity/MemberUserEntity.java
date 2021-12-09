@@ -1,9 +1,10 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
+import com.github.dactiv.basic.authentication.domain.model.MemberUserInitializationModel;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
 import lombok.Data;
@@ -28,7 +29,7 @@ import java.util.Date;
 @Alias("memberUser")
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_member_user", autoResultMap = true)
-public class MemberUser extends SystemUser {
+public class MemberUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 2708129983369081033L;
 
@@ -49,7 +50,7 @@ public class MemberUser extends SystemUser {
      * 用户初始化
      */
     @TableField(typeHandler = JacksonTypeHandler.class)
-    private MemberUserInitialization initialization;
+    private MemberUserInitializationModel initialization;
 
 
     /**

@@ -9,13 +9,16 @@ import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.RandomUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Component;
 import org.springframework.util.Base64Utils;
+import org.springframework.validation.Validator;
 
 import java.io.ByteArrayOutputStream;
 import java.util.LinkedHashMap;
@@ -37,11 +40,18 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
 
     private static final String DEFAULT_BASE_64_KEY = "base64";
 
-    @Autowired
-    private List<PictureCaptchaGenerator> pictureCaptchaGeneratorList;
+    private final List<PictureCaptchaGenerator> pictureCaptchaGenerators;
 
-    @Autowired
-    private PictureCaptchaProperties properties;
+    private final PictureCaptchaProperties properties;
+
+    public PictureCaptchaService(RedissonClient redissonClient,
+                                 @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
+                                 List<PictureCaptchaGenerator> pictureCaptchaGenerators,
+                                 PictureCaptchaProperties properties) {
+        super(redissonClient, validator);
+        this.pictureCaptchaGenerators = pictureCaptchaGenerators;
+        this.properties = properties;
+    }
 
     @Override
     protected TimeProperties getCaptchaExpireTime() {
@@ -51,9 +61,9 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
     @Override
     protected GenerateCaptchaResult generateCaptcha(BuildToken buildToken, PictureEntity entity) throws Exception {
         // 随机抽取验证码生成器集合里的其中一个生成器去生成验证码图片
-        int index = RandomUtils.nextInt(0, pictureCaptchaGeneratorList.size() - 1);
+        int index = RandomUtils.nextInt(0, pictureCaptchaGenerators.size() - 1);
 
-        PictureCaptchaGenerator captchaGenerator = pictureCaptchaGeneratorList.get(index);
+        PictureCaptchaGenerator captchaGenerator = pictureCaptchaGenerators.get(index);
 
         ByteArrayOutputStream os = new ByteArrayOutputStream();
         // 生成验证码

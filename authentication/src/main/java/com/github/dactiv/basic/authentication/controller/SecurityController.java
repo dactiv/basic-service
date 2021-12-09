@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.github.dactiv.basic.authentication.entity.MemberUser;
-import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.ConsoleUserService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
@@ -19,11 +19,9 @@ import com.github.dactiv.framework.spring.security.authentication.token.Principa
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
-import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import org.redisson.api.RBucket;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.actuate.audit.AuditEvent;
 import org.springframework.boot.actuate.audit.AuditEventRepository;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
@@ -51,17 +49,27 @@ import java.util.Objects;
 @RestController
 public class SecurityController {
 
-    @Autowired
-    private UserService userService;
+    private final JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
 
-    @Autowired
-    private JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
+    private final AuditEventRepository auditEventRepository;
 
-    @Autowired
-    private AuditEventRepository auditEventRepository;
+    private final MobileUserDetailsService mobileUserDetailsService;
 
-    @Autowired
-    private MobileUserDetailsService mobileUserDetailsService;
+    private final MemberUserService memberUserService;
+
+    private final ConsoleUserService consoleUserService;
+
+    public SecurityController(JsonLogoutSuccessHandler jsonLogoutSuccessHandler,
+                              AuditEventRepository auditEventRepository,
+                              MobileUserDetailsService mobileUserDetailsService,
+                              ConsoleUserService consoleUserService,
+                              MemberUserService memberUserService) {
+        this.jsonLogoutSuccessHandler = jsonLogoutSuccessHandler;
+        this.auditEventRepository = auditEventRepository;
+        this.mobileUserDetailsService = mobileUserDetailsService;
+        this.consoleUserService = consoleUserService;
+        this.memberUserService = memberUserService;
+    }
 
     /**
      * 获取用户审计数据
@@ -175,9 +183,9 @@ public class SecurityController {
     public List<? extends NumberIdEntity<Integer>> getPrincipalProfile(@RequestParam String type,
                                                                        @RequestParam List<Integer> ids) {
         if (ResourceSource.Console.toString().equals(type)) {
-            return userService.getConsoleUsers(ids);
+            return consoleUserService.get(ids);
         } else if (ResourceSource.UserCenter.toString().equals(type)) {
-            return userService.getMemberUsers(ids);
+            return memberUserService.get(ids);
         } else {
             throw new SystemException("找不到类型为 [" + type + "] 的用户信息");
         }
@@ -231,26 +239,6 @@ public class SecurityController {
         mobileUserDetailsService.onSuccessAuthentication(token);
 
         return mobileUserDetails;
-    }
-
-    /**
-     * 更新会员用户状态
-     *
-     * @param id     用户 id
-     * @param status 状态值
-     *
-     * @return 消息结果集
-     */
-    @PreAuthorize("hasRole('BASIC')")
-    @PostMapping("updateMemberUserStatus")
-    public RestResult<?> updateMemberUserStatus(@RequestParam Integer id, @RequestParam String status) {
-        MemberUser memberUser = userService.getMemberUser(id);
-
-        memberUser.setStatus(UserStatus.valueOf(status).getValue());
-
-        userService.updateMemberUser(memberUser);
-
-        return RestResult.of("修改成功");
     }
 
 }

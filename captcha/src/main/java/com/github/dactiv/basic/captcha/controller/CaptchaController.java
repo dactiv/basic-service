@@ -27,11 +27,14 @@ import java.util.Map;
 @RestController
 public class CaptchaController {
 
-    @Autowired
-    private DelegateCaptchaService delegateCaptchaService;
+    private final DelegateCaptchaService delegateCaptchaService;
 
-    @Autowired
-    private Interceptor interceptor;
+    private final Interceptor interceptor;
+
+    public CaptchaController(DelegateCaptchaService delegateCaptchaService, Interceptor interceptor) {
+        this.delegateCaptchaService = delegateCaptchaService;
+        this.interceptor = interceptor;
+    }
 
     /**
      * 创建生成验证码拦截

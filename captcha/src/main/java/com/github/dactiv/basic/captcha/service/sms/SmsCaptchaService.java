@@ -2,11 +2,15 @@ package com.github.dactiv.basic.captcha.service.sms;
 
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
+import com.github.dactiv.basic.commons.feign.config.ConfigService;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.TimeProperties;
 import org.apache.commons.lang3.RandomStringUtils;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.stereotype.Component;
+import org.springframework.validation.Validator;
 
 import java.text.MessageFormat;
 import java.util.Collections;
@@ -26,8 +30,16 @@ public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, 
      */
     private static final String DEFAULT_TYPE = "sms";
 
-    @Autowired
-    private SmsCaptchaProperties properties;
+    private final SmsCaptchaProperties properties;
+
+    public SmsCaptchaService(RedissonClient redissonClient,
+                             @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
+                             ConfigService configService,
+                             MessageService messageService,
+                             SmsCaptchaProperties properties) {
+        super(redissonClient, validator, configService, messageService);
+        this.properties = properties;
+    }
 
     @Override
     protected Map<String, Object> createSendMessageParam(SmsEntity entity, Map<String, Object> entry, String captcha) {

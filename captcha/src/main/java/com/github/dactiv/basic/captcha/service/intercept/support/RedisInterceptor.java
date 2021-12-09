@@ -27,17 +27,20 @@ import java.util.Optional;
 @RefreshScope
 public class RedisInterceptor implements Interceptor {
 
-    @Autowired
-    private RedissonClient redissonClient;
+    private final RedissonClient redissonClient;
 
-    @Autowired
-    private DelegateCaptchaService delegateCaptchaService;
+    private final DelegateCaptchaService delegateCaptchaService;
 
     /**
      * 存储在 redis 的绑定 token key 名称
      */
     @Value("${spring.application.captcha.token.interceptor.key-prefix:captcha:interceptor:token:}")
     private String interceptorTokenKeyPrefix;
+
+    public RedisInterceptor(RedissonClient redissonClient, DelegateCaptchaService delegateCaptchaService) {
+        this.redissonClient = redissonClient;
+        this.delegateCaptchaService = delegateCaptchaService;
+    }
 
     @Override
     public BuildToken generateCaptchaIntercept(String token, String type, String interceptType) {

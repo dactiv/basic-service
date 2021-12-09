@@ -6,7 +6,6 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
@@ -77,7 +76,7 @@ public class DataDictionary implements Tree<Integer, DataDictionary>, NumberIdEn
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer enabled;
+    private DisabledOrEnabled enabled;
 
     /**
      * 对应字典类型
@@ -113,15 +112,6 @@ public class DataDictionary implements Tree<Integer, DataDictionary>, NumberIdEn
      */
     @TableField(exist = false)
     private List<Tree<Integer, DataDictionary>> children = new LinkedList<>();
-
-    /**
-     * 获取状态名称
-     *
-     * @return 状态名称
-     */
-    public String getEnabledName() {
-        return NameValueEnumUtils.getName(enabled, DisabledOrEnabled.class);
-    }
 
     @Override
     @JsonIgnore

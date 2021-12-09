@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
+import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -10,7 +10,7 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_authentication_info - 认证信息</p>
  *
- * @see AuthenticationInfo
+ * @see AuthenticationInfoEntity
  *
  * @author maurice
  *
@@ -18,6 +18,6 @@ import org.springframework.stereotype.Repository;
  */
 @Mapper
 @Repository
-public interface AuthenticationInfoDao extends BaseMapper<AuthenticationInfo> {
+public interface AuthenticationInfoDao extends BaseMapper<AuthenticationInfoEntity> {
 
 }

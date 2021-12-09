@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.github.dactiv.basic.authentication.entity.AuthenticationInfo;
-import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
+import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
 import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
@@ -32,14 +32,19 @@ import java.util.Objects;
 @Component
 public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationSuccessResponse {
 
-    @Autowired
-    private MobileUserDetailsService mobileAuthenticationService;
+    private final MobileUserDetailsService mobileAuthenticationService;
 
-    @Autowired
-    private CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
+    private final CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
 
-    @Autowired
-    private AmqpTemplate amqpTemplate;
+    private final AmqpTemplate amqpTemplate;
+
+    public CaptchaAuthenticationSuccessResponse(MobileUserDetailsService mobileAuthenticationService,
+                                                CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler,
+                                                AmqpTemplate amqpTemplate) {
+        this.mobileAuthenticationService = mobileAuthenticationService;
+        this.jsonAuthenticationFailureHandler = jsonAuthenticationFailureHandler;
+        this.amqpTemplate = amqpTemplate;
+    }
 
     @Override
     public void setting(RestResult<Object> result, HttpServletRequest request) {
@@ -48,7 +53,7 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
         jsonAuthenticationFailureHandler.deleteAllowableFailureNumber(request);
 
-        AuthenticationInfo info = new AuthenticationInfo();
+        AuthenticationInfoEntity info = new AuthenticationInfoEntity();
 
         UserAgent device = DeviceUtils.getRequiredCurrentDevice(request);
         info.setDevice(device.toMap());
@@ -121,10 +126,8 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
                                                             UserAgent device,
                                                             Boolean isNew,
                                                             SecurityUserDetails userDetails) {
-
-        MemberUser memberUser = mobileAuthenticationService
-                .getUserService()
-                .getMemberUser(Casts.cast(userDetails.getId()));
+        Integer userId = Casts.cast(userDetails.getId());
+        MemberUserEntity memberUser = mobileAuthenticationService.getMemberUserService().get(userId);
 
         MobileUserDetails mobileUserDetails = mobileAuthenticationService.createMobileUserDetails(
                 memberUser,

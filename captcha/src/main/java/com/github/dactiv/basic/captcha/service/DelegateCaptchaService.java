@@ -18,8 +18,11 @@ import java.util.Optional;
 @Service
 public class DelegateCaptchaService {
 
-    @Autowired
-    private List<CaptchaService> captchaServices;
+    private final List<CaptchaService> captchaServices;
+
+    public DelegateCaptchaService(List<CaptchaService> captchaServices) {
+        this.captchaServices = captchaServices;
+    }
 
     /**
      * 根据 http servlet request 获取验证码服务

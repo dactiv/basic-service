@@ -1,14 +1,15 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.entity.Resource;
-import com.github.dactiv.basic.authentication.entity.SystemUser;
+import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
+import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
-import com.github.dactiv.basic.authentication.service.UserService;
-import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
+import com.github.dactiv.basic.authentication.service.ConsoleUserService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -41,9 +42,15 @@ import java.util.stream.Collectors;
 )
 public class ResourceController {
 
+    private final AuthorizationService authorizationService;
 
-    @Autowired
-    private UserService userService;
+    private final ConsoleUserService consoleUserService;
+
+    public ResourceController(AuthorizationService authorizationService,
+                              ConsoleUserService consoleUserService) {
+        this.authorizationService = authorizationService;
+        this.consoleUserService = consoleUserService;
+    }
 
     /**
      * 查找资源
@@ -55,17 +62,23 @@ public class ResourceController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public List<Resource> find(@RequestParam(required = false) boolean mergeTree,
-                               @RequestParam(required = false) String applicationName,
-                               @RequestParam(required = false) List<String> sources) {
+    public List<ResourceModel> find(@RequestParam(required = false) boolean mergeTree,
+                                    @RequestParam(required = false) String applicationName,
+                                    @RequestParam(required = false) List<String> sources) {
 
-        if (CollectionUtils.isEmpty(sources)) {
-            sources = new LinkedList<>();
+        List<ResourceSource> resourceSources = new LinkedList<>();
+
+        if (CollectionUtils.isNotEmpty(sources)) {
+            resourceSources = sources
+                    .stream()
+                    .map(s -> NameEnumUtils.parse(s, ResourceSource.class))
+                    .collect(Collectors.toList());
         }
 
-        List<Resource> resourceList = userService
-                .getAuthorizationService()
-                .getResources(applicationName, sources.toArray(new String[0]));
+        List<ResourceModel> resourceList = authorizationService.getResources(
+                applicationName,
+                resourceSources.toArray(new ResourceSource[0])
+        );
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);
@@ -85,7 +98,7 @@ public class ResourceController {
     @GetMapping("getConsoleUserResources")
     @Plugin(name = "获取用户资源 id 集合", sources = "Console")
     public List<String> getConsoleUserResources(@RequestParam Integer userId) {
-        SystemUser systemUser = userService.getConsoleUser(userId);
+        SystemUserEntity systemUser = consoleUserService.get(userId);
         Set<Map.Entry<String, List<String>>> entrySet = systemUser.getResourceMap().entrySet();
         return entrySet.stream().flatMap(e -> e.getValue().stream()).collect(Collectors.toList());
     }
@@ -101,23 +114,25 @@ public class ResourceController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
     @Plugin(name = "获取当前用户资源", sources = "Console")
-    public List<Resource> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
-                                                       @RequestParam(required = false) String type,
-                                                       @RequestParam(required = false) boolean mergeTree) {
+    public List<ResourceModel> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
+                                                            @RequestParam(required = false) String type,
+                                                            @RequestParam(required = false) boolean mergeTree) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        List<String> sourceContains = Arrays.asList(
-                userDetails.getType(),
-                ResourceSource.All.toString(),
-                ResourceSource.System.toString()
+        List<ResourceSource> sourceContains = Arrays.asList(
+                NameEnumUtils.parse(userDetails.getType(), ResourceSource.class),
+                ResourceSource.All,
+                ResourceSource.System
         );
 
-        ConsoleUser consoleUser = userService.getConsoleUser(Casts.cast(userDetails.getId(), Integer.class));
-
-        List<Resource> resourceList = userService
-                .getAuthorizationService()
-                .getSystemUserResource(consoleUser, type, sourceContains);
+        ConsoleUserEntity consoleUser = consoleUserService.get(Casts.cast(userDetails.getId(), Integer.class));
+        ResourceType resourceType = NameEnumUtils.parse(type, ResourceType.class);
+        List<ResourceModel> resourceList = authorizationService.getSystemUserResource(
+                consoleUser,
+                resourceType,
+                sourceContains
+        );
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(resourceList);
@@ -136,10 +151,9 @@ public class ResourceController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
     @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Resource get(@RequestParam String id) {
+    public ResourceModel get(@RequestParam String id) {
 
-        return userService
-                .getAuthorizationService()
+        return authorizationService
                 .getResources(null)
                 .stream()
                 .filter(r -> r.getId().equals(id))
@@ -158,7 +172,7 @@ public class ResourceController {
     @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     public RestResult<?> syncPluginResource() {
 
-        userService.getAuthorizationService().getPluginResourceService().resubscribeAllService();
+        authorizationService.getPluginResourceService().resubscribeAllService();
 
         return RestResult.of("同步数据完成");
     }

@@ -27,10 +27,13 @@ import java.util.Optional;
 @Component
 public class PluginServiceValidator implements NacosServiceListenerValidator {
 
-    @Autowired
-    private PluginResourceService pluginResourceService;
+    private final PluginResourceService pluginResourceService;
 
     private final List<String> exceptionServices = new LinkedList<>();
+
+    public PluginServiceValidator(PluginResourceService pluginResourceService) {
+        this.pluginResourceService = pluginResourceService;
+    }
 
     @Override
     public boolean isSupport(NacosService nacosService) {

@@ -1,17 +1,17 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.dactiv.basic.authentication.entity.Group;
-import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -20,7 +20,9 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.stream.Collectors;
+import java.util.Objects;
+
+import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 
 /**
  * 用户用户组控制器
@@ -39,11 +41,14 @@ import java.util.stream.Collectors;
 )
 public class GroupController {
 
-    @Autowired
-    private GroupService groupService;
+    private final GroupService groupService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<Group> queryGenerator;
+    private final MybatisPlusQueryGenerator<GroupEntity> queryGenerator;
+
+    public GroupController(GroupService groupService, MybatisPlusQueryGenerator<GroupEntity> queryGenerator) {
+        this.groupService = groupService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 获取所有用户组
@@ -51,9 +56,9 @@ public class GroupController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
     @Plugin(name = "查询全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public List<Group> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
+    public List<GroupEntity> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
-        List<Group> groupList = groupService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
+        List<GroupEntity> groupList = groupService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
 
         if (mergeTree) {
             return TreeUtils.buildGenericTree(groupList);
@@ -72,7 +77,7 @@ public class GroupController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[group:get]')")
     @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Group get(@RequestParam Integer id) {
+    public GroupEntity get(@RequestParam Integer id) {
         return groupService.get(id);
     }
 
@@ -85,12 +90,23 @@ public class GroupController {
      * @return 消息结果集
      */
     @PostMapping("save")
+    @SocketMessage(WEB_FILTER_RESULT_ID)
     @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
-    public RestResult<Integer> save(@Valid @RequestBody Group entity,
+    public RestResult<Integer> save(@Valid @RequestBody GroupEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
+
+        boolean isNew = Objects.isNull(entity.getId());
+
         groupService.save(entity);
+
+        if (isNew) {
+            SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.CREATE_SOCKET_EVENT_NAME, entity);
+        } else {
+            SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.UPDATE_SOCKET_EVENT_NAME, entity);
+        }
+
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
 
@@ -110,6 +126,8 @@ public class GroupController {
 
         groupService.deleteById(ids);
 
+        SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.DELETE_SOCKET_EVENT_NAME, ids);
+
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
@@ -125,7 +143,7 @@ public class GroupController {
     @Plugin(name = "判断权限值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
 
-        return groupService.find(Wrappers.<Group>lambdaQuery().eq(Group::getAuthority, authority)).isEmpty();
+        return groupService.find(Wrappers.<GroupEntity>lambdaQuery().eq(GroupEntity::getAuthority, authority)).isEmpty();
     }
 
     /**
@@ -139,6 +157,6 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断组名称是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
-        return groupService.find(Wrappers.<Group>lambdaQuery().eq(Group::getName, name)).isEmpty();
+        return groupService.find(Wrappers.<GroupEntity>lambdaQuery().eq(GroupEntity::getName, name)).isEmpty();
     }
 }

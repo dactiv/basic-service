@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
@@ -21,7 +21,7 @@ import javax.validation.constraints.NotEmpty;
 @Alias("consoleUser")
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_console_user", autoResultMap = true)
-public class ConsoleUser extends SystemUser {
+public class ConsoleUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 542256170672538050L;
     /**

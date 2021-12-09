@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.model;
 
 import com.baomidou.mybatisplus.annotation.*;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -24,7 +24,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class MemberUserInitialization implements Serializable {
+public class MemberUserInitializationModel implements Serializable {
 
     private static final long serialVersionUID = 1714564243745969863L;
     /**

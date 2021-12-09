@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.entity.UserAvatarHistory;
+import com.github.dactiv.basic.authentication.domain.entity.UserAvatarHistoryEntity;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -17,7 +17,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
@@ -50,11 +49,14 @@ import java.util.Objects;
 )
 public class UserAvatarController implements InitializingBean {
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private MinioTemplate minioTemplate;
+    private final MinioTemplate minioTemplate;
+
+    public UserAvatarController(ApplicationConfig applicationConfig, MinioTemplate minioTemplate) {
+        this.applicationConfig = applicationConfig;
+        this.minioTemplate = minioTemplate;
+    }
 
     /**
      * 上传头像
@@ -74,7 +76,7 @@ public class UserAvatarController implements InitializingBean {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        UserAvatarHistory history = getUserAvatarHistory(userDetails);
+        UserAvatarHistoryEntity history = getUserAvatarHistory(userDetails);
 
         if (!history.getValues().contains(file.getOriginalFilename())) {
             history.getValues().add(file.getOriginalFilename());
@@ -107,7 +109,7 @@ public class UserAvatarController implements InitializingBean {
 
     @GetMapping("history")
     @PreAuthorize("isFullyAuthenticated()")
-    public RestResult<UserAvatarHistory> history(@CurrentSecurityContext SecurityContext securityContext) {
+    public RestResult<UserAvatarHistoryEntity> history(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         return RestResult.ofSuccess(getUserAvatarHistory(userDetails));
     }
@@ -119,7 +121,7 @@ public class UserAvatarController implements InitializingBean {
      *
      * @return 用户头像历史记录实体
      */
-    private UserAvatarHistory getUserAvatarHistory(SecurityUserDetails userDetails) {
+    private UserAvatarHistoryEntity getUserAvatarHistory(SecurityUserDetails userDetails) {
         String bucketName = userDetails.getType() +
                 Casts.DEFAULT_DOT_SYMBOL +
                 applicationConfig.getUserAvatar().getBucketName();
@@ -128,11 +130,11 @@ public class UserAvatarController implements InitializingBean {
         String filename = MessageFormat.format(token, userDetails.getId());
 
         FileObject fileObject = FileObject.of(bucketName, filename);
-        UserAvatarHistory result = minioTemplate.readJsonValue(fileObject, UserAvatarHistory.class);
+        UserAvatarHistoryEntity result = minioTemplate.readJsonValue(fileObject, UserAvatarHistoryEntity.class);
 
         if (Objects.isNull(result)) {
 
-            result = new UserAvatarHistory();
+            result = new UserAvatarHistoryEntity();
 
             result.setHistoryFilename(filename);
             result.setBucketName(bucketName);
@@ -181,7 +183,7 @@ public class UserAvatarController implements InitializingBean {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        UserAvatarHistory history = getUserAvatarHistory(userDetails);
+        UserAvatarHistoryEntity history = getUserAvatarHistory(userDetails);
 
         if (!history.getValues().contains(filename)) {
             throw new SystemException("图片不存在，可能已经被删除。");
@@ -230,7 +232,7 @@ public class UserAvatarController implements InitializingBean {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        UserAvatarHistory history = getUserAvatarHistory(userDetails);
+        UserAvatarHistoryEntity history = getUserAvatarHistory(userDetails);
 
         if (!history.getValues().contains(filename)) {
             throw new SystemException("图片不存在，可能已经被删除。");

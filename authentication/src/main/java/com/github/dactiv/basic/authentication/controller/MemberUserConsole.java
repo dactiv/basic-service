@@ -1,19 +1,20 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.dactiv.basic.authentication.entity.MemberUser;
+import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
+import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -40,11 +41,15 @@ import java.util.List;
 )
 public class MemberUserConsole {
 
-    @Autowired
-    private MemberUserService memberUserService;
+    private final MemberUserService memberUserService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<MemberUser> queryGenerator;
+    private final MybatisPlusQueryGenerator<MemberUserEntity> queryGenerator;
+
+    public MemberUserConsole(MemberUserService memberUserService,
+                             MybatisPlusQueryGenerator<MemberUserEntity> queryGenerator) {
+        this.memberUserService = memberUserService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 查找会员用户分页信息
@@ -57,7 +62,7 @@ public class MemberUserConsole {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
     @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<MemberUser> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<MemberUserEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return memberUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -71,7 +76,7 @@ public class MemberUserConsole {
     @PostMapping("find")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "查询分页", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
-    public List<MemberUser> find(HttpServletRequest request) {
+    public List<MemberUserEntity> find(HttpServletRequest request) {
         return memberUserService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -84,7 +89,7 @@ public class MemberUserConsole {
      */
     @GetMapping("get")
     @PreAuthorize("isAuthenticated()")
-    public MemberUser get(@RequestParam Integer id) {
+    public MemberUserEntity get(@RequestParam Integer id) {
         return memberUserService.get(id);
     }
 
@@ -158,7 +163,28 @@ public class MemberUserConsole {
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isUsernameUnique(@RequestParam String username) {
-        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getUsername, username)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getUsername, username)).isEmpty();
+    }
+
+    /**
+     * 更新会员用户状态
+     *
+     * @param id     用户 id
+     * @param status 状态值
+     *
+     * @return 消息结果集
+     */
+    @PreAuthorize("hasRole('BASIC')")
+    @PostMapping("updateStatus")
+    public RestResult<?> updateMemberUserStatus(@RequestParam Integer id, @RequestParam Integer status) {
+        MemberUserEntity memberUser = memberUserService.get(id);
+        MemberUserEntity update = memberUser.ofIdData();
+
+        update.setStatus(ValueEnumUtils.parse(status, UserStatus.class));
+
+        memberUserService.save(update);
+
+        return RestResult.of("修改成功");
     }
 
     /**
@@ -171,7 +197,7 @@ public class MemberUserConsole {
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isEmailUnique(@RequestParam String email) {
-        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getEmail, email)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getEmail, email)).isEmpty();
     }
 
     /**
@@ -184,7 +210,7 @@ public class MemberUserConsole {
     @GetMapping("isPhoneUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isPhoneUnique(@RequestParam String phone) {
-        return memberUserService.find(Wrappers.<MemberUser>lambdaQuery().eq(MemberUser::getPhone, phone)).isEmpty();
+        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getPhone, phone)).isEmpty();
     }
 
 }

@@ -3,8 +3,9 @@ package com.github.dactiv.basic.authentication.service.plugin;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
-import com.github.dactiv.basic.authentication.entity.Resource;
+import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.tree.Tree;
@@ -18,7 +19,6 @@ import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
@@ -46,17 +46,13 @@ public class PluginResourceService {
      */
     private static final String DEFAULT_PLUGIN_INFO_URL = "/actuator/plugin";
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private NacosSpringEventManager nacosSpringEventManager;
+    private final NacosSpringEventManager nacosSpringEventManager;
 
-    @Autowired
-    private AuthorizationService authorizationService;
+    private final AuthorizationService authorizationService;
 
-    @Autowired(required = false)
-    private List<PluginResourceInterceptor> pluginResourceInterceptor;
+    private final List<PluginResourceInterceptor> pluginResourceInterceptor;
 
     /**
      * 服务实例缓存，用于记录当前的插件信息是否需要更新资源
@@ -66,7 +62,17 @@ public class PluginResourceService {
     /**
      * 当前插件的所有资源集合
      */
-    private final List<Resource> resources = new LinkedList<>();
+    private final List<ResourceModel> resources = new LinkedList<>();
+
+    public PluginResourceService(RestTemplate restTemplate,
+                                 NacosSpringEventManager nacosSpringEventManager,
+                                 AuthorizationService authorizationService,
+                                 List<PluginResourceInterceptor> pluginResourceInterceptor) {
+        this.restTemplate = restTemplate;
+        this.nacosSpringEventManager = nacosSpringEventManager;
+        this.authorizationService = authorizationService;
+        this.pluginResourceInterceptor = pluginResourceInterceptor;
+    }
 
     /**
      * 获取实例 info
@@ -181,12 +187,12 @@ public class PluginResourceService {
 
         List<PluginInfo> pluginList = createPluginInfoListFromInfo(instance.getInfo());
         // 启用資源得到新的資源集合
-        List<Resource> newResourceList = pluginList
+        List<ResourceModel> newResourceList = pluginList
                 .stream()
                 .map(p -> createResource(p, instance,null))
                 .collect(Collectors.toList());
 
-        List<Resource> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
+        List<ResourceModel> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
 
         resources.removeIf(r -> r.getApplicationName().equals(instance.getServiceName()));
         resources.addAll(unmergeResourceList);
@@ -260,8 +266,8 @@ public class PluginResourceService {
      *
      * @return 新的資源
      */
-    private Resource createResource(PluginInfo plugin, PluginInstance instance, Resource parent) {
-        Resource target = Casts.of(plugin, Resource.class, PluginInfo.DEFAULT_CHILDREN_NAME);
+    private ResourceModel createResource(PluginInfo plugin, PluginInstance instance, ResourceModel parent) {
+        ResourceModel target = Casts.of(plugin, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME);
 
         if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
             target.setParentId(null);
@@ -295,9 +301,17 @@ public class PluginResourceService {
      * @param nacosService nacos 服务信息
      */
     public void disabledApplicationResource(NacosService nacosService) {
+
+        List<ResourceSource> sources = resources
+                .stream()
+                .filter(r -> r.getApplicationName().equals(nacosService.getName()))
+                .flatMap(r -> r.getSources().stream())
+                .distinct()
+                .collect(Collectors.toList());
+
         resources.removeIf(r -> r.getApplicationName().equals(nacosService.getName()));
         // 查询所有符合条件的资源,并设置为禁用状态
-        authorizationService.deleteAuthorizationCache();
+        authorizationService.deleteAuthorizationCache(sources);
         if (CollectionUtils.isNotEmpty(pluginResourceInterceptor)) {
             pluginResourceInterceptor.forEach(i -> i.postDisabledApplicationResource(nacosService));
         }
@@ -346,11 +360,11 @@ public class PluginResourceService {
      *
      * @return 资源集合
      */
-    public List<Resource> getResources() {
+    public List<ResourceModel> getResources() {
         return this
                 .resources
                 .stream()
-                .map(r -> Casts.of(r, Resource.class, PluginInfo.DEFAULT_CHILDREN_NAME))
+                .map(r -> Casts.of(r, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME))
                 .collect(Collectors.toList());
     }
 }

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -8,18 +8,18 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
-import com.github.dactiv.framework.commons.enumerate.NameValueEnumUtils;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
+import com.github.dactiv.framework.mybatis.annotation.JsonCollectionGenericType;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
+import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
@@ -27,7 +27,6 @@ import org.hibernate.validator.constraints.Range;
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.*;
-import java.util.stream.Collectors;
 
 import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 
@@ -44,7 +43,7 @@ import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 @EqualsAndHashCode
 @TableName(value = "tb_group", autoResultMap = true)
 @IncludeView(value = SOCKET_RESULT_ID, properties = {"id", "name", "parentId"})
-public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
+public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5357157352791368716L;
 
@@ -94,8 +93,9 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * @see Plugin#sources()
      */
     @NotEmpty
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<String> sources = new LinkedList<>();
+    @JsonCollectionGenericType(ResourceSource.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private List<ResourceSource> sources = new LinkedList<>();
 
     /**
      * 父类 id
@@ -107,21 +107,24 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer removable;
+    @TableField(typeHandler = NameValueEnumTypeHandler.class)
+    private YesOrNo removable;
 
     /**
      * 是否可修改:0.否、1.是
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer modifiable;
+    @TableField(typeHandler = NameValueEnumTypeHandler.class)
+    private YesOrNo modifiable;
 
     /**
      * 状态:0.禁用、1.启用
      */
     @NotNull
     @Range(min = 0, max = 1)
-    private Integer status;
+    @TableField(typeHandler = NameValueEnumTypeHandler.class)
+    private DisabledOrEnabled status;
 
     /**
      * 资源 id 集合
@@ -138,7 +141,7 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
      * 子节点
      */
     @TableField(exist = false)
-    private List<Tree<Integer, Group>> children = new ArrayList<>();
+    private List<Tree<Integer, GroupEntity>> children = new ArrayList<>();
 
     @Override
     @JsonIgnore
@@ -147,48 +150,9 @@ public class Group implements Tree<Integer, Group>, NumberIdEntity<Integer> {
     }
 
     @Override
-    public boolean isChildren(Tree<Integer, Group> parent) {
-        Group group = Casts.cast(parent);
+    public boolean isChildren(Tree<Integer, GroupEntity> parent) {
+        GroupEntity group = Casts.cast(parent);
         return Objects.equals(group.getId(), this.getParent());
-    }
-
-    /**
-     * 获取状态名称
-     *
-     * @return String
-     */
-    public String getStatusName() {
-        return NameValueEnumUtils.getName(this.status, DisabledOrEnabled.class);
-    }
-
-    /**
-     * 获取是否可删除名称
-     *
-     * @return String
-     */
-    public String getRemovableName() {
-        return NameValueEnumUtils.getName(removable, YesOrNo.class);
-    }
-
-    /**
-     * 获取是否可修改名称
-     *
-     * @return String
-     */
-    public String getModifiableName() {
-        return NameValueEnumUtils.getName(modifiable, YesOrNo.class);
-    }
-
-    /**
-     * 获取来源名称
-     *
-     * @return String
-     */
-    public List<String> getSourcesName() {
-        if (CollectionUtils.isEmpty(this.sources)){
-            return null;
-        }
-        return this.sources.stream().map(s -> NameEnumUtils.getName(s, ResourceSource.class)).collect(Collectors.toList());
     }
 
 }

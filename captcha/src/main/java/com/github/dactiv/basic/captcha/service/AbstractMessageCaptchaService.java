@@ -4,8 +4,11 @@ import com.github.dactiv.basic.commons.feign.config.ConfigService;
 import com.github.dactiv.basic.commons.feign.message.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import org.redisson.api.RedissonClient;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
+import org.springframework.validation.Validator;
 
 import java.util.List;
 import java.util.Map;
@@ -24,14 +27,21 @@ public abstract class AbstractMessageCaptchaService<T extends MessageType, C ext
     /**
      * 配置管理服务
      */
-    @Autowired
-    private ConfigService configService;
+    private final ConfigService configService;
 
     /**
      * 消息服务
      */
-    @Autowired
-    private MessageService messageService;
+    private final MessageService messageService;
+
+    public AbstractMessageCaptchaService(RedissonClient redissonClient,
+                                         Validator validator,
+                                         ConfigService configService,
+                                         MessageService messageService) {
+        super(redissonClient, validator);
+        this.configService = configService;
+        this.messageService = messageService;
+    }
 
     @Override
     protected GenerateCaptchaResult generateCaptcha(BuildToken buildToken, T entity) {

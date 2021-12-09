@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
-import com.github.dactiv.basic.authentication.entity.ConsoleUser;
+import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -15,7 +15,6 @@ import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -45,11 +44,15 @@ import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
 )
 public class ConsoleUserController {
 
-    @Autowired
-    private ConsoleUserService consoleUserService;
+    private final ConsoleUserService consoleUserService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<ConsoleUser> queryGenerator;
+    private final MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator;
+
+    public ConsoleUserController(ConsoleUserService consoleUserService,
+                                 MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator) {
+        this.consoleUserService = consoleUserService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 查找系统用户分页信息
@@ -62,7 +65,7 @@ public class ConsoleUserController {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
     @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<ConsoleUser> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<ConsoleUserEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return consoleUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -76,7 +79,7 @@ public class ConsoleUserController {
     @GetMapping("get")
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[console_user:get]')")
     @Plugin(name = "获取信息", sources = {ResourceSource.SYSTEM_SOURCE_VALUE, ResourceSource.CONSOLE_SOURCE_VALUE})
-    public ConsoleUser get(@RequestParam Integer id) {
+    public ConsoleUserEntity get(@RequestParam Integer id) {
         return consoleUserService.get(id);
     }
 
@@ -92,7 +95,7 @@ public class ConsoleUserController {
     @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
-    public RestResult<Integer> save(@Valid @RequestBody ConsoleUser entity,
+    public RestResult<Integer> save(@Valid @RequestBody ConsoleUserEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
 
         boolean isNew = Objects.isNull(entity.getId());
@@ -100,9 +103,9 @@ public class ConsoleUserController {
         consoleUserService.save(entity);
 
         if (isNew) {
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.CREATE_SOCKET_EVENT_NAME, entity);
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.CREATE_SOCKET_EVENT_NAME, entity);
         } else {
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.UPDATE_SOCKET_EVENT_NAME, entity);
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.UPDATE_SOCKET_EVENT_NAME, entity);
         }
 
         return RestResult.ofSuccess("保存成功", entity.getId());
@@ -124,7 +127,7 @@ public class ConsoleUserController {
                                 @CurrentSecurityContext SecurityContext securityContext) {
 
         consoleUserService.deleteById(ids, false);
-        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUser.DELETE_SOCKET_EVENT_NAME, ids);
+        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.DELETE_SOCKET_EVENT_NAME, ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
@@ -176,7 +179,7 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断邮件是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
-        Wrapper<ConsoleUser> wrapper = consoleUserService.lambdaQuery().eq(ConsoleUser::getEmail, email);
+        Wrapper<ConsoleUserEntity> wrapper = consoleUserService.lambdaQuery().eq(ConsoleUserEntity::getEmail, email);
         return consoleUserService.find(wrapper).isEmpty();
     }
 

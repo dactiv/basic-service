@@ -2,20 +2,16 @@
 package com.github.dactiv.basic.authentication.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.authentication.entity.Group;
+import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import org.apache.ibatis.annotations.Mapper;
-import org.apache.ibatis.annotations.Param;
-import org.apache.ibatis.annotations.Select;
 import org.springframework.stereotype.Repository;
-
-import java.util.List;
 
 /**
  * tb_group 用户组数据访问
  *
  * <p>Table: tb_group - 用户组</p>
  *
- * @see Group
+ * @see GroupEntity
  *
  * @author maurice
  *
@@ -23,6 +19,6 @@ import java.util.List;
  */
 @Mapper
 @Repository
-public interface GroupDao extends BaseMapper<Group> {
+public interface GroupDao extends BaseMapper<GroupEntity> {
 
 }

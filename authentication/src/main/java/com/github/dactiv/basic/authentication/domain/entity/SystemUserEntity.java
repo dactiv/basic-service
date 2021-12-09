@@ -1,11 +1,14 @@
-package com.github.dactiv.basic.authentication.entity;
+package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
+import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.mybatis.annotation.JsonCollectionGenericType;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +29,7 @@ import java.util.*;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class SystemUser implements NumberIdEntity<Integer> {
+public class SystemUserEntity implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 750742816513263456L;
     /**
@@ -62,7 +65,7 @@ public class SystemUser implements NumberIdEntity<Integer> {
      */
     @NotNull
     @Range(min = 1, max = 3)
-    private Integer status;
+    private UserStatus status;
 
     /**
      * 登录帐号
@@ -74,21 +77,14 @@ public class SystemUser implements NumberIdEntity<Integer> {
     /**
      * 所属组集合
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private List<Map<String, Object>> groupsInfo = new LinkedList<>();
+    @JsonCollectionGenericType(IdRoleAuthority.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private List<IdRoleAuthority> groupsInfo = new LinkedList<>();
 
     /**
      * 独立权限资源 id 集合
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private Map<String, List<String>> resourceMap = new LinkedHashMap<>();
 
-    /**
-     * 获取用户状态名称
-     *
-     * @return 用户状态名称
-     */
-    public String getStatusName() {
-        return ValueEnumUtils.getName(status, UserStatus.class);
-    }
 }

@@ -3,21 +3,20 @@ package com.github.dactiv.basic.authentication.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
-import com.github.dactiv.basic.authentication.entity.ConsoleUser;
-import com.github.dactiv.basic.authentication.entity.SystemUser;
+import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
+import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.exception.ServiceException;
-import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import org.apache.commons.lang.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 
 /**
@@ -26,7 +25,7 @@ import java.util.List;
  *
  * <p>Table: tb_console_user - 后台用户表</p>
  *
- * @see ConsoleUser
+ * @see ConsoleUserEntity
  *
  * @author maurice.chen
  *
@@ -34,10 +33,13 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser> {
+public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUserEntity> {
 
-    @Autowired
-    private AuthorizationService authorizationService;
+    private final AuthorizationService authorizationService;
+
+    public ConsoleUserService(AuthorizationService authorizationService) {
+        this.authorizationService = authorizationService;
+    }
 
     /**
      * 更新后台用户密码
@@ -47,7 +49,7 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
      * @param newPassword 新密码
      */
     public void updateConsoleUserPassword(Integer userId, String oldPassword, String newPassword) {
-        ConsoleUser consoleUser = get(userId);
+        ConsoleUserEntity consoleUser = get(userId);
 
         PasswordEncoder passwordEncoder = authorizationService
                 .getUserDetailsService(ResourceSource.Console)
@@ -58,21 +60,21 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
         }
 
         lambdaUpdate()
-                .set(SystemUser::getPassword, passwordEncoder.encode(newPassword))
-                .eq(SystemUser::getId, userId)
+                .set(SystemUserEntity::getPassword, passwordEncoder.encode(newPassword))
+                .eq(SystemUserEntity::getId, userId)
                 .update();
 
         authorizationService.expireSystemUserSession(consoleUser.getUsername());
     }
 
     @Override
-    public int deleteById(Iterable<? extends Serializable> ids, boolean errorThrow) {
+    public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
         int result = super.deleteById(ids, errorThrow);
 
-        Wrapper<ConsoleUser> wrapper = Wrappers
-                .<ConsoleUser>lambdaQuery()
-                .select(SystemUser::getUsername)
-                .in(SystemUser::getId, ids);
+        Wrapper<ConsoleUserEntity> wrapper = Wrappers
+                .<ConsoleUserEntity>lambdaQuery()
+                .select(SystemUserEntity::getUsername)
+                .in(SystemUserEntity::getId, ids);
         List<String> username = findObjects(wrapper, String.class);
 
         username
@@ -91,7 +93,7 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
      *
      * @return 后台用户
      */
-    public ConsoleUser getByUsername(String username) {
-        return lambdaQuery().eq(SystemUser::getUsername, username).one();
+    public ConsoleUserEntity getByUsername(String username) {
+        return lambdaQuery().eq(SystemUserEntity::getUsername, username).one();
     }
 }

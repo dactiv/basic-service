@@ -1,8 +1,7 @@
 package com.github.dactiv.basic.authentication.service.security.handler;
 
-import com.alibaba.cloud.nacos.NacosServiceManager;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.service.UserService;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.security.LoginType;
 import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
@@ -63,27 +62,35 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
      */
     private final static String DEFAULT_TOKEN_NAME = "token";
 
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final CaptchaAuthenticationFailureResponse failureHandler;
 
-    @Autowired
-    private CaptchaAuthenticationFailureResponse failureHandler;
+    private final AuthorizationService authorizationService;
 
-    @Autowired
-    private UserService userService;
+    private final DeviceIdContextRepository deviceIdContextRepository;
 
-    @Autowired
-    private DeviceIdContextRepository deviceIdContextRepository;
+    private final List<UserDetailsService> userDetailsServices;
 
-    @Autowired
-    private List<UserDetailsService> userDetailsServices;
+    private final CookieRememberService cookieRememberService;
 
-    @Autowired
-    private CookieRememberService cookieRememberService;
+    private final DiscoveryClient discoveryClient;
 
-    @Autowired
-    private DiscoveryClient discoveryClient;
+    public JsonLogoutSuccessHandler(ApplicationConfig applicationConfig,
+                                    CaptchaAuthenticationFailureResponse failureHandler,
+                                    AuthorizationService authorizationService,
+                                    DeviceIdContextRepository deviceIdContextRepository,
+                                    List<UserDetailsService> userDetailsServices,
+                                    CookieRememberService cookieRememberService,
+                                    DiscoveryClient discoveryClient) {
+        this.applicationConfig = applicationConfig;
+        this.failureHandler = failureHandler;
+        this.authorizationService = authorizationService;
+        this.deviceIdContextRepository = deviceIdContextRepository;
+        this.userDetailsServices = userDetailsServices;
+        this.cookieRememberService = cookieRememberService;
+        this.discoveryClient = discoveryClient;
+    }
 
     @Override
     public void onLogoutSuccess(HttpServletRequest request, HttpServletResponse response, Authentication authentication) throws IOException {
@@ -146,7 +153,7 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
         userDetailsServices.forEach(uds -> uds.getType()
                 .stream()
                 .map(t -> new PrincipalAuthenticationToken(token, t))
-                .forEach(p -> userService.deleteRedisCache(uds, p)));
+                .forEach(p -> authorizationService.deleteSystemUseAuthenticationCache(uds, p)));
 
         Optional<UserDetailsService> userDetailsService = userDetailsServices.stream()
                 .filter(uds -> MobileUserDetailsService.class.isAssignableFrom(uds.getClass()))
@@ -197,13 +204,13 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
                 AnonymousUser.class.isAssignableFrom(authentication.getDetails().getClass())) {
             data.put(DEFAULT_IS_AUTHENTICATION_NAME, false);
             message = HttpStatus.UNAUTHORIZED.getReasonPhrase();
-            data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, userService.getAnonymousUser());
+            data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, authorizationService.getAnonymousUser());
         } else {
             data.put(DEFAULT_IS_AUTHENTICATION_NAME, authentication.isAuthenticated());
 
             if (!authentication.isAuthenticated()) {
                 message = HttpStatus.UNAUTHORIZED.getReasonPhrase();
-                data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, userService.getAnonymousUser());
+                data.put(AnonymousUser.DEFAULT_ANONYMOUS_USERNAME, authorizationService.getAnonymousUser());
             }
 
             if (RememberMeAuthenticationToken.class.isAssignableFrom(authentication.getClass())) {
