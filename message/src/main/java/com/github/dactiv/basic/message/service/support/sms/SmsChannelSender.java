@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
-import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
 import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;
@@ -33,7 +33,7 @@ public interface SmsChannelSender {
      *
      * @return rest 结果集
      */
-    RestResult<Map<String, Object>> sendSms(SmsMessage entity);
+    RestResult<Map<String, Object>> sendSms(SmsMessageEntity entity);
 
     /**
      * 获取可用余额

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -12,11 +12,11 @@ import org.springframework.stereotype.Repository;
  * <p>Table: tb_email_message - 邮件消息</p>
  *
  * @author maurice
- * @see EmailMessage
+ * @see EmailMessageEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository
-public interface EmailMessageDao extends BaseMapper<EmailMessage> {
+public interface EmailMessageDao extends BaseMapper<EmailMessageEntity> {
 
 }

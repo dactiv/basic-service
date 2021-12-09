@@ -2,7 +2,7 @@ package com.github.dactiv.basic.message.service.support.site.umeng;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
-import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidMessage;
 import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPayload;
@@ -71,7 +71,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
     @SuppressWarnings("unchecked")
     @Override
-    public RestResult<Map<String, Object>> sendSiteMessage(SiteMessage message) {
+    public RestResult<Map<String, Object>> sendSiteMessage(SiteMessageEntity message) {
 
         List<String> types = Arrays.asList(ResourceSource.Mobile.toString(), ResourceSource.UserCenter.toString());
 
@@ -161,7 +161,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * @return 基础消息实体
      */
     @SuppressWarnings("unchecked")
-    public BasicMessage getIosMessage(SiteMessage entity, MessageType type) {
+    public BasicMessage getIosMessage(SiteMessageEntity entity, MessageType type) {
         BasicMessage result = new BasicMessage();
 
         result.setProductionMode(properties.isProductionMode());
@@ -208,7 +208,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      *
      * @return 基础消息实体
      */
-    public BasicMessage getAndroidMessage(SiteMessage entity, MessageType type) {
+    public BasicMessage getAndroidMessage(SiteMessageEntity entity, MessageType type) {
 
         AndroidMessage result = new AndroidMessage();
 

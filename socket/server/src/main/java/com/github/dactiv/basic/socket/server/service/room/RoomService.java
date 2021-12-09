@@ -6,12 +6,12 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
-import com.github.dactiv.basic.socket.server.controller.room.RoomResponseBody;
+import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
 import com.github.dactiv.basic.socket.server.dao.RoomDao;
 import com.github.dactiv.basic.socket.server.dao.RoomParticipantDao;
-import com.github.dactiv.basic.socket.server.enitty.Room;
-import com.github.dactiv.basic.socket.server.enitty.RoomParticipant;
-import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRole;
+import com.github.dactiv.basic.socket.server.domain.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipant;
+import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRoleEnum;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.page.Page;
@@ -62,7 +62,7 @@ public class RoomService {
 
         List<RoomParticipant> roomParticipants = userIds
                 .stream()
-                .map(id -> RoomParticipant.of(id, RoomParticipantRole.Participant.getValue(), room.getId()))
+                .map(id -> RoomParticipant.of(id, RoomParticipantRoleEnum.Participant.getValue(), room.getId()))
                 .collect(Collectors.toList());
 
         Optional<RoomParticipant> optional = roomParticipants
@@ -71,9 +71,9 @@ public class RoomService {
                 .findFirst();
 
         if (optional.isPresent()) {
-            optional.get().setRole(RoomParticipantRole.Owner.getValue());
+            optional.get().setRole(RoomParticipantRoleEnum.Owner.getValue());
         } else {
-            roomParticipants.add(RoomParticipant.of(ownerId, RoomParticipantRole.Owner.getValue(), room.getId()));
+            roomParticipants.add(RoomParticipant.of(ownerId, RoomParticipantRoleEnum.Owner.getValue(), room.getId()));
         }
 
         roomParticipants

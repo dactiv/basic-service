@@ -6,8 +6,8 @@ import com.baomidou.mybatisplus.core.metadata.OrderItem;
 import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.message.dao.BatchMessageDao;
 import com.github.dactiv.basic.message.dao.SmsMessageDao;
-import com.github.dactiv.basic.message.entity.BatchMessage;
-import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.domain.entity.BatchMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.page.Page;
@@ -43,9 +43,9 @@ public class MessageService {
      *
      * @param batchMessage 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public void saveBatchMessage(BatchMessage batchMessage) {
+    public void saveBatchMessage(BatchMessageEntity batchMessage) {
         if (Objects.isNull(batchMessage.getId())) {
             insertBatchMessage(batchMessage);
         } else {
@@ -58,9 +58,9 @@ public class MessageService {
      *
      * @param batchMessage 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public void insertBatchMessage(BatchMessage batchMessage) {
+    public void insertBatchMessage(BatchMessageEntity batchMessage) {
         batchMessageDao.insert(batchMessage);
     }
 
@@ -69,9 +69,9 @@ public class MessageService {
      *
      * @param batchMessage 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public void updateBatchMessage(BatchMessage batchMessage) {
+    public void updateBatchMessage(BatchMessageEntity batchMessage) {
         batchMessageDao.updateById(batchMessage);
     }
 
@@ -80,7 +80,7 @@ public class MessageService {
      *
      * @param id 主键 id
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
     public void deleteBatchMessage(Integer id) {
         batchMessageDao.deleteById(id);
@@ -91,7 +91,7 @@ public class MessageService {
      *
      * @param ids 主键 id 集合
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
     public void deleteBatchMessage(List<Integer> ids) {
         ids.forEach(this::deleteBatchMessage);
@@ -104,9 +104,9 @@ public class MessageService {
      *
      * @return tb_batch_message 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public BatchMessage getBatchMessage(Integer id) {
+    public BatchMessageEntity getBatchMessage(Integer id) {
         return batchMessageDao.selectById(id);
     }
 
@@ -117,9 +117,9 @@ public class MessageService {
      *
      * @return tb_batch_message 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public BatchMessage findOneBatchMessage(Wrapper<BatchMessage> wrapper) {
+    public BatchMessageEntity findOneBatchMessage(Wrapper<BatchMessageEntity> wrapper) {
         return batchMessageDao.selectOne(wrapper);
     }
 
@@ -130,9 +130,9 @@ public class MessageService {
      *
      * @return tb_batch_message 实体集合
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public List<BatchMessage> findBatchMessageList(Wrapper<BatchMessage> wrapper) {
+    public List<BatchMessageEntity> findBatchMessageList(Wrapper<BatchMessageEntity> wrapper) {
         return batchMessageDao.selectList(wrapper);
     }
 
@@ -144,11 +144,11 @@ public class MessageService {
      *
      * @return 分页实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
-    public Page<BatchMessage> findBatchMessagePage(PageRequest pageRequest, Wrapper<BatchMessage> wrapper) {
+    public Page<BatchMessageEntity> findBatchMessagePage(PageRequest pageRequest, Wrapper<BatchMessageEntity> wrapper) {
 
-        IPage<BatchMessage> result = batchMessageDao.selectPage(
+        IPage<BatchMessageEntity> result = batchMessageDao.selectPage(
                 MybatisPlusQueryGenerator.createQueryPage(pageRequest),
                 wrapper
         );
@@ -163,7 +163,7 @@ public class MessageService {
      *
      * @param smsMessage 短信消息实体
      */
-    public void saveSmsMessage(SmsMessage smsMessage) {
+    public void saveSmsMessage(SmsMessageEntity smsMessage) {
         if (Objects.isNull(smsMessage.getId())) {
             insertSmsMessage(smsMessage);
         } else {
@@ -176,10 +176,10 @@ public class MessageService {
      *
      * @param smsMessage 短信消息实体
      */
-    public void insertSmsMessage(SmsMessage smsMessage) {
+    public void insertSmsMessage(SmsMessageEntity smsMessage) {
 
         smsMessage.setRetryCount(0);
-        smsMessage.setStatus(ExecuteStatus.Processing.getValue());
+        smsMessage.setExecuteStatus(ExecuteStatus.Processing);
 
         smsMessageDao.insert(smsMessage);
     }
@@ -189,7 +189,7 @@ public class MessageService {
      *
      * @param smsMessage 短信消息实体
      */
-    public void updateSmsMessage(SmsMessage smsMessage) {
+    public void updateSmsMessage(SmsMessageEntity smsMessage) {
         smsMessageDao.updateById(smsMessage);
     }
 
@@ -220,7 +220,7 @@ public class MessageService {
      *
      * @return 短信消息实体
      */
-    public SmsMessage getSmsMessage(Integer id) {
+    public SmsMessageEntity getSmsMessage(Integer id) {
         return smsMessageDao.selectById(id);
     }
 
@@ -232,12 +232,12 @@ public class MessageService {
      *
      * @return 分页实体
      */
-    public Page<SmsMessage> findSmsMessagePage(PageRequest pageRequest, Wrapper<SmsMessage> wrapper) {
-        PageDTO<SmsMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+    public Page<SmsMessageEntity> findSmsMessagePage(PageRequest pageRequest, Wrapper<SmsMessageEntity> wrapper) {
+        PageDTO<SmsMessageEntity> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
-        IPage<SmsMessage> result = smsMessageDao.selectPage(page, wrapper);
+        IPage<SmsMessageEntity> result = smsMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }

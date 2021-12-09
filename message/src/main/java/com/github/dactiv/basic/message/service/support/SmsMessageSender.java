@@ -1,11 +1,11 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.message.entity.BasicMessage;
-import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.service.support.body.SmsMessageBody;
+import com.github.dactiv.basic.message.domain.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -41,7 +41,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMessage> {
+public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMessageEntity> {
 
     public static final String DEFAULT_QUEUE_NAME = "message.sms.queue";
 
@@ -85,9 +85,9 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
                         Channel channel,
                         @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        SmsMessage entity = sendSms(id);
+        SmsMessageEntity entity = sendSms(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
+        if (ExecuteStatus.Retrying.equals(entity.getExecuteStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -101,11 +101,11 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
      * @param id 短信实体 id
      */
     @Transactional(rollbackFor = Exception.class)
-    public SmsMessage sendSms(Integer id) {
+    public SmsMessageEntity sendSms(Integer id) {
 
-        SmsMessage entity = messageService.getSmsMessage(id);
+        SmsMessageEntity entity = messageService.getSmsMessage(id);
 
-        if (ExecuteStatus.Success.getValue().equals(entity.getStatus())) {
+        if (ExecuteStatus.Success.equals(entity.getExecuteStatus())) {
             return entity;
         }
 
@@ -124,7 +124,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
             } else if (!entity.isRetry()) {
                 ExecuteStatus.failure(entity, restResult.getMessage());
             } else {
-                entity.setStatus(ExecuteStatus.Retrying.getValue());
+                entity.setExecuteStatus(ExecuteStatus.Retrying);
             }
 
         } catch (Exception e) {
@@ -132,7 +132,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
             if (!entity.isRetry()) {
                 ExecuteStatus.failure(entity, e.getMessage());
             } else {
-                entity.setStatus(ExecuteStatus.Retrying.getValue());
+                entity.setExecuteStatus(ExecuteStatus.Retrying);
             }
         }
 
@@ -162,27 +162,27 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    protected boolean preSend(List<SmsMessage> content) {
+    protected boolean preSend(List<SmsMessageEntity> content) {
         content.forEach(e -> messageService.saveSmsMessage(e));
         return true;
     }
 
     @Override
-    protected RestResult<Object> send(List<SmsMessage> entities) {
+    protected RestResult<Object> send(List<SmsMessageEntity> entities) {
         entities
                 .stream()
-                .map(BasicMessage::getId)
+                .map(BasicMessageEntity::getId)
                 .forEach(id ->
                         amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条短信消息完成",
-                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+                entities.stream().map(BasicMessageEntity::getId).collect(Collectors.toList())
         );
     }
 
     @Override
-    protected List<SmsMessage> getBatchMessageBodyContent(List<SmsMessageBody> result) {
+    protected List<SmsMessageEntity> getBatchMessageBodyContent(List<SmsMessageBody> result) {
         return result.stream().flatMap(this::createSmsMessageEntity).collect(Collectors.toList());
     }
 
@@ -193,9 +193,9 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
      *
      * @return 短信消息流
      */
-    private Stream<SmsMessage> createSmsMessageEntity(SmsMessageBody body) {
+    private Stream<SmsMessageEntity> createSmsMessageEntity(SmsMessageBody body) {
 
-        List<SmsMessage> result = new LinkedList<>();
+        List<SmsMessageEntity> result = new LinkedList<>();
 
         if (body.getPhoneNumbers().contains(DEFAULT_ALL_USER_KEY)) {
             Map<String, Object> filter = new LinkedHashMap<>();
@@ -207,7 +207,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
             for (Map<String, Object> user : users) {
 
-                SmsMessage entity = Casts.of(body, SmsMessage.class);
+                SmsMessageEntity entity = Casts.of(body, SmsMessageEntity.class);
                 entity.setPhoneNumber(user.get("phone").toString());
 
                 result.add(entity);
@@ -216,7 +216,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
         } else {
             for (String phoneNumber : body.getPhoneNumbers()) {
 
-                SmsMessage entity = Casts.of(body, SmsMessage.class);
+                SmsMessageEntity entity = Casts.of(body, SmsMessageEntity.class);
                 entity.setPhoneNumber(phoneNumber);
 
                 result.add(entity);

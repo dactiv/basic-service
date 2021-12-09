@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.server.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.socket.server.enitty.RoomParticipant;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipant;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support.site;
 
-import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;
@@ -26,5 +26,5 @@ public interface SiteMessageChannelSender {
      *
      * @return rest 结果集
      */
-    RestResult<Map<String, Object>> sendSiteMessage(SiteMessage entity) throws Exception;
+    RestResult<Map<String, Object>> sendSiteMessage(SiteMessageEntity entity) throws Exception;
 }

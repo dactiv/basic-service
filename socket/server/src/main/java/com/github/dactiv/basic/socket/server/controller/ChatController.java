@@ -1,9 +1,13 @@
 package com.github.dactiv.basic.socket.server.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.domain.ContactMessage;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.domain.model.GlobalMessageModel;
+import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.domain.model.RecentContactModel;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
-import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
@@ -58,7 +62,7 @@ public class ChatController {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer senderId = Casts.cast(userDetails.getId());
-        GlobalMessage.Message message = chatService.sendMessage(senderId, recipientId, content);
+        GlobalMessageModel.Message message = chatService.sendMessage(senderId, recipientId, content);
 
         return RestResult.ofSuccess("发送消息成功", message);
     }
@@ -97,7 +101,7 @@ public class ChatController {
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
-    public List<RecentContact> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
+    public List<RecentContactModel> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         return chatService.getRecentContacts(userId);
@@ -114,7 +118,7 @@ public class ChatController {
     @GetMapping("getUnreadMessages")
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
-    public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
+    public List<ContactMessage<BasicMessageModel.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
         return chatService.getUnreadMessages(userId);

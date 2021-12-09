@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.dao;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.socket.server.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.enitty.Room;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;

@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.socket.server.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.socket.server.controller.room.RoomResponseBody;
-import com.github.dactiv.basic.socket.server.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
+import com.github.dactiv.basic.socket.server.domain.enitty.Room;
 import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;

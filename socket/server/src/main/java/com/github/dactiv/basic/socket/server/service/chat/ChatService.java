@@ -7,13 +7,17 @@ import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
-import com.github.dactiv.basic.socket.server.controller.chat.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.enumerate.ContactType;
-import com.github.dactiv.basic.socket.server.enumerate.GlobalMessageType;
-import com.github.dactiv.basic.socket.server.receiver.chat.ReadMessageReceiver;
-import com.github.dactiv.basic.socket.server.receiver.chat.SaveMessageReceiver;
+import com.github.dactiv.basic.socket.server.domain.ContactMessage;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.domain.model.GlobalMessageModel;
+import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.domain.model.RecentContactModel;
+import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
+import com.github.dactiv.basic.socket.server.enumerate.GlobalMessageTypeEnum;
+import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
+import com.github.dactiv.basic.socket.server.receiver.SaveMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
-import com.github.dactiv.basic.socket.server.service.chat.data.*;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -111,9 +115,9 @@ public class ChatService implements InitializingBean {
                                                    Date time,
                                                    ScrollPageRequest pageRequest) {
 
-        GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
+        GlobalMessageModel globalMessage = getGlobalMessage(userId, targetId, false);
 
-        List<GlobalMessage.FileMessage> messages = new LinkedList<>();
+        List<GlobalMessageModel.FileMessage> messages = new LinkedList<>();
         LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
         List<String> historyFiles = globalMessage
                 .getMessageFileMap()
@@ -125,16 +129,16 @@ public class ChatService implements InitializingBean {
 
         for (String file : historyFiles) {
             FileObject fileObject = FileObject.of(chatConfig.getMessage().getBucket(), file);
-            List<GlobalMessage.FileMessage> fileMessageList = minioTemplate.readJsonValue(
+            List<GlobalMessageModel.FileMessage> fileMessageList = minioTemplate.readJsonValue(
                     fileObject,
                     new TypeReference<>() {
                     }
             );
 
-            List<GlobalMessage.FileMessage> temps = fileMessageList
+            List<GlobalMessageModel.FileMessage> temps = fileMessageList
                     .stream()
                     .filter(f -> f.getCreationTime().before(time))
-                    .sorted(Comparator.comparing(BasicMessage.Message::getCreationTime).reversed())
+                    .sorted(Comparator.comparing(BasicMessageModel.Message::getCreationTime).reversed())
                     .limit(pageRequest.getSize() - messages.size())
                     .peek(this::decryptMessageContent)
                     .collect(Collectors.toList());
@@ -165,7 +169,7 @@ public class ChatService implements InitializingBean {
      */
     public List<Date> getHistoryMessageDateList(Integer userId, Integer targetId) {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(chatConfig.getMessage().getFileSuffix());
-        GlobalMessage globalMessage = getGlobalMessage(userId, targetId, false);
+        GlobalMessageModel globalMessage = getGlobalMessage(userId, targetId, false);
         return  globalMessage
                 .getMessageFileMap()
                 .keySet()
@@ -196,7 +200,7 @@ public class ChatService implements InitializingBean {
      *
      * @param message 文件消息
      */
-    private void decryptMessageContent(BasicMessage.FileMessage message) {
+    private void decryptMessageContent(BasicMessageModel.FileMessage message) {
         CipherService cipherService = cipherAlgorithmService.getCipherService(message.getCryptoType());
         String content = message.getContent();
         String key = message.getCryptoKey();
@@ -219,7 +223,7 @@ public class ChatService implements InitializingBean {
      *
      * @return redis 桶
      */
-    private RBucket<GlobalMessage> getRedisGlobalMessageBucket(String filename, boolean global) {
+    private RBucket<GlobalMessageModel> getRedisGlobalMessageBucket(String filename, boolean global) {
         String key = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
 
         CacheProperties cache = getGlobalMessageCacheProperties(global);
@@ -247,7 +251,7 @@ public class ChatService implements InitializingBean {
      *
      * @return 全局消息
      */
-    public GlobalMessage getGlobalMessage(Integer sourceId, Integer targetId, boolean global) {
+    public GlobalMessageModel getGlobalMessage(Integer sourceId, Integer targetId, boolean global) {
 
         String filename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
 
@@ -261,21 +265,21 @@ public class ChatService implements InitializingBean {
             minioBucket = chatConfig.getGlobal().getBucket();
         }
 
-        RBucket<GlobalMessage> redisBucket = getRedisGlobalMessageBucket(filename, global);
+        RBucket<GlobalMessageModel> redisBucket = getRedisGlobalMessageBucket(filename, global);
 
-        GlobalMessage globalMessage = redisBucket.get();
+        GlobalMessageModel globalMessage = redisBucket.get();
 
         if (Objects.isNull(globalMessage)) {
             FileObject fileObject = FileObject.of(minioBucket, filename);
-            globalMessage = minioTemplate.readJsonValue(fileObject, GlobalMessage.class);
+            globalMessage = minioTemplate.readJsonValue(fileObject, GlobalMessageModel.class);
         }
 
         if (Objects.isNull(globalMessage)) {
-            globalMessage = new GlobalMessage();
+            globalMessage = new GlobalMessageModel();
 
             globalMessage.setFilename(filename);
             globalMessage.setBucketName(minioBucket.getBucketName());
-            globalMessage.setType(global ? GlobalMessageType.Global.getValue() : GlobalMessageType.Contact.getValue());
+            globalMessage.setType(global ? GlobalMessageTypeEnum.Global.getValue() : GlobalMessageTypeEnum.Contact.getValue());
         }
 
         return globalMessage;
@@ -292,7 +296,7 @@ public class ChatService implements InitializingBean {
      *
      * @throws Exception 获取错误时抛出
      */
-    private String getGlobalMessageCurrentFilename(GlobalMessage global, Integer sourceId, Integer targetId) throws Exception {
+    private String getGlobalMessageCurrentFilename(GlobalMessageModel global, Integer sourceId, Integer targetId) throws Exception {
         String filename;
 
         if (MapUtils.isNotEmpty(global.getMessageFileMap())) {
@@ -325,11 +329,11 @@ public class ChatService implements InitializingBean {
      *
      * @throws Exception 创建文件失败时抛出
      */
-    private String createHistoryMessageFile(GlobalMessage global, Integer sourceId, Integer targetId) throws Exception {
+    private String createHistoryMessageFile(GlobalMessageModel global, Integer sourceId, Integer targetId) throws Exception {
         String globalFilename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
         Integer historyFileCount = chatConfig.getContact().getHistoryMessageFileCount();
 
-        if (GlobalMessageType.Global.getValue().equals(global.getType())) {
+        if (GlobalMessageTypeEnum.Global.getValue().equals(global.getType())) {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
             globalFilename = MessageFormat.format(chatConfig.getGlobal().getPersonFileToken(), min, max);
@@ -355,7 +359,7 @@ public class ChatService implements InitializingBean {
 
         Bucket bucket = chatConfig.getContact().getContactBucket();
 
-        if (GlobalMessageType.Global.getValue().equals(global.getType())) {
+        if (GlobalMessageTypeEnum.Global.getValue().equals(global.getType())) {
             bucket = chatConfig.getGlobal().getBucket();
         }
 
@@ -363,7 +367,7 @@ public class ChatService implements InitializingBean {
         minioTemplate.writeJsonValue(globalFileObject, global);
 
         FileObject messageFileObject = FileObject.of(chatConfig.getMessage().getBucket(), filename);
-        minioTemplate.writeJsonValue(messageFileObject, new LinkedList<BasicMessage.Message>());
+        minioTemplate.writeJsonValue(messageFileObject, new LinkedList<BasicMessageModel.Message>());
 
         return filename;
     }
@@ -406,15 +410,15 @@ public class ChatService implements InitializingBean {
      *
      * @throws Exception 存储消息记录失败时抛出
      */
-    public List<BasicMessage.FileMessage> addHistoryMessage(List<GlobalMessage.Message> messages,
-                                                            Integer sourceId,
-                                                            Integer targetId,
-                                                            boolean global) throws Exception {
+    public List<BasicMessageModel.FileMessage> addHistoryMessage(List<GlobalMessageModel.Message> messages,
+                                                                 Integer sourceId,
+                                                                 Integer targetId,
+                                                                 boolean global) throws Exception {
 
-        GlobalMessage globalMessage = getGlobalMessage(sourceId, targetId, global);
+        GlobalMessageModel globalMessage = getGlobalMessage(sourceId, targetId, global);
         String filename = getGlobalMessageCurrentFilename(globalMessage, sourceId, targetId);
-        List<BasicMessage.FileMessage> fileMessageList = new LinkedList<>();
-        for (GlobalMessage.Message message : messages) {
+        List<BasicMessageModel.FileMessage> fileMessageList = new LinkedList<>();
+        for (GlobalMessageModel.Message message : messages) {
 
             String lastMessage = RegExUtils.replaceAll(
                     message.getContent(),
@@ -425,7 +429,7 @@ public class ChatService implements InitializingBean {
             globalMessage.setLastMessage(lastMessage);
             globalMessage.setLastSendTime(new Date());
 
-            BasicMessage.FileMessage fileMessage = BasicMessage.FileMessage.of(message, filename);
+            BasicMessageModel.FileMessage fileMessage = BasicMessageModel.FileMessage.of(message, filename);
             CipherService cipherService = cipherAlgorithmService.getCipherService(fileMessage.getCryptoType());
 
             byte[] key = Base64.decode(fileMessage.getCryptoKey());
@@ -437,7 +441,7 @@ public class ChatService implements InitializingBean {
         }
 
         FileObject messageFileObject = FileObject.of(chatConfig.getMessage().getBucket(), filename);
-        List<GlobalMessage.Message> senderMessageList = minioTemplate.readJsonValue(
+        List<GlobalMessageModel.Message> senderMessageList = minioTemplate.readJsonValue(
                 messageFileObject,
                 new TypeReference<>() {
                 }
@@ -454,7 +458,7 @@ public class ChatService implements InitializingBean {
         FileObject globalFileObject = FileObject.of(globalMessage.getBucketName(), globalMessage.getFilename());
         minioTemplate.writeJsonValue(globalFileObject, globalMessage);
 
-        RBucket<GlobalMessage> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename(), global);
+        RBucket<GlobalMessageModel> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename(), global);
         CacheProperties cache = getGlobalMessageCacheProperties(global);
 
         if (Objects.nonNull(cache.getExpiresTime())) {
@@ -485,9 +489,9 @@ public class ChatService implements InitializingBean {
             value = "socket:chat:send:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
             exception = "请不要过快的发送消息"
     )
-    public GlobalMessage.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
+    public GlobalMessageModel.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
 
-        GlobalMessage.Message message = new GlobalMessage.Message();
+        GlobalMessageModel.Message message = new GlobalMessageModel.Message();
 
         message.setContent(content);
         message.setId(UUID.randomUUID().toString());
@@ -495,20 +499,20 @@ public class ChatService implements InitializingBean {
         message.setCryptoType(chatConfig.getCryptoType());
         message.setCryptoKey(chatConfig.getCryptoKey());
 
-        List<BasicMessage.FileMessage> sourceUserMessages = addHistoryMessage(
+        List<BasicMessageModel.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
                 senderId,
                 recipientId,
                 false
         );
-        List<BasicMessage.FileMessage> targetUserMessages = addHistoryMessage(
+        List<BasicMessageModel.FileMessage> targetUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
                 recipientId,
                 senderId,
                 false
         );
         // 添加全局聊天记录文件
-        List<BasicMessage.FileMessage> globalMessages = addHistoryMessage(
+        List<BasicMessageModel.FileMessage> globalMessages = addHistoryMessage(
                 Collections.singletonList(message),
                 senderId,
                 recipientId,
@@ -517,7 +521,7 @@ public class ChatService implements InitializingBean {
 
         SocketUserDetails userDetails = socketServerManager.getSocketUserDetails(recipientId);
 
-        ContactMessage<BasicMessage.Message> contactMessage = new ContactMessage<>();
+        ContactMessage<BasicMessageModel.Message> contactMessage = new ContactMessage<>();
 
         String lastMessage = RegExUtils.replaceAll(
                 message.getContent(),
@@ -526,13 +530,13 @@ public class ChatService implements InitializingBean {
         );
 
         contactMessage.setId(senderId);
-        contactMessage.setType(ContactType.Person.getValue());
+        contactMessage.setType(ContactTypeEnum.Person.getValue());
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
         contactMessage.getMessages().add(message);
 
-        List<BasicMessage.UserMessageBody> userMessageBodies = targetUserMessages
+        List<BasicMessageModel.UserMessageBody> userMessageBodies = targetUserMessages
                 .stream()
                 .map(m -> this.createUserMessageBody(m, sourceUserMessages, globalMessages))
                 .peek(m -> m.setContent(message.getContent()))
@@ -540,7 +544,7 @@ public class ChatService implements InitializingBean {
 
         // 构造未读消息内容，用于已读时能够更改所有文件的状态为已读
         //noinspection unchecked
-        ContactMessage<BasicMessage.UserMessageBody> recipientMessage = Casts.of(contactMessage, ContactMessage.class);
+        ContactMessage<BasicMessageModel.UserMessageBody> recipientMessage = Casts.of(contactMessage, ContactMessage.class);
         // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
         // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
         // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
@@ -549,7 +553,7 @@ public class ChatService implements InitializingBean {
         addUnreadMessage(recipientId, recipientMessage);
 
         //noinspection unchecked
-        ContactMessage<BasicMessage.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
+        ContactMessage<BasicMessageModel.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
         unicastMessage.setMessages(targetUserMessages);
         unicastMessage.getMessages().forEach(this::decryptMessageContent);
 
@@ -586,14 +590,14 @@ public class ChatService implements InitializingBean {
      *
      * @return 用户消息体
      */
-    private BasicMessage.UserMessageBody createUserMessageBody(BasicMessage.FileMessage message,
-                                                               List<BasicMessage.FileMessage> sourceMessages,
-                                                               List<BasicMessage.FileMessage> globalMessages) {
+    private BasicMessageModel.UserMessageBody createUserMessageBody(BasicMessageModel.FileMessage message,
+                                                                    List<BasicMessageModel.FileMessage> sourceMessages,
+                                                                    List<BasicMessageModel.FileMessage> globalMessages) {
 
-        BasicMessage.UserMessageBody result = Casts.of(message, BasicMessage.UserMessageBody.class);
+        BasicMessageModel.UserMessageBody result = Casts.of(message, BasicMessageModel.UserMessageBody.class);
         result.getFilenames().add(message.getFilename());
 
-        BasicMessage.FileMessage sourceUserMessage = sourceMessages
+        BasicMessageModel.FileMessage sourceUserMessage = sourceMessages
                 .stream()
                 .filter(r -> r.getId().equals(result.getId()))
                 .findFirst()
@@ -601,7 +605,7 @@ public class ChatService implements InitializingBean {
 
         result.getFilenames().add(sourceUserMessage.getFilename());
 
-        BasicMessage.FileMessage globalMessage = globalMessages
+        BasicMessageModel.FileMessage globalMessage = globalMessages
                 .stream()
                 .filter(r -> r.getId().equals(result.getId()))
                 .findFirst()
@@ -619,13 +623,13 @@ public class ChatService implements InitializingBean {
      *
      * @return 未读消息集合
      */
-    public List<ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessages(Integer userId) {
-        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> result = getUnreadMessageData(userId);
+    public List<ContactMessage<BasicMessageModel.UserMessageBody>> getUnreadMessages(Integer userId) {
+        Map<Integer, ContactMessage<BasicMessageModel.UserMessageBody>> result = getUnreadMessageData(userId);
 
         return result
                 .values()
                 .stream()
-                .sorted(Comparator.comparing(BasicMessage::getLastMessage).reversed())
+                .sorted(Comparator.comparing(BasicMessageModel::getLastMessage).reversed())
                 .collect(Collectors.toList());
     }
 
@@ -636,10 +640,10 @@ public class ChatService implements InitializingBean {
      * @param contactMessage 联系人消息
      */
     @Deprecated
-    private void addUnreadMessage(Integer userId, ContactMessage<BasicMessage.UserMessageBody> contactMessage) throws Exception {
-        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = getUnreadMessageData(userId);
+    private void addUnreadMessage(Integer userId, ContactMessage<BasicMessageModel.UserMessageBody> contactMessage) throws Exception {
+        Map<Integer, ContactMessage<BasicMessageModel.UserMessageBody>> map = getUnreadMessageData(userId);
 
-        ContactMessage<BasicMessage.UserMessageBody> targetMessage = map.get(contactMessage.getId());
+        ContactMessage<BasicMessageModel.UserMessageBody> targetMessage = map.get(contactMessage.getId());
 
         if (Objects.isNull(targetMessage)) {
             map.put(contactMessage.getId(), contactMessage);
@@ -661,10 +665,10 @@ public class ChatService implements InitializingBean {
      * @return 未读消息数据
      */
     @Deprecated
-    public Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> getUnreadMessageData(Integer userId) {
+    public Map<Integer, ContactMessage<BasicMessageModel.UserMessageBody>> getUnreadMessageData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getUnreadMessageFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getUnreadBucket(), filename);
-        Map<Integer, ContactMessage<BasicMessage.UserMessageBody>> map = minioTemplate.readJsonValue(
+        Map<Integer, ContactMessage<BasicMessageModel.UserMessageBody>> map = minioTemplate.readJsonValue(
                 fileObject,
                 new TypeReference<>() {
                 }
@@ -697,8 +701,8 @@ public class ChatService implements InitializingBean {
      *
      * @return 常用联系人 id 集合
      */
-    public List<RecentContact> getRecentContacts(Integer userId) {
-        List<RecentContact> idEntities = getRecentContactData(userId);
+    public List<RecentContactModel> getRecentContacts(Integer userId) {
+        List<RecentContactModel> idEntities = getRecentContactData(userId);
 
         return idEntities
                 .stream()
@@ -713,10 +717,10 @@ public class ChatService implements InitializingBean {
      *
      * @return 常用联系人数据集合
      */
-    public List<RecentContact> getRecentContactData(Integer userId) {
+    public List<RecentContactModel> getRecentContactData(Integer userId) {
         String filename = MessageFormat.format(chatConfig.getContact().getRecentFileToken(), userId);
         FileObject fileObject = FileObject.of(chatConfig.getContact().getRecentBucket(), filename);
-        List<RecentContact> recentContacts = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {});
+        List<RecentContactModel> recentContacts = minioTemplate.readJsonValue(fileObject, new TypeReference<>() {});
 
         if (CollectionUtils.isEmpty(recentContacts)) {
             recentContacts = new LinkedList<>();
@@ -744,10 +748,10 @@ public class ChatService implements InitializingBean {
      * @param contactId 联系人 id
      * @param type 联系人类型
      */
-    public void addRecentContact(Integer userId, Integer contactId, ContactType type) throws Exception {
-        List<RecentContact> recentContacts = getRecentContactData(userId);
+    public void addRecentContact(Integer userId, Integer contactId, ContactTypeEnum type) throws Exception {
+        List<RecentContactModel> recentContacts = getRecentContactData(userId);
 
-        RecentContact recentContact = recentContacts
+        RecentContactModel recentContact = recentContacts
                 .stream()
                 .filter(i -> i.getId().equals(contactId) && i.getType().equals(type.getValue()))
                 .findFirst()
@@ -756,7 +760,7 @@ public class ChatService implements InitializingBean {
         if (Objects.nonNull(recentContact)) {
             recentContact.setCreationTime(new Date());
         } else {
-            recentContact = new RecentContact();
+            recentContact = new RecentContactModel();
             recentContact.setId(contactId);
             recentContact.setType(type.getValue());
             recentContacts.add(recentContact);
@@ -764,7 +768,7 @@ public class ChatService implements InitializingBean {
 
         for (int i = 0; i < recentContacts.size() - chatConfig.getContact().getRecentCount(); i++) {
 
-            Optional<RecentContact> optional = recentContacts
+            Optional<RecentContactModel> optional = recentContacts
                     .stream()
                     .min(Comparator.comparing(IntegerIdEntity::getCreationTime));
 
@@ -795,8 +799,8 @@ public class ChatService implements InitializingBean {
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            IdentityNamingStrategy.TYPE_KEY, ContactType.Person.getValue(),
-                            GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessageIds()
+                            IdentityNamingStrategy.TYPE_KEY, ContactTypeEnum.Person.getValue(),
+                            GlobalMessageModel.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
         } else {
@@ -805,7 +809,7 @@ public class ChatService implements InitializingBean {
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            GlobalMessage.DEFAULT_MESSAGE_IDS, body.getMessageIds()
+                            GlobalMessageModel.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
         }

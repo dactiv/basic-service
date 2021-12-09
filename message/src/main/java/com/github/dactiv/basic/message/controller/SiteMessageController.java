@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -44,7 +44,7 @@ public class SiteMessageController {
     private AttachmentMessageService messageService;
 
     @Autowired
-    private MybatisPlusQueryGenerator<SiteMessage> queryGenerator;
+    private MybatisPlusQueryGenerator<SiteMessageEntity> queryGenerator;
 
     /**
      * 获取站内信消息分页信息
@@ -57,7 +57,7 @@ public class SiteMessageController {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[site:page]')")
     @Plugin(name = "获取站内信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<SiteMessage> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<SiteMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSiteMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -122,7 +122,7 @@ public class SiteMessageController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[site:get]')")
     @Plugin(name = "获取站内信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public SiteMessage get(@RequestParam Integer id) {
+    public SiteMessageEntity get(@RequestParam Integer id) {
         return messageService.getSiteMessage(id);
     }
 

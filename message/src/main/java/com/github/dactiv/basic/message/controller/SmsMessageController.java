@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
@@ -47,7 +47,7 @@ public class SmsMessageController {
     private List<SmsChannelSender> smsChannelSenders;
 
     @Autowired
-    private MybatisPlusQueryGenerator<SmsMessage> queryGenerator;
+    private MybatisPlusQueryGenerator<SmsMessageEntity> queryGenerator;
 
     /**
      * 获取短信消息分页信息
@@ -60,7 +60,7 @@ public class SmsMessageController {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[sms:page]')")
     @Plugin(name = "获取短信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<SmsMessage> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<SmsMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findSmsMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -74,7 +74,7 @@ public class SmsMessageController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[sms:get]')")
     @Plugin(name = "获取短信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public SmsMessage get(@RequestParam Integer id) {
+    public SmsMessageEntity get(@RequestParam Integer id) {
         return messageService.getSmsMessage(id);
     }
 

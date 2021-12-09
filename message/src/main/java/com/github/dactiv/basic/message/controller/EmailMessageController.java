@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -41,7 +41,7 @@ public class EmailMessageController {
     private AttachmentMessageService messageService;
 
     @Autowired
-    private MybatisPlusQueryGenerator<EmailMessage> queryGenerator;
+    private MybatisPlusQueryGenerator<EmailMessageEntity> queryGenerator;
 
     /**
      * 获取邮件消息分页信息
@@ -54,7 +54,7 @@ public class EmailMessageController {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[email:page]')")
     @Plugin(name = "获取邮件消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<EmailMessage> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<EmailMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findEmailMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -68,7 +68,7 @@ public class EmailMessageController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[email:get]')")
     @Plugin(name = "获取邮件消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public EmailMessage get(@RequestParam Integer id) {
+    public EmailMessageEntity get(@RequestParam Integer id) {
         return messageService.getEmailMessage(id);
     }
 

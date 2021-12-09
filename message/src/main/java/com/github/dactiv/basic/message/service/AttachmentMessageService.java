@@ -9,10 +9,10 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.PageDTO;
 import com.github.dactiv.basic.message.dao.AttachmentDao;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
 import com.github.dactiv.basic.message.dao.SiteMessageDao;
-import com.github.dactiv.basic.message.entity.Attachment;
-import com.github.dactiv.basic.message.entity.EmailMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
-import com.github.dactiv.basic.message.enumerate.AttachmentType;
+import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
+import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
+import com.github.dactiv.basic.message.enumerate.AttachmentTypeEnum;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -56,9 +56,9 @@ public class AttachmentMessageService {
      *
      * @param attachment 实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public void saveAttachment(Attachment attachment) {
+    public void saveAttachment(AttachmentEntity attachment) {
         if (Objects.isNull(attachment.getId())) {
             insertAttachment(attachment);
         } else {
@@ -71,9 +71,9 @@ public class AttachmentMessageService {
      *
      * @param attachment 实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public void insertAttachment(Attachment attachment) {
+    public void insertAttachment(AttachmentEntity attachment) {
         attachmentDao.insert(attachment);
     }
 
@@ -82,9 +82,9 @@ public class AttachmentMessageService {
      *
      * @param attachment 实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public void updateAttachment(Attachment attachment) {
+    public void updateAttachment(AttachmentEntity attachment) {
         attachmentDao.updateById(attachment);
     }
 
@@ -93,7 +93,7 @@ public class AttachmentMessageService {
      *
      * @param id 主键 id
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
     public void deleteAttachment(Integer id) {
         attachmentDao.deleteById(id);
@@ -104,7 +104,7 @@ public class AttachmentMessageService {
      *
      * @param ids 主键 id 集合
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
     public void deleteAttachment(List<Integer> ids) {
         ids.forEach(this::deleteAttachment);
@@ -117,9 +117,9 @@ public class AttachmentMessageService {
      *
      * @return tb_attachment 实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public Attachment getAttachment(Integer id) {
+    public AttachmentEntity getAttachment(Integer id) {
         return attachmentDao.selectById(id);
     }
 
@@ -130,9 +130,9 @@ public class AttachmentMessageService {
      *
      * @return tb_attachment 实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public Attachment findOneAttachment(Wrapper<Attachment> wrapper) {
+    public AttachmentEntity findOneAttachment(Wrapper<AttachmentEntity> wrapper) {
         return attachmentDao.selectOne(wrapper);
     }
 
@@ -143,9 +143,9 @@ public class AttachmentMessageService {
      *
      * @return tb_attachment 实体集合
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public List<Attachment> findAttachmentList(Wrapper<Attachment> wrapper) {
+    public List<AttachmentEntity> findAttachmentList(Wrapper<AttachmentEntity> wrapper) {
         return attachmentDao.selectList(wrapper);
     }
 
@@ -157,11 +157,11 @@ public class AttachmentMessageService {
      *
      * @return 分页实体
      *
-     * @see Attachment
+     * @see AttachmentEntity
      */
-    public Page<Attachment> findAttachmentPage(PageRequest pageRequest, Wrapper<Attachment> wrapper) {
+    public Page<AttachmentEntity> findAttachmentPage(PageRequest pageRequest, Wrapper<AttachmentEntity> wrapper) {
 
-        IPage<Attachment> result = attachmentDao.selectPage(
+        IPage<AttachmentEntity> result = attachmentDao.selectPage(
                 MybatisPlusQueryGenerator.createQueryPage(pageRequest),
                 wrapper
         );
@@ -176,7 +176,7 @@ public class AttachmentMessageService {
      *
      * @param emailMessage 邮件消息实体
      */
-    public void saveEmailMessage(EmailMessage emailMessage) {
+    public void saveEmailMessage(EmailMessageEntity emailMessage) {
 
         if (Objects.isNull(emailMessage.getId())) {
 
@@ -186,7 +186,7 @@ public class AttachmentMessageService {
                 emailMessage
                         .getAttachmentList()
                         .stream()
-                        .peek(a -> a.setType(AttachmentType.Email.getValue()))
+                        .peek(a -> a.setType(AttachmentTypeEnum.Email.getValue()))
                         .peek(a -> a.setMessageId(emailMessage.getId()))
                         .forEach(this::saveAttachment);
             }
@@ -201,10 +201,10 @@ public class AttachmentMessageService {
      *
      * @param emailMessage 邮件消息实体
      */
-    public void insertEmailMessage(EmailMessage emailMessage) {
+    public void insertEmailMessage(EmailMessageEntity emailMessage) {
 
         emailMessage.setRetryCount(0);
-        emailMessage.setStatus(ExecuteStatus.Processing.getValue());
+        emailMessage.setExecuteStatus(ExecuteStatus.Processing);
 
         emailMessageDao.insert(emailMessage);
     }
@@ -214,7 +214,7 @@ public class AttachmentMessageService {
      *
      * @param emailMessage 邮件消息实体
      */
-    public void updateEmailMessage(EmailMessage emailMessage) {
+    public void updateEmailMessage(EmailMessageEntity emailMessage) {
         emailMessageDao.updateById(emailMessage);
     }
 
@@ -245,15 +245,15 @@ public class AttachmentMessageService {
      *
      * @return 邮件消息实体
      */
-    public EmailMessage getEmailMessage(Integer id) {
-        EmailMessage result = emailMessageDao.selectById(id);
+    public EmailMessageEntity getEmailMessage(Integer id) {
+        EmailMessageEntity result = emailMessageDao.selectById(id);
 
         if (YesOrNo.Yes.getValue().equals(result.getHasAttachment())) {
-            List<Attachment> attachmentList = findAttachmentList(
+            List<AttachmentEntity> attachmentList = findAttachmentList(
                     Wrappers
-                            .<Attachment>lambdaQuery()
-                            .eq(Attachment::getMessageId, result.getId())
-                            .eq(Attachment::getType, AttachmentType.Email.getValue())
+                            .<AttachmentEntity>lambdaQuery()
+                            .eq(AttachmentEntity::getMessageId, result.getId())
+                            .eq(AttachmentEntity::getType, AttachmentTypeEnum.Email.getValue())
             );
             result.setAttachmentList(attachmentList);
         }
@@ -269,13 +269,13 @@ public class AttachmentMessageService {
      *
      * @return 分页实体
      */
-    public Page<EmailMessage> findEmailMessagePage(PageRequest pageRequest, Wrapper<EmailMessage> wrapper) {
+    public Page<EmailMessageEntity> findEmailMessagePage(PageRequest pageRequest, Wrapper<EmailMessageEntity> wrapper) {
 
-        PageDTO<EmailMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+        PageDTO<EmailMessageEntity> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
-        IPage<EmailMessage> result = emailMessageDao.selectPage(page, wrapper);
+        IPage<EmailMessageEntity> result = emailMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -287,14 +287,14 @@ public class AttachmentMessageService {
      *
      * @param siteMessage 站内信消息实体
      */
-    public void saveSiteMessage(SiteMessage siteMessage) {
+    public void saveSiteMessage(SiteMessageEntity siteMessage) {
         if (Objects.isNull(siteMessage.getId())) {
             insertSiteMessage(siteMessage);
             if (CollectionUtils.isNotEmpty(siteMessage.getAttachmentList())) {
                 siteMessage
                         .getAttachmentList()
                         .stream()
-                        .peek(a -> a.setType(AttachmentType.Site.getValue()))
+                        .peek(a -> a.setType(AttachmentTypeEnum.Site.getValue()))
                         .peek(a -> a.setMessageId(siteMessage.getId()))
                         .forEach(this::saveAttachment);
             }
@@ -309,7 +309,7 @@ public class AttachmentMessageService {
      *
      * @param siteMessage 站内信消息实体
      */
-    public void insertSiteMessage(SiteMessage siteMessage) {
+    public void insertSiteMessage(SiteMessageEntity siteMessage) {
         siteMessageDao.insert(siteMessage);
     }
 
@@ -318,7 +318,7 @@ public class AttachmentMessageService {
      *
      * @param siteMessage 站内信消息实体
      */
-    public void updateSiteMessage(SiteMessage siteMessage) {
+    public void updateSiteMessage(SiteMessageEntity siteMessage) {
         siteMessageDao.updateById(siteMessage);
     }
 
@@ -349,15 +349,15 @@ public class AttachmentMessageService {
      *
      * @return 站内信消息实体
      */
-    public SiteMessage getSiteMessage(Integer id) {
-        SiteMessage result = siteMessageDao.selectById(id);
+    public SiteMessageEntity getSiteMessage(Integer id) {
+        SiteMessageEntity result = siteMessageDao.selectById(id);
 
         if (YesOrNo.Yes.getValue().equals(result.getHasAttachment())) {
-            List<Attachment> attachmentList = findAttachmentList(
+            List<AttachmentEntity> attachmentList = findAttachmentList(
                     Wrappers
-                            .<Attachment>lambdaQuery()
-                            .eq(Attachment::getMessageId, result.getId())
-                            .eq(Attachment::getType, AttachmentType.Site.getValue())
+                            .<AttachmentEntity>lambdaQuery()
+                            .eq(AttachmentEntity::getMessageId, result.getId())
+                            .eq(AttachmentEntity::getType, AttachmentTypeEnum.Site.getValue())
             );
             result.setAttachmentList(attachmentList);
         }
@@ -372,7 +372,7 @@ public class AttachmentMessageService {
      *
      * @return 站内信消息实体集合
      */
-    public List<SiteMessage> findSiteMessageList(Wrapper<SiteMessage> wrapper) {
+    public List<SiteMessageEntity> findSiteMessageList(Wrapper<SiteMessageEntity> wrapper) {
         return siteMessageDao.selectList(wrapper);
     }
 
@@ -384,12 +384,12 @@ public class AttachmentMessageService {
      *
      * @return 分页实体
      */
-    public Page<SiteMessage> findSiteMessagePage(PageRequest pageRequest, Wrapper<SiteMessage> wrapper) {
-        PageDTO<SiteMessage> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
+    public Page<SiteMessageEntity> findSiteMessagePage(PageRequest pageRequest, Wrapper<SiteMessageEntity> wrapper) {
+        PageDTO<SiteMessageEntity> page = MybatisPlusQueryGenerator.createQueryPage(pageRequest);
 
         page.addOrder(OrderItem.desc(IdEntity.ID_FIELD_NAME));
 
-        IPage<SiteMessage> result = siteMessageDao.selectPage(page, wrapper);
+        IPage<SiteMessageEntity> result = siteMessageDao.selectPage(page, wrapper);
 
         return MybatisPlusQueryGenerator.convertResultPage(result);
     }
@@ -413,19 +413,19 @@ public class AttachmentMessageService {
      */
     public void readSiteMessage(List<String> types, Integer userId) {
 
-        LambdaQueryWrapper<SiteMessage> queryWrapper = new LambdaQueryWrapper<>();
+        LambdaQueryWrapper<SiteMessageEntity> queryWrapper = new LambdaQueryWrapper<>();
 
         if (CollectionUtils.isNotEmpty(types)) {
-            queryWrapper.in(SiteMessage::getType, types);
+            queryWrapper.in(SiteMessageEntity::getType, types);
         }
 
-        queryWrapper.eq(SiteMessage::getToUserId, userId);
+        queryWrapper.eq(SiteMessageEntity::getToUserId, userId);
 
-        List<SiteMessage> siteMessages = findSiteMessageList(queryWrapper);
+        List<SiteMessageEntity> siteMessages = findSiteMessageList(queryWrapper);
 
         siteMessages
                 .stream()
-                .peek(s -> s.setIsRead(YesOrNo.Yes.getValue()))
+                .peek(s -> s.setIsRead(YesOrNo.Yes))
                 .peek(s -> s.setReadTime(new Date()))
                 .forEach(this::saveSiteMessage);
     }

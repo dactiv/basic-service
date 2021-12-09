@@ -18,7 +18,7 @@ import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.entity.SocketUserMessage;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
-import com.github.dactiv.basic.socket.server.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.enitty.Room;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.basic;
 
-import com.github.dactiv.basic.message.entity.BasicMessage;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
@@ -26,7 +26,7 @@ import java.util.Map;
  * @author maurice
  */
 @Slf4j
-public abstract class AbstractMessageSender<T extends BasicMessage> implements MessageSender {
+public abstract class AbstractMessageSender<T extends BasicMessageEntity> implements MessageSender {
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 

@@ -1,12 +1,12 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.message.entity.Attachment;
-import com.github.dactiv.basic.message.entity.BasicMessage;
-import com.github.dactiv.basic.message.entity.EmailMessage;
+import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.service.support.body.EmailMessageBody;
+import com.github.dactiv.basic.message.domain.body.EmailMessageBody;
 import com.github.dactiv.basic.message.service.support.mail.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -57,7 +57,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, EmailMessage> implements InitializingBean {
+public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, EmailMessageEntity> implements InitializingBean {
 
     public static final String DEFAULT_QUEUE_NAME = "message.email.queue";
 
@@ -84,21 +84,21 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     }
 
     @Override
-    protected RestResult<Object> send(List<EmailMessage> entities) {
+    protected RestResult<Object> send(List<EmailMessageEntity> entities) {
         entities
                 .stream()
-                .map(BasicMessage::getId)
+                .map(BasicMessageEntity::getId)
                 .forEach(id ->
                         amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条邮件消息完成",
-                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+                entities.stream().map(BasicMessageEntity::getId).collect(Collectors.toList())
         );
     }
 
     @Override
-    protected List<EmailMessage> getBatchMessageBodyContent(List<EmailMessageBody> result) {
+    protected List<EmailMessageEntity> getBatchMessageBodyContent(List<EmailMessageBody> result) {
         return result.stream().flatMap(this::createEmailMessageEntity).collect(Collectors.toList());
     }
 
@@ -122,9 +122,9 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        EmailMessage entity = sendEmail(id);
+        EmailMessageEntity entity = sendEmail(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
+        if (ExecuteStatus.Retrying.equals(entity.getExecuteStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -137,9 +137,9 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      * @param id 邮件实体 id
      */
     @Transactional(rollbackFor = Exception.class)
-    public EmailMessage sendEmail(Integer id) {
+    public EmailMessageEntity sendEmail(Integer id) {
 
-        EmailMessage entity = attachmentMessageService.getEmailMessage(id);
+        EmailMessageEntity entity = attachmentMessageService.getEmailMessage(id);
 
         if (Objects.isNull(entity)) {
             return null;
@@ -163,7 +163,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
             if (YesOrNo.Yes.getValue().equals(entity.getHasAttachment())) {
 
-                for (Attachment a : entity.getAttachmentList()) {
+                for (AttachmentEntity a : entity.getAttachmentList()) {
 
                     InputStreamSource iss;
 
@@ -204,7 +204,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    protected boolean preSend(List<EmailMessage> content) {
+    protected boolean preSend(List<EmailMessageEntity> content) {
         content.forEach(e -> attachmentMessageService.saveEmailMessage(e));
         return true;
     }
@@ -216,9 +216,9 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      *
      * @return 邮件消息流
      */
-    private Stream<EmailMessage> createEmailMessageEntity(EmailMessageBody body) {
+    private Stream<EmailMessageEntity> createEmailMessageEntity(EmailMessageBody body) {
 
-        List<EmailMessage> result = new LinkedList<>();
+        List<EmailMessageEntity> result = new LinkedList<>();
 
         if (body.getToEmails().contains(DEFAULT_ALL_USER_KEY)) {
             Map<String, Object> filter = new LinkedHashMap<>();
@@ -230,7 +230,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
             for (Map<String, Object> user : users) {
 
-                EmailMessage entity = ofEntity(body);
+                EmailMessageEntity entity = ofEntity(body);
                 entity.setToEmail(user.get("email").toString());
 
                 result.add(entity);
@@ -240,7 +240,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
             for (String toEmail : body.getToEmails()) {
 
-                EmailMessage entity = ofEntity(body);
+                EmailMessageEntity entity = ofEntity(body);
                 entity.setToEmail(toEmail);
 
                 result.add(entity);
@@ -257,8 +257,8 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
      *
      * @return 邮件消息实体
      */
-    private EmailMessage ofEntity(EmailMessageBody body) {
-        EmailMessage entity = Casts.of(body, EmailMessage.class, "attachmentList");
+    private EmailMessageEntity ofEntity(EmailMessageBody body) {
+        EmailMessageEntity entity = Casts.of(body, EmailMessageEntity.class, "attachmentList");
 
         JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
 
@@ -269,8 +269,8 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         entity.setFromEmail(mailSender.getUsername());
 
         if (CollectionUtils.isNotEmpty(body.getAttachmentList())) {
-            entity.setHasAttachment(YesOrNo.Yes.getValue());
-            body.getAttachmentList().forEach(a -> entity.getAttachmentList().add(Casts.of(a, Attachment.class)));
+            entity.setHasAttachment(YesOrNo.Yes);
+            body.getAttachmentList().forEach(a -> entity.getAttachmentList().add(Casts.of(a, AttachmentEntity.class)));
         }
 
         return entity;

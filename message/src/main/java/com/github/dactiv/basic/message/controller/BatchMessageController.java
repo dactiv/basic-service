@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.message.entity.BatchMessage;
+import com.github.dactiv.basic.message.domain.entity.BatchMessageEntity;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -27,7 +27,7 @@ import java.util.List;
  * <p>Table: tb_batch_message - 批量消息</p>
  *
  * @author maurice
- * @see BatchMessage
+ * @see BatchMessageEntity
  * @since 2021-08-22 04:45:14
  */
 @RestController
@@ -56,12 +56,12 @@ public class BatchMessageController {
      *
      * @return 分页实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[batch_message:page]')")
     @Plugin(name = "获取分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<BatchMessage> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<BatchMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return messageService.findBatchMessagePage(
                 pageRequest,
                 queryGenerator.getQueryWrapperByHttpRequest(request)
@@ -75,12 +75,12 @@ public class BatchMessageController {
      *
      * @return tb_batch_message 实体
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[batch_message:get]')")
     @Plugin(name = "获取实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public BatchMessage get(@RequestParam("id") Integer id) {
+    public BatchMessageEntity get(@RequestParam("id") Integer id) {
         return messageService.getBatchMessage(id);
     }
 
@@ -89,7 +89,7 @@ public class BatchMessageController {
      *
      * @param ids 主键 ID 值集合
      *
-     * @see BatchMessage
+     * @see BatchMessageEntity
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[batch_message:delete]')")

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -16,12 +16,12 @@ import java.util.Map;
  * <p>Table: tb_site_message - 站内信消息</p>
  *
  * @author maurice
- * @see SiteMessage
+ * @see SiteMessageEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository
-public interface SiteMessageDao extends BaseMapper<SiteMessage> {
+public interface SiteMessageDao extends BaseMapper<SiteMessageEntity> {
 
     /**
      * 技术纬度数量

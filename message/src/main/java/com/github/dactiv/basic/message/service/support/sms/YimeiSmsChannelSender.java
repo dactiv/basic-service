@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
-import com.github.dactiv.basic.message.entity.SmsMessage;
+import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
@@ -50,7 +50,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
     }
 
     @Override
-    public RestResult<Map<String, Object>> sendSms(SmsMessage entity) {
+    public RestResult<Map<String, Object>> sendSms(SmsMessageEntity entity) {
 
         MultiValueMap<String, Object> param = smsProperties.createBaseParam();
 

@@ -2,11 +2,11 @@ package com.github.dactiv.basic.message.service.basic;
 
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
 import com.github.dactiv.basic.message.config.AttachmentConfig;
-import com.github.dactiv.basic.message.entity.Attachment;
-import com.github.dactiv.basic.message.entity.AttachmentMessage;
-import com.github.dactiv.basic.message.entity.BasicMessage;
-import com.github.dactiv.basic.message.entity.BatchMessage;
-import com.github.dactiv.basic.message.enumerate.AttachmentType;
+import com.github.dactiv.basic.message.domain.AttachmentMessage;
+import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.BatchMessageEntity;
+import com.github.dactiv.basic.message.enumerate.AttachmentTypeEnum;
 import com.github.dactiv.basic.message.service.MessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
@@ -35,7 +35,7 @@ import java.util.stream.Collectors;
  * @param <S> 请求的消息数据泛型实体类型
  */
 @Slf4j
-public abstract class BatchMessageSender<T extends BasicMessage, S extends BatchMessage.Body> extends AbstractMessageSender<T> {
+public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends BatchMessageEntity.Body> extends AbstractMessageSender<T> {
 
     public static final String DEFAULT_MESSAGE_COUNT_KEY = "count";
 
@@ -102,12 +102,12 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
 
         if (content.size() > 1) {
 
-            BatchMessage batchMessage = new BatchMessage();
+            BatchMessageEntity batchMessage = new BatchMessageEntity();
 
             batchMessage.setCount(content.size());
 
-            AttachmentType attachmentType = AttachmentType.valueOf(entityClass);
-            batchMessage.setType(attachmentType.getValue());
+            AttachmentTypeEnum attachmentType = AttachmentTypeEnum.valueOf(entityClass);
+            batchMessage.setType(attachmentType);
 
             messageService.saveBatchMessage(batchMessage);
 
@@ -178,18 +178,18 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      * @param body 批量消息接口实现类
      */
     @Concurrent("message:batch:update:[#body.batchId]")
-    public void updateBatchMessage(BatchMessage.Body body) {
+    public void updateBatchMessage(BatchMessageEntity.Body body) {
 
-        BatchMessage batchMessage = messageService.getBatchMessage(body.getBatchId());
+        BatchMessageEntity batchMessage = messageService.getBatchMessage(body.getBatchId());
 
-        if (ExecuteStatus.Success.getValue().equals(body.getStatus())) {
+        if (ExecuteStatus.Success.equals(body.getExecuteStatus())) {
             batchMessage.setSuccessNumber(batchMessage.getSuccessNumber() - 1);
-        } else if (ExecuteStatus.Failure.getValue().equals(body.getStatus())) {
+        } else if (ExecuteStatus.Failure.equals(body.getExecuteStatus())) {
             batchMessage.setFailNumber(batchMessage.getFailNumber() + 1);
         }
 
         if (batchMessage.getCount().equals(batchMessage.getSuccessNumber() + batchMessage.getFailNumber())) {
-            batchMessage.setStatus(ExecuteStatus.Success.getValue());
+            batchMessage.setStatus(ExecuteStatus.Success);
             batchMessage.setCompleteTime(new Date());
 
             onBatchMessageComplete(batchMessage);
@@ -205,10 +205,10 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      * @param batchMessage 批量信息实体
      * @param bodyResult   request 传过来的 body 参数集合
      */
-    protected void batchMessageCreated(BatchMessage batchMessage, List<T> bodyResult, List<S> content) {
+    protected void batchMessageCreated(BatchMessageEntity batchMessage, List<T> bodyResult, List<S> content) {
         Map<String, byte[]> map = attachmentCache.computeIfAbsent(batchMessage.getId(), k -> new LinkedHashMap<>());
 
-        List<Attachment> attachments = bodyResult
+        List<AttachmentEntity> attachments = bodyResult
                 .stream()
                 .filter(t -> AttachmentMessage.class.isAssignableFrom(t.getClass()))
                 .map(t -> Casts.cast(t, AttachmentMessage.class))
@@ -216,7 +216,7 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
                 .filter(a -> !map.containsKey(a.getName()))
                 .collect(Collectors.toList());
 
-        for (Attachment a : attachments) {
+        for (AttachmentEntity a : attachments) {
             FileObject fileObject = FileObject.of(attachmentConfig.getBucketName(getMessageType()), a.getName());
             try {
                 GetObjectResponse response = minioTemplate.getObject(fileObject);
@@ -232,7 +232,7 @@ public abstract class BatchMessageSender<T extends BasicMessage, S extends Batch
      *
      * @param batchMessage 批量信息实体
      */
-    protected void onBatchMessageComplete(BatchMessage batchMessage) {
+    protected void onBatchMessageComplete(BatchMessageEntity batchMessage) {
         attachmentCache.remove(batchMessage.getId());
     }
 

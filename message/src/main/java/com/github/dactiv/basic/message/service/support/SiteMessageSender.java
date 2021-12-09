@@ -1,12 +1,12 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.message.entity.Attachment;
-import com.github.dactiv.basic.message.entity.BasicMessage;
-import com.github.dactiv.basic.message.entity.SiteMessage;
+import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
+import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import com.github.dactiv.basic.message.service.AttachmentMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.service.support.body.SiteMessageBody;
+import com.github.dactiv.basic.message.domain.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -48,7 +48,7 @@ import java.util.stream.Stream;
 @Slf4j
 @Component
 @RefreshScope
-public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessage> implements InitializingBean {
+public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessageEntity> implements InitializingBean {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
 
@@ -95,9 +95,9 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
                                 Channel channel,
                                 @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        SiteMessage entity = sendSiteMessage(id);
+        SiteMessageEntity entity = sendSiteMessage(id);
 
-        if (ExecuteStatus.Retrying.getValue().equals(entity.getStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
+        if (ExecuteStatus.Retrying.equals(entity.getExecuteStatus()) && entity.getRetryCount() < getMaxRetryCount()) {
             throw new SystemException(entity.getException());
         }
 
@@ -111,9 +111,9 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      * @param id 站内信实体 id
      */
     @Transactional(rollbackFor = Exception.class)
-    public SiteMessage sendSiteMessage(Integer id) {
+    public SiteMessageEntity sendSiteMessage(Integer id) {
 
-        SiteMessage entity = attachmentMessageService.getSiteMessage(id);
+        SiteMessageEntity entity = attachmentMessageService.getSiteMessage(id);
 
         if (Objects.isNull(entity)) {
             return null;
@@ -171,9 +171,9 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      *
      * @return 邮件消息流
      */
-    private Stream<SiteMessage> createSiteMessageEntity(SiteMessageBody body) {
+    private Stream<SiteMessageEntity> createSiteMessageEntity(SiteMessageBody body) {
 
-        List<SiteMessage> result = new LinkedList<>();
+        List<SiteMessageEntity> result = new LinkedList<>();
 
         if (body.getToUserIds().contains(DEFAULT_ALL_USER_KEY)) {
             Map<String, Object> filter = new LinkedHashMap<>();
@@ -184,7 +184,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
             for (Map<String, Object> user : users) {
 
-                SiteMessage entity = ofEntity(body);
+                SiteMessageEntity entity = ofEntity(body);
                 entity.setToUserId(Casts.cast(user.get(IdEntity.ID_FIELD_NAME), Integer.class));
 
                 result.add(entity);
@@ -194,7 +194,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
             for (String userId : body.getToUserIds()) {
 
-                SiteMessage entity = ofEntity(body);
+                SiteMessageEntity entity = ofEntity(body);
                 entity.setToUserId(NumberUtils.toInt(userId));
 
                 result.add(entity);
@@ -211,12 +211,12 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      *
      * @return 站内信消息实体
      */
-    private SiteMessage ofEntity(SiteMessageBody body) {
-        SiteMessage entity = Casts.of(body, SiteMessage.class, "attachmentList");
+    private SiteMessageEntity ofEntity(SiteMessageBody body) {
+        SiteMessageEntity entity = Casts.of(body, SiteMessageEntity.class, "attachmentList");
 
         if (CollectionUtils.isNotEmpty(body.getAttachmentList())) {
-            entity.setHasAttachment(YesOrNo.Yes.getValue());
-            body.getAttachmentList().forEach(a -> entity.getAttachmentList().add(Casts.of(a, Attachment.class)));
+            entity.setHasAttachment(YesOrNo.Yes);
+            body.getAttachmentList().forEach(a -> entity.getAttachmentList().add(Casts.of(a, AttachmentEntity.class)));
         }
 
         return entity;
@@ -229,27 +229,27 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
     @Override
     @Transactional(rollbackFor = Exception.class)
-    protected boolean preSend(List<SiteMessage> content) {
+    protected boolean preSend(List<SiteMessageEntity> content) {
         content.forEach(e -> attachmentMessageService.saveSiteMessage(e));
         return true;
     }
 
     @Override
-    protected RestResult<Object> send(List<SiteMessage> entities) {
+    protected RestResult<Object> send(List<SiteMessageEntity> entities) {
         entities
                 .stream()
-                .map(BasicMessage::getId)
+                .map(BasicMessageEntity::getId)
                 .forEach(id ->
                         amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条站内信消息完成",
-                entities.stream().map(BasicMessage::getId).collect(Collectors.toList())
+                entities.stream().map(BasicMessageEntity::getId).collect(Collectors.toList())
         );
     }
 
     @Override
-    protected List<SiteMessage> getBatchMessageBodyContent(List<SiteMessageBody> result) {
+    protected List<SiteMessageEntity> getBatchMessageBodyContent(List<SiteMessageBody> result) {
         return result.stream().flatMap(this::createSiteMessageEntity).collect(Collectors.toList());
     }
 
