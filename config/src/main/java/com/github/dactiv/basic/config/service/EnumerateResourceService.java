@@ -36,19 +36,14 @@ import java.util.Optional;
 @Component
 @SuppressWarnings("unchecked")
 public class EnumerateResourceService {
-
-    private static final Logger LOGGER = LoggerFactory.getLogger(EnumerateResourceService.class);
-
     /**
      * 默认获取应用信息的后缀 uri
      */
     private static final String DEFAULT_ENUMERATE_INFO_URL = "/actuator/enumerate";
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private NacosSpringEventManager nacosSpringEventManager;
+    private final NacosSpringEventManager nacosSpringEventManager;
 
     private final Map<String, Instance> instanceCache = new LinkedHashMap<>();
 
@@ -56,6 +51,11 @@ public class EnumerateResourceService {
      * 当前数据
      */
     private final Map<String, Map<String, Map<String, Object>>> data = new LinkedHashMap<>();
+
+    public EnumerateResourceService(RestTemplate restTemplate, NacosSpringEventManager nacosSpringEventManager) {
+        this.restTemplate = restTemplate;
+        this.nacosSpringEventManager = nacosSpringEventManager;
+    }
 
     /**
      * 匹配最大版本实例
@@ -157,8 +157,8 @@ public class EnumerateResourceService {
 
         instanceCache.put(serviceName, instance);
 
-        if (LOGGER.isDebugEnabled()) {
-            LOGGER.debug("添加服务[" + serviceName + "]枚举资源[" + data + "]成功");
+        if (log.isDebugEnabled()) {
+            log.debug("添加服务[" + serviceName + "]枚举资源[" + data + "]成功");
         }
     }
 

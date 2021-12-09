@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.gateway;
 
-import com.github.dactiv.basic.gateway.config.AccessCryptoConfig;
+import com.github.dactiv.basic.gateway.config.ApplicationConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
@@ -48,7 +48,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractAccessCryptoResolver.class);
 
     @Autowired
-    private AccessCryptoConfig accessCryptoConfig;
+    private ApplicationConfig applicationConfig;
 
     @Autowired
     private CryptoAlgorithm accessTokenAlgorithm;
@@ -66,7 +66,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
     @Override
     public boolean isRequestDecrypt(AccessCrypto accessCrypto, ServerWebExchange serverWebExchange) {
         // 判断是否符合请求解密
-        return YesOrNo.Yes.getValue().equals(accessCrypto.getRequestDecrypt())
+        return YesOrNo.Yes.equals(accessCrypto.getRequestDecrypt())
                 && antPathMatcher.match(accessCrypto.getValue(), serverWebExchange.getRequest().getPath().value())
                 && isAllMatchPredicate(serverWebExchange, accessCrypto.getPredicates());
     }
@@ -106,13 +106,13 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
             String trimString = StringUtils.trim(v);
 
-            String fieldName = StringUtils.substringBefore(trimString, accessCryptoConfig.getParamNameValueDelimiter());
+            String fieldName = StringUtils.substringBefore(trimString, applicationConfig.getParamNameValueDelimiter());
 
             if (StringUtils.isBlank(fieldName)) {
                 return;
             }
 
-            String fieldValue = StringUtils.substringAfter(trimString, accessCryptoConfig.getParamNameValueDelimiter());
+            String fieldValue = StringUtils.substringAfter(trimString, applicationConfig.getParamNameValueDelimiter());
 
             if (StringUtils.isBlank(fieldValue)) {
                 return;
@@ -166,7 +166,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
         // 获取原始的请求 body map
         MultiValueMap<String, String> originalBody = Casts.castRequestBodyMap(body);
         // 删除密文阐述
-        originalBody.remove(accessCryptoConfig.getCipherTextParamName());
+        originalBody.remove(applicationConfig.getCipherTextParamName());
         // 将原始的请求 body 里还存在的参数添加到新的请求 body 里
         newRequestBody.putAll(originalBody);
 
@@ -192,7 +192,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     private String getAccessTokenValue(ServerWebExchange serverWebExchange) {
 
-        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(accessCryptoConfig.getAccessTokenHeaders());
+        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(applicationConfig.getAccessTokenHeaders());
 
         if (CollectionUtils.isEmpty(accessToken)) {
             throw new CryptoException("key 值不能为 null");
@@ -210,7 +210,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     protected List<ByteSource> getRequestCipher(String body) {
         MultiValueMap<String, String> requestBody = decodeRequestBodyToMap(body);
-        List<String> values = requestBody.get(accessCryptoConfig.getCipherTextParamName());
+        List<String> values = requestBody.get(applicationConfig.getCipherTextParamName());
 
         return values.stream().map(value -> {
 
@@ -245,7 +245,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
     @Override
     public boolean isResponseEncrypt(AccessCrypto accessCrypto, ServerWebExchange serverWebExchange) {
-        return YesOrNo.Yes.getValue().equals(accessCrypto.getResponseEncrypt())
+        return YesOrNo.Yes.equals(accessCrypto.getResponseEncrypt())
                 && antPathMatcher.match(accessCrypto.getValue(), serverWebExchange.getRequest().getPath().value())
                 && isAllMatchPredicate(serverWebExchange, accessCrypto.getPredicates());
     }

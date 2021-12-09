@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.gateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.github.dactiv.basic.gateway.config.ApplicationConfig;
 import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -27,12 +28,13 @@ public class GatewayMain {
 
     @Bean
     @Order(Ordered.HIGHEST_PRECEDENCE)
-    public RestResultGatewayBlockExceptionHandler restResultGatewayBlockExceptionHandler(ObjectMapper objectMapper) {
-        return new RestResultGatewayBlockExceptionHandler(objectMapper);
+    public RestResultGatewayBlockExceptionHandler restResultGatewayBlockExceptionHandler(ObjectMapper objectMapper,
+                                                                                         ApplicationConfig applicationConfig) {
+        return new RestResultGatewayBlockExceptionHandler(objectMapper, applicationConfig);
     }
 
     @Bean
-    @ConfigurationProperties("spring.application.crypto.access.algorithm-mode")
+    @ConfigurationProperties("dactiv.gateway.crypto.access.algorithm-mode")
     public CryptoAlgorithm accessTokenAlgorithm() {
         return new CryptoAlgorithm();
     }

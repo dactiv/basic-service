@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.plugin;
+package com.github.dactiv.basic.authentication.plugin;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.Version;
@@ -20,7 +20,6 @@ import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;

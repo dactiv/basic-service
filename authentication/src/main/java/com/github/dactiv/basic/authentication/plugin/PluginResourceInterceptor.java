@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.plugin;
+package com.github.dactiv.basic.authentication.plugin;
 
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.framework.nacos.event.NacosService;

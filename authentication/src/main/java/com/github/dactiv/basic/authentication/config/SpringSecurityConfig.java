@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.authentication.config;
 
-import com.github.dactiv.basic.authentication.service.security.CaptchaAuthenticationFilter;
-import com.github.dactiv.basic.authentication.service.security.JsonSessionInformationExpiredStrategy;
-import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
-import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
+import com.github.dactiv.basic.authentication.security.CaptchaAuthenticationFilter;
+import com.github.dactiv.basic.authentication.security.JsonSessionInformationExpiredStrategy;
+import com.github.dactiv.basic.authentication.security.handler.CaptchaAuthenticationFailureResponse;
+import com.github.dactiv.basic.authentication.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.framework.spring.security.SpringSecurityAutoConfiguration;
 import com.github.dactiv.framework.spring.security.WebSecurityConfigurerAfterAdapter;
 import com.github.dactiv.framework.spring.security.authentication.AuthenticationTypeTokenResolver;

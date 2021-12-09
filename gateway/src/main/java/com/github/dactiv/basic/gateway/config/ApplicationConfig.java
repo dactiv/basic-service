@@ -11,8 +11,8 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "crypto.access")
-public class AccessCryptoConfig {
+@ConfigurationProperties(prefix = "dactiv.gateway.crypto.access")
+public class ApplicationConfig {
 
     /**
      * request 中的客户端密文参数名
@@ -38,4 +38,9 @@ public class AccessCryptoConfig {
      * 存储在 redis 的访问 token key 名称
      */
     private String accessTokenKey = "access:crypto:token:";
+
+    /**
+     * 当错误获取不到响应的 ReasonPhrase 时，抛出异常的默认信息
+     */
+    private String defaultReasonPhrase = "服务器异常，请稍后再试。";
 }

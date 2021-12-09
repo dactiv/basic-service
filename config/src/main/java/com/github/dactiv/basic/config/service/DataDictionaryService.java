@@ -3,7 +3,7 @@ package com.github.dactiv.basic.config.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.dao.DataDictionaryDao;
-import com.github.dactiv.basic.config.entity.DataDictionary;
+import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -19,7 +19,7 @@ import java.util.List;
  *
  * <p>Table: tb_data_dictionary - 数据字典表</p>
  *
- * @see DataDictionary
+ * @see DataDictionaryEntity
  *
  * @author maurice.chen
  *
@@ -27,7 +27,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class DataDictionaryService extends BasicService<DataDictionaryDao, DataDictionary> {
+public class DataDictionaryService extends BasicService<DataDictionaryDao, DataDictionaryEntity> {
 
     /**
      * 获取数据字典
@@ -36,8 +36,8 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
      *
      * @return 数据字典
      */
-    public DataDictionary getByCode(String code) {
-        return lambdaQuery().eq(DataDictionary::getCode, code).one();
+    public DataDictionaryEntity getByCode(String code) {
+        return lambdaQuery().eq(DataDictionaryEntity::getCode, code).one();
     }
 
     /**
@@ -47,8 +47,8 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
      *
      * @return 数据字典集合
      */
-    public List<DataDictionary> findByParentId(Integer parentId) {
-        return lambdaQuery().eq(DataDictionary::getParentId, parentId).list();
+    public List<DataDictionaryEntity> findByParentId(Integer parentId) {
+        return lambdaQuery().eq(DataDictionaryEntity::getParentId, parentId).list();
     }
 
     /**
@@ -58,8 +58,8 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
      *
      * @return 数据字典集合
      */
-    public List<DataDictionary> findByTypeId(Integer typeId) {
-        return lambdaQuery().eq(DataDictionary::getTypeId, typeId).list();
+    public List<DataDictionaryEntity> findByTypeId(Integer typeId) {
+        return lambdaQuery().eq(DataDictionaryEntity::getTypeId, typeId).list();
     }
 
     /**
@@ -70,10 +70,10 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
      * @return 数据字典集合
      */
     public List<Integer> findIdByTypeId(Collection<Integer> typeId) {
-        Wrapper<DataDictionary> wrapper = Wrappers
-                .<DataDictionary>lambdaQuery()
-                .select(DataDictionary::getId)
-                .in(DataDictionary::getTypeId, typeId);
+        Wrapper<DataDictionaryEntity> wrapper = Wrappers
+                .<DataDictionaryEntity>lambdaQuery()
+                .select(DataDictionaryEntity::getId)
+                .in(DataDictionaryEntity::getTypeId, typeId);
 
         return findObjects(wrapper, Integer.class);
     }
@@ -82,10 +82,10 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
     public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
         int result = 0;
 
-        Wrapper<DataDictionary> wrapper = Wrappers
-                .<DataDictionary>lambdaQuery()
-                .select(DataDictionary::getId)
-                .in(DataDictionary::getParentId, ids);
+        Wrapper<DataDictionaryEntity> wrapper = Wrappers
+                .<DataDictionaryEntity>lambdaQuery()
+                .select(DataDictionaryEntity::getId)
+                .in(DataDictionaryEntity::getParentId, ids);
 
         List<Long> subIds = findObjects(wrapper, Long.class);
 

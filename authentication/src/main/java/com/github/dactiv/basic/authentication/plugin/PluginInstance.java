@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.plugin;
+package com.github.dactiv.basic.authentication.plugin;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.Version;

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.service.security;
+package com.github.dactiv.basic.authentication.security;
 
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;

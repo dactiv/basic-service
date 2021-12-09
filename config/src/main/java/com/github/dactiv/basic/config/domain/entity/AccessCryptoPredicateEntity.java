@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.config.entity;
+package com.github.dactiv.basic.config.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
@@ -24,7 +24,7 @@ import java.util.Date;
 @Alias("configAccessCryptoPredicate")
 @TableName("tb_access_crypto_predicate")
 @EqualsAndHashCode(callSuper = true)
-public class ConfigAccessCryptoPredicate extends AccessCryptoPredicate implements NumberIdEntity<Integer> {
+public class AccessCryptoPredicateEntity extends AccessCryptoPredicate implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5764360440250914629L;
     /**

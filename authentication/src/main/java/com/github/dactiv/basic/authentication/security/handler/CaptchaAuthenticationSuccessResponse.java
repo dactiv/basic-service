@@ -1,10 +1,10 @@
-package com.github.dactiv.basic.authentication.service.security.handler;
+package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
-import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
-import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
+import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
+import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
@@ -17,7 +17,6 @@ import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;

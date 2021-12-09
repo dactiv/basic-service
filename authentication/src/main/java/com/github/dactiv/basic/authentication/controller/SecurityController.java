@@ -2,8 +2,8 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
-import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
-import com.github.dactiv.basic.authentication.service.security.handler.JsonLogoutSuccessHandler;
+import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
+import com.github.dactiv.basic.authentication.security.handler.JsonLogoutSuccessHandler;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.config.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.springframework.stereotype.Repository;
 
@@ -11,10 +11,10 @@ import org.springframework.stereotype.Repository;
  * <p>Table: tb_access_crypto - 访问加解密</p>
  *
  * @author maurice
- * @see ConfigAccessCrypto
+ * @see AccessCryptoEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository
-public interface AccessCryptoDao extends BaseMapper<ConfigAccessCrypto> {
+public interface AccessCryptoDao extends BaseMapper<AccessCryptoEntity> {
 }

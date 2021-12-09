@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.config.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -38,10 +38,10 @@ public class AccessCryptoController {
 
     private final AccessCryptoService accessCryptoService;
 
-    private final MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator;
+    private final MybatisPlusQueryGenerator<AccessCryptoEntity> queryGenerator;
 
     public AccessCryptoController(AccessCryptoService accessCryptoService,
-                                  MybatisPlusQueryGenerator<ConfigAccessCrypto> queryGenerator) {
+                                  MybatisPlusQueryGenerator<AccessCryptoEntity> queryGenerator) {
         this.accessCryptoService = accessCryptoService;
         this.queryGenerator = queryGenerator;
     }
@@ -57,7 +57,7 @@ public class AccessCryptoController {
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[access_crypto:page]')")
     @Plugin(name = "获取访问加解密分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public Page<ConfigAccessCrypto> page(PageRequest pageRequest, HttpServletRequest request) {
+    public Page<AccessCryptoEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return accessCryptoService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
@@ -71,7 +71,7 @@ public class AccessCryptoController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[access_crypto:get]')")
     @Plugin(name = "获取访问加解密实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
-    public ConfigAccessCrypto get(@RequestParam Integer id) {
+    public AccessCryptoEntity get(@RequestParam Integer id) {
         return accessCryptoService.get(id);
     }
 
@@ -82,7 +82,7 @@ public class AccessCryptoController {
      */
     @GetMapping("getAll")
     @PreAuthorize("hasRole('BASIC')")
-    public List<ConfigAccessCrypto> getAll(){
+    public List<AccessCryptoEntity> getAll(){
         return accessCryptoService.getAll();
     }
 
@@ -95,7 +95,7 @@ public class AccessCryptoController {
     @PreAuthorize("hasAuthority('perms[access_crypto:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存访问加解密实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:config:access:crypto:save:[#securityContext.authentication.details.id]")
-    public RestResult<Integer> save(@RequestBody @Valid ConfigAccessCrypto entity,
+    public RestResult<Integer> save(@RequestBody @Valid AccessCryptoEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
         accessCryptoService.save(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());

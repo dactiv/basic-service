@@ -3,8 +3,7 @@ package com.github.dactiv.basic.config.service;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.dao.DictionaryTypeDao;
-import com.github.dactiv.basic.config.entity.DataDictionary;
-import com.github.dactiv.basic.config.entity.DictionaryType;
+import com.github.dactiv.basic.config.domain.entity.DictionaryTypeEntity;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
@@ -20,7 +19,7 @@ import java.util.List;
  *
  * <p>Table: tb_dictionary_type - 数据字典类型表</p>
  *
- * @see DictionaryType
+ * @see DictionaryTypeEntity
  *
  * @author maurice.chen
  *
@@ -28,7 +27,7 @@ import java.util.List;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class DictionaryTypeService extends BasicService<DictionaryTypeDao, DictionaryType> {
+public class DictionaryTypeService extends BasicService<DictionaryTypeDao, DictionaryTypeEntity> {
 
     private final DataDictionaryService dataDictionaryService;
 
@@ -43,8 +42,8 @@ public class DictionaryTypeService extends BasicService<DictionaryTypeDao, Dicti
      *
      * @return 数据字典
      */
-    public DictionaryType getByCode(String code) {
-        return lambdaQuery().eq(DictionaryType::getCode, code).one();
+    public DictionaryTypeEntity getByCode(String code) {
+        return lambdaQuery().eq(DictionaryTypeEntity::getCode, code).one();
     }
 
     /**
@@ -54,18 +53,18 @@ public class DictionaryTypeService extends BasicService<DictionaryTypeDao, Dicti
      *
      * @return 数据字典集合
      */
-    public List<DictionaryType> getByParentId(Integer parentId) {
-        return lambdaQuery().eq(DictionaryType::getParentId, parentId).list();
+    public List<DictionaryTypeEntity> getByParentId(Integer parentId) {
+        return lambdaQuery().eq(DictionaryTypeEntity::getParentId, parentId).list();
     }
 
     @Override
     public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
         int result = 0;
 
-        Wrapper<DictionaryType> wrapper = Wrappers
-                .<DictionaryType>lambdaQuery()
-                .select(DictionaryType::getId)
-                .in(DictionaryType::getParentId, ids);
+        Wrapper<DictionaryTypeEntity> wrapper = Wrappers
+                .<DictionaryTypeEntity>lambdaQuery()
+                .select(DictionaryTypeEntity::getId)
+                .in(DictionaryTypeEntity::getParentId, ids);
 
         List<Integer> subIds = findObjects(wrapper, Integer.class);
 

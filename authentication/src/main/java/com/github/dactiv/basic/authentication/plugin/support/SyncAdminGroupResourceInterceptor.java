@@ -1,15 +1,13 @@
-package com.github.dactiv.basic.authentication.service.plugin.support;
+package com.github.dactiv.basic.authentication.plugin.support;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
-import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.GroupService;
-import com.github.dactiv.basic.authentication.service.plugin.PluginInstance;
-import com.github.dactiv.basic.authentication.service.plugin.PluginResourceInterceptor;
+import com.github.dactiv.basic.authentication.plugin.PluginInstance;
+import com.github.dactiv.basic.authentication.plugin.PluginResourceInterceptor;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.nacos.event.NacosService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.List;

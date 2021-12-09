@@ -1,6 +1,6 @@
-package com.github.dactiv.basic.authentication.service.security;
+package com.github.dactiv.basic.authentication.security;
 
-import com.github.dactiv.basic.authentication.service.security.handler.CaptchaAuthenticationFailureResponse;
+import com.github.dactiv.basic.authentication.security.handler.CaptchaAuthenticationFailureResponse;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.AuthenticationTypeTokenResolver;
 import com.github.dactiv.framework.spring.security.authentication.RequestAuthenticationFilter;

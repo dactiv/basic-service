@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.basic.authentication.domain.model.MemberUserInitializationModel;
-import com.github.dactiv.basic.authentication.service.security.MemberUserDetailsService;
+import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

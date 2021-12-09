@@ -4,15 +4,14 @@ import com.baomidou.mybatisplus.core.toolkit.CollectionUtils;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.dao.AccessCryptoDao;
-import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
-import com.github.dactiv.basic.config.entity.ConfigAccessCryptoPredicate;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoPredicateEntity;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
-import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import org.redisson.api.RList;
 import org.redisson.api.RedissonClient;
@@ -29,7 +28,7 @@ import java.util.stream.Collectors;
  *
  * <p>Table: tb_access_crypto - 访问加解密表</p>
  *
- * @see ConfigAccessCrypto
+ * @see AccessCryptoEntity
  *
  * @author maurice.chen
  *
@@ -37,7 +36,7 @@ import java.util.stream.Collectors;
  */
 @Service
 @Transactional(rollbackFor = Exception.class)
-public class AccessCryptoService extends BasicService<AccessCryptoDao, ConfigAccessCrypto> {
+public class AccessCryptoService extends BasicService<AccessCryptoDao, AccessCryptoEntity> {
 
     private final AccessCryptoPredicateService predicateService;
 
@@ -58,31 +57,31 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, ConfigAcc
      *
      * @return 访问加解密集合
      */
-    public List<ConfigAccessCrypto> getAll(){
-        RList<ConfigAccessCrypto> configAccessCryptos = redissonClient.getList(config.getAccessCryptoCache().getName());
-        if (CollectionUtils.isNotEmpty(configAccessCryptos)) {
-            return configAccessCryptos;
+    public List<AccessCryptoEntity> getAll(){
+        RList<AccessCryptoEntity> accessCryptoEntities = redissonClient.getList(config.getAccessCryptoCache().getName());
+        if (CollectionUtils.isNotEmpty(accessCryptoEntities)) {
+            return accessCryptoEntities;
         }
-        List<ConfigAccessCrypto> result = lambdaQuery()
+        List<AccessCryptoEntity> result = lambdaQuery()
                 .eq(AccessCrypto::getEnabled, DisabledOrEnabled.Enabled.getValue())
                 .list()
                 .stream()
                 .peek(this::loadAccessCryptoPredicate)
                 .collect(Collectors.toList());
 
-        configAccessCryptos.addAllAsync(result);
+        accessCryptoEntities.addAllAsync(result);
 
         TimeProperties expiresTime = config.getAccessCryptoCache().getExpiresTime();
         if (Objects.nonNull(expiresTime)) {
-            configAccessCryptos.expireAsync(expiresTime.getValue(), expiresTime.getUnit());
+            accessCryptoEntities.expireAsync(expiresTime.getValue(), expiresTime.getUnit());
         }
 
         return result;
     }
 
     @Override
-    public ConfigAccessCrypto get(Serializable id) {
-        ConfigAccessCrypto result = super.get(id);
+    public AccessCryptoEntity get(Serializable id) {
+        AccessCryptoEntity result = super.get(id);
         loadAccessCryptoPredicate(result);
         return result;
     }
@@ -90,20 +89,20 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, ConfigAcc
     /**
      * 加载通讯加解密断言条件集合
      *
-     * @param configAccessCrypto 通讯加解密实体
+     * @param accessCryptoEntity 通讯加解密实体
      */
-    public void loadAccessCryptoPredicate(ConfigAccessCrypto configAccessCrypto) {
+    public void loadAccessCryptoPredicate(AccessCryptoEntity accessCryptoEntity) {
 
-        List<ConfigAccessCryptoPredicate> configAccessCryptoPredicates = predicateService
+        List<AccessCryptoPredicateEntity> accessCryptoPredicates = predicateService
                 .lambdaQuery()
-                .eq(ConfigAccessCryptoPredicate::getAccessCryptoId, configAccessCrypto.getId())
+                .eq(AccessCryptoPredicateEntity::getAccessCryptoId, accessCryptoEntity.getId())
                 .list();
 
-        configAccessCrypto.setPredicates(new LinkedList<>(configAccessCryptoPredicates));
+        accessCryptoEntity.setPredicates(new LinkedList<>(accessCryptoPredicates));
     }
 
     @Override
-    public int save(ConfigAccessCrypto entity) {
+    public int save(AccessCryptoEntity entity) {
         if (YesOrNo.No.equals(entity.getRequestDecrypt())
                 && YesOrNo.No.equals(entity.getResponseEncrypt())) {
             throw new ServiceException("请求解密或响应解密，必须存在一个为'是'的状态");
@@ -116,23 +115,23 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, ConfigAcc
         if (!entity.getPredicates().isEmpty()) {
             entity.getPredicates()
                     .stream()
-                    .map(p -> Casts.of(p, ConfigAccessCryptoPredicate.class))
+                    .map(p -> Casts.of(p, AccessCryptoPredicateEntity.class))
                     .peek(p -> p.setAccessCryptoId(entity.getId()))
                     .forEach(predicateService::save);
         }
 
-        RList<ConfigAccessCrypto> configAccessCryptos = redissonClient.getList(config.getAccessCryptoCache().getName());
+        RList<AccessCryptoEntity> accessCryptos = redissonClient.getList(config.getAccessCryptoCache().getName());
 
         if (isNew) {
-            configAccessCryptos.addAsync(entity);
+            accessCryptos.addAsync(entity);
         } else {
-            Optional<ConfigAccessCrypto> optional = configAccessCryptos
+            Optional<AccessCryptoEntity> optional = accessCryptos
                     .stream()
                     .filter(c -> c.getId().equals(entity.getId()))
                     .findFirst();
             if (optional.isPresent()) {
-                int index = configAccessCryptos.indexOf(optional.get());
-                configAccessCryptos.setAsync(index, entity);
+                int index = accessCryptos.indexOf(optional.get());
+                accessCryptos.setAsync(index, entity);
             }
         }
 
@@ -143,16 +142,16 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, ConfigAcc
     public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
         predicateService.delete(
                 Wrappers
-                        .<ConfigAccessCryptoPredicate>lambdaQuery()
-                        .in(ConfigAccessCryptoPredicate::getAccessCryptoId, ids)
+                        .<AccessCryptoPredicateEntity>lambdaQuery()
+                        .in(AccessCryptoPredicateEntity::getAccessCryptoId, ids)
         );
 
-        RList<ConfigAccessCrypto> configAccessCryptos = redissonClient.getList(config.getAccessCryptoCache().getName());
-        List<ConfigAccessCrypto> removeObjs = configAccessCryptos
+        RList<AccessCryptoEntity> accessCryptos = redissonClient.getList(config.getAccessCryptoCache().getName());
+        List<AccessCryptoEntity> removeObjs = accessCryptos
                 .stream()
                 .filter(p -> ids.contains(p.getId()))
                 .collect(Collectors.toList());
-        configAccessCryptos.removeAllAsync(removeObjs);
+        accessCryptos.removeAllAsync(removeObjs);
 
         return super.deleteById(ids, errorThrow);
     }

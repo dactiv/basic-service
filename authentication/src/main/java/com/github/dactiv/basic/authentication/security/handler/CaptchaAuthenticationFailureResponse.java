@@ -1,7 +1,7 @@
-package com.github.dactiv.basic.authentication.service.security.handler;
+package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.service.security.LoginType;
+import com.github.dactiv.basic.authentication.security.LoginType;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -10,7 +10,6 @@ import com.github.dactiv.framework.spring.security.authentication.handler.JsonAu
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;

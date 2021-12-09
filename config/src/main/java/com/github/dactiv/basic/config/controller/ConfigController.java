@@ -5,8 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.basic.config.config.ApplicationConfig;
-import com.github.dactiv.basic.config.entity.ConfigAccessCrypto;
-import com.github.dactiv.basic.config.entity.DataDictionary;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
+import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.EnumerateResourceService;
@@ -103,16 +103,16 @@ public class ConfigController {
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionaries/{name:.*}")
-    public List<DataDictionary> findDataDictionaries(@PathVariable String name) {
+    public List<DataDictionaryEntity> findDataDictionaries(@PathVariable String name) {
 
         int index = StringUtils.indexOf(name, "*");
 
-        LambdaQueryWrapper<DataDictionary> wrapper = Wrappers.lambdaQuery();
+        LambdaQueryWrapper<DataDictionaryEntity> wrapper = Wrappers.lambdaQuery();
 
         if (index > 0) {
-            wrapper.like(DataDictionary::getCode, StringUtils.substring(name, 0, index));
+            wrapper.like(DataDictionaryEntity::getCode, StringUtils.substring(name, 0, index));
         } else {
-            wrapper.eq(DataDictionary::getCode, name);
+            wrapper.eq(DataDictionaryEntity::getCode, name);
         }
 
         return dictionaryService.getDataDictionaryService().find(wrapper);
@@ -129,9 +129,9 @@ public class ConfigController {
     @GetMapping("findAccessCrypto")
     public Map<String, Object> findAccessCrypto(@RequestParam String type) {
 
-        List<ConfigAccessCrypto> accessCryptoList = accessCryptoService.find(
+        List<AccessCryptoEntity> accessCryptoList = accessCryptoService.find(
                 Wrappers
-                        .<ConfigAccessCrypto>lambdaQuery()
+                        .<AccessCryptoEntity>lambdaQuery()
                         .eq(AccessCrypto::getType, type)
         );
 

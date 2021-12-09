@@ -28,10 +28,13 @@ import java.util.Optional;
 @Component
 public class EnumerateServiceValidator implements NacosServiceListenerValidator {
 
-    @Autowired
-    private EnumerateResourceService enumerateResourceService;
+    private final EnumerateResourceService enumerateResourceService;
 
     private final List<String> exceptionServices = new LinkedList<>();
+
+    public EnumerateServiceValidator(EnumerateResourceService enumerateResourceService) {
+        this.enumerateResourceService = enumerateResourceService;
+    }
 
     @Override
     public boolean isSupport(NacosService nacosService) {
@@ -48,7 +51,7 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
         Optional<Instance> optional = nacosService
                 .getInstances()
                 .stream()
-                .max((target, source) -> enumerateResourceService.comparingInstanceVersion(target, source));
+                .max(enumerateResourceService::comparingInstanceVersion);
 
         if (optional.isEmpty()) {
             return false;

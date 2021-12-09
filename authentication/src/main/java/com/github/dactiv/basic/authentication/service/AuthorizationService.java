@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
-import com.github.dactiv.basic.authentication.service.plugin.PluginResourceService;
+import com.github.dactiv.basic.authentication.plugin.PluginResourceService;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.CacheProperties;

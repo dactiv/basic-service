@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.config.entity;
+package com.github.dactiv.basic.config.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -32,7 +32,7 @@ import java.util.Objects;
 @NoArgsConstructor
 @Alias("dictionaryType")
 @TableName("tb_dictionary_type")
-public class DictionaryType implements Tree<Integer, DictionaryType>, NumberIdEntity<Integer> {
+public class DictionaryTypeEntity implements Tree<Integer, DictionaryTypeEntity>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 2211302874891670273L;
     /**
@@ -72,7 +72,7 @@ public class DictionaryType implements Tree<Integer, DictionaryType>, NumberIdEn
     private String remark;
 
     @TableField(exist = false)
-    private List<Tree<Integer, DictionaryType>> children = new LinkedList<>();
+    private List<Tree<Integer, DictionaryTypeEntity>> children = new LinkedList<>();
 
     @Override
     @JsonIgnore
@@ -81,8 +81,8 @@ public class DictionaryType implements Tree<Integer, DictionaryType>, NumberIdEn
     }
 
     @Override
-    public boolean isChildren(Tree<Integer, DictionaryType> parent) {
-        DictionaryType parentEntity = Casts.cast(parent);
+    public boolean isChildren(Tree<Integer, DictionaryTypeEntity> parent) {
+        DictionaryTypeEntity parentEntity = Casts.cast(parent);
         return Objects.equals(parentEntity.getId(), this.parentId);
     }
 }

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.config.dao;
 
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.config.entity.ConfigAccessCryptoPredicate;
+import com.github.dactiv.basic.config.domain.entity.AccessCryptoPredicateEntity;
 import org.apache.ibatis.annotations.Delete;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
@@ -13,12 +13,12 @@ import org.springframework.stereotype.Repository;
  * <p>Table: tb_access_crypto_predicate - 访问加解密断言</p>
  *
  * @author maurice
- * @see ConfigAccessCryptoPredicate
+ * @see AccessCryptoPredicateEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper
 @Repository
-public interface AccessCryptoPredicateDao extends BaseMapper<ConfigAccessCryptoPredicate> {
+public interface AccessCryptoPredicateDao extends BaseMapper<AccessCryptoPredicateEntity> {
 
     /**
      * 删除访问加解密断言

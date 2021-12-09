@@ -1,9 +1,9 @@
-package com.github.dactiv.basic.authentication.service.security.handler;
+package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
-import com.github.dactiv.basic.authentication.service.security.LoginType;
-import com.github.dactiv.basic.authentication.service.security.MobileUserDetailsService;
+import com.github.dactiv.basic.authentication.security.LoginType;
+import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSource;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -17,7 +17,6 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
