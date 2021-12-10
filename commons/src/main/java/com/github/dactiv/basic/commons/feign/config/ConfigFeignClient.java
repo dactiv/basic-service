@@ -40,6 +40,11 @@ public interface ConfigFeignClient {
     @GetMapping("obtainAccessToken")
     Map<String, Object> obtainAccessToken(@RequestParam("id") String id);
 
+    /**
+     * 获取全部访问加解密信息
+     *
+     * @return 访问加解密集合
+     */
     @GetMapping("access/crypto/getAll")
-    List<Map<String, Object>> getAllAccessCrypto();
+    List<Map<String, Object>> getAllAccessCryptos();
 }

@@ -8,6 +8,7 @@ import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.token.SimpleExpirationToken;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -27,8 +28,8 @@ import java.util.stream.Collectors;
  *
  * @author maurice
  */
+@Slf4j
 @Component
-@RefreshScope
 public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver implements InitializingBean {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigAccessCryptoResolver.class);
@@ -60,12 +61,17 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
 
     @Override
     public void afterPropertiesSet() {
-        syncRedisAccessCryptoList();
+        syncAccessCryptos();
     }
 
-    @NacosCronScheduled(cron = "${spring.application.crypto.access.redis.sync-cron:0 0/3 * * * ?}")
-    public void syncRedisAccessCryptoList() {
-        List<Map<String, Object>> result = configFeignClient.getAllAccessCrypto();
+    @NacosCronScheduled(cron = "${dactiv.gateway.crypto.access.sync-cron:0 0/3 * * * ?}")
+    public void syncAccessCryptos() {
+        List<Map<String, Object>> result = new ArrayList<>();
+        try {
+            configFeignClient.getAllAccessCryptos();
+        } catch (Exception e) {
+            log.warn("获取访问加解密数据出错", e);
+        }
 
         if (CollectionUtils.isEmpty(result)) {
             return ;

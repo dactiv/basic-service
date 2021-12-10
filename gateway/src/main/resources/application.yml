@@ -3,3 +3,9 @@ info:
   name: @name@
   artifact-id: ${spring.application.name}
   group-id: @groupId@
+
+dactiv:
+  authentication:
+    spring:
+      security:
+        enabled: false
