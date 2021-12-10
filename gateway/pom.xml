@@ -23,11 +23,26 @@
         </dependency>
 
         <dependency>
+            <groupId>com.github.dactiv.basic</groupId>
+            <artifactId>commons</artifactId>
+            <exclusions>
+                <exclusion>
+                    <groupId>com.github.dactiv.framework</groupId>
+                    <artifactId>spring-security</artifactId>
+                </exclusion>
+                <exclusion>
+                    <groupId>io.minio</groupId>
+                    <artifactId>minio</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+
+        <dependency>
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-gateway</artifactId>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.redisson</groupId>
             <artifactId>redisson-spring-boot-starter</artifactId>
             <exclusions>
@@ -36,7 +51,7 @@
                     <artifactId>spring-boot-starter-web</artifactId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.alibaba.cloud</groupId>

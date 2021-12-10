@@ -1,8 +1,12 @@
 package com.github.dactiv.basic.gateway.config;
 
+import com.github.dactiv.framework.commons.CacheProperties;
+import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
+
+import java.util.concurrent.TimeUnit;
 
 /**
  * 访问加解密配置
@@ -28,16 +32,6 @@ public class ApplicationConfig {
      * 参数与值的分隔符
      */
     private String paramNameValueDelimiter = "=";
-
-    /**
-     * 存储在 redis 的访问加解密集合 key 名称
-     */
-    private String accessCryptoListKey = "access:cryptos";
-
-    /**
-     * 存储在 redis 的访问 token key 名称
-     */
-    private String accessTokenKey = "access:crypto:token:";
 
     /**
      * 当错误获取不到响应的 ReasonPhrase 时，抛出异常的默认信息

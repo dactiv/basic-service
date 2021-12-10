@@ -150,6 +150,19 @@ public class ConfigController {
     }
 
     /**
+     * 通过 token id 获取访问 token
+     *
+     * @param id token id
+     *
+     * @return 访问 token
+     */
+    @PreAuthorize("hasRole('BASIC')")
+    @GetMapping("obtainAccessToken")
+    public AccessToken obtainAccessToken(@RequestParam String id){
+        return getAccessTokeBucket(id).get();
+    }
+
+    /**
      * 获取公共 token
      *
      * @param deviceIdentified 设备唯一识别
