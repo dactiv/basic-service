@@ -1,12 +1,10 @@
 package com.github.dactiv.basic.captcha.service;
 
-import com.github.dactiv.basic.commons.feign.config.ConfigService;
-import com.github.dactiv.basic.commons.feign.message.MessageService;
+import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
+import com.github.dactiv.basic.commons.feign.message.MessageFeignClient;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import org.redisson.api.RedissonClient;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.validation.Validator;
 
@@ -27,26 +25,26 @@ public abstract class AbstractMessageCaptchaService<T extends MessageType, C ext
     /**
      * 配置管理服务
      */
-    private final ConfigService configService;
+    private final ConfigFeignClient configFeignClient;
 
     /**
      * 消息服务
      */
-    private final MessageService messageService;
+    private final MessageFeignClient messageFeignClient;
 
     public AbstractMessageCaptchaService(RedissonClient redissonClient,
                                          Validator validator,
-                                         ConfigService configService,
-                                         MessageService messageService) {
+                                         ConfigFeignClient configFeignClient,
+                                         MessageFeignClient messageFeignClient) {
         super(redissonClient, validator);
-        this.configService = configService;
-        this.messageService = messageService;
+        this.configFeignClient = configFeignClient;
+        this.messageFeignClient = messageFeignClient;
     }
 
     @Override
     protected GenerateCaptchaResult generateCaptcha(BuildToken buildToken, T entity) {
 
-        List<Map<String, Object>> dicList = configService.findDataDictionaries(entity.getMessageType());
+        List<Map<String, Object>> dicList = configFeignClient.findDataDictionaries(entity.getMessageType());
 
         if (dicList.isEmpty()) {
             throw new ServiceException("找不到类型为:" + entity.getMessageType() + "的消息模板");
@@ -63,7 +61,7 @@ public abstract class AbstractMessageCaptchaService<T extends MessageType, C ext
 
         Map<String, Object> param = createSendMessageParam(entity, entry, captcha);
 
-        RestResult<Object> result = messageService.send(param);
+        RestResult<Object> result = messageFeignClient.send(param);
         // 如果发送成记录短信验证码到 redis 中给校验备用。
         if (result.getStatus() != HttpStatus.OK.value()) {
             throw new ServiceException("消息发送失败");

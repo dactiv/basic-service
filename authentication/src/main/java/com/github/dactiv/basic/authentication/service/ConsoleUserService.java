@@ -5,12 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import org.apache.commons.lang.StringUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -52,7 +51,7 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
         ConsoleUserEntity consoleUser = get(userId);
 
         PasswordEncoder passwordEncoder = authorizationService
-                .getUserDetailsService(ResourceSource.Console)
+                .getUserDetailsService(ResourceSourceEnum.CONSOLE)
                 .getPasswordEncoder();
 
         if (!StringUtils.equals(passwordEncoder.encode(oldPassword), consoleUser.getPassword())) {
@@ -79,8 +78,8 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
 
         username
                 .stream()
-                .map(un -> new PrincipalAuthenticationToken(un, ResourceSource.Console.toString()))
-                .peek(p -> authorizationService.deleteSystemUseAuthenticationCache(ResourceSource.Console, p))
+                .map(un -> new PrincipalAuthenticationToken(un, ResourceSourceEnum.CONSOLE.toString()))
+                .peek(p -> authorizationService.deleteSystemUseAuthenticationCache(ResourceSourceEnum.CONSOLE, p))
                 .forEach(p -> authorizationService.expireSystemUserSession(p.getName()));
 
         return result;

@@ -8,8 +8,8 @@ import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
+import com.github.dactiv.basic.commons.feign.captcha.CaptchaFeignClient;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
@@ -61,20 +61,20 @@ public class MemberUserDetailsService implements UserDetailsService {
 
     private final PasswordEncoder passwordEncoder;
 
-    private final CaptchaService captchaService;
+    private final CaptchaFeignClient captchaFeignClient;
 
     public MemberUserDetailsService(ApplicationConfig applicationConfig,
                                     AuthorizationService userService,
                                     GroupService groupService,
                                     MemberUserService memberUserService,
                                     PasswordEncoder passwordEncoder,
-                                    CaptchaService captchaService) {
+                                    CaptchaFeignClient captchaFeignClient) {
         this.applicationConfig = applicationConfig;
         this.authorizationService = userService;
         this.groupService = groupService;
         this.memberUserService = memberUserService;
         this.passwordEncoder = passwordEncoder;
-        this.captchaService = captchaService;
+        this.captchaFeignClient = captchaFeignClient;
     }
 
     @Override
@@ -97,7 +97,7 @@ public class MemberUserDetailsService implements UserDetailsService {
             user.setPassword(generateRandomPassword());
             user.setStatus(UserStatus.Enabled);
 
-            if (ResourceSource.Mobile.toString().equals(type)) {
+            if (ResourceSourceEnum.MOBILE.toString().equals(type)) {
 
                 String phone = token.getPrincipal().toString();
 
@@ -109,7 +109,7 @@ public class MemberUserDetailsService implements UserDetailsService {
                 int count = applicationConfig.getRegister().getRandomUsernameCount();
                 user.setUsername(RandomStringUtils.randomAlphanumeric(count) + user.getPhone());
 
-            } else if (!ResourceSource.AnonymousUser.toString().equals(type)) {
+            } else if (!ResourceSourceEnum.ANONYMOUS_USER.toString().equals(type)) {
                 throw new UsernameNotFoundException("用户名或密码错误");
             }
 
@@ -135,10 +135,10 @@ public class MemberUserDetailsService implements UserDetailsService {
 
         String type = token.getHttpServletRequest().getParameter(DEFAULT_AUTHENTICATION_TYPE_PARAM_NAME);
 
-        if (!ResourceSource.Mobile.toString().equals(type)) {
+        if (!ResourceSourceEnum.MOBILE.toString().equals(type)) {
             boolean matches = getPasswordEncoder().matches(presentedPassword, userDetails.getPassword());
 
-            if (ResourceSource.AnonymousUser.toString().equals(type) && matches && userDetails.getId() == null) {
+            if (ResourceSourceEnum.ANONYMOUS_USER.toString().equals(type) && matches && userDetails.getId() == null) {
                 createMemberUser(token, userDetails);
             }
 
@@ -162,7 +162,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
             try {
 
-                RestResult<Map<String, Object>> result = captchaService.verifyCaptcha(params);
+                RestResult<Map<String, Object>> result = captchaFeignClient.verifyCaptcha(params);
 
                 if (result.getStatus() == HttpStatus.OK.value()) {
 
@@ -238,7 +238,7 @@ public class MemberUserDetailsService implements UserDetailsService {
 
     @Override
     public List<String> getType() {
-        return Collections.singletonList(ResourceSource.UserCenter.toString());
+        return Collections.singletonList(ResourceSourceEnum.USER_CENTER.toString());
     }
 
     @Override

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.client;
 
-import com.github.dactiv.basic.socket.client.entity.ReturnValueSocketResult;
-import com.github.dactiv.basic.socket.client.entity.SocketResult;
+import com.github.dactiv.basic.socket.client.domain.ReturnValueSocketResult;
+import com.github.dactiv.basic.socket.client.domain.SocketResult;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.spring.web.SpringWebMvcProperties;
 import com.github.dactiv.framework.spring.web.result.RestResponseBodyAdvice;

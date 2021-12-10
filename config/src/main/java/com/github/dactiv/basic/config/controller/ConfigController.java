@@ -3,7 +3,7 @@ package com.github.dactiv.basic.config.controller;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
 import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
@@ -366,7 +366,7 @@ public class ConfigController {
      */
     @GetMapping("enumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:*]')")
-    @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Map<String, Map<String, Map<String, Object>>> enumerate() {
         return enumerateResourceService.getServiceEnumerate();
     }
@@ -379,7 +379,7 @@ public class ConfigController {
     @PostMapping("syncEnumerate")
     @Idempotent(key = "idempotent:config:sync-enumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:sync]')")
-    @Plugin(name = "同步所有枚举", parent = "enumerate", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "同步所有枚举", parent = "enumerate", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     public RestResult<Map<String, Map<String, Map<String, Object>>>> syncEnumerate() {
 
         enumerateResourceService.syncEnumerate();
@@ -395,7 +395,7 @@ public class ConfigController {
      */
     @GetMapping("environment")
     @PreAuthorize("hasAuthority('perms[environment:*]')")
-    @Plugin(name = "环境变量查询", id = "environment", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "环境变量查询", id = "environment", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Map<String, Object> environment() {
 
         Map<String, Object> result = new LinkedHashMap<>();

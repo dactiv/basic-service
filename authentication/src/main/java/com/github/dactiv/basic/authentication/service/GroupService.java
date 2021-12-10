@@ -1,17 +1,15 @@
 package com.github.dactiv.basic.authentication.service;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.ArrayUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -56,7 +54,7 @@ public class GroupService extends BasicService<GroupDao, GroupEntity> {
                 .filter(r -> r.getSources().stream().noneMatch(s -> entity.getSources().contains(s)))
                 .distinct()
                 .flatMap(r -> r.getSources().stream().filter(s -> !entity.getSources().contains(s)))
-                .map(ResourceSource::getName)
+                .map(ResourceSourceEnum::getName)
                 .collect(Collectors.toList());
 
         if (!noneMatchSources.isEmpty()) {
@@ -64,7 +62,7 @@ public class GroupService extends BasicService<GroupDao, GroupEntity> {
             List<String> sourceNames = entity
                     .getSources()
                     .stream()
-                    .map(ResourceSource::getName)
+                    .map(ResourceSourceEnum::getName)
                     .collect(Collectors.toList());
 
             throw new ServiceException("组来源 " + sourceNames + " 不能保存属于 " + noneMatchSources + " 的资源");

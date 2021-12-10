@@ -5,8 +5,8 @@ import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.commons.feign.captcha.CaptchaService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
+import com.github.dactiv.basic.commons.feign.captcha.CaptchaFeignClient;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
@@ -53,9 +53,9 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
                                     GroupService groupService,
                                     MemberUserService memberUserService,
                                     PasswordEncoder passwordEncoder,
-                                    CaptchaService captchaService,
+                                    CaptchaFeignClient captchaFeignClient,
                                     RedissonClient redissonClient) {
-        super(applicationConfig, userService, groupService, memberUserService, passwordEncoder, captchaService);
+        super(applicationConfig, userService, groupService, memberUserService, passwordEncoder, captchaFeignClient);
         this.redissonClient = redissonClient;
         this.passwordEncoder = passwordEncoder;
     }
@@ -263,6 +263,6 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
 
     @Override
     public List<String> getType() {
-        return Collections.singletonList(ResourceSource.Mobile.toString());
+        return Collections.singletonList(ResourceSourceEnum.MOBILE.toString());
     }
 }

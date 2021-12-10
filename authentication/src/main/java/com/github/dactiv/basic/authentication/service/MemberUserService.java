@@ -5,11 +5,10 @@ import com.github.dactiv.basic.authentication.dao.MemberUserDao;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -47,7 +46,7 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
         MemberUserEntity memberUser = get(userId);
 
         PasswordEncoder passwordEncoder = authorizationService
-                .getUserDetailsService(ResourceSource.UserCenter)
+                .getUserDetailsService(ResourceSourceEnum.USER_CENTER)
                 .getPasswordEncoder();
 
         if (YesOrNo.No.equals(memberUser.getInitialization().getModifyPassword())) {

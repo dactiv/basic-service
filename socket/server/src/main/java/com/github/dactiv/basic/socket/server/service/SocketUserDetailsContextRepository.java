@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.service;
 
-import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
+import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.config;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.spring.security.authentication.service.DefaultUserDetailsService;
@@ -22,12 +22,12 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("dactiv.authentication.extend")
+@ConfigurationProperties("dactiv.authentication.app")
 public class ApplicationConfig {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
 
-    public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(ResourceSource.Mobile.toString(), DefaultUserDetailsService.DEFAULT_TYPES);
+    public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(ResourceSourceEnum.MOBILE.toString(), DefaultUserDetailsService.DEFAULT_TYPES);
 
     /**
      * 管理员组 id
@@ -73,7 +73,7 @@ public class ApplicationConfig {
     /**
      * 允许认证错误次数的 redis key 前缀
      */
-    private String allowableFailureNumberKeyPrefix = "spring.security:authentication:failure:";
+    private String allowableFailureNumberKeyPrefix = "dactiv:authentication:failure:";
 
     /**
      * 登出连接

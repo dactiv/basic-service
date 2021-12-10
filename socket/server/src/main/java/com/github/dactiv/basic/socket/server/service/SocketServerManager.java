@@ -13,14 +13,13 @@ import com.corundumstudio.socketio.listener.ConnectListener;
 import com.corundumstudio.socketio.listener.DisconnectListener;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.socket.client.SocketClientTemplate;
-import com.github.dactiv.basic.socket.client.entity.SocketMessage;
-import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
-import com.github.dactiv.basic.socket.client.entity.SocketUserMessage;
+import com.github.dactiv.basic.socket.client.domain.SocketMessage;
+import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
+import com.github.dactiv.basic.socket.client.domain.SocketUserMessage;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
-import com.github.dactiv.basic.socket.server.domain.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
-import com.github.dactiv.basic.socket.server.service.room.RoomService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.minio.MinioTemplate;
@@ -94,40 +93,28 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      */
     public static final String CLIENT_DISCONNECT_EVENT_NAME = "client_disconnect";
 
-    @Autowired
     private DeviceIdContextRepository securityContextRepository;
 
-    @Autowired
     private SocketClientTemplate socketClientTemplate;
 
-    @Autowired
     private RestTemplate restTemplate;
 
-    @Autowired
     private SocketIOServer socketServer;
 
-    @Autowired
     private List<MessageSender> messageSenderList;
 
-    @Autowired
     private NacosServiceManager nacosServiceManager;
 
-    @Autowired
     private ApplicationConfig applicationConfig;
 
-    @Autowired
     private NacosDiscoveryProperties discoveryProperties;
 
-    @Autowired
     private AuthenticationProperties authenticationProperties;
 
-    @Autowired
     private RoomService roomService;
 
-    @Autowired
     private RedissonClient redissonClient;
 
-    @Autowired
     private MinioTemplate minioTemplate;
 
     /**
@@ -447,7 +434,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         refreshSpringSecurityContext(user);
         // 获取用户房间信息
-        List<Room> rooms = roomService.findRoomList(Casts.cast(user.getId(), Integer.class));
+        List<RoomEntity> rooms = roomService.findByUserId(Casts.cast(user.getId(), Integer.class));
         // 如果存在房间，讲客户端假如房间，做广播使用。
         if (CollectionUtils.isEmpty(rooms)) {
             rooms.forEach(r -> client.joinRoom(r.getId().toString()));
@@ -590,5 +577,65 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         }
 
         return Casts.cast(securityContext.getAuthentication().getDetails());
+    }
+
+    @Autowired
+    public void setSecurityContextRepository(DeviceIdContextRepository securityContextRepository) {
+        this.securityContextRepository = securityContextRepository;
+    }
+
+    @Autowired
+    public void setSocketClientTemplate(SocketClientTemplate socketClientTemplate) {
+        this.socketClientTemplate = socketClientTemplate;
+    }
+
+    @Autowired
+    public void setRestTemplate(RestTemplate restTemplate) {
+        this.restTemplate = restTemplate;
+    }
+
+    @Autowired
+    public void setSocketServer(SocketIOServer socketServer) {
+        this.socketServer = socketServer;
+    }
+
+    @Autowired
+    public void setMessageSenderList(List<MessageSender> messageSenderList) {
+        this.messageSenderList = messageSenderList;
+    }
+
+    @Autowired
+    public void setNacosServiceManager(NacosServiceManager nacosServiceManager) {
+        this.nacosServiceManager = nacosServiceManager;
+    }
+
+    @Autowired
+    public void setApplicationConfig(ApplicationConfig applicationConfig) {
+        this.applicationConfig = applicationConfig;
+    }
+
+    @Autowired
+    public void setDiscoveryProperties(NacosDiscoveryProperties discoveryProperties) {
+        this.discoveryProperties = discoveryProperties;
+    }
+
+    @Autowired
+    public void setAuthenticationProperties(AuthenticationProperties authenticationProperties) {
+        this.authenticationProperties = authenticationProperties;
+    }
+
+    @Autowired
+    public void setRoomService(RoomService roomService) {
+        this.roomService = roomService;
+    }
+
+    @Autowired
+    public void setRedissonClient(RedissonClient redissonClient) {
+        this.redissonClient = redissonClient;
+    }
+
+    @Autowired
+    public void setMinioTemplate(MinioTemplate minioTemplate) {
+        this.minioTemplate = minioTemplate;
     }
 }

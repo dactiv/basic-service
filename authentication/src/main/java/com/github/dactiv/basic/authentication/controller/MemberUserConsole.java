@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
@@ -37,7 +37,7 @@ import java.util.List;
         parent = "system",
         icon = "icon-user-groups",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class MemberUserConsole {
 
@@ -61,7 +61,7 @@ public class MemberUserConsole {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[member_user:page]')")
-    @Plugin(name = "查询分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "查询分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<MemberUserEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return memberUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -75,7 +75,7 @@ public class MemberUserConsole {
      */
     @PostMapping("find")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "查询分页", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
+    @Plugin(name = "查询分页", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE)
     public List<MemberUserEntity> find(HttpServletRequest request) {
         return memberUserService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -107,9 +107,9 @@ public class MemberUserConsole {
     @Plugin(
             name = "修改密码",
             sources = {
-                    ResourceSource.CONSOLE_SOURCE_VALUE,
-                    ResourceSource.USER_CENTER_SOURCE_VALUE,
-                    ResourceSource.MOBILE_SOURCE_VALUE
+                    ResourceSourceEnum.CONSOLE_SOURCE_VALUE,
+                    ResourceSourceEnum.USER_CENTER_SOURCE_VALUE,
+                    ResourceSourceEnum.MOBILE_SOURCE_VALUE
             },
             audit = true
     )
@@ -139,7 +139,7 @@ public class MemberUserConsole {
     @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(
             name = "修改登录账户", 
-            sources = {ResourceSource.USER_CENTER_SOURCE_VALUE, ResourceSource.MOBILE_SOURCE_VALUE}, 
+            sources = {ResourceSourceEnum.USER_CENTER_SOURCE_VALUE, ResourceSourceEnum.MOBILE_SOURCE_VALUE},
             audit = true
     )
     @Idempotent(key = "idempotent:authentication:member:update-username:[#securityContext.authentication.details.id]")

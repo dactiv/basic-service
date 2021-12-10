@@ -1,16 +1,15 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
-import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.EmailMessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -33,15 +32,19 @@ import java.util.List;
         parent = "message",
         icon = "icon-email",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class EmailMessageController {
 
-    @Autowired
-    private AttachmentMessageService messageService;
+    private final EmailMessageService emailMessageService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<EmailMessageEntity> queryGenerator;
+    private final MybatisPlusQueryGenerator<EmailMessageEntity> queryGenerator;
+
+    public EmailMessageController(EmailMessageService emailMessageService,
+                                  MybatisPlusQueryGenerator<EmailMessageEntity> queryGenerator) {
+        this.emailMessageService = emailMessageService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 获取邮件消息分页信息
@@ -53,9 +56,9 @@ public class EmailMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[email:page]')")
-    @Plugin(name = "获取邮件消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取邮件消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<EmailMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
-        return messageService.findEmailMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return emailMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -67,9 +70,9 @@ public class EmailMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[email:get]')")
-    @Plugin(name = "获取邮件消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取邮件消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public EmailMessageEntity get(@RequestParam Integer id) {
-        return messageService.getEmailMessage(id);
+        return emailMessageService.get(id);
     }
 
     /**
@@ -80,10 +83,10 @@ public class EmailMessageController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[email:delete]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:message:email:delete:[#securityContext.authentication.details.id]")
-    @Plugin(name = "删除邮件消息实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除邮件消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
-        messageService.deleteEmailMessage(ids);
+        emailMessageService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 

@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.domain.entity.BatchMessageEntity;
-import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.BatchMessageService;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
@@ -10,7 +10,6 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -38,15 +37,19 @@ import java.util.List;
         parent = "message",
         icon = "icon-batch",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class BatchMessageController {
 
-    @Autowired
-    private MessageService messageService;
+    private final MybatisPlusQueryGenerator<?> queryGenerator;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<?> queryGenerator;
+    private final BatchMessageService batchMessageService;
+
+    public BatchMessageController(MybatisPlusQueryGenerator<?> queryGenerator,
+                                  BatchMessageService batchMessageService) {
+        this.queryGenerator = queryGenerator;
+        this.batchMessageService = batchMessageService;
+    }
 
     /**
      * 获取 table: tb_batch_message 分页信息
@@ -60,9 +63,9 @@ public class BatchMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[batch_message:page]')")
-    @Plugin(name = "获取分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<BatchMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
-        return messageService.findBatchMessagePage(
+        return batchMessageService.findPage(
                 pageRequest,
                 queryGenerator.getQueryWrapperByHttpRequest(request)
         );
@@ -79,9 +82,9 @@ public class BatchMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[batch_message:get]')")
-    @Plugin(name = "获取实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public BatchMessageEntity get(@RequestParam("id") Integer id) {
-        return messageService.getBatchMessage(id);
+        return batchMessageService.get(id);
     }
 
     /**
@@ -93,11 +96,11 @@ public class BatchMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[batch_message:delete]')")
-    @Plugin(name = "删除实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:email:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
-        messageService.deleteBatchMessage(ids);
+        batchMessageService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 

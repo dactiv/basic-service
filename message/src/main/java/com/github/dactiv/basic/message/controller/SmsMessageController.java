@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
-import com.github.dactiv.basic.message.service.MessageService;
-import com.github.dactiv.basic.message.service.support.sms.SmsBalance;
+import com.github.dactiv.basic.message.service.SmsMessageService;
+import com.github.dactiv.basic.message.domain.model.SmsBalanceModel;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -12,7 +12,6 @@ import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -36,18 +35,23 @@ import java.util.stream.Collectors;
         parent = "message",
         icon = "icon-sms",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class SmsMessageController {
 
-    @Autowired
-    private MessageService messageService;
+    private final SmsMessageService smsMessageService;
 
-    @Autowired
-    private List<SmsChannelSender> smsChannelSenders;
+    private final List<SmsChannelSender> smsChannelSenders;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<SmsMessageEntity> queryGenerator;
+    private final MybatisPlusQueryGenerator<SmsMessageEntity> queryGenerator;
+
+    public SmsMessageController(SmsMessageService smsMessageService,
+                                List<SmsChannelSender> smsChannelSenders,
+                                MybatisPlusQueryGenerator<SmsMessageEntity> queryGenerator) {
+        this.smsMessageService = smsMessageService;
+        this.smsChannelSenders = smsChannelSenders;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 获取短信消息分页信息
@@ -59,9 +63,9 @@ public class SmsMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[sms:page]')")
-    @Plugin(name = "获取短信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取短信消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<SmsMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
-        return messageService.findSmsMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return smsMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -73,9 +77,9 @@ public class SmsMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[sms:get]')")
-    @Plugin(name = "获取短信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取短信消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public SmsMessageEntity get(@RequestParam Integer id) {
-        return messageService.getSmsMessage(id);
+        return smsMessageService.get(id);
     }
 
     /**
@@ -85,11 +89,11 @@ public class SmsMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[sms:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除短信消息实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除短信消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:sms:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
-        messageService.deleteSmsMessage(ids);
+        smsMessageService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
@@ -99,9 +103,9 @@ public class SmsMessageController {
      * @return 余额实体集合
      */
     @GetMapping("balance")
-    @Plugin(name = "获取短信余额", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取短信余额", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[sms:balance]')")
-    public List<SmsBalance> balance() {
+    public List<SmsBalanceModel> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());
     }
 

@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.client.holder.strategy;
 
-import com.github.dactiv.basic.socket.client.entity.SocketResult;
+import com.github.dactiv.basic.socket.client.domain.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolderStrategy;
 
 import java.util.Objects;

@@ -1,11 +1,12 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.message.config.sms.SmsConfig;
+import com.github.dactiv.basic.message.domain.body.SmsMessageBody;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
-import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.SmsMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.domain.body.SmsMessageBody;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -20,8 +21,6 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
@@ -47,23 +46,27 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
 
     private static final String DEFAULT_TYPE = "sms";
 
-    @Autowired
-    private MessageService messageService;
+    private final SmsMessageService smsMessageService;
 
-    @Autowired
-    private List<SmsChannelSender> smsChannelSenderList;
+    private final List<SmsChannelSender> smsChannelSenderList;
 
-    @Autowired
-    private AmqpTemplate amqpTemplate;
+    private final AmqpTemplate amqpTemplate;
 
-    @Autowired
-    private SmsMessageSender oneself;
+    private final SmsMessageSender oneself;
 
-    /**
-     * 渠道商
-     */
-    @Value("${dactiv.message.sms.channel}")
-    private String channel;
+    private final SmsConfig config;
+
+    public SmsMessageSender(SmsMessageService smsMessageService,
+                            List<SmsChannelSender> smsChannelSenderList,
+                            AmqpTemplate amqpTemplate,
+                            SmsMessageSender oneself,
+                            SmsConfig config) {
+        this.smsMessageService = smsMessageService;
+        this.smsChannelSenderList = smsChannelSenderList;
+        this.amqpTemplate = amqpTemplate;
+        this.oneself = oneself;
+        this.config = config;
+    }
 
     /**
      * 发送短信
@@ -103,13 +106,13 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     @Transactional(rollbackFor = Exception.class)
     public SmsMessageEntity sendSms(Integer id) {
 
-        SmsMessageEntity entity = messageService.getSmsMessage(id);
+        SmsMessageEntity entity = smsMessageService.get(id);
 
         if (ExecuteStatus.Success.equals(entity.getExecuteStatus())) {
             return entity;
         }
 
-        SmsChannelSender smsChannelSender = getSmsChannelSender(this.channel);
+        SmsChannelSender smsChannelSender = getSmsChannelSender(config.getChannel());
 
         entity.setLastSendTime(new Date());
         entity.setChannel(smsChannelSender.getType());
@@ -136,7 +139,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
             }
         }
 
-        messageService.saveSmsMessage(entity);
+        smsMessageService.save(entity);
 
         if (Objects.nonNull(entity.getBatchId())) {
             oneself.updateBatchMessage(entity);
@@ -163,7 +166,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     @Override
     @Transactional(rollbackFor = Exception.class)
     protected boolean preSend(List<SmsMessageEntity> content) {
-        content.forEach(e -> messageService.saveSmsMessage(e));
+        smsMessageService.save(content);
         return true;
     }
 
@@ -203,7 +206,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
             filter.put("filter_[phone_nen]", "true");
             filter.put("filter_[status_eq]", "1");
 
-            List<Map<String, Object>> users = authenticationService.findMemberUser(filter);
+            List<Map<String, Object>> users = authenticationFeignClient.findMemberUser(filter);
 
             for (Map<String, Object> user : users) {
 

@@ -60,17 +60,6 @@ public class ApplicationStartupAutoConfig {
     }
 
     @Bean
-    public MybatisPlusInterceptor mybatisPlusInterceptor() {
-
-        MybatisPlusInterceptor interceptor = new MybatisPlusInterceptor();
-
-        interceptor.addInnerInterceptor(new OptimisticLockerInnerInterceptor());
-        interceptor.addInnerInterceptor(new PaginationInnerInterceptor(DbType.MYSQL));
-
-        return interceptor;
-    }
-
-    @Bean
     public CipherAlgorithmService cipherAlgorithmService() {
         return new CipherAlgorithmService();
     }

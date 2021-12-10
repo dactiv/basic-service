@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.security;
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.spring.security.authentication.UserDetailsService;
 import com.github.dactiv.framework.spring.security.authentication.token.RequestAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
@@ -61,7 +61,7 @@ public class ConsoleUserDetailsService implements UserDetailsService {
 
     @Override
     public List<String> getType() {
-        return Collections.singletonList(ResourceSource.Console.toString());
+        return Collections.singletonList(ResourceSourceEnum.CONSOLE.toString());
     }
 
     @Override

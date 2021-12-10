@@ -2,8 +2,8 @@ package com.github.dactiv.basic.socket.server.service.message.support;
 
 import com.corundumstudio.socketio.ClientOperations;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.github.dactiv.basic.socket.client.entity.MultipleUnicastMessage;
-import com.github.dactiv.basic.socket.client.entity.SocketMessage;
+import com.github.dactiv.basic.socket.client.domain.MultipleUnicastMessage;
+import com.github.dactiv.basic.socket.client.domain.SocketMessage;
 import com.github.dactiv.basic.socket.server.service.message.AbstractMessageSender;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.framework.commons.Casts;

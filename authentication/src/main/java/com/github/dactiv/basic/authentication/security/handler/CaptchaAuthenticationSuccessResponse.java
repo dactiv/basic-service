@@ -6,7 +6,7 @@ import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoRe
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessResponse;
@@ -74,7 +74,7 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
                 Map<String, Object> data;
 
-                if (StringUtils.equals(ResourceSource.UserCenter.toString(), userDetails.getType())) {
+                if (StringUtils.equals(ResourceSourceEnum.USER_CENTER.toString(), userDetails.getType())) {
                     Boolean isNew = Casts.cast(
                             request.getAttribute(MemberUserDetailsService.DEFAULT_IS_NEW_MEMBER_KEY_NAME)
                     );

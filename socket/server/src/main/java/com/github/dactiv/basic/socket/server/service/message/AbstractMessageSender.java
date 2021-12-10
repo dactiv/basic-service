@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.service.message;
 
 import com.corundumstudio.socketio.ClientOperations;
 import com.corundumstudio.socketio.SocketIOServer;
-import com.github.dactiv.basic.socket.client.entity.SocketMessage;
+import com.github.dactiv.basic.socket.client.domain.SocketMessage;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import lombok.extern.slf4j.Slf4j;

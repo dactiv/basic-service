@@ -1,18 +1,17 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
-import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.SiteMessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
+import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -36,15 +35,18 @@ import java.util.Map;
         parent = "message",
         icon = "icon-notification",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class SiteMessageController {
 
-    @Autowired
-    private AttachmentMessageService messageService;
+    private final SiteMessageService siteMessageService;
 
-    @Autowired
-    private MybatisPlusQueryGenerator<SiteMessageEntity> queryGenerator;
+    private final MybatisPlusQueryGenerator<SiteMessageEntity> queryGenerator;
+
+    public SiteMessageController(SiteMessageService siteMessageService, MybatisPlusQueryGenerator<SiteMessageEntity> queryGenerator) {
+        this.siteMessageService = siteMessageService;
+        this.queryGenerator = queryGenerator;
+    }
 
     /**
      * 获取站内信消息分页信息
@@ -56,9 +58,9 @@ public class SiteMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[site:page]')")
-    @Plugin(name = "获取站内信消息分页", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取站内信消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<SiteMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
-        return messageService.findSiteMessagePage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
+        return siteMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
 
     /**
@@ -72,7 +74,7 @@ public class SiteMessageController {
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(
             name = "按类型分组获取站内信未读数量",
-            sources = {ResourceSource.MOBILE_SOURCE_VALUE, ResourceSource.USER_CENTER_SOURCE_VALUE}
+            sources = {ResourceSourceEnum.MOBILE_SOURCE_VALUE, ResourceSourceEnum.USER_CENTER_SOURCE_VALUE}
     )
     public List<Map<String, Object>> unreadQuantity(@CurrentSecurityContext SecurityContext securityContext) {
 
@@ -80,7 +82,7 @@ public class SiteMessageController {
 
         Integer id = Casts.cast(userDetails.getId());
 
-        return messageService.countSiteMessageUnreadQuantity(id);
+        return siteMessageService.countUnreadQuantity(id);
     }
 
     /**
@@ -95,8 +97,8 @@ public class SiteMessageController {
     @PreAuthorize("hasRole('ORDINARY')")
     @Plugin(name = "阅读站内信",
             sources = {
-                    ResourceSource.MOBILE_SOURCE_VALUE,
-                    ResourceSource.USER_CENTER_SOURCE_VALUE
+                    ResourceSourceEnum.MOBILE_SOURCE_VALUE,
+                    ResourceSourceEnum.USER_CENTER_SOURCE_VALUE
             },
             audit = true
     )
@@ -107,7 +109,7 @@ public class SiteMessageController {
 
         Integer id = Casts.cast(userDetails.getId());
 
-        messageService.readSiteMessage(types, id);
+        siteMessageService.read(types, id);
 
         return RestResult.of("阅读成功");
     }
@@ -121,9 +123,9 @@ public class SiteMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[site:get]')")
-    @Plugin(name = "获取站内信消息实体信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取站内信消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public SiteMessageEntity get(@RequestParam Integer id) {
-        return messageService.getSiteMessage(id);
+        return siteMessageService.get(id);
     }
 
     /**
@@ -135,11 +137,11 @@ public class SiteMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[site:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除站内信消息实体", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除站内信消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:site:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
-        messageService.deleteSiteMessage(ids);
+        siteMessageService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 

@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.controller;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.service.GroupService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.RestResult;
@@ -37,7 +37,7 @@ import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
         parent = "system",
         icon = "icon-group",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class GroupController {
 
@@ -55,7 +55,7 @@ public class GroupController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[group:find]')")
-    @Plugin(name = "查询全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "查询全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<GroupEntity> find(HttpServletRequest request, @RequestParam(required = false) boolean mergeTree) {
 
         List<GroupEntity> groupList = groupService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -76,7 +76,7 @@ public class GroupController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[group:get]')")
-    @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public GroupEntity get(@RequestParam Integer id) {
         return groupService.get(id);
     }
@@ -92,7 +92,7 @@ public class GroupController {
     @PostMapping("save")
     @SocketMessage(WEB_FILTER_RESULT_ID)
     @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
-    @Plugin(name = "保存", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "保存", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody GroupEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
@@ -119,7 +119,7 @@ public class GroupController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[group:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:group:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
@@ -140,7 +140,7 @@ public class GroupController {
      */
     @GetMapping("isAuthorityUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断权限值是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "判断权限值是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
 
         return groupService.find(Wrappers.<GroupEntity>lambdaQuery().eq(GroupEntity::getAuthority, authority)).isEmpty();
@@ -155,7 +155,7 @@ public class GroupController {
      */
     @GetMapping("isNameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断组名称是否唯一", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "判断组名称是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
         return groupService.find(Wrappers.<GroupEntity>lambdaQuery().eq(GroupEntity::getName, name)).isEmpty();
     }

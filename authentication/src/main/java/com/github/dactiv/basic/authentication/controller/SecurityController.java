@@ -4,7 +4,7 @@ import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
 import com.github.dactiv.basic.authentication.security.handler.JsonLogoutSuccessHandler;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -89,7 +89,7 @@ public class SecurityController {
             icon = "icon-audit",
             parent = "system",
             type = ResourceType.Menu,
-            sources = ResourceSource.CONSOLE_SOURCE_VALUE
+            sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
     )
     public Page<AuditEvent> audit(PageRequest pageRequest,
                                   @RequestParam(required = false) String principal,
@@ -117,7 +117,7 @@ public class SecurityController {
      */
     @GetMapping("getAudit")
     @PreAuthorize("hasAuthority('perms[audit:get]')")
-    @Plugin(name = "获取操作审计", parent = "audit", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取操作审计", parent = "audit", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public AuditEvent getAudit(@RequestParam(required = false) String id,
                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after) {
 
@@ -182,9 +182,9 @@ public class SecurityController {
     @RequestMapping(value = "getPrincipalProfile", method = {RequestMethod.GET, RequestMethod.POST})
     public List<? extends NumberIdEntity<Integer>> getPrincipalProfile(@RequestParam String type,
                                                                        @RequestParam List<Integer> ids) {
-        if (ResourceSource.Console.toString().equals(type)) {
+        if (ResourceSourceEnum.CONSOLE.toString().equals(type)) {
             return consoleUserService.get(ids);
-        } else if (ResourceSource.UserCenter.toString().equals(type)) {
+        } else if (ResourceSourceEnum.USER_CENTER.toString().equals(type)) {
             return memberUserService.get(ids);
         } else {
             throw new SystemException("找不到类型为 [" + type + "] 的用户信息");

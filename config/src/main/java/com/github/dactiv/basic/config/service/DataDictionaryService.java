@@ -77,24 +77,4 @@ public class DataDictionaryService extends BasicService<DataDictionaryDao, DataD
 
         return findObjects(wrapper, Integer.class);
     }
-
-    @Override
-    public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
-        int result = 0;
-
-        Wrapper<DataDictionaryEntity> wrapper = Wrappers
-                .<DataDictionaryEntity>lambdaQuery()
-                .select(DataDictionaryEntity::getId)
-                .in(DataDictionaryEntity::getParentId, ids);
-
-        List<Long> subIds = findObjects(wrapper, Long.class);
-
-        if (CollectionUtils.isNotEmpty(subIds)) {
-            result += deleteById(subIds, errorThrow);
-        }
-
-        result += super.deleteById(ids, errorThrow);
-
-        return result;
-    }
 }

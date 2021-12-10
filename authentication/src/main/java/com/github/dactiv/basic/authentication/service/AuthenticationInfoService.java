@@ -4,7 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
-import com.github.dactiv.basic.commons.feign.message.MessageService;
+import com.github.dactiv.basic.commons.feign.message.MessageFeignClient;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
@@ -48,7 +48,7 @@ import java.util.*;
 @Transactional(rollbackFor = Exception.class)
 public class AuthenticationInfoService extends BasicService<AuthenticationInfoDao, AuthenticationInfoEntity> {
 
-    private final MessageService messageService;
+    private final MessageFeignClient messageFeignClient;
 
     private final ApplicationConfig applicationConfig;
 
@@ -60,10 +60,10 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
             NumberIdEntity.CREATION_TIME_FIELD_NAME
     );
 
-    public AuthenticationInfoService(MessageService messageService,
+    public AuthenticationInfoService(MessageFeignClient messageFeignClient,
                                      ApplicationConfig applicationConfig,
                                      ElasticsearchRestTemplate elasticsearchRestTemplate) {
-        this.messageService = messageService;
+        this.messageFeignClient = messageFeignClient;
         this.applicationConfig = applicationConfig;
         this.elasticsearchRestTemplate = elasticsearchRestTemplate;
     }
@@ -111,7 +111,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
         Map<String, Object> param = new LinkedHashMap<>();
 
-        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, applicationConfig.getAbnormalArea().getSendType());
+        param.put(MessageFeignClient.DEFAULT_MESSAGE_TYPE_KEY, applicationConfig.getAbnormalArea().getSendType());
 
         param.put("content", applicationConfig.getAbnormalArea().getSendContent());
         param.put("toUserIds", Collections.singletonList(info.getUserId()));
@@ -122,7 +122,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
         try {
 
-            RestResult<Object> result = messageService.send(param);
+            RestResult<Object> result = messageFeignClient.send(param);
 
             if (HttpStatus.OK.value() != result.getStatus() && HttpStatus.NOT_FOUND.value() != result.getStatus()) {
                 throw new ServiceException(result.getMessage());

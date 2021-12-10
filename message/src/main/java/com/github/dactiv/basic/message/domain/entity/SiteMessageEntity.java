@@ -8,9 +8,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
+import lombok.*;
 import org.apache.ibatis.type.Alias;
 
 import java.util.Date;
@@ -110,4 +108,8 @@ public class SiteMessageEntity extends BasicMessageEntity implements AttachmentM
      */
     @TableField(exist = false)
     private List<AttachmentEntity> attachmentList = new LinkedList<>();
+
+    public SiteMessageEntity(Integer id) {
+        this.setId(id);
+    }
 }

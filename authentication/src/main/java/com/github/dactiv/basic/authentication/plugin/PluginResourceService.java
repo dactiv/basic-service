@@ -5,7 +5,7 @@ import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
 import com.github.dactiv.framework.commons.tree.Tree;
@@ -301,7 +301,7 @@ public class PluginResourceService {
      */
     public void disabledApplicationResource(NacosService nacosService) {
 
-        List<ResourceSource> sources = resources
+        List<ResourceSourceEnum> sources = resources
                 .stream()
                 .filter(r -> r.getApplicationName().equals(nacosService.getName()))
                 .flatMap(r -> r.getSources().stream())

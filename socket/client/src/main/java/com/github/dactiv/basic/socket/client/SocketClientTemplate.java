@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.client;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.dactiv.basic.socket.client.entity.*;
+import com.github.dactiv.basic.socket.client.domain.*;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;

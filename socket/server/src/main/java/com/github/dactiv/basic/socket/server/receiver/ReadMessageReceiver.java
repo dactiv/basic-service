@@ -40,8 +40,11 @@ public class ReadMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "read.chat.message";
 
-    @Autowired
-    private ChatService chatService;
+    private final ChatService chatService;
+
+    public ReadMessageReceiver(ChatService chatService) {
+        this.chatService = chatService;
+    }
 
     @RabbitListener(
             bindings = @QueueBinding(

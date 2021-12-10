@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.client.holder;
 
-import com.github.dactiv.basic.socket.client.entity.SocketResult;
+import com.github.dactiv.basic.socket.client.domain.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.strategy.ThreadLocalSocketResultHolderStrategy;
 import org.springframework.util.ReflectionUtils;
 import org.springframework.util.StringUtils;

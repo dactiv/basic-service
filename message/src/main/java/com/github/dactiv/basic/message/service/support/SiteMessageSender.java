@@ -1,12 +1,13 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.message.config.site.SiteConfig;
+import com.github.dactiv.basic.message.domain.body.SiteMessageBody;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
-import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.SiteMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.domain.body.SiteMessageBody;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -27,9 +28,6 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpStatus;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
@@ -47,7 +45,6 @@ import java.util.stream.Stream;
  */
 @Slf4j
 @Component
-@RefreshScope
 public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteMessageEntity> implements InitializingBean {
 
     public static final String DEFAULT_QUEUE_NAME = "message.site.queue";
@@ -57,23 +54,28 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
      */
     private static final String DEFAULT_TYPE = "site";
 
-    @Autowired
-    private AttachmentMessageService attachmentMessageService;
+    private final SiteMessageService siteMessageService;
 
-    @Autowired
-    private List<SiteMessageChannelSender> siteMessageChannelSenderList;
+    private final List<SiteMessageChannelSender> siteMessageChannelSenderList;
 
-    @Autowired
-    private AmqpTemplate amqpTemplate;
+    private final AmqpTemplate amqpTemplate;
 
-    @Autowired
-    private SiteMessageSender oneself;
+    private final SiteMessageSender oneself;
 
-    /**
-     * 渠道商
-     */
-    @Value("${dactiv.message.site.channel}")
-    private String channel;
+    private final SiteConfig config;
+
+    public SiteMessageSender(SiteMessageService siteMessageService,
+                             List<SiteMessageChannelSender> siteMessageChannelSenderList,
+                             AmqpTemplate amqpTemplate,
+                             SiteMessageSender oneself,
+                             SiteConfig config) {
+
+        this.siteMessageService = siteMessageService;
+        this.siteMessageChannelSenderList = siteMessageChannelSenderList;
+        this.amqpTemplate = amqpTemplate;
+        this.oneself = oneself;
+        this.config = config;
+    }
 
     /**
      * 发送站内信
@@ -113,13 +115,13 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @Transactional(rollbackFor = Exception.class)
     public SiteMessageEntity sendSiteMessage(Integer id) {
 
-        SiteMessageEntity entity = attachmentMessageService.getSiteMessage(id);
+        SiteMessageEntity entity = siteMessageService.get(id);
 
         if (Objects.isNull(entity)) {
             return null;
         }
 
-        SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(this.channel);
+        SiteMessageChannelSender siteMessageChannelSender = getSiteMessageChannelSender(config.getChannel());
 
         entity.setLastSendTime(new Date());
         entity.setChannel(siteMessageChannelSender.getType());
@@ -140,7 +142,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
             ExecuteStatus.failure(entity, e.getMessage());
         }
 
-        attachmentMessageService.saveSiteMessage(entity);
+        siteMessageService.save(entity);
 
         if (Objects.nonNull(entity.getBatchId())) {
             oneself.updateBatchMessage(entity);
@@ -180,7 +182,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
             filter.put("filter_[status_eq]", "1");
 
-            List<Map<String, Object>> users = authenticationService.findMemberUser(filter);
+            List<Map<String, Object>> users = authenticationFeignClient.findMemberUser(filter);
 
             for (Map<String, Object> user : users) {
 
@@ -230,7 +232,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
     @Override
     @Transactional(rollbackFor = Exception.class)
     protected boolean preSend(List<SiteMessageEntity> content) {
-        content.forEach(e -> attachmentMessageService.saveSiteMessage(e));
+        siteMessageService.save(content);
         return true;
     }
 

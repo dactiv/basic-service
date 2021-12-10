@@ -2,8 +2,8 @@ package com.github.dactiv.basic.captcha.service.email;
 
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
-import com.github.dactiv.basic.commons.feign.config.ConfigService;
-import com.github.dactiv.basic.commons.feign.message.MessageService;
+import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
+import com.github.dactiv.basic.commons.feign.message.MessageFeignClient;
 import com.github.dactiv.framework.commons.TimeProperties;
 import org.apache.commons.lang3.RandomStringUtils;
 import org.redisson.api.RedissonClient;
@@ -33,10 +33,10 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
 
     public EmailCaptchaService(RedissonClient redissonClient,
                                @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
-                               ConfigService configService,
-                               MessageService messageService,
+                               ConfigFeignClient configFeignClient,
+                               MessageFeignClient messageFeignClient,
                                EmailCaptchaProperties properties) {
-        super(redissonClient, validator, configService, messageService);
+        super(redissonClient, validator, configFeignClient, messageFeignClient);
         this.properties = properties;
     }
 
@@ -59,7 +59,7 @@ public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEnti
         param.put("toEmails", Collections.singletonList(entity.getEmail()));
         param.put("type", entry.get("name"));
 
-        param.put(MessageService.DEFAULT_MESSAGE_TYPE_KEY, DEFAULT_TYPE);
+        param.put(MessageFeignClient.DEFAULT_MESSAGE_TYPE_KEY, DEFAULT_TYPE);
 
         return param;
     }

@@ -1,24 +1,26 @@
 package com.github.dactiv.basic.message.service.support.site.umeng;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
-import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
+import com.github.dactiv.basic.commons.feign.authentication.AuthenticationFeignClient;
+import com.github.dactiv.basic.message.config.site.SiteConfig;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
+import com.github.dactiv.basic.message.domain.model.site.ument.BasicMessageModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.PolicyModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidMessageModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPayloadBodyModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPayloadModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPolicyModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadApsAlertModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadApsModel;
+import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadModel;
+import com.github.dactiv.basic.message.enumerate.site.ument.MessageTypeEnum;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
-import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidMessage;
-import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPayload;
-import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPayloadBody;
-import com.github.dactiv.basic.message.service.support.site.umeng.android.AndroidPolicy;
-import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayload;
-import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayloadAps;
-import com.github.dactiv.basic.message.service.support.site.umeng.ios.IosPayloadApsAlert;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections.MapUtils;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
@@ -34,7 +36,6 @@ import java.util.*;
  * @author maurice
  */
 @Component
-@RefreshScope
 public class UmengSiteMessageService implements SiteMessageChannelSender {
 
     /**
@@ -52,16 +53,16 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      */
     public static final String DEFAULT_SUCCESS_MESSAGE = "SUCCESS";
 
-    @Autowired
-    private SiteProperties properties;
+    private final SiteConfig config;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
 
-    @Autowired
-    private AuthenticationService authenticationService;
+    private final AuthenticationFeignClient authenticationFeignClient;
 
-    public UmengSiteMessageService() {
+    public UmengSiteMessageService(SiteConfig config, RestTemplate restTemplate, AuthenticationFeignClient authenticationFeignClient) {
+        this.config = config;
+        this.restTemplate = restTemplate;
+        this.authenticationFeignClient = authenticationFeignClient;
     }
 
     @Override
@@ -73,10 +74,10 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     @Override
     public RestResult<Map<String, Object>> sendSiteMessage(SiteMessageEntity message) {
 
-        List<String> types = Arrays.asList(ResourceSource.Mobile.toString(), ResourceSource.UserCenter.toString());
+        List<String> types = Arrays.asList(ResourceSourceEnum.MOBILE.toString(), ResourceSourceEnum.USER_CENTER.toString());
 
         // 获取最后一次认证信息
-        Map<String, Object> info = authenticationService.getLastAuthenticationInfo(message.getToUserId(), types);
+        Map<String, Object> info = authenticationFeignClient.getLastAuthenticationInfo(message.getToUserId(), types);
 
         if (MapUtils.isEmpty(info)) {
             return RestResult.of(
@@ -89,12 +90,12 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         // 得到设备信息
         Map<String, Object> device = Casts.cast(info.get("device"), Map.class);
 
-        BasicMessage basicMessage = null;
+        BasicMessageModel basicMessage = null;
         // 根据谁被信息构造基础消息对象
         if ("ANDROID".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
-            basicMessage = getAndroidMessage(message, MessageType.Customize);
+            basicMessage = getAndroidMessage(message, MessageTypeEnum.Customize);
         } else if ("IOS".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
-            basicMessage = getIosMessage(message, MessageType.Customize);
+            basicMessage = getIosMessage(message, MessageTypeEnum.Customize);
         }
 
         if (basicMessage == null) {
@@ -113,9 +114,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         HttpEntity<String> entity = new HttpEntity<>(requestJson, headers);
 
-        String sign = DigestUtils.md5Hex(("POST" + properties.getUrl() + requestJson + basicMessage.getSecretKey()).getBytes(StandardCharsets.UTF_8));
+        String sign = DigestUtils.md5Hex(("POST" + config.getUmeng().getUrl() + requestJson + basicMessage.getSecretKey()).getBytes(StandardCharsets.UTF_8));
         // 发送消息
-        ResponseEntity<String> result = restTemplate.postForEntity(properties.getUrl() + "?sign=" + sign, entity, String.class);
+        ResponseEntity<String> result = restTemplate.postForEntity(config.getUmeng().getUrl() + "?sign=" + sign, entity, String.class);
         // OK 为成功，否则失败
         if (result.getStatusCode().equals(HttpStatus.OK)) {
 
@@ -161,23 +162,23 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * @return 基础消息实体
      */
     @SuppressWarnings("unchecked")
-    public BasicMessage getIosMessage(SiteMessageEntity entity, MessageType type) {
-        BasicMessage result = new BasicMessage();
+    public BasicMessageModel getIosMessage(SiteMessageEntity entity, MessageTypeEnum type) {
+        BasicMessageModel result = new BasicMessageModel();
 
-        result.setProductionMode(properties.isProductionMode());
-        result.setAppkey(properties.getIos().getAppKey());
-        result.setSecretKey(properties.getIos().getSecretKey());
+        result.setProductionMode(config.getUmeng().isProductionMode());
+        result.setAppkey(config.getUmeng().getIos().getAppKey());
+        result.setSecretKey(config.getUmeng().getIos().getSecretKey());
         result.setType(type.getName());
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
 
-        IosPayload iosPayload = new IosPayload();
+        IosPayloadModel iosPayload = new IosPayloadModel();
 
-        IosPayloadAps iosPayloadAps = new IosPayloadAps();
+        IosPayloadApsModel iosPayloadAps = new IosPayloadApsModel();
 
         iosPayload.setAps(iosPayloadAps);
 
-        IosPayloadApsAlert iosPayloadApsAlert = new IosPayloadApsAlert();
+        IosPayloadApsAlertModel iosPayloadApsAlert = new IosPayloadApsAlertModel();
 
         iosPayloadApsAlert.setTitle(entity.getTitle());
         iosPayloadApsAlert.setBody(entity.getContent());
@@ -191,7 +192,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         result.setPayload(payloadMap);
 
-        Policy policy = new Policy();
+        PolicyModel policy = new PolicyModel();
 
         policy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(policy);
@@ -208,24 +209,24 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      *
      * @return 基础消息实体
      */
-    public BasicMessage getAndroidMessage(SiteMessageEntity entity, MessageType type) {
+    public BasicMessageModel getAndroidMessage(SiteMessageEntity entity, MessageTypeEnum type) {
 
-        AndroidMessage result = new AndroidMessage();
+        AndroidMessageModel result = new AndroidMessageModel();
 
-        result.setProductionMode(properties.isProductionMode());
-        result.setAppkey(properties.getAndroid().getAppKey());
-        result.setSecretKey(properties.getAndroid().getSecretKey());
+        result.setProductionMode(config.getUmeng().isProductionMode());
+        result.setAppkey(config.getUmeng().getAndroid().getAppKey());
+        result.setSecretKey(config.getUmeng().getAndroid().getSecretKey());
         result.setType(type.getName());
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
 
-        AndroidPayload androidPayload = new AndroidPayload();
+        AndroidPayloadModel androidPayload = new AndroidPayloadModel();
 
         androidPayload.setDisplayType("notification");
 
         androidPayload.getExtra().putAll(entity.getMeta());
 
-        AndroidPayloadBody androidPayloadBody = new AndroidPayloadBody();
+        AndroidPayloadBodyModel androidPayloadBody = new AndroidPayloadBodyModel();
 
         androidPayloadBody.setTicker(entity.getContent());
         androidPayloadBody.setTitle(entity.getTitle());
@@ -242,16 +243,16 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         androidPayload.setBody(androidPayloadBody);
         result.setPayload(androidPayload);
 
-        AndroidPolicy androidPolicy = new AndroidPolicy();
+        AndroidPolicyModel androidPolicy = new AndroidPolicyModel();
 
         androidPolicy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(androidPolicy);
 
         result.setDescription("ANDROID");
 
-        if (!properties.getAndroid().getIgnoreActivityType().contains(entity.getType())) {
-            result.setMipush(properties.getAndroid().isPush());
-            result.setMiActivity(properties.getAndroid().getActivity());
+        if (!config.getUmeng().getAndroid().getIgnoreActivityType().contains(entity.getType())) {
+            result.setMipush(config.getUmeng().getAndroid().isPush());
+            result.setMiActivity(config.getUmeng().getAndroid().getActivity());
         }
 
         return result;
@@ -260,7 +261,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
     public Date getExpireTime(Date currentDate) {
 
         LocalDateTime localDateTime = LocalDateTime.ofInstant(currentDate.toInstant(), ZoneId.systemDefault());
-        localDateTime = localDateTime.plus(properties.getExpireTime().getValue(), properties.getExpireTime().getUnit().toChronoUnit());
+        localDateTime = localDateTime.plus(config.getUmeng().getExpireTime().getValue(), config.getUmeng().getExpireTime().getUnit().toChronoUnit());
 
         return Date.from(localDateTime.atZone(ZoneId.systemDefault()).toInstant());
     }

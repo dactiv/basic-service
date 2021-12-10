@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
+import com.github.dactiv.basic.message.domain.model.SmsBalanceModel;
 import com.github.dactiv.framework.commons.RestResult;
 
 import java.util.Map;
@@ -40,5 +41,5 @@ public interface SmsChannelSender {
      *
      * @return 可用余额
      */
-    SmsBalance getBalance();
+    SmsBalanceModel getBalance();
 }

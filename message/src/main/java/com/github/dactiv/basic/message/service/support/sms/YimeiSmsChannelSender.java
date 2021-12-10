@@ -1,14 +1,14 @@
 package com.github.dactiv.basic.message.service.support.sms;
 
+import com.github.dactiv.basic.message.config.sms.SmsConfig;
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
+import com.github.dactiv.basic.message.domain.model.SmsBalanceModel;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import org.apache.commons.collections.MapUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.*;
 import org.springframework.stereotype.Component;
 import org.springframework.util.MultiValueMap;
@@ -22,9 +22,8 @@ import java.util.Map;
  *
  * @author maurice
  */
-@SuppressWarnings("unchecked")
 @Component
-@RefreshScope
+@SuppressWarnings("unchecked")
 public class YimeiSmsChannelSender implements SmsChannelSender {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(YimeiSmsChannelSender.class);
@@ -33,11 +32,14 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
 
     private static final String DEFAULT_GET_BALANCE_API = "/simpleinter/getBalance";
 
-    @Autowired
-    private SmsProperties smsProperties;
+    private final SmsConfig config;
 
-    @Autowired
-    private RestTemplate restTemplate;
+    private final RestTemplate restTemplate;
+
+    public YimeiSmsChannelSender(SmsConfig config, RestTemplate restTemplate) {
+        this.config = config;
+        this.restTemplate = restTemplate;
+    }
 
     @Override
     public String getType() {
@@ -52,7 +54,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
     @Override
     public RestResult<Map<String, Object>> sendSms(SmsMessageEntity entity) {
 
-        MultiValueMap<String, Object> param = smsProperties.createBaseParam();
+        MultiValueMap<String, Object> param = config.getYimei().createBaseParam();
 
         param.add("mobiles", entity.getPhoneNumber());
         param.add("content", entity.getContent());
@@ -69,7 +71,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                 LOGGER.debug("对号码为[" + entity.getPhoneNumber() + "]发送短信，参数为:" + param);
             }
 
-            ResponseEntity<String> r = restTemplate.postForEntity(smsProperties.getUrl() + DEFAULT_SEND_SMS_API, request, String.class);
+            ResponseEntity<String> r = restTemplate.postForEntity(config.getYimei().getUrl() + DEFAULT_SEND_SMS_API, request, String.class);
 
             if (r.getStatusCode() == HttpStatus.OK) {
 
@@ -93,15 +95,15 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                             ErrorCodeException.DEFAULT_EXCEPTION_CODE);
                 }
 
-                if (data.containsKey(smsProperties.getSuccessFieldName()) && data.get(smsProperties.getSuccessFieldName()).equals(smsProperties.getSuccessFieldValue())) {
+                if (data.containsKey(config.getYimei().getSuccessFieldName()) && data.get(config.getYimei().getSuccessFieldName()).equals(config.getYimei().getSuccessFieldValue())) {
                     return new RestResult<>(
                             r.getStatusCode().getReasonPhrase(),
                             r.getStatusCode().value(),
                             String.valueOf(r.getStatusCode().value()),
-                            Casts.cast(data.get(smsProperties.getResponseDataField())));
+                            Casts.cast(data.get(config.getYimei().getResponseDataField())));
                 } else {
                     return RestResult.of(
-                            "执行返回的[" + smsProperties.getSuccessFieldName() + "]值为:" + data.get(smsProperties.getSuccessFieldName()) + "，不等于 " + smsProperties.getSuccessFieldValue(),
+                            "执行返回的[" + config.getYimei().getSuccessFieldName() + "]值为:" + data.get(config.getYimei().getSuccessFieldName()) + "，不等于 " + config.getYimei().getSuccessFieldValue(),
                             HttpStatus.INTERNAL_SERVER_ERROR.value(),
                             ErrorCodeException.DEFAULT_EXCEPTION_CODE
                     );
@@ -122,9 +124,9 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
     }
 
     @Override
-    public SmsBalance getBalance() {
+    public SmsBalanceModel getBalance() {
 
-        MultiValueMap<String, Object> param = smsProperties.createBaseParam();
+        MultiValueMap<String, Object> param = config.getYimei().createBaseParam();
 
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
@@ -132,27 +134,27 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
         HttpEntity<MultiValueMap<String, Object>> request = new HttpEntity<>(param, headers);
 
         try {
-            ResponseEntity<String> r = restTemplate.postForEntity(smsProperties.getUrl() + DEFAULT_GET_BALANCE_API, request, String.class);
+            ResponseEntity<String> r = restTemplate.postForEntity(config.getYimei().getUrl() + DEFAULT_GET_BALANCE_API, request, String.class);
 
             if (r.getStatusCode() == HttpStatus.OK) {
 
                 if (r.getBody() == null) {
-                    LOGGER.warn("通过 API " + smsProperties.getUrl() + DEFAULT_GET_BALANCE_API + " 无任何响应");
+                    LOGGER.warn("通过 API " + config.getYimei().getUrl() + DEFAULT_GET_BALANCE_API + " 无任何响应");
                 } else {
 
                     Map<String, Object> data = Casts.readValue(r.getBody(), Map.class);
-                    Map<String, Object> balanceMap = Casts.cast(data.get(smsProperties.getResponseDataField()));
-                    BigDecimal balance = Casts.cast(balanceMap.get(smsProperties.getBalanceFieldName()), BigDecimal.class);
+                    Map<String, Object> balanceMap = Casts.cast(data.get(config.getYimei().getResponseDataField()));
+                    BigDecimal balance = Casts.cast(balanceMap.get(config.getYimei().getBalanceFieldName()), BigDecimal.class);
 
-                    return new SmsBalance(getName(), balance);
+                    return new SmsBalanceModel(getName(), balance);
                 }
             } else {
-                LOGGER.warn("通过 API " + smsProperties.getUrl() + DEFAULT_GET_BALANCE_API + " 获取不到余额信息");
+                LOGGER.warn("通过 API " + config.getYimei().getUrl() + DEFAULT_GET_BALANCE_API + " 获取不到余额信息");
             }
 
             return null;
         } catch (Exception e) {
-            LOGGER.error("通过 API " + smsProperties.getUrl() + DEFAULT_GET_BALANCE_API + " 获取余额时，出错", e);
+            LOGGER.error("通过 API " + config.getYimei().getUrl() + DEFAULT_GET_BALANCE_API + " 获取余额时，出错", e);
 
             return null;
         }

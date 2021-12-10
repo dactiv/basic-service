@@ -2,6 +2,8 @@ server:
   port: 8082
 
 dactiv:
+  idempotent:
+    ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:
     permit-uri-ant-matchers:
       - "/generateToken/**"

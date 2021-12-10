@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.dao;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.mapper.BaseMapper;
-import com.github.dactiv.basic.socket.server.domain.enitty.Room;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import org.apache.ibatis.annotations.Mapper;
 import org.apache.ibatis.annotations.Param;
 import org.apache.ibatis.annotations.Select;
@@ -15,7 +15,7 @@ import java.util.List;
  *
  * <p>Table: tb_room - 房间信息，用于说明当前用户存在些什么房间。</p>
  *
- * @see Room
+ * @see RoomEntity
  *
  * @author maurice
  *
@@ -23,7 +23,7 @@ import java.util.List;
  */
 @Mapper
 @Repository
-public interface RoomDao extends BaseMapper<Room> {
+public interface RoomDao extends BaseMapper<RoomEntity> {
 
     @Select("<script>" +
             "SELECT " +
@@ -43,6 +43,6 @@ public interface RoomDao extends BaseMapper<Room> {
             "   AND ${ew.expression.sqlSegment}" +
             "</if>" +
             "</script>")
-    List<Room> findByUserId(@Param("userId") Integer userId, @Param("ew") Wrapper<Room> wrapper);
+    List<RoomEntity> findByUserId(@Param("userId") Integer userId, @Param("ew") Wrapper<RoomEntity> wrapper);
 
 }

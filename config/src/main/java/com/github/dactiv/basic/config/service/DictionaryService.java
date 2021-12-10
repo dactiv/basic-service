@@ -1,14 +1,19 @@
 package com.github.dactiv.basic.config.service;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
 import com.github.dactiv.basic.config.domain.entity.DictionaryTypeEntity;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.io.Serializable;
+import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
 
@@ -141,6 +146,29 @@ public class DictionaryService {
         }
     }
 
+    /**
+     * 删除数据字典
+     *
+     * @param ids 主键 id 集合
+     *
+     */
+    public void deleteDataDictionary(List<Integer> ids) {
+
+        Wrapper<DataDictionaryEntity> wrapper = Wrappers
+                .<DataDictionaryEntity>lambdaQuery()
+                .select(DataDictionaryEntity::getId)
+                .in(DataDictionaryEntity::getParentId, ids);
+
+        List<Integer> subIds = dataDictionaryService.findObjects(wrapper, Integer.class);
+
+        if (CollectionUtils.isNotEmpty(subIds)) {
+            deleteDataDictionary(subIds);
+        }
+
+        dataDictionaryService.deleteById(ids);
+
+    }
+
     // ----------------------------------------- 字典类型管理 ----------------------------------------- //
 
     /**
@@ -237,6 +265,32 @@ public class DictionaryService {
         }
 
         dictionaryTypeService.updateById(entity);
+    }
+
+    /**
+     * 删除字典类型
+     *
+     * @param ids 主键 id 集合
+     */
+    public void deleteDictionaryType(List<Integer> ids) {
+        Wrapper<DictionaryTypeEntity> wrapper = Wrappers
+                .<DictionaryTypeEntity>lambdaQuery()
+                .select(DictionaryTypeEntity::getId)
+                .in(DictionaryTypeEntity::getParentId, ids);
+
+        List<Integer> subIds = dictionaryTypeService.findObjects(wrapper, Integer.class);
+
+        List<Integer> dataDictionaryIds = dataDictionaryService.findIdByTypeId(subIds);
+
+        if (CollectionUtils.isNotEmpty(dataDictionaryIds)) {
+            dataDictionaryService.deleteById(dataDictionaryIds);
+        }
+
+        if (CollectionUtils.isNotEmpty(subIds)) {
+            deleteDictionaryType(subIds);
+        }
+
+        dataDictionaryService.deleteById(ids);
     }
 
 }

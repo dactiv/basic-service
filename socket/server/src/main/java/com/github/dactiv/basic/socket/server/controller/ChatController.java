@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
@@ -37,12 +37,15 @@ import java.util.List;
         parent = "socket-server",
         icon = "icon-message",
         type = ResourceType.Security,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class ChatController {
 
-    @Autowired
-    private ChatService chatService;
+    private final ChatService chatService;
+
+    public ChatController(ChatService chatService) {
+        this.chatService = chatService;
+    }
 
     /**
      * 发送消息
@@ -55,7 +58,7 @@ public class ChatController {
      */
     @PostMapping("sendMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "发送消息", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "发送消息", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> sendMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestParam Integer recipientId,
                                      @RequestParam String content) throws Exception {
@@ -77,7 +80,7 @@ public class ChatController {
      */
     @PostMapping("readMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "读取消息", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "读取消息", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> readMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestBody ReadMessageRequestBody body) throws Exception {
 
@@ -100,7 +103,7 @@ public class ChatController {
      */
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "获取常用联系人", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<RecentContactModel> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -117,7 +120,7 @@ public class ChatController {
     @Deprecated
     @GetMapping("getUnreadMessages")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "获取常用联系人", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<ContactMessage<BasicMessageModel.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -136,7 +139,7 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessagePage")
-    @Plugin(name = "获取历史消息分页", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                    @RequestParam Integer targetId,
                                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
@@ -158,7 +161,7 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessageDateList")
-    @Plugin(name = "获取历史消息分页", sources = ResourceSource.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
                                                 @RequestParam Integer targetId) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());

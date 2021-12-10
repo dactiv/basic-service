@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
@@ -93,9 +93,9 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      * @see Plugin#sources()
      */
     @NotEmpty
-    @JsonCollectionGenericType(ResourceSource.class)
+    @JsonCollectionGenericType(ResourceSourceEnum.class)
     @TableField(typeHandler = JacksonJsonTypeHandler.class)
-    private List<ResourceSource> sources = new LinkedList<>();
+    private List<ResourceSourceEnum> sources = new LinkedList<>();
 
     /**
      * 父类 id

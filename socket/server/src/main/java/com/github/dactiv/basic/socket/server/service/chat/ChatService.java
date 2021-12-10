@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.service.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.Constants;
-import com.github.dactiv.basic.socket.client.entity.SocketUserDetails;
+import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
@@ -43,7 +43,6 @@ import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -82,24 +81,32 @@ public class ChatService implements InitializingBean {
     public static final String CHAT_READ_MESSAGE_EVENT_NAME = "chat_read_message";
 
     @Getter
-    @Autowired
-    private ChatConfig chatConfig;
-
-    @Autowired
-    private SocketServerManager socketServerManager;
-
-    @Autowired
-    private AmqpTemplate amqpTemplate;
-
-    @Autowired
-    private CipherAlgorithmService cipherAlgorithmService;
-
-    @Autowired
-    private RedissonClient redissonClient;
+    private final ChatConfig chatConfig;
 
     @Getter
-    @Autowired
-    private MinioTemplate minioTemplate;
+    private final MinioTemplate minioTemplate;
+
+    private final SocketServerManager socketServerManager;
+
+    private final AmqpTemplate amqpTemplate;
+
+    private final CipherAlgorithmService cipherAlgorithmService;
+
+    private final RedissonClient redissonClient;
+
+    public ChatService(ChatConfig chatConfig,
+                       MinioTemplate minioTemplate,
+                       SocketServerManager socketServerManager,
+                       AmqpTemplate amqpTemplate,
+                       CipherAlgorithmService cipherAlgorithmService,
+                       RedissonClient redissonClient) {
+        this.chatConfig = chatConfig;
+        this.minioTemplate = minioTemplate;
+        this.socketServerManager = socketServerManager;
+        this.amqpTemplate = amqpTemplate;
+        this.cipherAlgorithmService = cipherAlgorithmService;
+        this.redissonClient = redissonClient;
+    }
 
     /**
      * 获取消息分页

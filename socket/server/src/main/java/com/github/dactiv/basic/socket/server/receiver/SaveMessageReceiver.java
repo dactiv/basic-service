@@ -28,8 +28,11 @@ public class SaveMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "save.chat.message";
 
-    @Autowired
-    private ChatService chatService;
+    private final ChatService chatService;
+
+    public SaveMessageReceiver(ChatService chatService) {
+        this.chatService = chatService;
+    }
 
     @RabbitListener(
             bindings = @QueueBinding(

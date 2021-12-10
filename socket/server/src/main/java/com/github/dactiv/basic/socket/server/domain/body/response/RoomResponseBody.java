@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.server.domain.body.response;
 
-import com.github.dactiv.basic.socket.server.domain.enitty.Room;
-import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipant;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -17,11 +17,11 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class RoomResponseBody extends Room {
+public class RoomResponseBody extends RoomEntity {
 
     private static final long serialVersionUID = -3988898426840609747L;
     /**
      * 参与者集合
      */
-    private List<RoomParticipant> participantList = new LinkedList<>();
+    private List<RoomParticipantEntity> participantList = new LinkedList<>();
 }

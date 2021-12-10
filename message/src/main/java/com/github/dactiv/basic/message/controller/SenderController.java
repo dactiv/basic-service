@@ -1,12 +1,11 @@
 package com.github.dactiv.basic.message.controller;
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -28,8 +27,11 @@ public class SenderController {
 
     private static final String DEFAULT_TYPE_PARAM_NAME = "messageType";
 
-    @Autowired
-    private List<MessageSender> messageSenders;
+    private final List<MessageSender> messageSenders;
+
+    public SenderController(List<MessageSender> messageSenders) {
+        this.messageSenders = messageSenders;
+    }
 
     /**
      * 发送消息
@@ -41,7 +43,7 @@ public class SenderController {
     @PostMapping(value = "send", consumes = MediaType.APPLICATION_JSON_VALUE)
     @Idempotent(key = "idempotent:message:send:[#securityContext.authentication.details.id]")
     @PreAuthorize("hasRole('BASIC') or (hasAuthority('perms[message:send]') and isFullyAuthenticated())")
-    @Plugin(name = "发送消息", id = "send", parent = "message", sources = ResourceSource.SYSTEM_SOURCE_VALUE)
+    @Plugin(name = "发送消息", id = "send", parent = "message", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE)
     public RestResult<Object> send(@RequestBody Map<String, Object> body,
                                    @CurrentSecurityContext SecurityContext securityContext) throws Exception {
 

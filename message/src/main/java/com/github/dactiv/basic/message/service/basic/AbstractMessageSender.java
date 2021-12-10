@@ -30,8 +30,6 @@ public abstract class AbstractMessageSender<T extends BasicMessageEntity> implem
 
     private static final String DEFAULT_BATCH_MESSAGE_KEY = "messages";
 
-    @Qualifier("mvcValidator")
-    @Autowired(required = false)
     private Validator validator;
 
     /**
@@ -120,4 +118,9 @@ public abstract class AbstractMessageSender<T extends BasicMessageEntity> implem
 
     }
 
+    @Qualifier("mvcValidator")
+    @Autowired(required = false)
+    public void setValidator(Validator validator) {
+        this.validator = validator;
+    }
 }

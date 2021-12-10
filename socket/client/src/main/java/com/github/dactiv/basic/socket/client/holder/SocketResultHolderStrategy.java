@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.client.holder;
 
-import com.github.dactiv.basic.socket.client.entity.SocketResult;
+import com.github.dactiv.basic.socket.client.domain.SocketResult;
 
 /**
  * socket 结果集持有者策略

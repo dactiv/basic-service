@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.message.controller;
 
 
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.config.AttachmentConfig;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
@@ -11,7 +11,6 @@ import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import io.minio.ObjectWriteResponse;
 import org.apache.commons.io.IOUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -35,11 +34,14 @@ import java.util.*;
 )
 public class AttachmentController {
 
-    @Autowired
-    private MinioTemplate minioTemplate;
+    private final MinioTemplate minioTemplate;
 
-    @Autowired
-    private AttachmentConfig attachmentConfig;
+    private final AttachmentConfig attachmentConfig;
+
+    public AttachmentController(MinioTemplate minioTemplate, AttachmentConfig attachmentConfig) {
+        this.minioTemplate = minioTemplate;
+        this.attachmentConfig = attachmentConfig;
+    }
 
     /**
      * 删除文件
@@ -116,7 +118,7 @@ public class AttachmentController {
      */
     @GetMapping("get/{type}/{filename}")
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[attachment:get]')")
-    @Plugin(name = "获取文件", sources = ResourceSource.SYSTEM_SOURCE_VALUE, audit = true)
+    @Plugin(name = "获取文件", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE, audit = true)
     public ResponseEntity<byte[]> get(@PathVariable("type") String type, @PathVariable("filename") String filename) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),

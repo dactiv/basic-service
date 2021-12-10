@@ -1,13 +1,13 @@
 package com.github.dactiv.basic.message.service.basic;
 
-import com.github.dactiv.basic.commons.feign.authentication.AuthenticationService;
+import com.github.dactiv.basic.commons.feign.authentication.AuthenticationFeignClient;
 import com.github.dactiv.basic.message.config.AttachmentConfig;
 import com.github.dactiv.basic.message.domain.AttachmentMessage;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.BatchMessageEntity;
 import com.github.dactiv.basic.message.enumerate.AttachmentTypeEnum;
-import com.github.dactiv.basic.message.service.MessageService;
+import com.github.dactiv.basic.message.service.BatchMessageService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
@@ -43,37 +43,31 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
 
     public static final String DEFAULT_ALL_USER_KEY = "ALL_USER";
 
-    @Autowired
-    private MessageService messageService;
+    private BatchMessageService batchMessageService;
 
     /**
      * 文件管理服务
      */
-    @Autowired
     protected MinioTemplate minioTemplate;
 
     /**
      * 附件配置信息
      */
-    @Autowired
     protected AttachmentConfig attachmentConfig;
 
     /**
      * 会员用户服务
      */
-    @Autowired
-    protected AuthenticationService authenticationService;
+    protected AuthenticationFeignClient authenticationFeignClient;
 
     /**
      * 线程池，用于批量发送消息时候异步使用。
      */
-    @Autowired
     private ThreadPoolTaskExecutor threadPoolTaskExecutor;
 
     /**
      * rabbit 配置
      */
-    @Autowired
     private RabbitProperties rabbitProperties;
 
     protected final Class<S> sendEntityClass;
@@ -109,7 +103,7 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
             AttachmentTypeEnum attachmentType = AttachmentTypeEnum.valueOf(entityClass);
             batchMessage.setType(attachmentType);
 
-            messageService.saveBatchMessage(batchMessage);
+            batchMessageService.save(batchMessage);
 
             content.forEach(r -> r.setBatchId(batchMessage.getId()));
 
@@ -180,7 +174,7 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
     @Concurrent("message:batch:update:[#body.batchId]")
     public void updateBatchMessage(BatchMessageEntity.Body body) {
 
-        BatchMessageEntity batchMessage = messageService.getBatchMessage(body.getBatchId());
+        BatchMessageEntity batchMessage = batchMessageService.get(body.getBatchId());
 
         if (ExecuteStatus.Success.equals(body.getExecuteStatus())) {
             batchMessage.setSuccessNumber(batchMessage.getSuccessNumber() - 1);
@@ -195,7 +189,7 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
             onBatchMessageComplete(batchMessage);
         }
 
-        messageService.saveBatchMessage(batchMessage);
+        batchMessageService.save(batchMessage);
 
     }
 
@@ -245,5 +239,35 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
         return rabbitProperties.getListener().getSimple().getRetry().isEnabled() ?
                 rabbitProperties.getListener().getSimple().getRetry().getMaxAttempts() :
                 0;
+    }
+
+    @Autowired
+    public void setBatchMessageService(BatchMessageService batchMessageService) {
+        this.batchMessageService = batchMessageService;
+    }
+
+    @Autowired
+    public void setMinioTemplate(MinioTemplate minioTemplate) {
+        this.minioTemplate = minioTemplate;
+    }
+
+    @Autowired
+    public void setAttachmentConfig(AttachmentConfig attachmentConfig) {
+        this.attachmentConfig = attachmentConfig;
+    }
+
+    @Autowired
+    public void setAuthenticationService(AuthenticationFeignClient authenticationFeignClient) {
+        this.authenticationFeignClient = authenticationFeignClient;
+    }
+
+    @Autowired
+    public void setThreadPoolTaskExecutor(ThreadPoolTaskExecutor threadPoolTaskExecutor) {
+        this.threadPoolTaskExecutor = threadPoolTaskExecutor;
+    }
+
+    @Autowired
+    public void setRabbitProperties(RabbitProperties rabbitProperties) {
+        this.rabbitProperties = rabbitProperties;
     }
 }

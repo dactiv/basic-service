@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.client.holder.Interceptor;
 
 import com.github.dactiv.basic.socket.client.SocketClientTemplate;
-import com.github.dactiv.basic.socket.client.entity.SocketResult;
+import com.github.dactiv.basic.socket.client.domain.SocketResult;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;

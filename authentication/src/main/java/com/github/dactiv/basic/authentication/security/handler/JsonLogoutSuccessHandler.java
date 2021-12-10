@@ -4,7 +4,7 @@ import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.security.LoginType;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
@@ -42,8 +42,8 @@ import java.util.*;
 public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
     private final static List<String> DEFAULT_MEMBER_TYPES = Arrays.asList(
-            ResourceSource.Mobile.toString(),
-            ResourceSource.UserCenter.toString()
+            ResourceSourceEnum.MOBILE.toString(),
+            ResourceSourceEnum.USER_CENTER.toString()
     );
 
     /**

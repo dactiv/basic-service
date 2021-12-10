@@ -6,7 +6,7 @@ import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.plugin.PluginResourceService;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -93,7 +93,7 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 账户认证的用户明细服务
      */
-    public UserDetailsService getUserDetailsService(ResourceSource source) {
+    public UserDetailsService getUserDetailsService(ResourceSourceEnum source) {
 
         PrincipalAuthenticationToken token = new PrincipalAuthenticationToken(
                 "",
@@ -140,14 +140,14 @@ public class AuthorizationService implements InitializingBean {
     /**
      * 所有删除认证缓存
      */
-    public void deleteAuthorizationCache(List<ResourceSource> sources) {
+    public void deleteAuthorizationCache(List<ResourceSourceEnum> sources) {
         List<PrincipalAuthenticationToken> tokens = sources
                 .stream()
                 .map(s -> new PrincipalAuthenticationToken("*", s.toString()))
                 .collect(Collectors.toList());
 
         for (PrincipalAuthenticationToken token : tokens) {
-            UserDetailsService userDetailsService = getUserDetailsService(ResourceSource.Console);
+            UserDetailsService userDetailsService = getUserDetailsService(ResourceSourceEnum.CONSOLE);
             CacheProperties cache = userDetailsService.getAuthorizationCache(token);
             redissonClient.getBucket(cache.getName()).deleteAsync();
         }
@@ -161,7 +161,7 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 资源集合
      */
-    public List<ResourceModel> getResources(String applicationName, ResourceSource... sources) {
+    public List<ResourceModel> getResources(String applicationName, ResourceSourceEnum... sources) {
         List<ResourceModel> result = pluginResourceService.getResources();
         Stream<ResourceModel> stream = result.stream();
 
@@ -170,14 +170,14 @@ public class AuthorizationService implements InitializingBean {
         }
 
         if (ArrayUtils.isNotEmpty(sources)) {
-            List<ResourceSource> sourceList = Arrays.asList(sources);
+            List<ResourceSourceEnum> sourceList = Arrays.asList(sources);
             stream = stream.filter(r -> r.getSources().stream().anyMatch(sourceList::contains));
         }
 
         return stream.sorted(Comparator.comparing(ResourceModel::getSort)).collect(Collectors.toList());
     }
 
-    public void deleteSystemUseAuthenticationCache(ResourceSource source, PrincipalAuthenticationToken token) {
+    public void deleteSystemUseAuthenticationCache(ResourceSourceEnum source, PrincipalAuthenticationToken token) {
 
         UserDetailsService userDetailsService = getUserDetailsService(source);
 
@@ -214,7 +214,7 @@ public class AuthorizationService implements InitializingBean {
      */
     public List<ResourceModel> getSystemUserResource(SystemUserEntity user,
                                                      ResourceType type,
-                                                     List<ResourceSource> sourceContains) {
+                                                     List<ResourceSourceEnum> sourceContains) {
         List<ResourceModel> userResource = getSystemUserResource(user);
 
         return userResource
@@ -263,7 +263,7 @@ public class AuthorizationService implements InitializingBean {
         List<GroupEntity> groups = groupService.get(groupIds);
 
         // 获取组来源，用于过滤组的资源里有存在不同的资源来源细腻些
-        List<ResourceSource> groupSources = groups
+        List<ResourceSourceEnum> groupSources = groups
                 .stream()
                 .flatMap(g -> g.getSources().stream())
                 .distinct()
@@ -281,7 +281,7 @@ public class AuthorizationService implements InitializingBean {
         return userResource;
     }
 
-    private Stream<ResourceModel> getResourcesStream(Map<String, List<String>> resourceMap, List<ResourceSource> sources) {
+    private Stream<ResourceModel> getResourcesStream(Map<String, List<String>> resourceMap, List<ResourceSourceEnum> sources) {
 
         if (MapUtils.isEmpty(resourceMap)) {
             return Stream.empty();

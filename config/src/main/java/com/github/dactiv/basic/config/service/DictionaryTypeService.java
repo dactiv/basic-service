@@ -29,12 +29,6 @@ import java.util.List;
 @Transactional(rollbackFor = Exception.class)
 public class DictionaryTypeService extends BasicService<DictionaryTypeDao, DictionaryTypeEntity> {
 
-    private final DataDictionaryService dataDictionaryService;
-
-    public DictionaryTypeService(DataDictionaryService dataDictionaryService) {
-        this.dataDictionaryService = dataDictionaryService;
-    }
-
     /**
      * 获取数据字典
      *
@@ -57,29 +51,4 @@ public class DictionaryTypeService extends BasicService<DictionaryTypeDao, Dicti
         return lambdaQuery().eq(DictionaryTypeEntity::getParentId, parentId).list();
     }
 
-    @Override
-    public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
-        int result = 0;
-
-        Wrapper<DictionaryTypeEntity> wrapper = Wrappers
-                .<DictionaryTypeEntity>lambdaQuery()
-                .select(DictionaryTypeEntity::getId)
-                .in(DictionaryTypeEntity::getParentId, ids);
-
-        List<Integer> subIds = findObjects(wrapper, Integer.class);
-
-        List<Integer> dataDictionaryIds = dataDictionaryService.findIdByTypeId(subIds);
-
-        if (CollectionUtils.isNotEmpty(dataDictionaryIds)) {
-            result += dataDictionaryService.deleteById(dataDictionaryIds);
-        }
-
-        if (CollectionUtils.isNotEmpty(subIds)) {
-            result += deleteById(subIds, errorThrow);
-        }
-
-        result += super.deleteById(ids, errorThrow);
-
-        return result;
-    }
 }

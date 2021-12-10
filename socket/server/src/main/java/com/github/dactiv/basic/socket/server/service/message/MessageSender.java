@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.server.service.message;
 
 import com.corundumstudio.socketio.SocketIOServer;
-import com.github.dactiv.basic.socket.client.entity.SocketMessage;
+import com.github.dactiv.basic.socket.client.domain.SocketMessage;
 
 /**
  * 消息发送者

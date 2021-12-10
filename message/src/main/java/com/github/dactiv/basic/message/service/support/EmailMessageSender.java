@@ -4,10 +4,10 @@ import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
-import com.github.dactiv.basic.message.service.AttachmentMessageService;
+import com.github.dactiv.basic.message.service.EmailMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
 import com.github.dactiv.basic.message.domain.body.EmailMessageBody;
-import com.github.dactiv.basic.message.service.support.mail.MailConfig;
+import com.github.dactiv.basic.message.config.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
@@ -29,7 +29,6 @@ import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.InitializingBean;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.core.io.ByteArrayResource;
@@ -68,19 +67,22 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     private final Map<String, JavaMailSenderImpl> mailSenderMap = new LinkedHashMap<>();
 
-    @Autowired
-    private AmqpTemplate amqpTemplate;
+    private final AmqpTemplate amqpTemplate;
 
-    @Autowired
-    private AttachmentMessageService attachmentMessageService;
+    private final EmailMessageService emailMessageService;
 
-    @Autowired
-    private EmailMessageSender oneself;
+    private final EmailMessageSender oneself;
 
-    @Autowired
-    private MailConfig mailConfig;
+    private final MailConfig mailConfig;
 
-    public EmailMessageSender() {
+    public EmailMessageSender(AmqpTemplate amqpTemplate,
+                              EmailMessageService emailMessageService,
+                              EmailMessageSender oneself,
+                              MailConfig mailConfig) {
+        this.amqpTemplate = amqpTemplate;
+        this.emailMessageService = emailMessageService;
+        this.oneself = oneself;
+        this.mailConfig = mailConfig;
     }
 
     @Override
@@ -139,7 +141,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     @Transactional(rollbackFor = Exception.class)
     public EmailMessageEntity sendEmail(Integer id) {
 
-        EmailMessageEntity entity = attachmentMessageService.getEmailMessage(id);
+        EmailMessageEntity entity = emailMessageService.get(id);
 
         if (Objects.isNull(entity)) {
             return null;
@@ -148,7 +150,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         entity.setLastSendTime(new Date());
         entity.setRetryCount(entity.getRetryCount() + 1);
 
-        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
+        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType().toString());
 
         try {
 
@@ -161,7 +163,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             helper.setSubject(entity.getTitle());
             helper.setText(entity.getContent(), true);
 
-            if (YesOrNo.Yes.getValue().equals(entity.getHasAttachment())) {
+            if (YesOrNo.Yes.equals(entity.getHasAttachment())) {
 
                 for (AttachmentEntity a : entity.getAttachmentList()) {
 
@@ -193,7 +195,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             ExecuteStatus.failure(entity, ex.getCause().getMessage());
         }
 
-        attachmentMessageService.saveEmailMessage(entity);
+        emailMessageService.save(entity);
 
         if (Objects.nonNull(entity.getBatchId())) {
             oneself.updateBatchMessage(entity);
@@ -205,7 +207,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     @Override
     @Transactional(rollbackFor = Exception.class)
     protected boolean preSend(List<EmailMessageEntity> content) {
-        content.forEach(e -> attachmentMessageService.saveEmailMessage(e));
+        emailMessageService.save(content);
         return true;
     }
 
@@ -226,7 +228,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             filter.put("filter_[email_nen]", "true");
             filter.put("filter_[status_eq]", "1");
 
-            List<Map<String, Object>> users = authenticationService.findMemberUser(filter);
+            List<Map<String, Object>> users = authenticationFeignClient.findMemberUser(filter);
 
             for (Map<String, Object> user : users) {
 
@@ -260,7 +262,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
     private EmailMessageEntity ofEntity(EmailMessageBody body) {
         EmailMessageEntity entity = Casts.of(body, EmailMessageEntity.class, "attachmentList");
 
-        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType());
+        JavaMailSenderImpl mailSender = mailSenderMap.get(entity.getType().toString());
 
         if (Objects.isNull(mailSender)) {
             throw new SystemException("找不到类型为 [" + entity.getType() + "] 的邮件发送者");

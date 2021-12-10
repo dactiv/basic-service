@@ -2,16 +2,14 @@ package com.github.dactiv.basic.authentication.domain.model;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.commons.collections4.CollectionUtils;
 import org.hibernate.validator.constraints.Length;
 import org.hibernate.validator.constraints.Range;
 
@@ -19,7 +17,6 @@ import javax.validation.constraints.NotEmpty;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
-import java.util.stream.Collectors;
 
 /**
  * <p>资源实体类</p>
@@ -69,12 +66,12 @@ public class ResourceModel extends IdEntity<String> implements Tree<String, Reso
     /**
      * 来源
      *
-     * @see ResourceSource
+     * @see ResourceSourceEnum
      */
     @NotEmpty
     @Length(max = 16)
     @EqualsAndHashCode.Include
-    private List<ResourceSource> sources;
+    private List<ResourceSourceEnum> sources;
 
     /**
      * 版本号

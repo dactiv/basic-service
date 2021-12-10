@@ -5,8 +5,7 @@ import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
-import com.github.dactiv.basic.authentication.service.MemberUserService;
-import com.github.dactiv.basic.commons.enumeration.ResourceSource;
+import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
@@ -16,7 +15,6 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.apache.commons.collections4.CollectionUtils;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -38,7 +36,7 @@ import java.util.stream.Collectors;
         parent = "system",
         icon = "icon-attachment",
         type = ResourceType.Menu,
-        sources = ResourceSource.CONSOLE_SOURCE_VALUE
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class ResourceController {
 
@@ -61,23 +59,23 @@ public class ResourceController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
-    @Plugin(name = "查找全部", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "查找全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<ResourceModel> find(@RequestParam(required = false) boolean mergeTree,
                                     @RequestParam(required = false) String applicationName,
                                     @RequestParam(required = false) List<String> sources) {
 
-        List<ResourceSource> resourceSources = new LinkedList<>();
+        List<ResourceSourceEnum> resourceSources = new LinkedList<>();
 
         if (CollectionUtils.isNotEmpty(sources)) {
             resourceSources = sources
                     .stream()
-                    .map(s -> NameEnumUtils.parse(s, ResourceSource.class))
+                    .map(s -> NameEnumUtils.parse(s, ResourceSourceEnum.class))
                     .collect(Collectors.toList());
         }
 
         List<ResourceModel> resourceList = authorizationService.getResources(
                 applicationName,
-                resourceSources.toArray(new ResourceSource[0])
+                resourceSources.toArray(new ResourceSourceEnum[0])
         );
 
         if (mergeTree) {
@@ -120,10 +118,10 @@ public class ResourceController {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        List<ResourceSource> sourceContains = Arrays.asList(
-                NameEnumUtils.parse(userDetails.getType(), ResourceSource.class),
-                ResourceSource.All,
-                ResourceSource.System
+        List<ResourceSourceEnum> sourceContains = Arrays.asList(
+                NameEnumUtils.parse(userDetails.getType(), ResourceSourceEnum.class),
+                ResourceSourceEnum.ALL,
+                ResourceSourceEnum.SYSTEM
         );
 
         ConsoleUserEntity consoleUser = consoleUserService.get(Casts.cast(userDetails.getId(), Integer.class));
@@ -150,7 +148,7 @@ public class ResourceController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
-    @Plugin(name = "获取信息", sources = ResourceSource.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "获取信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public ResourceModel get(@RequestParam String id) {
 
         return authorizationService
@@ -168,7 +166,7 @@ public class ResourceController {
      */
     @PostMapping("syncPluginResource")
     @Idempotent(key = "idempotent:authentication:resource:sync-plugin-resource")
-    @Plugin(name = "同步插件资源", sources = ResourceSource.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "同步插件资源", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     public RestResult<?> syncPluginResource() {
 
