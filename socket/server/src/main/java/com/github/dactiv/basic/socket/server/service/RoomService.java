@@ -1,8 +1,6 @@
 package com.github.dactiv.basic.socket.server.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
-import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.dao.RoomDao;
 import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;

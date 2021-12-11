@@ -9,6 +9,7 @@ import com.github.dactiv.framework.nacos.event.NacosServiceListenerValidator;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 
@@ -30,7 +31,7 @@ public class PluginServiceValidator implements NacosServiceListenerValidator {
 
     private final List<String> exceptionServices = new LinkedList<>();
 
-    public PluginServiceValidator(PluginResourceService pluginResourceService) {
+    public PluginServiceValidator(@Lazy PluginResourceService pluginResourceService) {
         this.pluginResourceService = pluginResourceService;
     }
 
@@ -49,7 +50,7 @@ public class PluginServiceValidator implements NacosServiceListenerValidator {
         Optional<Instance> optional = nacosService
                 .getInstances()
                 .stream()
-                .max((target, source) -> pluginResourceService.comparingInstanceVersion(target, source));
+                .max(pluginResourceService::comparingInstanceVersion);
 
         if (optional.isEmpty()) {
             return false;

@@ -2,7 +2,6 @@ package com.github.dactiv.basic.config.service;
 
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.alibaba.nacos.common.utils.MapUtils;
-import com.github.dactiv.basic.config.service.EnumerateResourceService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.retry.Retryable;
 import com.github.dactiv.framework.nacos.event.NacosService;
@@ -10,7 +9,7 @@ import com.github.dactiv.framework.nacos.event.NacosServiceListenerValidator;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.spring.web.endpoint.EnumerateEndpoint;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.HttpStatusCodeException;
 
@@ -32,7 +31,7 @@ public class EnumerateServiceValidator implements NacosServiceListenerValidator 
 
     private final List<String> exceptionServices = new LinkedList<>();
 
-    public EnumerateServiceValidator(EnumerateResourceService enumerateResourceService) {
+    public EnumerateServiceValidator(@Lazy EnumerateResourceService enumerateResourceService) {
         this.enumerateResourceService = enumerateResourceService;
     }
 

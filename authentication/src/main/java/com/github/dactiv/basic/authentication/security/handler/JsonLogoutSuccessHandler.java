@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.security.LoginType;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;

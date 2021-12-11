@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.message.service;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.message.dao.EmailMessageDao;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;

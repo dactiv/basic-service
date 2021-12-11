@@ -2,7 +2,6 @@ package com.github.dactiv.basic.message.config.site.umeng;
 
 import com.github.dactiv.basic.message.enumerate.MessageTypeEnum;
 import lombok.Data;
-import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.util.ArrayList;

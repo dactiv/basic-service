@@ -1,12 +1,8 @@
 package com.github.dactiv.basic.gateway.config;
 
-import com.github.dactiv.framework.commons.CacheProperties;
-import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
-
-import java.util.concurrent.TimeUnit;
 
 /**
  * 访问加解密配置

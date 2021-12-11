@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
+import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;

@@ -3,7 +3,6 @@ package com.github.dactiv.basic.authentication.service;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
-
 import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;

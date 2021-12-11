@@ -1,9 +1,9 @@
 package com.github.dactiv.basic.message.enumerate;
 
-import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.body.EmailMessageBody;
 import com.github.dactiv.basic.message.domain.body.SiteMessageBody;
 import com.github.dactiv.basic.message.domain.body.SmsMessageBody;
+import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import lombok.AccessLevel;

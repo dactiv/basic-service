@@ -5,10 +5,11 @@ import com.github.dactiv.basic.authentication.service.AuthenticationInfoService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
+import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
 import javax.servlet.http.HttpServletRequest;
 import java.util.List;
 

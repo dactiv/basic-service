@@ -1,12 +1,10 @@
 package com.github.dactiv.basic.message.service;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.message.dao.SiteMessageDao;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
-import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
 import com.github.dactiv.basic.message.enumerate.AttachmentTypeEnum;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;

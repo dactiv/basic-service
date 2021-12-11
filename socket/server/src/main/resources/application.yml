@@ -11,6 +11,7 @@ mybatis-plus:
   global-config:
     db-config:
       id-type: auto
+    banner: "off"
 
 dactiv:
   spring:

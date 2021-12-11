@@ -1,8 +1,8 @@
 package com.github.dactiv.basic.socket.server.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

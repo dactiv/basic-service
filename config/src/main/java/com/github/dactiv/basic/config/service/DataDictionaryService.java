@@ -5,11 +5,9 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.config.dao.DataDictionaryDao;
 import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 

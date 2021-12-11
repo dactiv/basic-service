@@ -1,13 +1,13 @@
 package com.github.dactiv.basic.message.service.support;
 
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.message.config.MailConfig;
+import com.github.dactiv.basic.message.domain.body.EmailMessageBody;
 import com.github.dactiv.basic.message.domain.entity.AttachmentEntity;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
 import com.github.dactiv.basic.message.domain.entity.EmailMessageEntity;
 import com.github.dactiv.basic.message.service.EmailMessageService;
 import com.github.dactiv.basic.message.service.basic.BatchMessageSender;
-import com.github.dactiv.basic.message.domain.body.EmailMessageBody;
-import com.github.dactiv.basic.message.config.MailConfig;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;

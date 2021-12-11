@@ -1,14 +1,15 @@
 package com.github.dactiv.basic.authentication.domain.model;
 
-import com.baomidou.mybatisplus.annotation.*;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
-import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotNull;
