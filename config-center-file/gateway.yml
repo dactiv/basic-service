@@ -1,17 +1,4 @@
 spring:
-  application:
-    crypto:
-      access:
-        algorithm-mode:
-          algorithm: "AES"
-          mode: "CBC"
-          block-size: 0
-          padding-scheme: "PKCS5"
-          streaming-mode: "CBC"
-          streaming-block-size: 0
-          streaming-padding-scheme: "PKCS5"
-          keySize: 128
-          initialization-vector-size: 128
   redis:
     host: localhost
     port: 6379
@@ -51,3 +38,16 @@ spring:
               args:
                 name: "'X-REQUEST-CLIENT'"
                 value: "'SPRING_GATEWAY'"
+
+dactiv:
+  gateway:
+    algorithm:
+      name: "AES"
+      mode: "CBC"
+      block-size: 0
+      padding-scheme: "PKCS5"
+      streaming-mode: "CBC"
+      streaming-block-size: 0
+      streaming-padding-scheme: "PKCS5"
+      keySize: 128
+      initialization-vector-size: 128

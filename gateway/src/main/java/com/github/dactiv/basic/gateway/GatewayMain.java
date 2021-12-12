@@ -35,9 +35,4 @@ public class GatewayMain {
         return new RestResultGatewayBlockExceptionHandler(objectMapper, applicationConfig);
     }
 
-    @Bean
-    @ConfigurationProperties("dactiv.gateway.crypto.access.algorithm-mode")
-    public CryptoAlgorithm accessTokenAlgorithm() {
-        return new CryptoAlgorithm();
-    }
 }

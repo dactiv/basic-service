@@ -66,8 +66,6 @@ public class ConfigController {
 
     private final RedissonClient redissonClient;
 
-    private final CryptoAlgorithm accessTokenAlgorithm;
-
     private final DiscoveryClient discoveryClient;
 
     private final ApplicationConfig properties;
@@ -89,7 +87,6 @@ public class ConfigController {
         this.accessCryptoService = accessCryptoService;
         this.enumerateResourceService = enumerateResourceService;
         this.redissonClient = redissonClient;
-        this.accessTokenAlgorithm = accessTokenAlgorithm;
         this.discoveryClient = discoveryClient;
         this.properties = properties;
         this.restTemplate = restTemplate;
@@ -180,9 +177,9 @@ public class ConfigController {
         bucket.deleteAsync();
 
         // 获取当前访问加解密的公共密钥
-        ByteSource publicByteSource = new SimpleByteSource(Base64.decode(properties.getPublicKey()));
+        ByteSource publicByteSource = new SimpleByteSource(Base64.decode(properties.getRsa().getPublicKey()));
         // 获取当前访问加解密的私有密钥
-        ByteSource privateByteSource = new SimpleByteSource(Base64.decode(properties.getPrivateKey()));
+        ByteSource privateByteSource = new SimpleByteSource(Base64.decode(properties.getRsa().getPrivateKey()));
 
         // 创建一个生成密钥类型 token，设置密钥为公共密钥，返回给客户端
         SimpleToken result = SimpleToken.generate(AccessToken.PUBLIC_TOKEN_KEY_NAME, publicByteSource);
@@ -254,7 +251,7 @@ public class ConfigController {
         ByteSource publicKey = rsa.decrypt(Base64.decode(key), privateToken.getKey().obtainBytes());
 
         // 根据请求解密算法模型创建块密码服务
-        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(accessTokenAlgorithm);
+        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(properties.getAlgorithm());
 
         // 生成请求解密访问 token 密钥
         ByteSource requestAccessCryptoKey = new SimpleByteSource(cipherService.generateKey().getEncoded());

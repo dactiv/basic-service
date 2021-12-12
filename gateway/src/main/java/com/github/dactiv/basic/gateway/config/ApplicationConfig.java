@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.gateway.config;
 
+import com.github.dactiv.framework.crypto.AlgorithmProperties;
+import com.github.dactiv.framework.crypto.RsaProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;
@@ -11,7 +13,7 @@ import org.springframework.stereotype.Component;
  */
 @Data
 @Component
-@ConfigurationProperties(prefix = "dactiv.gateway.crypto.access")
+@ConfigurationProperties(prefix = "dactiv.gateway")
 public class ApplicationConfig {
 
     /**
@@ -33,4 +35,9 @@ public class ApplicationConfig {
      * 当错误获取不到响应的 ReasonPhrase 时，抛出异常的默认信息
      */
     private String defaultReasonPhrase = "服务器异常，请稍后再试。";
+
+    /**
+     * 加解密算法配置
+     */
+    private AlgorithmProperties algorithm;
 }

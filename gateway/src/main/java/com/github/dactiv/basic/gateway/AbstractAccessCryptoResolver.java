@@ -7,7 +7,6 @@ import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessCryptoPredicate;
 import com.github.dactiv.framework.crypto.access.AccessToken;
-import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import com.github.dactiv.framework.crypto.algorithm.Base64;
 import com.github.dactiv.framework.crypto.algorithm.ByteSource;
 import com.github.dactiv.framework.crypto.algorithm.CodecUtils;
@@ -18,6 +17,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.expression.ExpressionParser;
@@ -47,21 +47,23 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
     private final static Logger LOGGER = LoggerFactory.getLogger(AbstractAccessCryptoResolver.class);
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig config;
 
-    @Autowired
-    private CryptoAlgorithm accessTokenAlgorithm;
+    private final List<RoutePredicateFactory> predicates;
 
-    @Autowired
-    private List<RoutePredicateFactory> predicates;
-
-    @Autowired(required = false)
-    private CipherAlgorithmService cipherAlgorithmService = new CipherAlgorithmService();
+    private final CipherAlgorithmService cipherAlgorithmService;
 
     private final AntPathMatcher antPathMatcher = new AntPathMatcher();
 
     private final ExpressionParser parser = new SpelExpressionParser();
+
+    public AbstractAccessCryptoResolver(ApplicationConfig config,
+                                        List<RoutePredicateFactory> predicates,
+                                        ObjectProvider<CipherAlgorithmService> cipherAlgorithmService) {
+        this.config = config;
+        this.predicates = predicates;
+        this.cipherAlgorithmService = cipherAlgorithmService.getIfUnique(CipherAlgorithmService::new);
+    }
 
     @Override
     public boolean isRequestDecrypt(AccessCrypto accessCrypto, ServerWebExchange serverWebExchange) {
@@ -106,13 +108,13 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
 
             String trimString = StringUtils.trim(v);
 
-            String fieldName = StringUtils.substringBefore(trimString, applicationConfig.getParamNameValueDelimiter());
+            String fieldName = StringUtils.substringBefore(trimString, this.config.getParamNameValueDelimiter());
 
             if (StringUtils.isBlank(fieldName)) {
                 return;
             }
 
-            String fieldValue = StringUtils.substringAfter(trimString, applicationConfig.getParamNameValueDelimiter());
+            String fieldValue = StringUtils.substringAfter(trimString, this.config.getParamNameValueDelimiter());
 
             if (StringUtils.isBlank(fieldValue)) {
                 return;
@@ -149,7 +151,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
             }
 
             // 使用访问加解密 的请求解密算法获取密码服务
-            AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(accessTokenAlgorithm);
+            AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(config.getAlgorithm());
             // 解密
             ByteSource plaintextSource = cipherService.decrypt(b.obtainBytes(), token.getKey().obtainBytes());
             // 得到新的明文信息
@@ -166,7 +168,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
         // 获取原始的请求 body map
         MultiValueMap<String, String> originalBody = Casts.castRequestBodyMap(body);
         // 删除密文阐述
-        originalBody.remove(applicationConfig.getCipherTextParamName());
+        originalBody.remove(config.getCipherTextParamName());
         // 将原始的请求 body 里还存在的参数添加到新的请求 body 里
         newRequestBody.putAll(originalBody);
 
@@ -192,7 +194,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     private String getAccessTokenValue(ServerWebExchange serverWebExchange) {
 
-        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(applicationConfig.getAccessTokenHeaders());
+        List<String> accessToken = serverWebExchange.getRequest().getHeaders().get(config.getAccessTokenHeaders());
 
         if (CollectionUtils.isEmpty(accessToken)) {
             throw new CryptoException("key 值不能为 null");
@@ -210,7 +212,7 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
      */
     protected List<ByteSource> getRequestCipher(String body) {
         MultiValueMap<String, String> requestBody = decodeRequestBodyToMap(body);
-        List<String> values = requestBody.get(applicationConfig.getCipherTextParamName());
+        List<String> values = requestBody.get(config.getCipherTextParamName());
 
         return values.stream().map(value -> {
 
@@ -280,18 +282,10 @@ public abstract class AbstractAccessCryptoResolver implements AccessCryptoResolv
             throw new CryptoException("找不到访问 token 为 [" + accessToken + "]的 response 解密信息");
         }
         // 使用访问加解密的响应算法获取密码服务
-        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(accessTokenAlgorithm);
+        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(config.getAlgorithm());
         // 加密响应内容
         ByteSource byteSource = cipherService.encrypt(CodecUtils.toBytes(originalBody), token.getKey().obtainBytes());
         // 返回加密内容
         return Mono.just(byteSource.getBase64());
-    }
-
-    public CipherAlgorithmService getCipherAlgorithmService() {
-        return cipherAlgorithmService;
-    }
-
-    public void setCipherAlgorithmService(CipherAlgorithmService cipherAlgorithmService) {
-        this.cipherAlgorithmService = cipherAlgorithmService;
     }
 }

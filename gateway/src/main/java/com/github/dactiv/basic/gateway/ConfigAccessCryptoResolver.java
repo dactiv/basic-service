@@ -3,7 +3,9 @@ package com.github.dactiv.basic.gateway;
 import com.alibaba.nacos.common.utils.CollectionUtils;
 import com.alibaba.nacos.common.utils.MapUtils;
 import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
+import com.github.dactiv.basic.gateway.config.ApplicationConfig;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.token.SimpleExpirationToken;
@@ -13,7 +15,9 @@ import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.propertyeditors.StringArrayPropertyEditor;
+import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
@@ -37,7 +41,12 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
 
     private List<AccessCrypto> cache = new ArrayList<>();
 
-    public ConfigAccessCryptoResolver(ConfigFeignClient configFeignClient) {
+    @SuppressWarnings("rawtypes")
+    public ConfigAccessCryptoResolver(ApplicationConfig config,
+                                      ObjectProvider<RoutePredicateFactory> predicates,
+                                      ObjectProvider<CipherAlgorithmService> cipherAlgorithmService,
+                                      ConfigFeignClient configFeignClient) {
+        super(config, predicates.stream().collect(Collectors.toList()), cipherAlgorithmService);
         this.configFeignClient = configFeignClient;
     }
 

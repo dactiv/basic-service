@@ -2,6 +2,9 @@ package com.github.dactiv.basic.config.config;
 
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
+import com.github.dactiv.framework.crypto.AlgorithmProperties;
+import com.github.dactiv.framework.crypto.RsaProperties;
+import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -48,14 +51,16 @@ public class ApplicationConfig {
      * 伪装访问加解密的成功信息
      */
     private String camouflageAccessCryptoName = "success access crypto";
+
     /**
-     * 共有密钥
+     * 加解密算法配置
      */
-    private String publicKey;
+    private AlgorithmProperties algorithm;
+
     /**
-     * 私有密钥
+     * rsa 配置
      */
-    private String privateKey;
+    private RsaProperties rsa;
 
     /**
      * 字典配置

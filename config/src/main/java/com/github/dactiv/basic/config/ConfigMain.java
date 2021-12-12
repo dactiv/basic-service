@@ -28,7 +28,7 @@ public class ConfigMain {
     }
 
     @Bean
-    @ConfigurationProperties("spring.application.crypto.access.algorithm-mode")
+    @ConfigurationProperties("dactiv.config.crypto.access.algorithm")
     public CryptoAlgorithm accessTokenAlgorithm() {
         return new CryptoAlgorithm();
     }
