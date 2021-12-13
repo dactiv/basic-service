@@ -14,14 +14,14 @@ dactiv:
     plugin:
       base-packages: com.github.dactiv.basic.message.controller
       generate-sources:
-        - "Console"
-        - "All"
-        - "System"
+        - "CONSOLE"
+        - "ALL"
+        - "SYSTEM"
       parent:
         message:
           name: '消息管理'
           icon: 'icon-message'
-          sources: "Console"
+          sources: "CONSOLE"
     audit:
       type: elasticsearch
     permit-uri-ant-matchers:

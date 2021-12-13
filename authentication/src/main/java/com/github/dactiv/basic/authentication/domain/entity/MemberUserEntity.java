@@ -6,7 +6,7 @@ import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.basic.authentication.domain.model.MemberUserInitializationModel;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
-import com.github.dactiv.framework.commons.jackson.JacksonDesensitize;
+import com.github.dactiv.framework.commons.jackson.serializer.JacksonDesensitizeSerializer;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -58,7 +58,7 @@ public class MemberUserEntity extends SystemUserEntity {
      *
      * @return 加敏手机号码
      */
-    @JsonSerialize(using = JacksonDesensitize.class)
+    @JsonSerialize(using = JacksonDesensitizeSerializer.class)
     public String getDesensitizePhone() {
         return phone;
     }

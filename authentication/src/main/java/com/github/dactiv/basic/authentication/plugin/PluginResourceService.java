@@ -8,6 +8,8 @@ import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
+import com.github.dactiv.framework.commons.enumerate.NameEnum;
+import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
@@ -266,7 +268,15 @@ public class PluginResourceService {
      * @return 新的資源
      */
     private ResourceModel createResource(PluginInfo plugin, PluginInstance instance, ResourceModel parent) {
-        ResourceModel target = Casts.of(plugin, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME);
+        ResourceModel target = Casts.of(plugin, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME, PluginInfo.DEFAULT_SOURCES_NAME);
+
+        List<ResourceSourceEnum> sources = plugin
+                .getSources()
+                .stream()
+                .map(s -> NameEnumUtils.parse(s, ResourceSourceEnum.class))
+                .collect(Collectors.toList());
+
+        target.setSources(sources);
 
         if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
             target.setParentId(null);

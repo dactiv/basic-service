@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("spring.application.captcha.email")
+@ConfigurationProperties("dactiv.captcha.email")
 public class EmailCaptchaProperties {
     /**
      * 邮件验证码的超时时间

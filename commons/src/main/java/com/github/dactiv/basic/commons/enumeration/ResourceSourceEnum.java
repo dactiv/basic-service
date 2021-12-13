@@ -1,6 +1,8 @@
 package com.github.dactiv.basic.commons.enumeration;
 
 import com.github.dactiv.framework.commons.enumerate.NameEnum;
+import org.apache.commons.lang3.RegExUtils;
+import org.apache.commons.lang3.StringUtils;
 
 /**
  * 插件来源枚举
@@ -100,5 +102,16 @@ public enum ResourceSourceEnum implements NameEnum {
      * 全部应用来源值
      */
     public static final String ALL_SOURCE_VALUE = "ALL";
+
+    /**
+     * 获取桶名称
+     *
+     * @param value 值
+     *
+     * @return 符合 minio 桶格式的名称
+     */
+    public static String getMinioBucket(String value) {
+        return RegExUtils.replaceAll(value, "_", "-");
+    }
 
 }

@@ -22,14 +22,14 @@ dactiv:
     plugin:
       base-packages: com.github.dactiv.basic.socket.server.controller
       generate-sources:
-        - "SocketUser"
-        - "All"
-        - "System"
+        - "SOCKET_USER"
+        - "ALL"
+        - "SYSTEM"
       parent:
         socket-server:
           name: "socket 服务管理"
           icon: "icon-plug-socket"
-          sources: "SocketUser"
+          sources: "SOCKET_USER"
     permit-uri-ant-matchers:
       - "/health/**"
       - "/joinRoom/**"

@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("spring.application.captcha.sms")
+@ConfigurationProperties("dactiv.captcha.sms")
 public class SmsCaptchaProperties {
     /**
      * 短信验证码的超时时间

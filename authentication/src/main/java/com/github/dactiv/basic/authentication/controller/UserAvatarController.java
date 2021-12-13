@@ -254,7 +254,8 @@ public class UserAvatarController implements InitializingBean {
     @Override
     public void afterPropertiesSet() throws Exception {
         for (String s : applicationConfig.getUserAvatar().getUserSources()) {
-            String bucketName = applicationConfig.getUserAvatar().getBucketName() + Casts.DEFAULT_DOT_SYMBOL + s;
+            String name = ResourceSourceEnum.getMinioBucket(s);
+            String bucketName = applicationConfig.getUserAvatar().getBucketName() + Casts.DEFAULT_DOT_SYMBOL + name;
             minioTemplate.makeBucketIfNotExists(Bucket.of(bucketName));
         }
     }

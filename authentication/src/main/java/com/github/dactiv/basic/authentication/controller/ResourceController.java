@@ -94,7 +94,7 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsoleUserResources")
-    @Plugin(name = "获取用户资源 id 集合", sources = "Console")
+    @Plugin(name = "获取用户资源 id 集合", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<String> getConsoleUserResources(@RequestParam Integer userId) {
         SystemUserEntity systemUser = consoleUserService.get(userId);
         Set<Map.Entry<String, List<String>>> entrySet = systemUser.getResourceMap().entrySet();
@@ -111,7 +111,7 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
-    @Plugin(name = "获取当前用户资源", sources = "Console")
+    @Plugin(name = "获取当前用户资源", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<ResourceModel> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
                                                             @RequestParam(required = false) String type,
                                                             @RequestParam(required = false) boolean mergeTree) {

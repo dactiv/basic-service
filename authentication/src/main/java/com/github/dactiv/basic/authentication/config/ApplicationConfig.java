@@ -239,7 +239,7 @@ public class ApplicationConfig {
         /**
          * 当前使用的头像名称
          */
-        private String CurrentUseFileToken = "current_{0}";
+        private String currentUseFileToken = "current_{0}";
 
         /**
          * 保留的历史头像记录总数
@@ -249,7 +249,11 @@ public class ApplicationConfig {
         /**
          * 用户来源，用于默认服务启动时创建桶使用。
          */
-        private List<String> userSources = Arrays.asList("Console", "UserCenter", "SocketUser");
+        private List<String> userSources = Arrays.asList(
+                ResourceSourceEnum.CONSOLE_SOURCE_VALUE,
+                ResourceSourceEnum.USER_CENTER_SOURCE_VALUE,
+                ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE
+        );
     }
 
 }

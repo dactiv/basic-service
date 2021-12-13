@@ -22,14 +22,14 @@ dactiv:
     plugin:
       base-packages: com.github.dactiv.basic.config.controller
       generate-sources:
-        - "Console"
-        - "All"
-        - "System"
+        - "CONSOLE"
+        - "ALL"
+        - "SYSTEM"
       parent:
         config:
           name: '配置管理'
           icon: 'icon-un-config-o'
-          sources: "Console"
+          sources: "CONSOLE"
     permit-uri-ant-matchers:
       - "/findDataDictionaries/**"
       - "/getServiceEnumerate/**"

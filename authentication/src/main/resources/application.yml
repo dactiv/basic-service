@@ -22,14 +22,14 @@ dactiv:
     plugin:
       base-packages: com.github.dactiv.basic.authentication.controller
       generate-sources:
-        - "Console"
-        - "All"
-        - "System"
+        - "CONSOLE"
+        - "ALL"
+        - "SYSTEM"
       parent:
         system:
           name: "系统管理"
           icon: "icon-setting"
-          sources: "Console"
+          sources: "CONSOLE"
     permit-uri-ant-matchers:
       - "/prepare/**"
       - "/login/**"

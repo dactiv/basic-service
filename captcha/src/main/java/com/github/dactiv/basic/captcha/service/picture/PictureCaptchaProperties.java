@@ -16,7 +16,7 @@ import java.util.concurrent.TimeUnit;
 @Data
 @Component
 @NoArgsConstructor
-@ConfigurationProperties("spring.application.captcha.picture")
+@ConfigurationProperties("dactiv.captcha.picture")
 public class PictureCaptchaProperties {
 
     /**
