@@ -179,8 +179,7 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断邮件是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
-        Wrapper<ConsoleUserEntity> wrapper = consoleUserService.lambdaQuery().eq(ConsoleUserEntity::getEmail, email);
-        return consoleUserService.find(wrapper).isEmpty();
+        return Objects.isNull(consoleUserService.getByEmail(email));
     }
 
 }

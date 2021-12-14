@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.authentication.service;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.AuthenticationInfoDao;
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
@@ -77,7 +78,8 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
      * @return 认证信息表实体
      */
     public AuthenticationInfoEntity getLastAuthenticationInfo(Integer userId, List<String> types) {
-        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+        Wrapper<AuthenticationInfoEntity> wrapper = Wrappers
+                .<AuthenticationInfoEntity>lambdaQuery()
                 .eq(AuthenticationInfoEntity::getUserId, userId)
                 .in(AuthenticationInfoEntity::getType, types);
         return findOne(wrapper);
@@ -90,7 +92,8 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
      */
     public void validAuthenticationInfo(AuthenticationInfoEntity info) {
 
-        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+        Wrapper<AuthenticationInfoEntity> wrapper = Wrappers
+                .<AuthenticationInfoEntity>lambdaQuery()
                 .eq(AuthenticationInfoEntity::getUserId, info.getUserId())
                 .in(AuthenticationInfoEntity::getType, Collections.singletonList(info.getType()))
                 .ne(AuthenticationInfoEntity::getId, info.getId());
@@ -137,7 +140,8 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
     @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
     @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", waitTime = @Time(0L))
     public void syncAuthenticationInfo() {
-        Wrapper<AuthenticationInfoEntity> wrapper = lambdaQuery()
+        Wrapper<AuthenticationInfoEntity> wrapper = Wrappers
+                .<AuthenticationInfoEntity>lambdaQuery()
                 .le(AuthenticationInfoEntity::getRetryCount, applicationConfig.getAbnormalArea().getMaxRetryCount())
                 .ne(AuthenticationInfoEntity::getSyncStatus, ExecuteStatus.Success.getValue());
 

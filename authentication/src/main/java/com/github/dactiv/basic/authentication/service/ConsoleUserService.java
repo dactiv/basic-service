@@ -95,4 +95,15 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
     public ConsoleUserEntity getByUsername(String username) {
         return lambdaQuery().eq(SystemUserEntity::getUsername, username).one();
     }
+
+    /**
+     * 通过电子邮件获取后台用户
+     *
+     * @param email 电子邮件
+     *
+     * @return 后台用户
+     */
+    public ConsoleUserEntity getByEmail(String email) {
+        return lambdaQuery().eq(ConsoleUserEntity::getEmail, email).one();
+    }
 }

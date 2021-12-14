@@ -163,7 +163,7 @@ public class MemberUserConsole {
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isUsernameUnique(@RequestParam String username) {
-        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getUsername, username)).isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getUsername, username).list().isEmpty();
     }
 
     /**
@@ -197,7 +197,7 @@ public class MemberUserConsole {
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isEmailUnique(@RequestParam String email) {
-        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getEmail, email)).isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getEmail, email).list().isEmpty();
     }
 
     /**
@@ -210,7 +210,7 @@ public class MemberUserConsole {
     @GetMapping("isPhoneUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isPhoneUnique(@RequestParam String phone) {
-        return memberUserService.find(Wrappers.<MemberUserEntity>lambdaQuery().eq(MemberUserEntity::getPhone, phone)).isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getPhone, phone).list().isEmpty();
     }
 
 }
