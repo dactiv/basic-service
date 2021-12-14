@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.domain.model;
+package com.github.dactiv.basic.authentication.domain.meta;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -28,7 +28,7 @@ import java.util.Objects;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = false)
-public class ResourceModel extends IdEntity<String> implements Tree<String, ResourceModel> {
+public class ResourceMeta extends IdEntity<String> implements Tree<String, ResourceMeta> {
 
     private static final long serialVersionUID = 4709419291009298510L;
 
@@ -118,7 +118,7 @@ public class ResourceModel extends IdEntity<String> implements Tree<String, Reso
      * 子节点
      */
     @TableField(exist = false)
-    private List<Tree<String, ResourceModel>> children = new ArrayList<>();
+    private List<Tree<String, ResourceMeta>> children = new ArrayList<>();
 
     @Override
     @JsonIgnore
@@ -127,8 +127,8 @@ public class ResourceModel extends IdEntity<String> implements Tree<String, Reso
     }
 
     @Override
-    public boolean isChildren(Tree<String, ResourceModel> parent) {
-        ResourceModel resource = Casts.cast(parent);
+    public boolean isChildren(Tree<String, ResourceMeta> parent) {
+        ResourceMeta resource = Casts.cast(parent);
         return Objects.equals(resource.getId(), this.getParent());
     }
 }

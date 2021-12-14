@@ -2,7 +2,7 @@ package com.github.dactiv.basic.authentication.plugin.support;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.basic.authentication.plugin.PluginInstance;
 import com.github.dactiv.basic.authentication.plugin.PluginResourceInterceptor;
 import com.github.dactiv.basic.authentication.service.GroupService;
@@ -32,7 +32,7 @@ public class SyncAdminGroupResourceInterceptor implements PluginResourceIntercep
     }
 
     @Override
-    public void postSyncPlugin(PluginInstance instance, List<ResourceModel> newResourceList) {
+    public void postSyncPlugin(PluginInstance instance, List<ResourceMeta> newResourceList) {
 
         GroupEntity group = groupService.get(applicationConfig.getAdminGroupId());
 

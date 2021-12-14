@@ -3,12 +3,11 @@ package com.github.dactiv.basic.authentication.plugin;
 import com.alibaba.nacos.api.naming.pojo.Instance;
 import com.fasterxml.jackson.core.Version;
 import com.fasterxml.jackson.core.util.VersionUtil;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.annotation.Time;
-import com.github.dactiv.framework.commons.enumerate.NameEnum;
 import com.github.dactiv.framework.commons.enumerate.NameEnumUtils;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
@@ -63,7 +62,7 @@ public class PluginResourceService {
     /**
      * 当前插件的所有资源集合
      */
-    private final List<ResourceModel> resources = new LinkedList<>();
+    private final List<ResourceMeta> resources = new LinkedList<>();
 
     public PluginResourceService(RestTemplate restTemplate,
                                  NacosSpringEventManager nacosSpringEventManager,
@@ -188,12 +187,12 @@ public class PluginResourceService {
 
         List<PluginInfo> pluginList = createPluginInfoListFromInfo(instance.getInfo());
         // 启用資源得到新的資源集合
-        List<ResourceModel> newResourceList = pluginList
+        List<ResourceMeta> newResourceList = pluginList
                 .stream()
                 .map(p -> createResource(p, instance,null))
                 .collect(Collectors.toList());
 
-        List<ResourceModel> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
+        List<ResourceMeta> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
 
         resources.removeIf(r -> r.getApplicationName().equals(instance.getServiceName()));
         resources.addAll(unmergeResourceList);
@@ -267,8 +266,8 @@ public class PluginResourceService {
      *
      * @return 新的資源
      */
-    private ResourceModel createResource(PluginInfo plugin, PluginInstance instance, ResourceModel parent) {
-        ResourceModel target = Casts.of(plugin, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME, PluginInfo.DEFAULT_SOURCES_NAME);
+    private ResourceMeta createResource(PluginInfo plugin, PluginInstance instance, ResourceMeta parent) {
+        ResourceMeta target = Casts.of(plugin, ResourceMeta.class, PluginInfo.DEFAULT_CHILDREN_NAME, PluginInfo.DEFAULT_SOURCES_NAME);
 
         List<ResourceSourceEnum> sources = plugin
                 .getSources()
@@ -369,11 +368,11 @@ public class PluginResourceService {
      *
      * @return 资源集合
      */
-    public List<ResourceModel> getResources() {
+    public List<ResourceMeta> getResources() {
         return this
                 .resources
                 .stream()
-                .map(r -> Casts.of(r, ResourceModel.class, PluginInfo.DEFAULT_CHILDREN_NAME))
+                .map(r -> Casts.of(r, ResourceMeta.class, PluginInfo.DEFAULT_CHILDREN_NAME))
                 .collect(Collectors.toList());
     }
 }

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service.sms;
+package com.github.dactiv.basic.captcha.config;
 
 import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @NoArgsConstructor
 @ConfigurationProperties("dactiv.captcha.sms")
-public class SmsCaptchaProperties {
+public class SmsCaptchaConfig {
     /**
      * 短信验证码的超时时间
      */

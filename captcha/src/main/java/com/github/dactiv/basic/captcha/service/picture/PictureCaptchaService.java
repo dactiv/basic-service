@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.captcha.service.picture;
 
+import com.github.dactiv.basic.captcha.config.PictureCaptchaConfig;
+import com.github.dactiv.basic.captcha.domain.meta.PictureMeta;
 import com.github.dactiv.basic.captcha.service.AbstractRedisCaptchaService;
 import com.github.dactiv.basic.captcha.service.BuildToken;
 import com.github.dactiv.basic.captcha.service.ExpiredCaptcha;
@@ -31,7 +33,7 @@ import java.util.Map;
  * @author maurice
  */
 @Component
-public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEntity, ExpiredCaptcha> {
+public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureMeta, ExpiredCaptcha> {
 
     /**
      * 默认的验证码服务类型名称
@@ -42,12 +44,12 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
 
     private final List<PictureCaptchaGenerator> pictureCaptchaGenerators;
 
-    private final PictureCaptchaProperties properties;
+    private final PictureCaptchaConfig properties;
 
     public PictureCaptchaService(RedissonClient redissonClient,
                                  @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
                                  List<PictureCaptchaGenerator> pictureCaptchaGenerators,
-                                 PictureCaptchaProperties properties) {
+                                 PictureCaptchaConfig properties) {
         super(redissonClient, validator);
         this.pictureCaptchaGenerators = pictureCaptchaGenerators;
         this.properties = properties;
@@ -59,7 +61,7 @@ public class PictureCaptchaService extends AbstractRedisCaptchaService<PictureEn
     }
 
     @Override
-    protected GenerateCaptchaResult generateCaptcha(BuildToken buildToken, PictureEntity entity) throws Exception {
+    protected GenerateCaptchaResult generateCaptcha(BuildToken buildToken, PictureMeta entity) throws Exception {
         // 随机抽取验证码生成器集合里的其中一个生成器去生成验证码图片
         int index = RandomUtils.nextInt(0, pictureCaptchaGenerators.size() - 1);
 

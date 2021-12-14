@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.service;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.dao.GroupDao;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
@@ -46,7 +46,7 @@ public class GroupService extends BasicService<GroupDao, GroupEntity> {
     @Override
     public int save(GroupEntity entity) {
 
-        List<ResourceModel> groupResource = authorizationService.getGroupResource(entity);
+        List<ResourceMeta> groupResource = authorizationService.getGroupResource(entity);
 
         List<String> noneMatchSources = groupResource
                 .stream()

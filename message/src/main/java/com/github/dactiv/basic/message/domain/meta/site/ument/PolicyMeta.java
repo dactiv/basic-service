@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model.site.ument;
+package com.github.dactiv.basic.message.domain.meta.site.ument;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -11,7 +11,7 @@ import java.util.Date;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class PolicyModel {
+public class PolicyMeta {
 
     //--------------------------------------------------------------------------------------//
     // 友盟 policy 基本配置信息开始 查看: https://developer.umeng.com/docs/67966/detail/68343
@@ -25,7 +25,7 @@ public class PolicyModel {
 
     private String outBizNo;
 
-    public PolicyModel() {
+    public PolicyMeta() {
     }
 
     public Date getStartTime() {

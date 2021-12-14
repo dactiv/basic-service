@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.domain.model;
+package com.github.dactiv.basic.authentication.domain.meta;
 
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
@@ -25,7 +25,7 @@ import java.util.Date;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-public class MemberUserInitializationModel implements Serializable {
+public class MemberUserInitializationMeta implements Serializable {
 
     private static final long serialVersionUID = 1714564243745969863L;
     /**
@@ -57,15 +57,11 @@ public class MemberUserInitializationModel implements Serializable {
      * 是否可更新密码：1.是、0.否
      */
     @NotNull
-    @Range(min = 0, max = 1)
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo modifyPassword = YesOrNo.No;
 
     /**
      * 是否可更新登录账户：1.是、0.否
      */
     @NotNull
-    @Range(min = 0, max = 1)
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo modifyUsername = YesOrNo.No;
 }

@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.captcha.service.email;
 
+import com.github.dactiv.basic.captcha.config.EmailCaptchaConfig;
+import com.github.dactiv.basic.captcha.domain.meta.EmailMeta;
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
 import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
@@ -23,25 +25,25 @@ import java.util.Map;
  * @author maurice
  */
 @Component
-public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailEntity, ReusableCaptcha> {
+public class EmailCaptchaService extends AbstractMessageCaptchaService<EmailMeta, ReusableCaptcha> {
     /**
      * 默认的验证码服务类型名称
      */
     private static final String DEFAULT_TYPE = "email";
 
-    private final EmailCaptchaProperties properties;
+    private final EmailCaptchaConfig properties;
 
     public EmailCaptchaService(RedissonClient redissonClient,
                                @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
                                ConfigFeignClient configFeignClient,
                                MessageFeignClient messageFeignClient,
-                               EmailCaptchaProperties properties) {
+                               EmailCaptchaConfig properties) {
         super(redissonClient, validator, configFeignClient, messageFeignClient);
         this.properties = properties;
     }
 
     @Override
-    protected Map<String, Object> createSendMessageParam(EmailEntity entity, Map<String, Object> entry, String captcha) {
+    protected Map<String, Object> createSendMessageParam(EmailMeta entity, Map<String, Object> entry, String captcha) {
 
         Map<String, Object> param = new LinkedHashMap<>();
 

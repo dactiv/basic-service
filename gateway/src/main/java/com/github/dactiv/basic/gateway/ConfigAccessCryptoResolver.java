@@ -76,7 +76,7 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
     public void syncAccessCryptos() {
         List<Map<String, Object>> result = new ArrayList<>();
         try {
-            configFeignClient.getAllAccessCryptos();
+            result = configFeignClient.getAllAccessCryptos();
         } catch (Exception e) {
             log.warn("获取访问加解密数据出错", e);
         }
@@ -85,7 +85,10 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
             return ;
         }
 
-        cache = result.stream().map(m -> Casts.convertValue(m, AccessCrypto.class)).collect(Collectors.toList());
+        cache = result
+                .stream()
+                .map(m -> Casts.convertValue(m, AccessCrypto.class))
+                .collect(Collectors.toList());
 
         LOGGER.info("同步 redis 访问加解密加载出" + cache.size() + "条记录:");
 

@@ -2,7 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
@@ -60,9 +60,9 @@ public class ResourceController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
     @Plugin(name = "查找全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public List<ResourceModel> find(@RequestParam(required = false) boolean mergeTree,
-                                    @RequestParam(required = false) String applicationName,
-                                    @RequestParam(required = false) List<String> sources) {
+    public List<ResourceMeta> find(@RequestParam(required = false) boolean mergeTree,
+                                   @RequestParam(required = false) String applicationName,
+                                   @RequestParam(required = false) List<String> sources) {
 
         List<ResourceSourceEnum> resourceSources = new LinkedList<>();
 
@@ -73,7 +73,7 @@ public class ResourceController {
                     .collect(Collectors.toList());
         }
 
-        List<ResourceModel> resourceList = authorizationService.getResources(
+        List<ResourceMeta> resourceList = authorizationService.getResources(
                 applicationName,
                 resourceSources.toArray(new ResourceSourceEnum[0])
         );
@@ -112,9 +112,9 @@ public class ResourceController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
     @Plugin(name = "获取当前用户资源", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public List<ResourceModel> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
-                                                            @RequestParam(required = false) String type,
-                                                            @RequestParam(required = false) boolean mergeTree) {
+    public List<ResourceMeta> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
+                                                           @RequestParam(required = false) String type,
+                                                           @RequestParam(required = false) boolean mergeTree) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -126,7 +126,7 @@ public class ResourceController {
 
         ConsoleUserEntity consoleUser = consoleUserService.get(Casts.cast(userDetails.getId(), Integer.class));
         ResourceType resourceType = NameEnumUtils.parse(type, ResourceType.class);
-        List<ResourceModel> resourceList = authorizationService.getSystemUserResource(
+        List<ResourceMeta> resourceList = authorizationService.getSystemUserResource(
                 consoleUser,
                 resourceType,
                 sourceContains
@@ -149,7 +149,7 @@ public class ResourceController {
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
     @Plugin(name = "获取信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public ResourceModel get(@RequestParam String id) {
+    public ResourceMeta get(@RequestParam String id) {
 
         return authorizationService
                 .getResources(null)

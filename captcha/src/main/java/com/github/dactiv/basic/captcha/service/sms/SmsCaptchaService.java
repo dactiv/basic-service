@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.captcha.service.sms;
 
+import com.github.dactiv.basic.captcha.config.SmsCaptchaConfig;
+import com.github.dactiv.basic.captcha.domain.meta.SmsMeta;
 import com.github.dactiv.basic.captcha.service.AbstractMessageCaptchaService;
 import com.github.dactiv.basic.captcha.service.ReusableCaptcha;
 import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
@@ -23,26 +25,26 @@ import java.util.Map;
  * @author maurice
  */
 @Component
-public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsEntity, ReusableCaptcha> {
+public class SmsCaptchaService extends AbstractMessageCaptchaService<SmsMeta, ReusableCaptcha> {
 
     /**
      * 默认的验证码服务类型名称
      */
     private static final String DEFAULT_TYPE = "sms";
 
-    private final SmsCaptchaProperties properties;
+    private final SmsCaptchaConfig properties;
 
     public SmsCaptchaService(RedissonClient redissonClient,
                              @Qualifier("mvcValidator") @Autowired(required = false) Validator validator,
                              ConfigFeignClient configFeignClient,
                              MessageFeignClient messageFeignClient,
-                             SmsCaptchaProperties properties) {
+                             SmsCaptchaConfig properties) {
         super(redissonClient, validator, configFeignClient, messageFeignClient);
         this.properties = properties;
     }
 
     @Override
-    protected Map<String, Object> createSendMessageParam(SmsEntity entity, Map<String, Object> entry, String captcha) {
+    protected Map<String, Object> createSendMessageParam(SmsMeta entity, Map<String, Object> entry, String captcha) {
 
         Map<String, Object> param = new LinkedHashMap<>();
 

@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
@@ -142,7 +141,7 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断权限值是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
-        return groupService.lambdaQuery().eq(GroupEntity::getAuthority, authority).list().isEmpty();
+        return groupService.lambdaQuery().eq(GroupEntity::getAuthority, authority).exists();
     }
 
     /**
@@ -156,6 +155,6 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断组名称是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
-        return groupService.lambdaQuery().eq(GroupEntity::getName, name).list().isEmpty();
+        return groupService.lambdaQuery().eq(GroupEntity::getName, name).exists();
     }
 }

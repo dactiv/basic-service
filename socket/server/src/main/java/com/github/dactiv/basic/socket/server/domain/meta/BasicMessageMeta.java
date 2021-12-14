@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.socket.server.domain.model;
+package com.github.dactiv.basic.socket.server.domain.meta;
 
 import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.framework.commons.Casts;
@@ -21,7 +21,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode
-public class BasicMessageModel implements Serializable {
+public class BasicMessageMeta implements Serializable {
 
     private static final long serialVersionUID = 7397284325411371767L;
 

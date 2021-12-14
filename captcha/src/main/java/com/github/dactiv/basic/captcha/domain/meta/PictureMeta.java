@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service.picture;
+package com.github.dactiv.basic.captcha.domain.meta;
 
 import lombok.AllArgsConstructor;
 import lombok.Data;
@@ -16,7 +16,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @EqualsAndHashCode
 @AllArgsConstructor
-public class PictureEntity implements Serializable {
+public class PictureMeta implements Serializable {
 
     private static final long serialVersionUID = 2309714787571972942L;
     /**

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service.email;
+package com.github.dactiv.basic.captcha.domain.meta;
 
 import com.github.dactiv.basic.captcha.service.SimpleMessageType;
 import lombok.Data;
@@ -15,7 +15,7 @@ import java.io.Serializable;
  */
 @Data
 @EqualsAndHashCode(callSuper = true)
-public class EmailEntity extends SimpleMessageType implements Serializable {
+public class EmailMeta extends SimpleMessageType implements Serializable {
 
     private static final long serialVersionUID = 3429703228723485142L;
     /**

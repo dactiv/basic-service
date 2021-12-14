@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model.site.ument.android;
+package com.github.dactiv.basic.message.domain.meta.site.ument.android;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -10,7 +10,7 @@ import java.util.Map;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AndroidPayloadBodyModel {
+public class AndroidPayloadBodyMeta {
 
     private String ticker;
 
@@ -40,7 +40,7 @@ public class AndroidPayloadBodyModel {
 
     private Map<String, Object> custom;
 
-    public AndroidPayloadBodyModel() {
+    public AndroidPayloadBodyMeta() {
     }
 
     public String getTicker() {

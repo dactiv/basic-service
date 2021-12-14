@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service.picture;
+package com.github.dactiv.basic.captcha.config;
 
 import com.github.dactiv.framework.commons.TimeProperties;
 import lombok.Data;
@@ -17,7 +17,7 @@ import java.util.concurrent.TimeUnit;
 @Component
 @NoArgsConstructor
 @ConfigurationProperties("dactiv.captcha.picture")
-public class PictureCaptchaProperties {
+public class PictureCaptchaConfig {
 
     /**
      * 提交验证码的参数名称

@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.service;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.basic.authentication.plugin.PluginResourceService;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
@@ -122,11 +122,11 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 资源结婚
      */
-    public List<ResourceModel> getGroupResource(GroupEntity group) {
-        List<ResourceModel> result = new LinkedList<>();
+    public List<ResourceMeta> getGroupResource(GroupEntity group) {
+        List<ResourceMeta> result = new LinkedList<>();
         for (Map.Entry<String, List<String>> entry: group.getResourceMap().entrySet()) {
-            List<ResourceModel> resources = getResources(entry.getKey());
-            List<ResourceModel> findResources = resources
+            List<ResourceMeta> resources = getResources(entry.getKey());
+            List<ResourceMeta> findResources = resources
                     .stream()
                     .filter(r -> entry.getValue().contains(r.getId()))
                     .collect(Collectors.toList());
@@ -161,9 +161,9 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 资源集合
      */
-    public List<ResourceModel> getResources(String applicationName, ResourceSourceEnum... sources) {
-        List<ResourceModel> result = pluginResourceService.getResources();
-        Stream<ResourceModel> stream = result.stream();
+    public List<ResourceMeta> getResources(String applicationName, ResourceSourceEnum... sources) {
+        List<ResourceMeta> result = pluginResourceService.getResources();
+        Stream<ResourceMeta> stream = result.stream();
 
         if (StringUtils.isNotBlank(applicationName)) {
             stream = stream.filter(r -> r.getApplicationName().equals(applicationName));
@@ -174,7 +174,7 @@ public class AuthorizationService implements InitializingBean {
             stream = stream.filter(r -> r.getSources().stream().anyMatch(sourceList::contains));
         }
 
-        return stream.sorted(Comparator.comparing(ResourceModel::getSort)).collect(Collectors.toList());
+        return stream.sorted(Comparator.comparing(ResourceMeta::getSort)).collect(Collectors.toList());
     }
 
     public void deleteSystemUseAuthenticationCache(ResourceSourceEnum source, PrincipalAuthenticationToken token) {
@@ -212,10 +212,10 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 系统用户资源集合
      */
-    public List<ResourceModel> getSystemUserResource(SystemUserEntity user,
-                                                     ResourceType type,
-                                                     List<ResourceSourceEnum> sourceContains) {
-        List<ResourceModel> userResource = getSystemUserResource(user);
+    public List<ResourceMeta> getSystemUserResource(SystemUserEntity user,
+                                                    ResourceType type,
+                                                    List<ResourceSourceEnum> sourceContains) {
+        List<ResourceMeta> userResource = getSystemUserResource(user);
 
         return userResource
                 .stream()
@@ -234,7 +234,7 @@ public class AuthorizationService implements InitializingBean {
         List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
         userDetails.getRoleAuthorities().addAll(roleAuthorities);
         // 构造用户的组资源
-        List<ResourceModel> userResource = getSystemUserResource(user);
+        List<ResourceMeta> userResource = getSystemUserResource(user);
         // 构造对应 spring security 的资源内容
         List<ResourceAuthority> resourceAuthorities = userResource
                 .stream()
@@ -251,7 +251,7 @@ public class AuthorizationService implements InitializingBean {
      *
      * @return 系统用户资源
      */
-    public List<ResourceModel> getSystemUserResource(SystemUserEntity user) {
+    public List<ResourceMeta> getSystemUserResource(SystemUserEntity user) {
         List<IdRoleAuthority> roleAuthorities = user.getGroupsInfo();
 
         // 通过 id 获取组信息
@@ -270,7 +270,7 @@ public class AuthorizationService implements InitializingBean {
                 .collect(Collectors.toList());
 
         // 构造用户的组资源
-        List<ResourceModel> userResource = groups
+        List<ResourceMeta> userResource = groups
                 .stream()
                 .flatMap(g -> getResourcesStream(g.getResourceMap(), groupSources))
                 .collect(Collectors.toList());
@@ -281,18 +281,18 @@ public class AuthorizationService implements InitializingBean {
         return userResource;
     }
 
-    private Stream<ResourceModel> getResourcesStream(Map<String, List<String>> resourceMap, List<ResourceSourceEnum> sources) {
+    private Stream<ResourceMeta> getResourcesStream(Map<String, List<String>> resourceMap, List<ResourceSourceEnum> sources) {
 
         if (MapUtils.isEmpty(resourceMap)) {
             return Stream.empty();
         }
 
-        List<ResourceModel> result = new LinkedList<>();
+        List<ResourceMeta> result = new LinkedList<>();
 
         for (Map.Entry<String, List<String>> entry : resourceMap.entrySet()) {
-            List<ResourceModel> resources = getResources(entry.getKey());
+            List<ResourceMeta> resources = getResources(entry.getKey());
 
-            List<ResourceModel> findResources = resources
+            List<ResourceMeta> findResources = resources
                     .stream()
                     .filter(r -> entry.getValue().contains(r.getId()))
                     .filter(r -> r.getSources().stream().anyMatch(sources::contains))
@@ -304,7 +304,7 @@ public class AuthorizationService implements InitializingBean {
         return result.stream();
     }
 
-    private Stream<ResourceAuthority> createResourceAuthoritiesStream(ResourceModel resource) {
+    private Stream<ResourceAuthority> createResourceAuthoritiesStream(ResourceMeta resource) {
         if (StringUtils.isBlank(resource.getAuthority())) {
             return Stream.empty();
         }

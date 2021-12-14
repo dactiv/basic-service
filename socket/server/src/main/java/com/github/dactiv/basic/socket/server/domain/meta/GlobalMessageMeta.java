@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.socket.server.domain.model;
+package com.github.dactiv.basic.socket.server.domain.meta;
 
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -15,7 +15,7 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class GlobalMessageModel extends BasicMessageModel {
+public class GlobalMessageMeta extends BasicMessageMeta {
 
     private static final long serialVersionUID = 6466725003068761373L;
 

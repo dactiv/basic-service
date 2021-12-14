@@ -53,7 +53,6 @@ public class BasicMessageEntity implements NumberIdEntity<Integer> {
      * @see MessageTypeEnum
      */
     @NotNull
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private MessageTypeEnum type;
 
     /**
@@ -67,7 +66,6 @@ public class BasicMessageEntity implements NumberIdEntity<Integer> {
      *
      * @see ExecuteStatus
      */
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private ExecuteStatus executeStatus = ExecuteStatus.Processing;
 
     /**

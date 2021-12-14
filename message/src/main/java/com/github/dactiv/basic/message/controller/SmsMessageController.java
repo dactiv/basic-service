@@ -2,7 +2,7 @@ package com.github.dactiv.basic.message.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
-import com.github.dactiv.basic.message.domain.model.SmsBalanceModel;
+import com.github.dactiv.basic.message.domain.meta.SmsBalanceMeta;
 import com.github.dactiv.basic.message.service.SmsMessageService;
 import com.github.dactiv.basic.message.service.support.sms.SmsChannelSender;
 import com.github.dactiv.framework.commons.RestResult;
@@ -105,7 +105,7 @@ public class SmsMessageController {
     @GetMapping("balance")
     @Plugin(name = "获取短信余额", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[sms:balance]')")
-    public List<SmsBalanceModel> balance() {
+    public List<SmsBalanceMeta> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());
     }
 

@@ -4,7 +4,6 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
@@ -107,7 +106,6 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      */
     @NotNull
     @Range(min = 0, max = 1)
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo removable;
 
     /**
@@ -115,7 +113,6 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      */
     @NotNull
     @Range(min = 0, max = 1)
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo modifiable;
 
     /**
@@ -123,13 +120,12 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      */
     @NotNull
     @Range(min = 0, max = 1)
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private DisabledOrEnabled status;
 
     /**
      * 资源 id 集合
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private Map<String, List<String>> resourceMap = new LinkedHashMap<>();
 
     /**

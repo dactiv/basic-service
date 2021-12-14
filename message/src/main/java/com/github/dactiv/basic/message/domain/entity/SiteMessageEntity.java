@@ -51,13 +51,11 @@ public class SiteMessageEntity extends BasicMessageEntity implements AttachmentM
     /**
      * 是否推送消息：0.否，1.是
      */
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo isPush = YesOrNo.Yes;
 
     /**
      * 是否已读：0.否，1.是
      */
-    @TableField(typeHandler = NameValueEnumTypeHandler.class)
     private YesOrNo isRead = YesOrNo.No;
 
     /**

@@ -2,11 +2,11 @@ package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
-import com.github.dactiv.basic.authentication.domain.model.MemberUserInitializationModel;
+import com.github.dactiv.basic.authentication.domain.meta.MemberUserInitializationMeta;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
-import com.github.dactiv.framework.commons.jackson.serializer.JacksonDesensitizeSerializer;
+import com.github.dactiv.framework.commons.jackson.serializer.DesensitizeSerializer;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -49,8 +49,8 @@ public class MemberUserEntity extends SystemUserEntity {
     /**
      * 用户初始化
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
-    private MemberUserInitializationModel initialization;
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private MemberUserInitializationMeta initialization;
 
 
     /**
@@ -58,7 +58,7 @@ public class MemberUserEntity extends SystemUserEntity {
      *
      * @return 加敏手机号码
      */
-    @JsonSerialize(using = JacksonDesensitizeSerializer.class)
+    @JsonSerialize(using = DesensitizeSerializer.class)
     public String getDesensitizePhone() {
         return phone;
     }

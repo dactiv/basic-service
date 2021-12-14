@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model;
+package com.github.dactiv.basic.message.domain.meta;
 
 import java.io.Serializable;
 import java.math.BigDecimal;
@@ -8,7 +8,7 @@ import java.math.BigDecimal;
  *
  * @author maurice
  */
-public class SmsBalanceModel implements Serializable {
+public class SmsBalanceMeta implements Serializable {
 
     private static final long serialVersionUID = 4834851659384448629L;
 
@@ -16,12 +16,12 @@ public class SmsBalanceModel implements Serializable {
 
     private BigDecimal balance;
 
-    public SmsBalanceModel(String name, BigDecimal balance) {
+    public SmsBalanceMeta(String name, BigDecimal balance) {
         this.name = name;
         this.balance = balance;
     }
 
-    public SmsBalanceModel() {
+    public SmsBalanceMeta() {
     }
 
     public String getName() {

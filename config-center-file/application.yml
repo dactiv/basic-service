@@ -16,6 +16,8 @@ spring:
     default-property-inclusion: non_empty
     time-zone: GMT+8
     date-format: yyyy-MM-dd HH:mm:ss
+    deserialization:
+      fail-on-unknown-properties: false
   http:
     encoding:
       force: true

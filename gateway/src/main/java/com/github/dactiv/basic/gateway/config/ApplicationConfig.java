@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.gateway.config;
 
 import com.github.dactiv.framework.crypto.AlgorithmProperties;
-import com.github.dactiv.framework.crypto.RsaProperties;
 import lombok.Data;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.stereotype.Component;

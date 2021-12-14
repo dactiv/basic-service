@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.captcha.service.sms;
+package com.github.dactiv.basic.captcha.domain.meta;
 
 import com.github.dactiv.basic.captcha.service.SimpleMessageType;
 import lombok.AllArgsConstructor;
@@ -19,7 +19,7 @@ import java.io.Serializable;
 @NoArgsConstructor
 @AllArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class SmsEntity extends SimpleMessageType implements Serializable {
+public class SmsMeta extends SimpleMessageType implements Serializable {
 
     private static final long serialVersionUID = 1235954873943241073L;
     /**

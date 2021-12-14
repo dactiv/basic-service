@@ -1,7 +1,7 @@
-package com.github.dactiv.basic.message.domain.model.site.ument.android;
+package com.github.dactiv.basic.message.domain.meta.site.ument.android;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
-import com.github.dactiv.basic.message.domain.model.site.ument.PolicyModel;
+import com.github.dactiv.basic.message.domain.meta.site.ument.PolicyMeta;
 
 /**
  * 友盟安卓 Policy 实体
@@ -9,11 +9,11 @@ import com.github.dactiv.basic.message.domain.model.site.ument.PolicyModel;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AndroidPolicyModel extends PolicyModel {
+public class AndroidPolicyMeta extends PolicyMeta {
 
     private Integer maxSendNum;
 
-    public AndroidPolicyModel() {
+    public AndroidPolicyMeta() {
     }
 
     public Integer getMaxSendNum() {

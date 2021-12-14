@@ -1,5 +1,7 @@
 package com.github.dactiv.basic.captcha.service.picture;
 
+import com.github.dactiv.basic.captcha.domain.meta.PictureMeta;
+
 import java.io.OutputStream;
 
 /**
@@ -19,6 +21,6 @@ public interface PictureCaptchaGenerator {
      *
      * @throws Exception 生成错误时抛出
      */
-    String generateCaptcha(PictureEntity entity, OutputStream outputStream) throws Exception;
+    String generateCaptcha(PictureMeta entity, OutputStream outputStream) throws Exception;
 
 }

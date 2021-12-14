@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.domain;
 
-import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.framework.commons.page.ScrollPage;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import lombok.Data;
@@ -18,7 +18,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class GlobalMessagePage extends ScrollPage<BasicMessageModel.FileMessage> {
+public class GlobalMessagePage extends ScrollPage<BasicMessageMeta.FileMessage> {
 
     private static final long serialVersionUID = -321127303631279127L;
 
@@ -39,7 +39,7 @@ public class GlobalMessagePage extends ScrollPage<BasicMessageModel.FileMessage>
      * @param elements    分页元素集合
      */
     public GlobalMessagePage(ScrollPageRequest pageRequest,
-                             List<BasicMessageModel.FileMessage> elements) {
+                             List<BasicMessageMeta.FileMessage> elements) {
         super(pageRequest, elements);
     }
 
@@ -52,7 +52,7 @@ public class GlobalMessagePage extends ScrollPage<BasicMessageModel.FileMessage>
      * @return 全局消息分页
      */
     public static GlobalMessagePage of(ScrollPageRequest pageRequest,
-                                       List<BasicMessageModel.FileMessage> elements) {
+                                       List<BasicMessageMeta.FileMessage> elements) {
         return new GlobalMessagePage(pageRequest, elements);
     }
 

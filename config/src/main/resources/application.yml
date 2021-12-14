@@ -2,6 +2,7 @@ mybatis-plus:
   type-aliases-package: com.github.dactiv.basic.config.domain.entity
   configuration:
     call-setters-on-nulls: on
+    default-enum-type-handler: com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler
   global-config:
     db-config:
       id-type: auto

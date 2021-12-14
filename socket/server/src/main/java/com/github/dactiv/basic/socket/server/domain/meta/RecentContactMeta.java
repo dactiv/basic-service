@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.socket.server.domain.model;
+package com.github.dactiv.basic.socket.server.domain.meta;
 
 import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
@@ -14,7 +14,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class RecentContactModel extends IntegerIdEntity {
+public class RecentContactMeta extends IntegerIdEntity {
     private static final long serialVersionUID = 7454008176314089935L;
     /**
      * 类型

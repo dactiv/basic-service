@@ -2,7 +2,7 @@ package com.github.dactiv.basic.message.service.support.sms;
 
 import com.github.dactiv.basic.message.config.sms.SmsConfig;
 import com.github.dactiv.basic.message.domain.entity.SmsMessageEntity;
-import com.github.dactiv.basic.message.domain.model.SmsBalanceModel;
+import com.github.dactiv.basic.message.domain.meta.SmsBalanceMeta;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
@@ -124,7 +124,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
     }
 
     @Override
-    public SmsBalanceModel getBalance() {
+    public SmsBalanceMeta getBalance() {
 
         MultiValueMap<String, Object> param = config.getYimei().createBaseParam();
 
@@ -146,7 +146,7 @@ public class YimeiSmsChannelSender implements SmsChannelSender {
                     Map<String, Object> balanceMap = Casts.cast(data.get(config.getYimei().getResponseDataField()));
                     BigDecimal balance = Casts.cast(balanceMap.get(config.getYimei().getBalanceFieldName()), BigDecimal.class);
 
-                    return new SmsBalanceModel(getName(), balance);
+                    return new SmsBalanceMeta(getName(), balance);
                 }
             } else {
                 LOGGER.warn("通过 API " + config.getYimei().getUrl() + DEFAULT_GET_BALANCE_API + " 获取不到余额信息");

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model.site.ument.android;
+package com.github.dactiv.basic.message.domain.meta.site.ument.android;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -11,15 +11,15 @@ import java.util.Map;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class AndroidPayloadModel {
+public class AndroidPayloadMeta {
 
     private String displayType;
 
-    private AndroidPayloadBodyModel body;
+    private AndroidPayloadBodyMeta body;
 
     private Map<String, Object> extra = new LinkedHashMap<>();
 
-    public AndroidPayloadModel() {
+    public AndroidPayloadMeta() {
     }
 
     public String getDisplayType() {
@@ -30,11 +30,11 @@ public class AndroidPayloadModel {
         this.displayType = displayType;
     }
 
-    public AndroidPayloadBodyModel getBody() {
+    public AndroidPayloadBodyMeta getBody() {
         return body;
     }
 
-    public void setBody(AndroidPayloadBodyModel body) {
+    public void setBody(AndroidPayloadBodyMeta body) {
         this.body = body;
     }
 

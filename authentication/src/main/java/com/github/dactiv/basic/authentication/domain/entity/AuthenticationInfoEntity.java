@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -70,7 +70,7 @@ public class AuthenticationInfoEntity implements NumberIdEntity<Integer> {
      */
     @NotEmpty
     @EqualsAndHashCode.Exclude
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private Map<String, String> device;
 
     /**

@@ -4,7 +4,6 @@ import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
 import com.github.dactiv.framework.crypto.AlgorithmProperties;
 import com.github.dactiv.framework.crypto.RsaProperties;
-import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;

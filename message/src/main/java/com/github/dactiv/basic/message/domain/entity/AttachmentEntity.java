@@ -4,9 +4,9 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.baomidou.mybatisplus.extension.handlers.JacksonTypeHandler;
 import com.github.dactiv.basic.message.enumerate.AttachmentTypeEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -70,6 +70,6 @@ public class AttachmentEntity implements NumberIdEntity<Integer> {
     /**
      * 元数据信息
      */
-    @TableField(typeHandler = JacksonTypeHandler.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private Map<String, Object> meta;
 }

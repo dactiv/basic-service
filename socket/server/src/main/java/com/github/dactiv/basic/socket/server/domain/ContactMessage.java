@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.server.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
-import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
@@ -19,7 +19,7 @@ import java.util.List;
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class ContactMessage<T extends BasicMessageModel.Message> extends BasicMessageModel implements NumberIdEntity<Integer> {
+public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMessageMeta implements NumberIdEntity<Integer> {
     private static final long serialVersionUID = 6725391155534568648L;
 
     /**

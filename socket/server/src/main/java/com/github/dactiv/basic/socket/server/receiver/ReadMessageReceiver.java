@@ -4,7 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.domain.model.BasicMessageModel;
+import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
@@ -62,19 +62,19 @@ public class ReadMessageReceiver {
     }
 
     private void readMessage(ReadMessageRequestBody body) throws Exception {
-        Map<Integer, ContactMessage<BasicMessageModel.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
+        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
 
         if (MapUtils.isEmpty(map)) {
             return ;
         }
 
-        ContactMessage<BasicMessageModel.UserMessageBody> message = map.get(body.getSenderId());
+        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(body.getSenderId());
 
         if (Objects.isNull(message)) {
             return ;
         }
 
-        List<BasicMessageModel.UserMessageBody> userMessageBodies = message
+        List<BasicMessageMeta.UserMessageBody> userMessageBodies = message
                 .getMessages()
                 .stream()
                 .filter(umb -> body.getMessageIds().contains(umb.getId()))
@@ -84,7 +84,7 @@ public class ReadMessageReceiver {
             return;
         }
 
-        for (BasicMessageModel.UserMessageBody userMessageBody : userMessageBodies) {
+        for (BasicMessageMeta.UserMessageBody userMessageBody : userMessageBodies) {
 
             for (String filename : userMessageBody.getFilenames()) {
 
@@ -93,19 +93,19 @@ public class ReadMessageReceiver {
                         filename
                 );
 
-                List<BasicMessageModel.FileMessage> messageList = chatService.getMinioTemplate().readJsonValue(
+                List<BasicMessageMeta.FileMessage> messageList = chatService.getMinioTemplate().readJsonValue(
                         messageFileObject,
                         new TypeReference<>() {
                         }
                 );
 
-                Optional<BasicMessageModel.FileMessage> messageOptional = messageList
+                Optional<BasicMessageMeta.FileMessage> messageOptional = messageList
                         .stream()
                         .filter(m -> m.getId().equals(userMessageBody.getId()))
                         .findFirst();
 
                 if (messageOptional.isPresent()) {
-                    BasicMessageModel.FileMessage fileMessage = messageOptional.get();
+                    BasicMessageMeta.FileMessage fileMessage = messageOptional.get();
                     fileMessage.setRead(true);
                     fileMessage.setReadTime(body.getCreationTime());
                 }

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.captcha.service.picture.generator;
 
 import com.github.dactiv.basic.captcha.service.picture.PictureCaptchaGenerator;
-import com.github.dactiv.basic.captcha.service.picture.PictureEntity;
+import com.github.dactiv.basic.captcha.domain.meta.PictureMeta;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 
@@ -76,7 +76,7 @@ public class SimplePictureCaptchaGenerator implements PictureCaptchaGenerator {
 
 
     @Override
-    public String generateCaptcha(PictureEntity imgCaptcha, OutputStream os) throws Exception {
+    public String generateCaptcha(PictureMeta imgCaptcha, OutputStream os) throws Exception {
         if (imgCaptcha.getWidth() <= 0) {
             imgCaptcha.setWidth(DEFAULT_WIDTH);
         }

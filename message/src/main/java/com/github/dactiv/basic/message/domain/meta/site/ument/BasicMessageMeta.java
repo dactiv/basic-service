@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model.site.ument;
+package com.github.dactiv.basic.message.domain.meta.site.ument;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -11,7 +11,7 @@ import java.util.Date;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class BasicMessageModel implements Serializable {
+public class BasicMessageMeta implements Serializable {
 
     //----------------------------------------------------------------------------//
     // 友盟基本配置信息开始 查看: https://developer.umeng.com/docs/67966/detail/68343
@@ -31,13 +31,13 @@ public class BasicMessageModel implements Serializable {
 
     private Object payload;
 
-    private PolicyModel policy;
+    private PolicyMeta policy;
 
     private boolean productionMode;
 
     private String description;
 
-    public BasicMessageModel() {
+    public BasicMessageMeta() {
 
     }
 
@@ -89,11 +89,11 @@ public class BasicMessageModel implements Serializable {
         this.payload = payload;
     }
 
-    public PolicyModel getPolicy() {
+    public PolicyMeta getPolicy() {
         return policy;
     }
 
-    public void setPolicy(PolicyModel policy) {
+    public void setPolicy(PolicyMeta policy) {
         this.policy = policy;
     }
 

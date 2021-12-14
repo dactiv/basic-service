@@ -2,7 +2,6 @@ package com.github.dactiv.basic.commons.enumeration;
 
 import com.github.dactiv.framework.commons.enumerate.NameEnum;
 import org.apache.commons.lang3.RegExUtils;
-import org.apache.commons.lang3.StringUtils;
 
 /**
  * 插件来源枚举

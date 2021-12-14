@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.plugin;
 
-import com.github.dactiv.basic.authentication.domain.model.ResourceModel;
+import com.github.dactiv.basic.authentication.domain.meta.ResourceMeta;
 import com.github.dactiv.framework.nacos.event.NacosService;
 
 import java.util.List;
@@ -18,7 +18,7 @@ public interface PluginResourceInterceptor {
      * @param instance 插件实例
      * @param newResourceList 插件新资源集合
      */
-    void postSyncPlugin(PluginInstance instance, List<ResourceModel> newResourceList);
+    void postSyncPlugin(PluginInstance instance, List<ResourceMeta> newResourceList);
 
     /**
      * 禁用应用资源后的处理

@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.authentication.controller;
 
-import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
@@ -163,7 +162,7 @@ public class MemberUserConsole {
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isUsernameUnique(@RequestParam String username) {
-        return memberUserService.lambdaQuery().eq(MemberUserEntity::getUsername, username).list().isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getUsername, username).exists();
     }
 
     /**
@@ -197,7 +196,7 @@ public class MemberUserConsole {
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isEmailUnique(@RequestParam String email) {
-        return memberUserService.lambdaQuery().eq(MemberUserEntity::getEmail, email).list().isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getEmail, email).exists();
     }
 
     /**
@@ -210,7 +209,7 @@ public class MemberUserConsole {
     @GetMapping("isPhoneUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isPhoneUnique(@RequestParam String phone) {
-        return memberUserService.lambdaQuery().eq(MemberUserEntity::getPhone, phone).list().isEmpty();
+        return memberUserService.lambdaQuery().eq(MemberUserEntity::getPhone, phone).exists();
     }
 
 }

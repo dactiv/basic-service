@@ -4,15 +4,15 @@ import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationFeignClient;
 import com.github.dactiv.basic.message.config.site.SiteConfig;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
-import com.github.dactiv.basic.message.domain.model.site.ument.BasicMessageModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.PolicyModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidMessageModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPayloadBodyModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPayloadModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.android.AndroidPolicyModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadApsAlertModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadApsModel;
-import com.github.dactiv.basic.message.domain.model.site.ument.ios.IosPayloadModel;
+import com.github.dactiv.basic.message.domain.meta.site.ument.BasicMessageMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.PolicyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidMessageMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPayloadBodyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPayloadMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPolicyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadApsAlertMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadApsMeta;
+import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadMeta;
 import com.github.dactiv.basic.message.enumerate.site.ument.MessageTypeEnum;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
@@ -90,7 +90,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         // 得到设备信息
         Map<String, Object> device = Casts.cast(info.get("device"), Map.class);
 
-        BasicMessageModel basicMessage = null;
+        BasicMessageMeta basicMessage = null;
         // 根据谁被信息构造基础消息对象
         if ("ANDROID".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
             basicMessage = getAndroidMessage(message, MessageTypeEnum.Customize);
@@ -162,8 +162,8 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * @return 基础消息实体
      */
     @SuppressWarnings("unchecked")
-    public BasicMessageModel getIosMessage(SiteMessageEntity entity, MessageTypeEnum type) {
-        BasicMessageModel result = new BasicMessageModel();
+    public BasicMessageMeta getIosMessage(SiteMessageEntity entity, MessageTypeEnum type) {
+        BasicMessageMeta result = new BasicMessageMeta();
 
         result.setProductionMode(config.getUmeng().isProductionMode());
         result.setAppkey(config.getUmeng().getIos().getAppKey());
@@ -172,13 +172,13 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
 
-        IosPayloadModel iosPayload = new IosPayloadModel();
+        IosPayloadMeta iosPayload = new IosPayloadMeta();
 
-        IosPayloadApsModel iosPayloadAps = new IosPayloadApsModel();
+        IosPayloadApsMeta iosPayloadAps = new IosPayloadApsMeta();
 
         iosPayload.setAps(iosPayloadAps);
 
-        IosPayloadApsAlertModel iosPayloadApsAlert = new IosPayloadApsAlertModel();
+        IosPayloadApsAlertMeta iosPayloadApsAlert = new IosPayloadApsAlertMeta();
 
         iosPayloadApsAlert.setTitle(entity.getTitle());
         iosPayloadApsAlert.setBody(entity.getContent());
@@ -192,7 +192,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         result.setPayload(payloadMap);
 
-        PolicyModel policy = new PolicyModel();
+        PolicyMeta policy = new PolicyMeta();
 
         policy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(policy);
@@ -209,9 +209,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      *
      * @return 基础消息实体
      */
-    public BasicMessageModel getAndroidMessage(SiteMessageEntity entity, MessageTypeEnum type) {
+    public BasicMessageMeta getAndroidMessage(SiteMessageEntity entity, MessageTypeEnum type) {
 
-        AndroidMessageModel result = new AndroidMessageModel();
+        AndroidMessageMeta result = new AndroidMessageMeta();
 
         result.setProductionMode(config.getUmeng().isProductionMode());
         result.setAppkey(config.getUmeng().getAndroid().getAppKey());
@@ -220,13 +220,13 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         result.setAliasType(DEFAULT_USER_ALIAS_TYPE);
         result.setAlias(entity.getToUserId().toString());
 
-        AndroidPayloadModel androidPayload = new AndroidPayloadModel();
+        AndroidPayloadMeta androidPayload = new AndroidPayloadMeta();
 
         androidPayload.setDisplayType("notification");
 
         androidPayload.getExtra().putAll(entity.getMeta());
 
-        AndroidPayloadBodyModel androidPayloadBody = new AndroidPayloadBodyModel();
+        AndroidPayloadBodyMeta androidPayloadBody = new AndroidPayloadBodyMeta();
 
         androidPayloadBody.setTicker(entity.getContent());
         androidPayloadBody.setTitle(entity.getTitle());
@@ -243,7 +243,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         androidPayload.setBody(androidPayloadBody);
         result.setPayload(androidPayload);
 
-        AndroidPolicyModel androidPolicy = new AndroidPolicyModel();
+        AndroidPolicyMeta androidPolicy = new AndroidPolicyMeta();
 
         androidPolicy.setExpireTime(getExpireTime(result.getTimestamp()));
         result.setPolicy(androidPolicy);

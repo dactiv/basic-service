@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.model.site.ument.ios;
+package com.github.dactiv.basic.message.domain.meta.site.ument.ios;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 
@@ -8,9 +8,9 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @author maurice
  */
 @JsonInclude(JsonInclude.Include.NON_EMPTY)
-public class IosPayloadApsModel {
+public class IosPayloadApsMeta {
 
-    private IosPayloadApsAlertModel alert;
+    private IosPayloadApsAlertMeta alert;
 
     private String badge;
 
@@ -20,14 +20,14 @@ public class IosPayloadApsModel {
 
     private String category;
 
-    public IosPayloadApsModel() {
+    public IosPayloadApsMeta() {
     }
 
-    public IosPayloadApsAlertModel getAlert() {
+    public IosPayloadApsAlertMeta getAlert() {
         return alert;
     }
 
-    public void setAlert(IosPayloadApsAlertModel alert) {
+    public void setAlert(IosPayloadApsAlertMeta alert) {
         this.alert = alert;
     }
 
