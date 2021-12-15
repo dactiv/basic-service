@@ -16,6 +16,8 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.idempotent.ConcurrentProperties;
+import com.github.dactiv.framework.idempotent.advisor.concurrent.ConcurrentInterceptor;
 import com.github.dactiv.framework.minio.data.Bucket;
 import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
@@ -35,6 +37,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.*;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -60,20 +63,20 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
     private final AmqpTemplate amqpTemplate;
 
-    private final SiteMessageSender oneself;
+    private final ConcurrentInterceptor concurrentInterceptor;
 
     private final SiteConfig config;
 
     public SiteMessageSender(SiteMessageService siteMessageService,
                              List<SiteMessageChannelSender> siteMessageChannelSenderList,
                              AmqpTemplate amqpTemplate,
-                             SiteMessageSender oneself,
+                             ConcurrentInterceptor concurrentInterceptor,
                              SiteConfig config) {
 
         this.siteMessageService = siteMessageService;
         this.siteMessageChannelSenderList = siteMessageChannelSenderList;
         this.amqpTemplate = amqpTemplate;
-        this.oneself = oneself;
+        this.concurrentInterceptor = concurrentInterceptor;
         this.config = config;
     }
 
@@ -145,7 +148,11 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
         siteMessageService.save(entity);
 
         if (Objects.nonNull(entity.getBatchId())) {
-            oneself.updateBatchMessage(entity);
+            ConcurrentProperties properties = config.getBatchUpdateConcurrent().ofSuffix(entity.getBatchId());
+            concurrentInterceptor.invoke(properties, () -> {
+                updateBatchMessage(entity);
+                return null;
+            });
         }
 
         return entity;

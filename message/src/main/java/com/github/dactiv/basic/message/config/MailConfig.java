@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.message.config;
 
+import com.github.dactiv.framework.idempotent.ConcurrentProperties;
 import lombok.Data;
 import org.springframework.boot.autoconfigure.mail.MailProperties;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -54,4 +55,9 @@ public class MailConfig {
      * Session JNDI name. When set, takes precedence over other Session settings.
      */
     private String jndiName;
+
+    /**
+     * 批量消息更新并发配置
+     */
+    private ConcurrentProperties batchUpdateConcurrent = new ConcurrentProperties("email:message:batch:update");
 }

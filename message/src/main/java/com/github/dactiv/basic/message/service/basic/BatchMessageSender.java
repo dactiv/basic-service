@@ -171,7 +171,6 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
      *
      * @param body 批量消息接口实现类
      */
-    @Concurrent("message:batch:update:[#body.batchId]")
     public void updateBatchMessage(BatchMessageEntity.Body body) {
 
         BatchMessageEntity batchMessage = batchMessageService.get(body.getBatchId());

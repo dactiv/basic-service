@@ -13,6 +13,8 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.idempotent.ConcurrentProperties;
+import com.github.dactiv.framework.idempotent.advisor.concurrent.ConcurrentInterceptor;
 import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
@@ -71,18 +73,18 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     private final EmailMessageService emailMessageService;
 
-    private final EmailMessageSender oneself;
+    private final ConcurrentInterceptor concurrentInterceptor;
 
-    private final MailConfig mailConfig;
+    private final MailConfig config;
 
     public EmailMessageSender(AmqpTemplate amqpTemplate,
                               EmailMessageService emailMessageService,
-                              EmailMessageSender oneself,
-                              MailConfig mailConfig) {
+                              ConcurrentInterceptor concurrentInterceptor,
+                              MailConfig config) {
         this.amqpTemplate = amqpTemplate;
         this.emailMessageService = emailMessageService;
-        this.oneself = oneself;
-        this.mailConfig = mailConfig;
+        this.concurrentInterceptor = concurrentInterceptor;
+        this.config = config;
     }
 
     @Override
@@ -198,7 +200,11 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
         emailMessageService.save(entity);
 
         if (Objects.nonNull(entity.getBatchId())) {
-            oneself.updateBatchMessage(entity);
+            ConcurrentProperties properties = config.getBatchUpdateConcurrent().ofSuffix(entity.getBatchId());
+            concurrentInterceptor.invoke(properties, () -> {
+                updateBatchMessage(entity);
+                return null;
+            });
         }
 
         return entity;
@@ -285,7 +291,7 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
 
     @Override
     public void afterPropertiesSet() throws Exception {
-        mailConfig.getAccounts().entrySet().forEach(this::generateMailSender);
+        config.getAccounts().entrySet().forEach(this::generateMailSender);
         minioTemplate.makeBucketIfNotExists(Bucket.of(attachmentConfig.getBucketName(getMessageType())));
     }
 
@@ -310,20 +316,20 @@ public class EmailMessageSender extends BatchMessageSender<EmailMessageBody, Ema
             mailSender.getJavaMailProperties().putAll(mailProperties.getProperties());
         }
 
-        if (MapUtils.isEmpty(mailSender.getJavaMailProperties()) && MapUtils.isNotEmpty(mailConfig.getProperties())) {
-            mailSender.getJavaMailProperties().putAll(mailConfig.getProperties());
+        if (MapUtils.isEmpty(mailSender.getJavaMailProperties()) && MapUtils.isNotEmpty(config.getProperties())) {
+            mailSender.getJavaMailProperties().putAll(config.getProperties());
         }
 
-        mailSender.setHost(StringUtils.defaultIfEmpty(mailProperties.getHost(), mailConfig.getHost()));
-        mailSender.setPort(Objects.nonNull(mailProperties.getPort()) ? mailProperties.getPort() : mailConfig.getPort());
-        mailSender.setProtocol(StringUtils.defaultIfEmpty(mailProperties.getProtocol(), mailConfig.getProtocol()));
+        mailSender.setHost(StringUtils.defaultIfEmpty(mailProperties.getHost(), config.getHost()));
+        mailSender.setPort(Objects.nonNull(mailProperties.getPort()) ? mailProperties.getPort() : config.getPort());
+        mailSender.setProtocol(StringUtils.defaultIfEmpty(mailProperties.getProtocol(), config.getProtocol()));
 
-        Charset encoding = Objects.nonNull(mailProperties.getDefaultEncoding()) ? mailProperties.getDefaultEncoding() : mailConfig.getDefaultEncoding();
+        Charset encoding = Objects.nonNull(mailProperties.getDefaultEncoding()) ? mailProperties.getDefaultEncoding() : config.getDefaultEncoding();
         if (Objects.nonNull(encoding)) {
             mailSender.setDefaultEncoding(encoding.toString());
         }
 
-        String jndiName = StringUtils.defaultIfEmpty(mailProperties.getJndiName(), mailConfig.getJndiName());
+        String jndiName = StringUtils.defaultIfEmpty(mailProperties.getJndiName(), config.getJndiName());
 
         if (StringUtils.isNotBlank(jndiName)) {
             try {
