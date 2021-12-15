@@ -4,15 +4,14 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
+import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
-import com.github.dactiv.framework.mybatis.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.Email;
 import javax.validation.constraints.NotEmpty;
@@ -62,7 +61,6 @@ public class SystemUserEntity implements NumberIdEntity<Integer> {
      * 状态:1.启用、2.禁用、3.锁定
      */
     @NotNull
-    @Range(min = 1, max = 3)
     private UserStatus status;
 
     /**

@@ -7,13 +7,12 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.mybatis.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
-import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
@@ -91,7 +90,7 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      *
      * @see Plugin#sources()
      */
-    @NotEmpty
+    @NotNull
     @JsonCollectionGenericType(ResourceSourceEnum.class)
     @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private List<ResourceSourceEnum> sources = new LinkedList<>();
@@ -105,21 +104,18 @@ public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<I
      * 是否可删除:0.否、1.是
      */
     @NotNull
-    @Range(min = 0, max = 1)
     private YesOrNo removable;
 
     /**
      * 是否可修改:0.否、1.是
      */
     @NotNull
-    @Range(min = 0, max = 1)
     private YesOrNo modifiable;
 
     /**
      * 状态:0.禁用、1.启用
      */
     @NotNull
-    @Range(min = 0, max = 1)
     private DisabledOrEnabled status;
 
     /**

@@ -196,7 +196,7 @@ public class MemberUserConsole {
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isEmailUnique(@RequestParam String email) {
-        return memberUserService.lambdaQuery().eq(MemberUserEntity::getEmail, email).exists();
+        return !memberUserService.lambdaQuery().eq(MemberUserEntity::getEmail, email).exists();
     }
 
     /**
@@ -209,7 +209,7 @@ public class MemberUserConsole {
     @GetMapping("isPhoneUnique")
     @PreAuthorize("isAuthenticated()")
     public boolean isPhoneUnique(@RequestParam String phone) {
-        return memberUserService.lambdaQuery().eq(MemberUserEntity::getPhone, phone).exists();
+        return !memberUserService.lambdaQuery().eq(MemberUserEntity::getPhone, phone).exists();
     }
 
 }

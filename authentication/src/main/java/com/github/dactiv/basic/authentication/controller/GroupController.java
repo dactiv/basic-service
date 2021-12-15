@@ -141,7 +141,7 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断权限值是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isAuthorityUnique(@RequestParam String authority) {
-        return groupService.lambdaQuery().eq(GroupEntity::getAuthority, authority).exists();
+        return !groupService.lambdaQuery().eq(GroupEntity::getAuthority, authority).exists();
     }
 
     /**
@@ -155,6 +155,6 @@ public class GroupController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断组名称是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isNameUnique(@RequestParam String name) {
-        return groupService.lambdaQuery().eq(GroupEntity::getName, name).exists();
+        return !groupService.lambdaQuery().eq(GroupEntity::getName, name).exists();
     }
 }

@@ -16,6 +16,7 @@ import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceSubscribeEvent;
 import com.github.dactiv.framework.nacos.event.NacosSpringEventManager;
+import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.PluginEndpoint;
 import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
 import lombok.extern.slf4j.Slf4j;
@@ -267,7 +268,12 @@ public class PluginResourceService {
      * @return 新的資源
      */
     private ResourceMeta createResource(PluginInfo plugin, PluginInstance instance, ResourceMeta parent) {
-        ResourceMeta target = Casts.of(plugin, ResourceMeta.class, PluginInfo.DEFAULT_CHILDREN_NAME, PluginInfo.DEFAULT_SOURCES_NAME);
+        ResourceMeta target = Casts.of(
+                plugin,
+                ResourceMeta.class,
+                PluginInfo.DEFAULT_CHILDREN_NAME,
+                PluginInfo.DEFAULT_SOURCES_NAME
+        );
 
         List<ResourceSourceEnum> sources = plugin
                 .getSources()
@@ -276,6 +282,7 @@ public class PluginResourceService {
                 .collect(Collectors.toList());
 
         target.setSources(sources);
+        target.setType(NameEnumUtils.parse(plugin.getType(), ResourceType.class));
 
         if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
             target.setParentId(null);
