@@ -11,10 +11,10 @@ import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.EnumerateResourceService;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.crypto.AlgorithmProperties;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
-import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import com.github.dactiv.framework.crypto.access.token.SignToken;
 import com.github.dactiv.framework.crypto.access.token.SimpleExpirationToken;
 import com.github.dactiv.framework.crypto.access.token.SimpleToken;
@@ -78,7 +78,6 @@ public class ConfigController {
                             AccessCryptoService accessCryptoService,
                             EnumerateResourceService enumerateResourceService,
                             RedissonClient redissonClient,
-                            CryptoAlgorithm accessTokenAlgorithm,
                             DiscoveryClient discoveryClient,
                             ApplicationConfig properties,
                             RestTemplate restTemplate) {

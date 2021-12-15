@@ -2,6 +2,8 @@ package com.github.dactiv.basic.gateway;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.github.dactiv.basic.gateway.config.ApplicationConfig;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.spring.web.SpringWebMvcProperties;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -12,6 +14,7 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.converter.HttpMessageConverter;
+import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.stream.Collectors;
@@ -41,6 +44,14 @@ public class GatewayMain {
     @Bean
     public HttpMessageConverters httpMessageConverters(ObjectProvider<HttpMessageConverter<?>> messageConverters) {
         return new HttpMessageConverters(messageConverters.orderedStream().collect(Collectors.toList()));
+    }
+
+    @Bean
+    public ObjectMapper objectMapper(Jackson2ObjectMapperBuilder builder) {
+
+        ObjectMapper objectMapper = builder.createXmlMapper(false).build();
+        Casts.setObjectMapper(objectMapper);
+        return objectMapper;
     }
 
 }

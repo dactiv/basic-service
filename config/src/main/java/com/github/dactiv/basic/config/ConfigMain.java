@@ -1,11 +1,8 @@
 package com.github.dactiv.basic.config;
 
-import com.github.dactiv.framework.crypto.access.CryptoAlgorithm;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.cloud.client.discovery.EnableDiscoveryClient;
-import org.springframework.context.annotation.Bean;
 import org.springframework.security.config.annotation.method.configuration.EnableGlobalMethodSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.session.data.redis.config.annotation.web.http.EnableRedisHttpSession;
@@ -27,9 +24,4 @@ public class ConfigMain {
         SpringApplication.run(ConfigMain.class, args);
     }
 
-    @Bean
-    @ConfigurationProperties("dactiv.config.crypto.access.algorithm")
-    public CryptoAlgorithm accessTokenAlgorithm() {
-        return new CryptoAlgorithm();
-    }
 }
