@@ -69,6 +69,19 @@ public class ConsoleUserController {
     }
 
     /**
+     * 查找系统用户信息
+     *
+     * @param request http 请求
+     *
+     * @return 系统用户信息
+     */
+    @PostMapping("find")
+    @PreAuthorize("isAuthenticated()")
+    public List<ConsoleUserEntity> find(HttpServletRequest request) {
+        return consoleUserService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
+    }
+
+    /**
      * 获取系统用户实体
      *
      * @param id 主键值
