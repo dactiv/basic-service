@@ -22,6 +22,8 @@ import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.github.dactiv.framework.spring.security.authentication.DeviceIdContextRepository;
@@ -255,7 +257,11 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
             }
 
             SocketUserDetails user = Casts.convertValue(userResult, SocketUserDetails.class);
-            if (!UserStatus.Enabled.getValue().equals(userResult.get(RestResult.DEFAULT_STATUS_NAME))) {
+            if (userResult.containsKey(NumberIdEntity.CREATION_TIME_FIELD_NAME)) {
+                Long createTimeValue = Casts.cast(userResult.get(NumberIdEntity.CREATION_TIME_FIELD_NAME));
+                user.setCreationTime(new Date(createTimeValue));
+            }
+            if (!UserStatus.Enabled.equals(user.getStatus())) {
                 log.warn("ID 为 [" + userId + "] 的用户非启用");
                 return false;
             }

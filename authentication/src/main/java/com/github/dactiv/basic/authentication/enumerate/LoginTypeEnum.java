@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.security;
+package com.github.dactiv.basic.authentication.enumerate;
 
 import com.github.dactiv.framework.commons.enumerate.NameEnum;
 
@@ -7,7 +7,7 @@ import com.github.dactiv.framework.commons.enumerate.NameEnum;
  *
  * @author maurice
  */
-public enum LoginType implements NameEnum {
+public enum LoginTypeEnum implements NameEnum {
 
     /**
      * 登录账户与密码登录
@@ -18,7 +18,7 @@ public enum LoginType implements NameEnum {
      */
     Mobile("移动验证码登录");
 
-    LoginType(String name) {
+    LoginTypeEnum(String name) {
         this.name = name;
     }
 

@@ -48,14 +48,14 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
                 .getUserDetailsService(ResourceSourceEnum.USER_CENTER)
                 .getPasswordEncoder();
 
-        if (YesOrNo.No.equals(memberUser.getInitialization().getModifyPassword())) {
+        if (YesOrNo.Yes.equals(memberUser.getInitialization().getRandomPassword())) {
 
             if (!passwordEncoder.matches(oldPassword, memberUser.getPassword())) {
                 throw new ServiceException("旧密码不正确");
             }
 
         } else {
-            memberUser.getInitialization().setModifyPassword(YesOrNo.Yes);
+            memberUser.getInitialization().setRandomPassword(YesOrNo.No);
         }
 
         lambdaUpdate()
@@ -76,7 +76,7 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
     public void updateMemberUserUsername(Integer userId, String newUsername) {
         MemberUserEntity memberUser = get(userId);
 
-        if (YesOrNo.Yes.equals(memberUser.getInitialization().getModifyUsername())) {
+        if (YesOrNo.No.equals(memberUser.getInitialization().getRandomUsername())) {
             throw new ServiceException("不能多次修改登录账户");
         }
 
@@ -84,7 +84,7 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
             throw new ServiceException("登录账户 [" + newUsername + "] 已存在");
         }
 
-        memberUser.getInitialization().setModifyUsername(YesOrNo.Yes);
+        memberUser.getInitialization().setRandomUsername(YesOrNo.No);
 
         lambdaUpdate()
                 .set(SystemUserEntity::getUsername, newUsername)

@@ -11,6 +11,7 @@ import com.github.dactiv.framework.spring.security.authentication.config.Authent
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationFailureHandler;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessHandler;
 import com.github.dactiv.framework.spring.security.authentication.rememberme.CookieRememberService;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.ApplicationEventPublisher;
@@ -23,8 +24,10 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
+import org.springframework.stereotype.Component;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 自定义 spring security 的配置
@@ -36,41 +39,54 @@ import java.util.List;
 @AutoConfigureAfter({SpringSecurityAutoConfiguration.class, RedisHttpSessionConfiguration.class})
 public class SpringSecurityConfig<S extends Session> implements WebSecurityConfigurerAfterAdapter {
 
-    @Autowired
-    private AuthenticationProperties properties;
+    private final AuthenticationProperties properties;
 
-    @Autowired
-    private CookieRememberService rememberMeServices;
+    private final CookieRememberService rememberMeServices;
 
-    @Autowired
-    private JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
+    private final JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
 
-    @Autowired
-    private JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
+    private final JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler;
 
-    @Autowired
-    private JsonSessionInformationExpiredStrategy jsonSessionInformationExpiredStrategy;
+    private final JsonSessionInformationExpiredStrategy jsonSessionInformationExpiredStrategy;
 
-    @Autowired
-    private ApplicationConfig applicationConfig;
+    private final ApplicationConfig applicationConfig;
 
-    @Autowired
+    private final JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
+
+    private final CaptchaAuthenticationFailureResponse captchaAuthenticationFailureResponse;
+
+    private final ApplicationEventPublisher eventPublisher;
+
+    private final AuthenticationManager authenticationManager;
+
+    private final List<AuthenticationTypeTokenResolver> authenticationTypeTokenResolvers;
+
     private SpringSessionBackedSessionRegistry<S> sessionBackedSessionRegistry;
 
-    @Autowired
-    private JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler;
+    public SpringSecurityConfig(AuthenticationProperties properties,
+                                CookieRememberService rememberMeServices,
+                                JsonLogoutSuccessHandler jsonLogoutSuccessHandler,
+                                JsonAuthenticationSuccessHandler jsonAuthenticationSuccessHandler,
+                                JsonSessionInformationExpiredStrategy jsonSessionInformationExpiredStrategy,
+                                ApplicationConfig applicationConfig,
+                                JsonAuthenticationFailureHandler jsonAuthenticationFailureHandler,
+                                CaptchaAuthenticationFailureResponse captchaAuthenticationFailureResponse,
+                                ApplicationEventPublisher eventPublisher,
+                                AuthenticationManager authenticationManager,
+                                ObjectProvider<AuthenticationTypeTokenResolver> authenticationTypeTokenResolver) {
 
-    @Autowired
-    private CaptchaAuthenticationFailureResponse captchaAuthenticationFailureResponse;
-
-    @Autowired
-    private ApplicationEventPublisher eventPublisher;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired(required = false)
-    private List<AuthenticationTypeTokenResolver> authenticationTypeTokenResolvers;
+        this.properties = properties;
+        this.rememberMeServices = rememberMeServices;
+        this.jsonLogoutSuccessHandler = jsonLogoutSuccessHandler;
+        this.jsonAuthenticationSuccessHandler = jsonAuthenticationSuccessHandler;
+        this.jsonSessionInformationExpiredStrategy = jsonSessionInformationExpiredStrategy;
+        this.applicationConfig = applicationConfig;
+        this.jsonAuthenticationFailureHandler = jsonAuthenticationFailureHandler;
+        this.captchaAuthenticationFailureResponse = captchaAuthenticationFailureResponse;
+        this.eventPublisher = eventPublisher;
+        this.authenticationManager = authenticationManager;
+        this.authenticationTypeTokenResolvers = authenticationTypeTokenResolver.orderedStream().collect(Collectors.toList());
+    }
 
     @Override
     public void configure(HttpSecurity httpSecurity) throws Exception {
@@ -101,7 +117,8 @@ public class SpringSecurityConfig<S extends Session> implements WebSecurityConfi
 
     @Bean
     public SpringSessionBackedSessionRegistry<S> springSessionBackedSessionRegistry(FindByIndexNameSessionRepository<S> sessionRepository) {
-        return new SpringSessionBackedSessionRegistry<>(sessionRepository);
+        sessionBackedSessionRegistry = new SpringSessionBackedSessionRegistry<>(sessionRepository);
+        return sessionBackedSessionRegistry;
     }
 
 }

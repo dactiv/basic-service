@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
+import com.github.dactiv.basic.authentication.domain.meta.MemberUserInitializationMeta;
 import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.authentication.service.MemberUserService;
@@ -54,10 +55,10 @@ public class MemberUserDetailsService implements UserDetailsService {
     @Getter
     private final AuthorizationService authorizationService;
 
-    private final GroupService groupService;
-
     @Getter
     private final MemberUserService memberUserService;
+
+    private final GroupService groupService;
 
     private final PasswordEncoder passwordEncoder;
 
@@ -96,6 +97,7 @@ public class MemberUserDetailsService implements UserDetailsService {
             user.setPhone(token.getPrincipal().toString());
             user.setPassword(generateRandomPassword());
             user.setStatus(UserStatus.Enabled);
+            user.setInitialization(new MemberUserInitializationMeta());
 
             if (ResourceSourceEnum.MOBILE.toString().equals(type)) {
 

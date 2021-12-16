@@ -28,8 +28,8 @@ import java.util.Map;
 @Data
 @NoArgsConstructor
 @Alias("siteMessage")
-@TableName("tb_site_message")
 @EqualsAndHashCode(callSuper = true)
+@TableName(value = "tb_site_message", autoResultMap = true)
 public class SiteMessageEntity extends BasicMessageEntity implements AttachmentMessage, Retryable, ExecuteStatus.Body, BatchMessageEntity.Body {
 
     private static final long serialVersionUID = 2037280001998945900L;

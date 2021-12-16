@@ -7,7 +7,7 @@ import com.github.dactiv.framework.commons.enumerate.NameEnum;
  *
  * @author maurice
  */
-public enum MessageTypeEnum implements NameEnum {
+public enum UmengMessageTypeEnum implements NameEnum {
     /**
      * 自定义
      */
@@ -26,7 +26,7 @@ public enum MessageTypeEnum implements NameEnum {
      *
      * @param name 名称
      */
-    MessageTypeEnum(String name) {
+    UmengMessageTypeEnum(String name) {
         this.name = name;
     }
 

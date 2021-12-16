@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.meta.site.ument.ios;
+package com.github.dactiv.basic.message.domain.meta.site.umeng.ios;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

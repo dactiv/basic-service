@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.meta.site.ument;
+package com.github.dactiv.basic.message.domain.meta.site.umeng;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 import com.fasterxml.jackson.annotation.JsonInclude;

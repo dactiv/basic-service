@@ -36,4 +36,6 @@ dactiv:
       - "/login/**"
       - "/logout/**"
       - "/actuator/**"
-
+  enumerate:
+    base-packages:
+      - com.github.dactiv.basic.authentication.enumerate

@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.message.domain.meta.site.ument.android;
+package com.github.dactiv.basic.message.domain.meta.site.umeng.android;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 

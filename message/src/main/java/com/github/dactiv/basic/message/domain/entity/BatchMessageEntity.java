@@ -49,7 +49,7 @@ public class BatchMessageEntity extends IdEntity<Integer> {
     /**
      * 状态:0.执行中、1.执行成功，99.执行失败
      */
-    private ExecuteStatus status = ExecuteStatus.Processing;
+    private ExecuteStatus executeStatus = ExecuteStatus.Processing;
 
     /**
      * 总数

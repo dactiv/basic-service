@@ -27,7 +27,11 @@ public class ApplicationConfig {
 
     public static final String DEFAULT_LOGOUT_URL = "/logout";
 
-    public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(ResourceSourceEnum.MOBILE.toString(), DefaultUserDetailsService.DEFAULT_TYPES);
+    public static final List<String> DEFAULT_CAPTCHA_AUTHENTICATION_TYPES = Arrays.asList(
+            ResourceSourceEnum.MOBILE_SOURCE_VALUE,
+            ResourceSourceEnum.CONSOLE_SOURCE_VALUE,
+            DefaultUserDetailsService.DEFAULT_TYPES
+    );
 
     /**
      * 管理员组 id
@@ -59,11 +63,6 @@ public class ApplicationConfig {
      * 超级管理登陆账户
      */
     private String adminUsername = "admin";
-
-    /**
-     * 会员用户初始化缓存配置
-     */
-    private CacheProperties memberUserInitializationCache = new CacheProperties("member:user:initialization:");
 
     /**
      * 错误次数超时间

@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.security.LoginType;
+import com.github.dactiv.basic.authentication.enumerate.LoginTypeEnum;
 import com.github.dactiv.basic.commons.feign.captcha.CaptchaFeignClient;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -74,7 +74,7 @@ public class CaptchaAuthenticationFailureResponse implements JsonAuthenticationF
         // 该验证码会通过 CaptchaAuthenticationFilter 进行验证码，详情查看 CaptchaAuthenticationFilter。
         // 如果登录类型为手机短信登录，创建一个生成短信发送验证码的拦截 token 给客户端，
         // 让客户端在页面生成一个验证码，该验证码为发送短信时需要验证的验证码，方式短信被刷行为。
-        if (LoginType.Mobile.toString().equals(loginType)) {
+        if (LoginTypeEnum.Mobile.toString().equals(loginType)) {
 
             String token = request.getParameter(applicationConfig.getSmsCaptchaParamName());
 

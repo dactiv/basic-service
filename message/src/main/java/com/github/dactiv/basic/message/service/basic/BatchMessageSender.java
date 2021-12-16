@@ -182,7 +182,7 @@ public abstract class BatchMessageSender<T extends BasicMessageEntity, S extends
         }
 
         if (batchMessage.getCount().equals(batchMessage.getSuccessNumber() + batchMessage.getFailNumber())) {
-            batchMessage.setStatus(ExecuteStatus.Success);
+            batchMessage.setExecuteStatus(ExecuteStatus.Success);
             batchMessage.setCompleteTime(new Date());
 
             onBatchMessageComplete(batchMessage);

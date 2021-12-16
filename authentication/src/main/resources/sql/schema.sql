@@ -77,6 +77,7 @@ CREATE TABLE `tb_member_user` (
   `email` varchar(64) DEFAULT NULL COMMENT '邮箱',
   `phone` varchar(24) DEFAULT NULL COMMENT '备注',
   `status` tinyint(4) NOT NULL COMMENT '状态:1.启用、2.禁用、3.锁定',
+  `initialization` json DEFAULT NULL COMMENT '初始化信息',
   `groups_info` json DEFAULT NULL COMMENT '组信息',
   `resource_map` json DEFAULT NULL COMMENT '资源信息',
   PRIMARY KEY (`id`) USING BTREE,

@@ -4,16 +4,16 @@ import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.commons.feign.authentication.AuthenticationFeignClient;
 import com.github.dactiv.basic.message.config.site.SiteConfig;
 import com.github.dactiv.basic.message.domain.entity.SiteMessageEntity;
-import com.github.dactiv.basic.message.domain.meta.site.ument.BasicMessageMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.PolicyMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidMessageMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPayloadBodyMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPayloadMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.android.AndroidPolicyMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadApsAlertMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadApsMeta;
-import com.github.dactiv.basic.message.domain.meta.site.ument.ios.IosPayloadMeta;
-import com.github.dactiv.basic.message.enumerate.site.ument.MessageTypeEnum;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.BasicMessageMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.PolicyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.android.AndroidMessageMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.android.AndroidPayloadBodyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.android.AndroidPayloadMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.android.AndroidPolicyMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.ios.IosPayloadApsAlertMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.ios.IosPayloadApsMeta;
+import com.github.dactiv.basic.message.domain.meta.site.umeng.ios.IosPayloadMeta;
+import com.github.dactiv.basic.message.enumerate.site.ument.UmengMessageTypeEnum;
 import com.github.dactiv.basic.message.service.support.site.SiteMessageChannelSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -93,9 +93,9 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
         BasicMessageMeta basicMessage = null;
         // 根据谁被信息构造基础消息对象
         if ("ANDROID".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
-            basicMessage = getAndroidMessage(message, MessageTypeEnum.Customize);
+            basicMessage = getAndroidMessage(message, UmengMessageTypeEnum.Customize);
         } else if ("IOS".equals(device.get(UserAgent.OPERATING_SYSTEM_NAME))) {
-            basicMessage = getIosMessage(message, MessageTypeEnum.Customize);
+            basicMessage = getIosMessage(message, UmengMessageTypeEnum.Customize);
         }
 
         if (basicMessage == null) {
@@ -162,7 +162,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      * @return 基础消息实体
      */
     @SuppressWarnings("unchecked")
-    public BasicMessageMeta getIosMessage(SiteMessageEntity entity, MessageTypeEnum type) {
+    public BasicMessageMeta getIosMessage(SiteMessageEntity entity, UmengMessageTypeEnum type) {
         BasicMessageMeta result = new BasicMessageMeta();
 
         result.setProductionMode(config.getUmeng().isProductionMode());
@@ -209,7 +209,7 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
      *
      * @return 基础消息实体
      */
-    public BasicMessageMeta getAndroidMessage(SiteMessageEntity entity, MessageTypeEnum type) {
+    public BasicMessageMeta getAndroidMessage(SiteMessageEntity entity, UmengMessageTypeEnum type) {
 
         AndroidMessageMeta result = new AndroidMessageMeta();
 
