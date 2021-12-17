@@ -18,7 +18,7 @@ dactiv:
   spring:
     web:
       mvc:
-        base-packages: com.github.dactiv.basic.socket.server
+        filter-view-base-packages: com.github.dactiv.basic.socket.server.domain
   authentication:
     plugin:
       base-packages: com.github.dactiv.basic.socket.server.controller

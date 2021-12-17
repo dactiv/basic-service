@@ -20,13 +20,12 @@ import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
-import org.hibernate.validator.constraints.Range;
 
 import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 
-import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
+import static com.github.dactiv.basic.commons.Constants.CHAT_FILTER_RESULT_ID;
 
 /**
  * <p>用户组实体类</p>
@@ -40,7 +39,7 @@ import static com.github.dactiv.basic.commons.Constants.SOCKET_RESULT_ID;
 @NoArgsConstructor
 @EqualsAndHashCode
 @TableName(value = "tb_group", autoResultMap = true)
-@IncludeView(value = SOCKET_RESULT_ID, properties = {"id", "name", "parentId"})
+@IncludeView(value = CHAT_FILTER_RESULT_ID, properties = {"id", "name", "parentId"})
 public class GroupEntity implements Tree<Integer, GroupEntity>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 5357157352791368716L;

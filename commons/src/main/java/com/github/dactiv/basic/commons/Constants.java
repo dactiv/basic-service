@@ -11,6 +11,8 @@ public interface Constants {
 
     String WEB_FILTER_RESULT_ID = "web";
 
+    String CHAT_FILTER_RESULT_ID = "chat";
+
     /**
      * 替换 HTML 标签正则表达式
      */
@@ -55,11 +57,6 @@ public interface Constants {
      * socket 服务系统名称
      */
     String SYS_SOCKET_SERVER_NAME = "socket-server";
-
-    /**
-     * socket 结果集 id，用于响应socket 内容时的过滤或引入字段 id
-     */
-    String SOCKET_RESULT_ID = "socket_result";
 
     /**
      * 权限系统的默认 rabbitmq 交换机名称

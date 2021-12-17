@@ -9,6 +9,10 @@ mybatis-plus:
     banner: "off"
 
 dactiv:
+  spring:
+    web:
+      mvc:
+        filter-view-base-packages: com.github.dactiv.basic.message.domain
   idempotent:
     ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:

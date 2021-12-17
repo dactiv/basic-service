@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -8,6 +9,8 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+
+import static com.github.dactiv.basic.commons.Constants.CHAT_FILTER_RESULT_ID;
 
 /**
  * <p>系统用户实体类</p>
@@ -21,6 +24,7 @@ import javax.validation.constraints.NotEmpty;
 @Alias("consoleUser")
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_console_user", autoResultMap = true)
+@IncludeView(value = CHAT_FILTER_RESULT_ID, properties = {"id", "username", "realName"})
 public class ConsoleUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 542256170672538050L;
