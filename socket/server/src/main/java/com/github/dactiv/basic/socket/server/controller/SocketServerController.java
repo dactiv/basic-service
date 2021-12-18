@@ -20,6 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -49,21 +50,45 @@ public class SocketServerController {
     /**
      * 加入房间频道
      *
-     * @param securityContext spring 安全上下文
-     * @param rooms           房间集合
+     * @param deviceIdentifies 用户唯一识别集合
+     * @param rooms   房间集合
      *
      * @return rest 结果集
      */
     @PostMapping("joinRoom")
     @PreAuthorize("hasRole('BASIC') || hasRole('ORDINARY')")
-    public RestResult<?> joinRoom(@CurrentSecurityContext SecurityContext securityContext,
+    public RestResult<?> joinRoom(@RequestParam List<String> deviceIdentifies,
                                   @RequestParam List<String> rooms) {
 
-        SocketUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        deviceIdentifies
+                .stream()
+                .map(socketServerManager::getSocketUserDetails)
+                .filter(Objects::nonNull)
+                .forEach(u -> socketServerManager.joinRoom(u, rooms));
 
-        socketServerManager.joinRoom(userDetails, rooms);
+        return RestResult.of("加入 " + rooms + " 房间成功");
+    }
 
-        return RestResult.of("加入[" + rooms + "]房间成功");
+    /**
+     * 离开房间频道
+     *
+     * @param deviceIdentifies 用户唯一识别集合
+     * @param rooms   房间集合
+     *
+     * @return rest 结果集
+     */
+    @PostMapping("leaveRoom")
+    @PreAuthorize("hasRole('BASIC') || hasRole('ORDINARY')")
+    public RestResult<?> leaveRoom(@RequestParam List<String> deviceIdentifies,
+                                   @RequestParam List<String> rooms) {
+
+        deviceIdentifies
+                .stream()
+                .map(socketServerManager::getSocketUserDetails)
+                .filter(Objects::nonNull)
+                .forEach(u -> socketServerManager.leaveRoom(u, rooms));
+
+        return RestResult.of("离开 " + rooms + " 房间成功");
     }
 
     /**
@@ -78,7 +103,7 @@ public class SocketServerController {
     public List<RestResult<?>> broadcast(@RequestBody List<BroadcastMessage<?>> messageList) {
         return messageList
                 .stream()
-                .peek(r -> socketServerManager.sendMessage(r))
+                .peek(socketServerManager::sendMessage)
                 .map(r -> RestResult.ofSuccess("广播 socket 成功", r.getMessage().getData()))
                 .collect(Collectors.toList());
 
@@ -99,7 +124,7 @@ public class SocketServerController {
         messageList
                 .stream()
                 .flatMap(r -> r.toUnicastMessageList().stream())
-                .forEach(r -> socketServerManager.sendMessage(r));
+                .forEach(socketServerManager::sendMessage);
 
         return messageList
                 .stream()
@@ -120,7 +145,7 @@ public class SocketServerController {
 
         return messageList
                 .stream()
-                .peek(r -> socketServerManager.sendMessage(r))
+                .peek(socketServerManager::sendMessage)
                 .map(r -> RestResult.ofSuccess("单播 socket 成功", r.getMessage().getData()))
                 .collect(Collectors.toList());
     }

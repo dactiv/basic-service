@@ -148,13 +148,30 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         SocketIOClient client = socketServer.getClient(UUID.fromString(userDetails.getDeviceIdentified()));
 
-        if (Objects.nonNull(client)) {
-
-            client.getAllRooms().forEach(client::leaveRoom);
-
-            rooms.forEach(client::joinRoom);
+        if (Objects.isNull(client) ) {
+            return ;
         }
 
+        Set<String> allRooms = client.getAllRooms();
+        rooms.stream().filter(r -> !allRooms.contains(r)).forEach(client::joinRoom);
+    }
+
+    /**
+     * 离开聊天房间频道
+     *
+     * @param userDetails socket 用户明细
+     * @param rooms 房间名称集合
+     */
+    public void leaveRoom(SocketUserDetails userDetails, List<String> rooms) {
+        SocketIOClient client = socketServer.getClient(UUID.fromString(userDetails.getDeviceIdentified()));
+
+        if (Objects.isNull(client) ) {
+            return ;
+        }
+
+        Set<String> allRooms = client.getAllRooms();
+
+        rooms.stream().filter(r -> allRooms.contains(r)).forEach(client::leaveRoom);
     }
 
     @Override

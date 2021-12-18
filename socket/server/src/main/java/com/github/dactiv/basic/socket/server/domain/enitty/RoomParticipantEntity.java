@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRoleEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
 import lombok.*;
@@ -53,7 +54,7 @@ public class RoomParticipantEntity implements NumberIdEntity<Integer> {
      * 角色
      */
     @NonNull
-    private Integer role;
+    private RoomParticipantRoleEnum role;
 
     /**
      * 房间 id

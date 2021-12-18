@@ -21,5 +21,5 @@ public class RecentContactMeta extends IntegerIdEntity {
      *
      * @see ContactTypeEnum
      */
-    private Integer type;
+    private ContactTypeEnum type;
 }

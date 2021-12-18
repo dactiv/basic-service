@@ -14,12 +14,14 @@ import lombok.Setter;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.jetbrains.annotations.NotNull;
 import org.springframework.beans.factory.DisposableBean;
 import org.springframework.cloud.client.ServiceInstance;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
+import org.springframework.util.AntPathMatcher;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.RestTemplate;
 
@@ -49,6 +51,51 @@ public class SocketClientTemplate implements DisposableBean {
 
     @NonNull
     private AuthenticationProperties properties;
+
+    /**
+     * 构造加入/离开房间的 Http 实体
+     *
+     * @param deviceIdentifies 设备唯一识别集合
+     * @param rooms 房间集合
+     *
+     * @return Http 实体
+     */
+    private HttpEntity<Map<String, Object>> createRoomHttpEntity(List<String> deviceIdentifies, List<String> rooms) {
+        HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
+        httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
+
+        Map<String, Object> data = new LinkedHashMap<>();
+        data.put("deviceIdentifies", deviceIdentifies);
+        data.put("rooms", rooms);
+
+        return new HttpEntity<>(data, httpHeaders);
+    }
+
+    /**
+     * 加入房间
+     *
+     * @param deviceIdentifies 设备唯一是被
+     * @param rooms 房间集合
+     *
+     * @return 执行结果
+     */
+    public List<Map<String, Object>> joinRoom(List<String> deviceIdentifies, List<String> rooms) {
+        HttpEntity<Map<String, Object>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  "joinRoom");
+    }
+
+    /**
+     * 离开房间
+     *
+     * @param deviceIdentifies 设备唯一是被
+     * @param rooms 房间集合
+     *
+     * @return 执行结果
+     */
+    public List<Map<String, Object>> leaveRoom(List<String> deviceIdentifies, List<String> rooms) {
+        HttpEntity<Map<String, Object>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  "leaveRoom");
+    }
 
     /**
      * 广播消息
@@ -484,14 +531,14 @@ public class SocketClientTemplate implements DisposableBean {
                     .findFirst()
                     .orElseThrow(() -> new SystemException("找不到 IP 为 [" + ip + "] 的服务实例"));
 
-            urls.add(instance.getUri() + "/" + type);
+            urls.add(this.createUrl(instance, type));
 
         } else {
             List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
 
             urls = serviceInstances
                     .stream()
-                    .map(s -> s.getUri() + "/" + type)
+                    .map(s -> this.createUrl(s, type))
                     .collect(Collectors.toList());
         }
 
@@ -522,6 +569,56 @@ public class SocketClientTemplate implements DisposableBean {
 
         return result;
 
+    }
+
+    /**
+     * 执行服务发现操作
+     *
+     * @param entity http 实体
+     * @param method 提交方式
+     * @param name 执行后缀
+     *
+     * @return 每个服务执行结果集合
+     */
+    private List<Map<String, Object>> exchangeDiscoveryOperation(HttpEntity<?> entity, HttpMethod method, String name) {
+        List<Map<String, Object>> result = new LinkedList<>();
+
+        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
+
+        List<String> urls = serviceInstances
+                .stream()
+                .map(s -> this.createUrl(s, name))
+                .collect(Collectors.toList());
+
+        for (String url : urls) {
+
+            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
+                    url,
+                    method,
+                    entity,
+                    new ParameterizedTypeReference<>() {
+                    }
+            );
+
+            if (Objects.nonNull(response.getBody())) {
+                result.add(response.getBody());
+            }
+        }
+
+        return result;
+    }
+
+    /**
+     * 根据服务实例和接口名称创建 url
+     *
+     * @param s 服务实例
+     * @param name 接口名称
+     *
+     * @return 完整 url 路径
+     */
+    private String createUrl(ServiceInstance s, String name) {
+        String prefix = StringUtils.appendIfMissing(s.getUri().toString(), AntPathMatcher.DEFAULT_PATH_SEPARATOR);
+        return prefix + StringUtils.removeStart(name, AntPathMatcher.DEFAULT_PATH_SEPARATOR);
     }
 
     /**
@@ -586,7 +683,7 @@ public class SocketClientTemplate implements DisposableBean {
      */
     static class LogListenableFutureCallback<T> implements ListenableFutureCallback<T> {
         @Override
-        public void onFailure(Throwable ex) {
+        public void onFailure(@NotNull Throwable ex) {
             log.error("发送 socket 消息失败", ex);
         }
 

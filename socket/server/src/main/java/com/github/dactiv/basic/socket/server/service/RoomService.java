@@ -1,13 +1,16 @@
 package com.github.dactiv.basic.socket.server.service;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.socket.server.dao.RoomDao;
 import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
 import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRoleEnum;
+import com.github.dactiv.basic.socket.server.receiver.CreateRoomMessageReceiver;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
+import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -34,12 +37,11 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
 
     private final RoomParticipantService roomParticipantService;
 
-    private final SocketServerManager socketServerManager;
+    private final AmqpTemplate amqpTemplate;
 
-    public RoomService(RoomParticipantService roomParticipantService,
-                       SocketServerManager socketServerManager) {
+    public RoomService(RoomParticipantService roomParticipantService, AmqpTemplate amqpTemplate) {
         this.roomParticipantService = roomParticipantService;
-        this.socketServerManager = socketServerManager;
+        this.amqpTemplate = amqpTemplate;
     }
 
     /**
@@ -55,7 +57,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
 
         List<RoomParticipantEntity> roomParticipants = userIds
                 .stream()
-                .map(id -> RoomParticipantEntity.of(id, RoomParticipantRoleEnum.Participant.getValue(), room.getId()))
+                .map(id -> RoomParticipantEntity.of(id, RoomParticipantRoleEnum.Participant, room.getId()))
                 .collect(Collectors.toList());
 
         Optional<RoomParticipantEntity> optional = roomParticipants
@@ -64,20 +66,21 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                 .findFirst();
 
         if (optional.isPresent()) {
-            optional.get().setRole(RoomParticipantRoleEnum.Owner.getValue());
+            optional.get().setRole(RoomParticipantRoleEnum.Owner);
         } else {
-            roomParticipants.add(RoomParticipantEntity.of(ownerId, RoomParticipantRoleEnum.Owner.getValue(), room.getId()));
+            roomParticipants.add(RoomParticipantEntity.of(ownerId, RoomParticipantRoleEnum.Owner, room.getId()));
         }
 
-        roomParticipants
-                .stream()
-                .peek(roomParticipantService::save)
-                .map(r -> socketServerManager.getSocketUserDetails(r.getUserId()))
-                .filter(Objects::nonNull)
-                .forEach(s -> socketServerManager.joinRoom(s, room.getId().toString()));
+        roomParticipantService.save(roomParticipants);
 
         RoomResponseBody body = Casts.of(room, RoomResponseBody.class);
         body.setParticipantList(roomParticipants);
+
+        amqpTemplate.convertAndSend(
+                Constants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                CreateRoomMessageReceiver.DEFAULT_QUEUE_NAME,
+                room.getId()
+        );
 
         return body;
     }
@@ -122,5 +125,32 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                 .peek(r -> r.setParticipantList(roomParticipantService.findByRoomId(r.getId())))
                 .collect(Collectors.toList());
 
+    }
+
+    /**
+     * 退出/解散房间
+     *
+     * @param userId 当前用户 id
+     * @param id 房间 id
+     *
+     * @return true 解散房间，false 退出房间
+     */
+    public boolean exitRoom(Integer userId, Integer id) {
+
+        RoomParticipantEntity entity = roomParticipantService.lambdaQuery()
+                .select(RoomParticipantEntity::getId, RoomParticipantEntity::getRole)
+                .eq(RoomParticipantEntity::getUserId, userId)
+                .eq(RoomParticipantEntity::getRoomId, id)
+                .one();
+
+        boolean result = RoomParticipantRoleEnum.Owner.equals(entity.getRole());
+
+        if (result) {
+            roomParticipantService.lambdaUpdate().eq(RoomParticipantEntity::getRoomId, id).remove();
+        }
+
+        deleteById(id);
+
+        return result;
     }
 }

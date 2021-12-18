@@ -32,7 +32,7 @@ public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMes
      *
      * @see ContactTypeEnum
      */
-    private Integer type;
+    private ContactTypeEnum type;
 
     /**
      * 目标用户 id

@@ -53,7 +53,6 @@ public class RoomController {
      */
     @PostMapping("createRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @SocketMessage(Constants.WEB_FILTER_RESULT_ID)
     @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> createRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     RoomEntity room,
@@ -64,8 +63,28 @@ public class RoomController {
 
         RoomResponseBody body = roomService.create(room, userIds, userId);
 
-        SocketResultHolder.get().addBroadcastSocketMessage(room.getName(), RoomEntity.ROOM_CREATE_EVENT_NAME, body);
-        return RestResult.ofSuccess("创建" + room.getId() + "房间成功", room.getId());
+        return RestResult.ofSuccess("创建" + room.getName() + "房间成功", body);
+    }
+
+    /**
+     * 退出/解散房间
+     *
+     * @param securityContext 安全上下文
+     * @param id 房间信息 id
+     *
+     * @return rest 结果集
+     */
+    @PostMapping("exitRoom")
+    @PreAuthorize("isFullyAuthenticated()")
+    @SocketMessage(Constants.WEB_FILTER_RESULT_ID)
+    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
+    public RestResult<?> exitRoom(@CurrentSecurityContext SecurityContext securityContext, Integer id) {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        boolean dissolution = roomService.exitRoom(userId, id);
+
+        return RestResult.ofSuccess((dissolution ? "解散" : "退出") + "成功", id);
     }
 
     /**

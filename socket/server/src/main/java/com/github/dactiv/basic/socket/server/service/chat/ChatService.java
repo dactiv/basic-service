@@ -286,7 +286,7 @@ public class ChatService implements InitializingBean {
 
             globalMessage.setFilename(filename);
             globalMessage.setBucketName(minioBucket.getBucketName());
-            globalMessage.setType(global ? GlobalMessageTypeEnum.Global.getValue() : GlobalMessageTypeEnum.Contact.getValue());
+            globalMessage.setType(global ? GlobalMessageTypeEnum.Global : GlobalMessageTypeEnum.Contact);
         }
 
         return globalMessage;
@@ -537,7 +537,7 @@ public class ChatService implements InitializingBean {
         );
 
         contactMessage.setId(senderId);
-        contactMessage.setType(ContactTypeEnum.Person.getValue());
+        contactMessage.setType(ContactTypeEnum.Person);
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
@@ -760,7 +760,7 @@ public class ChatService implements InitializingBean {
 
         RecentContactMeta recentContact = recentContacts
                 .stream()
-                .filter(i -> i.getId().equals(contactId) && i.getType().equals(type.getValue()))
+                .filter(i -> i.getId().equals(contactId) && i.getType().equals(type))
                 .findFirst()
                 .orElse(null);
 
@@ -769,7 +769,7 @@ public class ChatService implements InitializingBean {
         } else {
             recentContact = new RecentContactMeta();
             recentContact.setId(contactId);
-            recentContact.setType(type.getValue());
+            recentContact.setType(type);
             recentContacts.add(recentContact);
         }
 
