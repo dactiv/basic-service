@@ -171,7 +171,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         Set<String> allRooms = client.getAllRooms();
 
-        rooms.stream().filter(r -> allRooms.contains(r)).forEach(client::leaveRoom);
+        rooms.stream().filter(allRooms::contains).forEach(client::leaveRoom);
     }
 
     @Override
