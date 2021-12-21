@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.socket.server.service.chat;
 
 import com.fasterxml.jackson.core.type.TypeReference;
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -59,7 +59,7 @@ import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static com.github.dactiv.basic.commons.Constants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE;
+import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE;
 
 /**
  * 聊天业务逻辑服务
@@ -429,7 +429,7 @@ public class ChatService implements InitializingBean {
 
             String lastMessage = RegExUtils.replaceAll(
                     message.getContent(),
-                    Constants.REPLACE_HTML_TAG_REX,
+                    SystemConstants.REPLACE_HTML_TAG_REX,
                     StringUtils.EMPTY
             );
 
@@ -532,7 +532,7 @@ public class ChatService implements InitializingBean {
 
         String lastMessage = RegExUtils.replaceAll(
                 message.getContent(),
-                Constants.REPLACE_HTML_TAG_REX,
+                SystemConstants.REPLACE_HTML_TAG_REX,
                 StringUtils.EMPTY
         );
 

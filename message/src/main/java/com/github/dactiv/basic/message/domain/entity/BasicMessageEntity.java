@@ -1,14 +1,12 @@
 package com.github.dactiv.basic.message.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.Version;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.message.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
-import com.github.dactiv.framework.mybatis.handler.NameValueEnumTypeHandler;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

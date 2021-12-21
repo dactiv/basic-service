@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.receiver;
 
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
@@ -36,7 +36,7 @@ public class SaveMessageReceiver {
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = Constants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE),
+                    exchange = @Exchange(value = SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE),
                     key = DEFAULT_QUEUE_NAME
             )
     )

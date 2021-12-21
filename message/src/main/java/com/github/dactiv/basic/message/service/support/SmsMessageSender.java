@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.message.service.support;
 
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.message.config.sms.SmsConfig;
 import com.github.dactiv.basic.message.domain.body.SmsMessageBody;
 import com.github.dactiv.basic.message.domain.entity.BasicMessageEntity;
@@ -80,7 +80,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE),
+                    exchange = @Exchange(value = SystemConstants.SYS_MESSAGE_RABBITMQ_EXCHANGE),
                     key = DEFAULT_QUEUE_NAME
             )
     )
@@ -176,7 +176,7 @@ public class SmsMessageSender extends BatchMessageSender<SmsMessageBody, SmsMess
                 .stream()
                 .map(BasicMessageEntity::getId)
                 .forEach(id ->
-                        amqpTemplate.convertAndSend(Constants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
+                        amqpTemplate.convertAndSend(SystemConstants.SYS_MESSAGE_RABBITMQ_EXCHANGE, DEFAULT_QUEUE_NAME, id));
 
         return RestResult.ofSuccess(
                 "发送 " + entities.size() + " 条短信消息完成",

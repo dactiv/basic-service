@@ -25,7 +25,7 @@ import javax.validation.constraints.NotEmpty;
 import javax.validation.constraints.NotNull;
 import java.util.*;
 
-import static com.github.dactiv.basic.commons.Constants.CHAT_FILTER_RESULT_ID;
+import static com.github.dactiv.basic.commons.SystemConstants.CHAT_FILTER_RESULT_ID;
 
 /**
  * <p>用户组实体类</p>

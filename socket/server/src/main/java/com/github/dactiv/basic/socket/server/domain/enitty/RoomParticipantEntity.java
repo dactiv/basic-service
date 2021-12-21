@@ -3,7 +3,7 @@ package com.github.dactiv.basic.socket.server.domain.enitty;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRoleEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
@@ -60,7 +60,7 @@ public class RoomParticipantEntity implements NumberIdEntity<Integer> {
      * 房间 id
      */
     @NonNull
-    @Exclude(Constants.WEB_FILTER_RESULT_ID)
+    @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
     private Integer roomId;
 
 }

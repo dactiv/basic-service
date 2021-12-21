@@ -7,7 +7,7 @@ import com.github.dactiv.framework.commons.Casts;
  *
  * @author maurice.chen
  */
-public interface Constants {
+public interface SystemConstants {
 
     String WEB_FILTER_RESULT_ID = "web";
 

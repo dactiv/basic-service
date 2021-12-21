@@ -48,7 +48,7 @@ public class SocketUserDetails extends MobileUserDetails {
      * 链接 socket 服务器的端口
      */
     @JsonIgnore
-    private Integer port;
+    private int port;
 
     /**
      * 最后链接时间

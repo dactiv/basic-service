@@ -18,11 +18,9 @@ import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.domain.SocketUserMessage;
 import com.github.dactiv.basic.socket.client.enumerate.ConnectStatus;
 import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
-import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.service.message.MessageSender;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
-import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.FileObject;
@@ -154,6 +152,10 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         Set<String> allRooms = client.getAllRooms();
         rooms.stream().filter(r -> !allRooms.contains(r)).forEach(client::joinRoom);
+        if (log.isDebugEnabled()) {
+            log.debug("用户 [" + userDetails.getUsername() + "] 加入了 ["
+                    + rooms + "], 当前房间数据为 [" + client.getAllRooms() + "]");
+        }
     }
 
     /**
@@ -172,6 +174,10 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         Set<String> allRooms = client.getAllRooms();
 
         rooms.stream().filter(allRooms::contains).forEach(client::leaveRoom);
+        if (log.isDebugEnabled()) {
+            log.debug("用户 [" + userDetails.getUsername() + "] 离开了 ["
+                    + rooms + "], 当前房间数据为 [" + client.getAllRooms() + "]");
+        }
     }
 
     @Override
@@ -457,14 +463,15 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
 
         refreshSpringSecurityContext(user);
         // 获取用户房间信息
-        List<RoomEntity> rooms = roomService.findByUserId(Casts.cast(user.getId(), Integer.class));
+        List<Integer> rooms = roomService.findRoomIdsByUserId(Casts.cast(user.getId(), Integer.class));
         // 如果存在房间，讲客户端假如房间，做广播使用。
         if (CollectionUtils.isEmpty(rooms)) {
-            rooms.forEach(r -> client.joinRoom(r.getId().toString()));
+            rooms.forEach(r -> client.joinRoom(r.toString()));
         }
 
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "
-                + client.getRemoteAddress().toString() + ", 用户为: " + user.getId());
+                + client.getRemoteAddress().toString() + ", 用户为: " +
+                user.getId() + "拥有的房间为:" + client.getAllRooms());
 
     }
 

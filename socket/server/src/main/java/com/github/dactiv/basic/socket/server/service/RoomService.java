@@ -1,19 +1,27 @@
 package com.github.dactiv.basic.socket.server.service;
 
-import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
-import com.github.dactiv.basic.commons.Constants;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
+import com.github.dactiv.basic.commons.ErrorCodeConstants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.dao.RoomDao;
-import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
+import com.github.dactiv.basic.socket.server.domain.dto.RoomDto;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
 import com.github.dactiv.basic.socket.server.enumerate.RoomParticipantRoleEnum;
 import com.github.dactiv.basic.socket.server.receiver.CreateRoomMessageReceiver;
+import com.github.dactiv.basic.socket.server.receiver.ExitRoomMessageReceiver;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
+import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
+import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -51,7 +59,8 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      * @param userIds 用户 id 集合
      * @param ownerId 拥有者 id
      */
-    public RoomResponseBody create(RoomEntity room, List<Integer> userIds, Integer ownerId) {
+    @Concurrent(value = "socket-server:create-room:[#ownerId]")
+    public void create(RoomEntity room, List<Integer> userIds, Integer ownerId) {
 
         save(room);
 
@@ -73,16 +82,14 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
 
         roomParticipantService.save(roomParticipants);
 
-        RoomResponseBody body = Casts.of(room, RoomResponseBody.class);
-        body.setParticipantList(roomParticipants);
+        RoomDto dto = Casts.of(room, RoomDto.class);
+        dto.setParticipantList(roomParticipants);
 
         amqpTemplate.convertAndSend(
-                Constants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
                 CreateRoomMessageReceiver.DEFAULT_QUEUE_NAME,
-                room.getId()
+                dto
         );
-
-        return body;
     }
 
     /**
@@ -92,20 +99,12 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      *
      * @return 房间集合
      */
-    public List<RoomEntity> findByUserId(Integer userId) {
-        return findByUserId(userId, null);
-    }
-
-    /**
-     * 根据用户 id 获取房间集合
-     *
-     * @param userId  用户 id
-     * @param wrapper 查询条件
-     *
-     * @return 房间集合
-     */
-    public List<RoomEntity> findByUserId(Integer userId, LambdaQueryWrapper<RoomEntity> wrapper) {
-        return getBaseMapper().findByUserId(userId, wrapper);
+    public List<Integer> findRoomIdsByUserId(Integer userId) {
+        Wrapper<RoomParticipantEntity>  wrapper = Wrappers
+                .<RoomParticipantEntity>lambdaQuery()
+                .select(RoomParticipantEntity::getRoomId)
+                .eq(RoomParticipantEntity::getUserId, userId);
+        return roomParticipantService.findObjects(wrapper, Integer.class);
     }
 
     /**
@@ -115,14 +114,32 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      *
      * @return 房间响应实体集合
      */
-    public List<RoomResponseBody> findResponseBodiesByUserid(Integer userId) {
+    public List<RoomDto> findByUserId(Integer userId) {
 
-        List<RoomEntity> rooms = findByUserId(userId);
+        List<Integer> ids = findRoomIdsByUserId(userId);
+
+        if (CollectionUtils.isEmpty(ids)) {
+            return new LinkedList<>();
+        }
+
+        List<RoomEntity> rooms = lambdaQuery()
+                .in(RoomEntity::getId, ids)
+                .list();
+
+        List<RoomParticipantEntity> participantList = roomParticipantService
+                .lambdaQuery()
+                .in(RoomParticipantEntity::getRoomId, ids)
+                .list();
 
         return rooms
                 .stream()
-                .map(r -> Casts.of(r, RoomResponseBody.class))
-                .peek(r -> r.setParticipantList(roomParticipantService.findByRoomId(r.getId())))
+                .map(r -> Casts.of(r, RoomDto.class))
+                .peek(r -> r.setParticipantList(
+                        participantList
+                                .stream()
+                                .filter(p -> p.getRoomId().equals(r.getId()))
+                                .collect(Collectors.toList())
+                ))
                 .collect(Collectors.toList());
 
     }
@@ -135,22 +152,61 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      *
      * @return true 解散房间，false 退出房间
      */
+    @Concurrent(value = "socket-server:exit-room:[#userId]")
     public boolean exitRoom(Integer userId, Integer id) {
 
         RoomParticipantEntity entity = roomParticipantService.lambdaQuery()
-                .select(RoomParticipantEntity::getId, RoomParticipantEntity::getRole)
+                .select(RoomParticipantEntity::getRole)
                 .eq(RoomParticipantEntity::getUserId, userId)
                 .eq(RoomParticipantEntity::getRoomId, id)
                 .one();
 
-        boolean result = RoomParticipantRoleEnum.Owner.equals(entity.getRole());
+        ErrorCodeException.isTrue(
+                Objects.nonNull(entity),
+                "该群聊不存在或者您已经不在此群聊内。",
+                ErrorCodeConstants.NOT_CONTENT_CODE
+        );
 
+        boolean result = RoomParticipantRoleEnum.Owner.equals(entity.getRole());
+        // 如果为群主，直接解散房间。
         if (result) {
-            roomParticipantService.lambdaUpdate().eq(RoomParticipantEntity::getRoomId, id).remove();
+
+            lambdaUpdate()
+                    .set(RoomEntity::getStatus, DisabledOrEnabled.Disabled.getValue())
+                    .eq(RoomEntity::getId, id)
+                    .update();
+
+            amqpTemplate.convertAndSend(
+                    SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                    ExitRoomMessageReceiver.DEFAULT_QUEUE_NAME,
+                    id
+            );
+        } else {
+            roomParticipantService.deleteById(entity.getId());
         }
 
-        deleteById(id);
-
         return result;
+    }
+
+    /**
+     * 修改房间名称
+     *
+     * @param userId 修改用户 id
+     * @param name 新的房间名称
+     * @param id 房间 id
+     */
+    public void rename(Integer userId, String name, Integer id) {
+        RoomParticipantEntity entity = roomParticipantService.lambdaQuery()
+                .eq(RoomParticipantEntity::getUserId, userId)
+                .eq(RoomParticipantEntity::getRoomId, id)
+                .one();
+
+        ErrorCodeException.isTrue(
+                Objects.nonNull(entity),
+                "您不在此群聊内，无法修改名称。",
+                ErrorCodeConstants.NOT_CONTENT_CODE
+        );
+
+        lambdaUpdate().set(RoomEntity::getName, name).eq(RoomEntity::getId, id).update();
     }
 }

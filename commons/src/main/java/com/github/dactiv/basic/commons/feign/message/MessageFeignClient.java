@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.commons.feign.message;
 
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.FeignAuthenticationConfiguration;
 import org.springframework.cloud.openfeign.FeignClient;
@@ -14,7 +14,7 @@ import java.util.Map;
  *
  * @author maurice
  */
-@FeignClient(value = Constants.SYS_MESSAGE_NAME, configuration = FeignAuthenticationConfiguration.class)
+@FeignClient(value = SystemConstants.SYS_MESSAGE_NAME, configuration = FeignAuthenticationConfiguration.class)
 public interface MessageFeignClient {
 
     /**

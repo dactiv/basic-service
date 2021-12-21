@@ -12,7 +12,6 @@ import com.github.dactiv.framework.spring.security.authentication.handler.JsonAu
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessHandler;
 import com.github.dactiv.framework.spring.security.authentication.rememberme.CookieRememberService;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.autoconfigure.AutoConfigureAfter;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.context.annotation.Bean;
@@ -24,7 +23,6 @@ import org.springframework.session.FindByIndexNameSessionRepository;
 import org.springframework.session.Session;
 import org.springframework.session.data.redis.config.annotation.web.http.RedisHttpSessionConfiguration;
 import org.springframework.session.security.SpringSessionBackedSessionRegistry;
-import org.springframework.stereotype.Component;
 
 import java.util.List;
 import java.util.stream.Collectors;

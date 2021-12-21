@@ -10,7 +10,7 @@ import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
 
-import static com.github.dactiv.basic.commons.Constants.CHAT_FILTER_RESULT_ID;
+import static com.github.dactiv.basic.commons.SystemConstants.CHAT_FILTER_RESULT_ID;
 
 /**
  * <p>系统用户实体类</p>

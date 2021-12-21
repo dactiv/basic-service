@@ -7,6 +7,7 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.spring.security.authentication.config.AuthenticationProperties;
 import com.github.dactiv.framework.spring.security.authentication.service.feign.FeignAuthenticationConfiguration;
+import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.web.result.filter.holder.FilterResultHolder;
 import lombok.AllArgsConstructor;
 import lombok.NonNull;
@@ -22,6 +23,8 @@ import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.*;
 import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.util.AntPathMatcher;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
 import org.springframework.util.concurrent.ListenableFutureCallback;
 import org.springframework.web.client.RestTemplate;
 
@@ -39,6 +42,10 @@ import java.util.stream.Collectors;
 public class SocketClientTemplate implements DisposableBean {
 
     private static final String DEFAULT_SERVER_SERVICE_ID = "socket-server";
+
+    public static final String JOIN_ROOM_TYPE = "joinRoom";
+
+    public static final String LEAVE_ROOM_TYPE = "leaveRoom";
 
     @NonNull
     private DiscoveryClient discoveryClient;
@@ -60,11 +67,12 @@ public class SocketClientTemplate implements DisposableBean {
      *
      * @return Http 实体
      */
-    private HttpEntity<Map<String, Object>> createRoomHttpEntity(List<String> deviceIdentifies, List<String> rooms) {
+    private HttpEntity<MultiValueMap<String, String>> createRoomHttpEntity(List<String> deviceIdentifies,
+                                                                           List<String> rooms) {
         HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
         httpHeaders.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
 
-        Map<String, Object> data = new LinkedHashMap<>();
+        MultiValueMap<String, String> data = new LinkedMultiValueMap<>();
         data.put("deviceIdentifies", deviceIdentifies);
         data.put("rooms", rooms);
 
@@ -80,8 +88,8 @@ public class SocketClientTemplate implements DisposableBean {
      * @return 执行结果
      */
     public List<Map<String, Object>> joinRoom(List<String> deviceIdentifies, List<String> rooms) {
-        HttpEntity<Map<String, Object>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
-        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  "joinRoom");
+        HttpEntity<MultiValueMap<String, String>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  JOIN_ROOM_TYPE);
     }
 
     /**
@@ -93,8 +101,68 @@ public class SocketClientTemplate implements DisposableBean {
      * @return 执行结果
      */
     public List<Map<String, Object>> leaveRoom(List<String> deviceIdentifies, List<String> rooms) {
-        HttpEntity<Map<String, Object>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
-        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  "leaveRoom");
+        HttpEntity<MultiValueMap<String, String>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  LEAVE_ROOM_TYPE);
+    }
+
+    /**
+     * 执行房间操作
+     *
+     * @param details 用户明细集合
+     * @param rooms 房间集合
+     * @param type 类型:"leaveRoom" -> 离开房间, "joinRoom" -> 加入房间
+     *
+     * @return 执行结果
+     */
+    public List<Map<String, Object>> exchangeRoomOperation(List<SocketUserDetails> details,
+                                                           List<String> rooms,
+                                                           String type) {
+        Map<Optional<ServiceInstance>, List<SocketUserDetails>> groupDetails = details
+                .stream()
+                .collect(Collectors.groupingBy(this::getServiceInstanceOptional));
+
+        List<Map<String, Object>> result = new LinkedList<>();
+
+        for (Map.Entry<Optional<ServiceInstance>, List<SocketUserDetails>> entry : groupDetails.entrySet()) {
+
+            Optional<ServiceInstance> optional = entry.getKey();
+
+            if (optional.isEmpty()) {
+                continue;
+            }
+
+            ServiceInstance serviceInstance = optional.get();
+
+            List<String> deviceIdentifies = entry
+                    .getValue()
+                    .stream()
+                    .map(MobileUserDetails::getDeviceIdentified)
+                    .collect(Collectors.toList());
+
+            HttpEntity<MultiValueMap<String, String>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
+            String url = this.createUrl(serviceInstance.getUri().toString(), type);
+            Map<String, Object> data = exchangeOperation(url, entity, HttpMethod.POST);
+            result.add(data);
+        }
+
+        return result;
+    }
+
+    /**
+     * 获取服务实例
+     *
+     * @param details socket 用户明细
+     *
+     * @return 服务实例的可选择对象
+     */
+    private Optional<ServiceInstance> getServiceInstanceOptional(SocketUserDetails details) {
+
+        List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
+
+        return serviceInstances
+                .stream()
+                .filter(s -> s.getHost().equals(details.getSocketServerIp()))
+                .findFirst();
     }
 
     /**
@@ -241,11 +309,13 @@ public class SocketClientTemplate implements DisposableBean {
 
         tempList.removeAll(socketUserMessages);
 
-        List<Map<String, Object>> result = socketUserMessages.stream()
-                .collect(Collectors.groupingBy(u -> u.getDetails().getSocketServerIp()))
+        List<Map<String, Object>> result = socketUserMessages
+                .stream()
+                .collect(Collectors.groupingBy(s -> this.getServiceInstanceOptional(s.getDetails())))
                 .entrySet()
                 .stream()
-                .flatMap(e -> postSocketMessage(e.getKey(), SocketUserMessage.DEFAULT_TYPE, e.getValue()).stream())
+                .filter(e -> e.getKey().isPresent())
+                .flatMap(e -> postSocketMessage(e.getKey().get().getHost(), SocketUserMessage.DEFAULT_TYPE, e.getValue()).stream())
                 .collect(Collectors.toList());
 
         if (CollectionUtils.isNotEmpty(tempList)) {
@@ -377,14 +447,19 @@ public class SocketClientTemplate implements DisposableBean {
 
         for (MultipleSocketUserMessage<?> message : socketUserMessages) {
 
-            Map<String, List<SocketUserDetails>> group = message
+            Map<Optional<ServiceInstance>, List<SocketUserDetails>> group = message
                     .getSocketUserDetails()
                     .stream()
-                    .collect(Collectors.groupingBy(SocketUserDetails::getSocketServerIp));
+                    .collect(Collectors.groupingBy(this::getServiceInstanceOptional));
 
-            for (Map.Entry<String, List<SocketUserDetails>> entry : group.entrySet()) {
+            for (Map.Entry<Optional<ServiceInstance>, List<SocketUserDetails>> entry : group.entrySet()) {
+                Optional<ServiceInstance> optional = entry.getKey();
 
-                List<MultipleSocketUserMessage<?>> list = postData.computeIfAbsent(entry.getKey(), k -> new LinkedList<>());
+                if (optional.isEmpty()) {
+                    continue;
+                }
+
+                List<MultipleSocketUserMessage<?>> list = postData.computeIfAbsent(optional.get().getHost(), k -> new LinkedList<>());
 
                 MultipleSocketUserMessage<?> data = MultipleSocketUserMessage.ofSocketUserDetails(
                         entry.getValue(),
@@ -508,7 +583,7 @@ public class SocketClientTemplate implements DisposableBean {
     /**
      * 提交 socket 消息到指定 socket 服务器
      *
-     * @param ip     socket 服务 ip 地址
+     * @param host   socket 服务 ip 地址
      * @param type   消息类型: unicastUser: 根据用户所在服务器单播，
      *               unicast: 根据设备识别单播，
      *               broadcast: 广播,
@@ -517,58 +592,39 @@ public class SocketClientTemplate implements DisposableBean {
      *
      * @return {@link RestResult} 的 map 映射集合
      */
-    private List<Map<String, Object>> postSocketMessage(String ip, String type, List<? extends SocketMessage<?>> values) {
+    private List<Map<String, Object>> postSocketMessage(String host, String type, List<? extends SocketMessage<?>> values) {
 
-        List<String> urls = new LinkedList<>();
+        HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
+        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        if (StringUtils.isNotBlank(ip)) {
+        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {});
+
+        HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(data, httpHeaders);
+        List<Map<String, Object>> result = new LinkedList<>();
+
+        if (StringUtils.isEmpty(host)) {
+            List<List<Map<String, Object>>> restData = exchangeDiscoveryOperation(entity, HttpMethod.POST, type);
+            restData.forEach(result::addAll);
+        } else {
 
             List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
 
             ServiceInstance instance = serviceInstances
                     .stream()
-                    .filter(s -> s.getHost().equals(ip))
+                    .filter(s -> s.getHost().equals(host))
                     .findFirst()
-                    .orElseThrow(() -> new SystemException("找不到 IP 为 [" + ip + "] 的服务实例"));
+                    .orElseThrow(() -> new SystemException("找不到 IP 为 [" + host + "] 的服务实例"));
 
-            urls.add(this.createUrl(instance, type));
+            String url = this.createUrl(instance.getUri().toString(), type);
 
-        } else {
-            List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
-
-            urls = serviceInstances
-                    .stream()
-                    .map(s -> this.createUrl(s, type))
-                    .collect(Collectors.toList());
-        }
-
-        HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
-        httpHeaders.setContentType(MediaType.APPLICATION_JSON);
-
-        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {
-        });
-
-        HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(data, httpHeaders);
-
-        List<Map<String, Object>> result = new LinkedList<>();
-
-        for (String url : urls) {
-
-            ResponseEntity<List<Map<String, Object>>> response = restTemplate.exchange(
-                    url,
-                    HttpMethod.POST,
-                    entity,
-                    new ParameterizedTypeReference<>() {
-                    }
-            );
-
-            if (Objects.nonNull(response.getBody())) {
-                result.addAll(response.getBody());
+            ResponseEntity<List<Map<String, Object>>> response = exchangeOperation(url, entity, HttpMethod.POST);
+            List<Map<String, Object>> restData = response.getBody();
+            if (Objects.nonNull(restData)) {
+                result.addAll(restData);
             }
         }
 
         return result;
-
     }
 
     /**
@@ -580,44 +636,50 @@ public class SocketClientTemplate implements DisposableBean {
      *
      * @return 每个服务执行结果集合
      */
-    private List<Map<String, Object>> exchangeDiscoveryOperation(HttpEntity<?> entity, HttpMethod method, String name) {
-        List<Map<String, Object>> result = new LinkedList<>();
+    private <T> List<T> exchangeDiscoveryOperation(HttpEntity<?> entity, HttpMethod method, String name) {
+        List<T> result = new LinkedList<>();
 
         List<ServiceInstance> serviceInstances = discoveryClient.getInstances(DEFAULT_SERVER_SERVICE_ID);
 
         List<String> urls = serviceInstances
                 .stream()
-                .map(s -> this.createUrl(s, name))
+                .map(s -> this.createUrl(s.getUri().toString(), name))
                 .collect(Collectors.toList());
 
         for (String url : urls) {
 
-            ResponseEntity<Map<String, Object>> response = restTemplate.exchange(
-                    url,
-                    method,
-                    entity,
-                    new ParameterizedTypeReference<>() {
-                    }
-            );
+            T data = exchangeOperation(url, entity, method);
 
-            if (Objects.nonNull(response.getBody())) {
-                result.add(response.getBody());
+            if (Objects.nonNull(data)) {
+                result.add(data);
             }
         }
 
         return result;
     }
 
+    private <T> T exchangeOperation(String url, HttpEntity<?> entity, HttpMethod method) {
+        ResponseEntity<T> response = restTemplate.exchange(
+                url,
+                method,
+                entity,
+                new ParameterizedTypeReference<>() {
+                }
+        );
+
+        return response.getBody();
+    }
+
     /**
      * 根据服务实例和接口名称创建 url
      *
-     * @param s 服务实例
+     * @param uri 服务地址 uri
      * @param name 接口名称
      *
      * @return 完整 url 路径
      */
-    private String createUrl(ServiceInstance s, String name) {
-        String prefix = StringUtils.appendIfMissing(s.getUri().toString(), AntPathMatcher.DEFAULT_PATH_SEPARATOR);
+    private String createUrl(String uri, String name) {
+        String prefix = StringUtils.appendIfMissing(uri, AntPathMatcher.DEFAULT_PATH_SEPARATOR);
         return prefix + StringUtils.removeStart(name, AntPathMatcher.DEFAULT_PATH_SEPARATOR);
     }
 

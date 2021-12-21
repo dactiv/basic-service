@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.domain.meta;
 
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
@@ -70,13 +70,13 @@ public class BasicMessageMeta implements Serializable {
         /**
          * 密钥值
          */
-        @Exclude(Constants.WEB_FILTER_RESULT_ID)
+        @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
         private String cryptoKey;
 
         /**
          * 密钥类型
          */
-        @Exclude(Constants.WEB_FILTER_RESULT_ID)
+        @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
         private String cryptoType;
 
         /**

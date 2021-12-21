@@ -5,7 +5,7 @@ import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -95,7 +95,7 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
         info.setRetryCount(0);
 
         amqpTemplate.convertAndSend(
-                Constants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
+                SystemConstants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
                 ValidAuthenticationInfoReceiver.DEFAULT_QUEUE_NAME,
                 info
         );

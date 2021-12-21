@@ -3,7 +3,6 @@ package com.github.dactiv.basic.socket.server.controller;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.client.domain.BroadcastMessage;
 import com.github.dactiv.basic.socket.client.domain.MultipleUnicastMessage;
-import com.github.dactiv.basic.socket.client.domain.SocketUserDetails;
 import com.github.dactiv.basic.socket.client.domain.UnicastMessage;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;

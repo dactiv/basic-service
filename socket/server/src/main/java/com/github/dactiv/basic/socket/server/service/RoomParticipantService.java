@@ -34,6 +34,8 @@ public class RoomParticipantService extends BasicService<RoomParticipantDao, Roo
      * @see RoomParticipantEntity
      */
     public List<RoomParticipantEntity> findByRoomId(Integer roomId) {
-        return lambdaQuery().eq(RoomParticipantEntity::getRoomId, roomId).list();
+        return lambdaQuery()
+                .eq(RoomParticipantEntity::getRoomId, roomId)
+                .list();
     }
 }

@@ -1,10 +1,7 @@
 package com.github.dactiv.basic.socket.server.controller;
 
-import com.github.dactiv.basic.commons.Constants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
-import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
-import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
-import com.github.dactiv.basic.socket.server.domain.body.response.RoomResponseBody;
+import com.github.dactiv.basic.socket.server.domain.dto.RoomDto;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.service.RoomService;
 import com.github.dactiv.framework.commons.Casts;
@@ -49,11 +46,11 @@ public class RoomController {
      * @param room 房间信息
      * @param userIds 参与者用户 id
      *
-     * @return 新的房间主键 id
+     * @return rest 结果集
      */
     @PostMapping("createRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
+    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
     public RestResult<?> createRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     RoomEntity room,
                                     @RequestParam List<Integer> userIds) {
@@ -61,9 +58,32 @@ public class RoomController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        RoomResponseBody body = roomService.create(room, userIds, userId);
+        roomService.create(room, userIds, userId);
 
-        return RestResult.ofSuccess("创建" + room.getName() + "房间成功", body);
+        return RestResult.of("创建" + room.getName() + "房间成功");
+    }
+
+    /**
+     * 修改房间名称
+     *
+     * @param securityContext 安全上下文
+     * @param name 新名称
+     * @param id 房间 id
+     *
+     * @return rest 结果集
+     */
+    @PostMapping("renameRoom")
+    @PreAuthorize("isFullyAuthenticated()")
+    @Plugin(name = "修改房间名称", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
+    public RestResult<?> renameRoom(@CurrentSecurityContext SecurityContext securityContext,
+                                    @RequestParam String name,
+                                    @RequestParam Integer id) {
+        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
+        Integer userId = Casts.cast(userDetails.getId());
+
+        roomService.rename(userId, name, id);
+
+        return RestResult.of("修改名称成功");
     }
 
     /**
@@ -76,9 +96,8 @@ public class RoomController {
      */
     @PostMapping("exitRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @SocketMessage(Constants.WEB_FILTER_RESULT_ID)
-    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
-    public RestResult<?> exitRoom(@CurrentSecurityContext SecurityContext securityContext, Integer id) {
+    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
+    public RestResult<?> exitRoom(@CurrentSecurityContext SecurityContext securityContext, @RequestParam Integer id) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
@@ -97,9 +116,9 @@ public class RoomController {
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getCurrentPrincipalRooms")
     @Plugin(name = "获取当前用户房间集合", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
-    public List<RoomResponseBody> getCurrentPrincipalRooms(@CurrentSecurityContext SecurityContext securityContext) {
+    public List<RoomDto> getCurrentPrincipalRooms(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
-        return roomService.findResponseBodiesByUserid(userId);
+        return roomService.findByUserId(userId);
     }
 }

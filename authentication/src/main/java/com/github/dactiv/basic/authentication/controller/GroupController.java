@@ -21,7 +21,7 @@ import javax.validation.Valid;
 import java.util.List;
 import java.util.Objects;
 
-import static com.github.dactiv.basic.commons.Constants.WEB_FILTER_RESULT_ID;
+import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_ID;
 
 /**
  * 用户用户组控制器

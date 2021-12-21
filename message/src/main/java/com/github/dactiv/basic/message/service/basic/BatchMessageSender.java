@@ -14,7 +14,6 @@ import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.retry.Retryable;
-import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.FileObject;
 import io.minio.GetObjectResponse;

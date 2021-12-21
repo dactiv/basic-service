@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.captcha.service.picture.generator;
 
-import com.github.dactiv.basic.captcha.service.picture.PictureCaptchaGenerator;
 import com.github.dactiv.basic.captcha.domain.meta.PictureMeta;
+import com.github.dactiv.basic.captcha.service.picture.PictureCaptchaGenerator;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Component;
 

@@ -2,7 +2,7 @@ package com.github.dactiv.basic.authentication.receiver;
 
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import com.github.dactiv.basic.authentication.service.AuthenticationInfoService;
-import com.github.dactiv.basic.commons.Constants;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -34,7 +34,7 @@ public class ValidAuthenticationInfoReceiver {
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
-                    exchange = @Exchange(value = Constants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE),
+                    exchange = @Exchange(value = SystemConstants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE),
                     key = DEFAULT_QUEUE_NAME
             )
     )

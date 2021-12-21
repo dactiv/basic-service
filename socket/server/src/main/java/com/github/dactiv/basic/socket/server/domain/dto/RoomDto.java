@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.socket.server.domain.body.response;
+package com.github.dactiv.basic.socket.server.domain.dto;
 
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
@@ -10,14 +10,14 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 房间响应实体
+ * 房间 dto
  *
  * @author maurice.chen
  */
 @Data
 @NoArgsConstructor
 @EqualsAndHashCode(callSuper = true)
-public class RoomResponseBody extends RoomEntity {
+public class RoomDto extends RoomEntity {
 
     private static final long serialVersionUID = -3988898426840609747L;
     /**
