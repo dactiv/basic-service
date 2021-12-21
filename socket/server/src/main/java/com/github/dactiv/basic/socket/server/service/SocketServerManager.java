@@ -465,13 +465,13 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
         // 获取用户房间信息
         List<Integer> rooms = roomService.findRoomIdsByUserId(Casts.cast(user.getId(), Integer.class));
         // 如果存在房间，讲客户端假如房间，做广播使用。
-        if (CollectionUtils.isEmpty(rooms)) {
+        if (CollectionUtils.isNotEmpty(rooms)) {
             rooms.forEach(r -> client.joinRoom(r.toString()));
         }
 
         log.info("设备: " + deviceIdentified + "建立连接成功, " + "IP 为: "
                 + client.getRemoteAddress().toString() + ", 用户为: " +
-                user.getId() + "拥有的房间为:" + client.getAllRooms());
+                user.getId() + ", 拥有的房间为:" + client.getAllRooms());
 
     }
 

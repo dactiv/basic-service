@@ -29,13 +29,17 @@ public class RoomEntity implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = -8032662822919772839L;
     /**
-     * 聊天信息事件名称
+     * 房间创建事件名称
      */
     public static final String ROOM_CREATE_EVENT_NAME = "room_create";
     /**
-     * 聊天信息事件名称
+     * 房间删除事件名称
      */
     public static final String ROOM_DELETE_EVENT_NAME = "room_delete";
+    /**
+     * 房间更名事件名称
+     */
+    public static final String ROOM_RENAME_EVENT_NAME = "room_rename";
 
     /**
      * 主键

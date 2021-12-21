@@ -11,6 +11,7 @@ CREATE TABLE `tb_room` (
   `name` varchar(32) NOT NULL COMMENT '房间名称',
   `last_message_time` datetime(3) DEFAULT NULL COMMENT '最后修改时间',
   `type` varchar(16) NOT NULL COMMENT '类型，用于区分房间的属性使用',
+  `status` tinyint(4) DEFAULT '0' COMMENT '状态：0.今哟过，1.启用',
   `remark` varchar(256) DEFAULT NULL COMMENT '备注',
   PRIMARY KEY (`id`)
 ) ENGINE=InnoDB COMMENT='房间信息，用于说明当前用户存在些什么房间。';

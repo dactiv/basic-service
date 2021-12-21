@@ -1,11 +1,17 @@
 package com.github.dactiv.basic.socket.server.controller;
 
+import ch.qos.logback.core.joran.action.Action;
+import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.domain.dto.RoomDto;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
+import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
 import com.github.dactiv.basic.socket.server.service.RoomService;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
@@ -15,6 +21,7 @@ import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * 房间控制器
@@ -74,6 +81,7 @@ public class RoomController {
      */
     @PostMapping("renameRoom")
     @PreAuthorize("isFullyAuthenticated()")
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     @Plugin(name = "修改房间名称", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
     public RestResult<?> renameRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam String name,
@@ -82,6 +90,13 @@ public class RoomController {
         Integer userId = Casts.cast(userDetails.getId());
 
         roomService.rename(userId, name, id);
+
+        Map<String, Object> message = Map.of(
+                IdEntity.ID_FIELD_NAME, id,
+                Action.NAME_ATTRIBUTE, name,
+                RoomParticipantEntity.USER_ID_FIELD_NAME, userId
+        );
+        SocketResultHolder.get().addBroadcastSocketMessage(id.toString(), RoomEntity.ROOM_RENAME_EVENT_NAME, message);
 
         return RestResult.of("修改名称成功");
     }

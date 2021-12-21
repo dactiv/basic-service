@@ -28,6 +28,9 @@ import java.util.Date;
 public class RoomParticipantEntity implements NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 3092205314058668475L;
+
+    public static final String USER_ID_FIELD_NAME = "userId";
+
     /**
      * 主键
      */
