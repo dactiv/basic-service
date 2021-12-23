@@ -129,7 +129,7 @@ public class RoomController {
      * @return 房间响应实体集合
      */
     @PreAuthorize("isAuthenticated()")
-    @GetMapping("getCurrentPrincipalRooms")
+    @PostMapping("getCurrentPrincipalRooms")
     @Plugin(name = "获取当前用户房间集合", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<RoomDto> getCurrentPrincipalRooms(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
