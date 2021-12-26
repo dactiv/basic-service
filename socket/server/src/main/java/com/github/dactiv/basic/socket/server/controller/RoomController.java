@@ -5,6 +5,7 @@ import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
+import com.github.dactiv.basic.socket.server.SocketServerConstants;
 import com.github.dactiv.basic.socket.server.domain.dto.RoomDto;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
@@ -89,14 +90,22 @@ public class RoomController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        roomService.rename(userId, name, id);
+        boolean socket = roomService.rename(userId, name, id);
 
-        Map<String, Object> message = Map.of(
-                IdEntity.ID_FIELD_NAME, id,
-                Action.NAME_ATTRIBUTE, name,
-                RoomParticipantEntity.USER_ID_FIELD_NAME, userId
-        );
-        SocketResultHolder.get().addBroadcastSocketMessage(id.toString(), RoomEntity.ROOM_RENAME_EVENT_NAME, message);
+        if (socket) {
+            Map<String, Object> message = Map.of(
+                    IdEntity.ID_FIELD_NAME, id,
+                    Action.NAME_ATTRIBUTE, name,
+                    RoomParticipantEntity.USER_ID_FIELD_NAME, userId
+            );
+            SocketResultHolder
+                    .get()
+                    .addBroadcastSocketMessage(
+                            id.toString(),
+                            RoomEntity.ROOM_RENAME_EVENT_NAME,
+                            message
+                    );
+        }
 
         return RestResult.of("修改名称成功");
     }

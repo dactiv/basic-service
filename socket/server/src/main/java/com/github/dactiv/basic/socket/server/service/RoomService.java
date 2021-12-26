@@ -194,8 +194,9 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      * @param userId 修改用户 id
      * @param name 新的房间名称
      * @param id 房间 id
+     * @return true 修改成功, false 不做任何修改
      */
-    public void rename(Integer userId, String name, Integer id) {
+    public boolean rename(Integer userId, String name, Integer id) {
         RoomParticipantEntity entity = roomParticipantService.lambdaQuery()
                 .eq(RoomParticipantEntity::getUserId, userId)
                 .eq(RoomParticipantEntity::getRoomId, id)
@@ -207,6 +208,13 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                 ErrorCodeConstants.NOT_CONTENT_CODE
         );
 
+        RoomEntity room = get(entity.getRoomId());
+
+        if (room.getName().equals(name)) {
+            return false;
+        }
+
         lambdaUpdate().set(RoomEntity::getName, name).eq(RoomEntity::getId, id).update();
+        return true;
     }
 }
