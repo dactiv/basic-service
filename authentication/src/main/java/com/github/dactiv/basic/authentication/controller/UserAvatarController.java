@@ -1,7 +1,10 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
+import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.UserAvatarHistoryEntity;
+import com.github.dactiv.basic.authentication.service.ConsoleUserService;
+import com.github.dactiv.basic.authentication.service.MemberUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -15,7 +18,8 @@ import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.io.IOUtils;
-import org.apache.commons.lang.StringUtils;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.commons.lang3.math.NumberUtils;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
@@ -53,9 +57,19 @@ public class UserAvatarController implements InitializingBean {
 
     private final MinioTemplate minioTemplate;
 
-    public UserAvatarController(ApplicationConfig applicationConfig, MinioTemplate minioTemplate) {
+    private final ConsoleUserService consoleUserService;
+
+    private final MemberUserService memberUserService;
+
+    public UserAvatarController(ApplicationConfig applicationConfig,
+                                MinioTemplate minioTemplate,
+                                ConsoleUserService consoleUserService,
+                                MemberUserService memberUserService) {
         this.applicationConfig = applicationConfig;
         this.minioTemplate = minioTemplate;
+
+        this.consoleUserService = consoleUserService;
+        this.memberUserService = memberUserService;
     }
 
     /**
@@ -95,7 +109,7 @@ public class UserAvatarController implements InitializingBean {
                 file.getContentType()
         );
 
-        String currentName = getCurrentAvatarFilename(userDetails);
+        String currentName = getCurrentAvatarFilename(userDetails.getId());
         minioTemplate.upload(
                 FileObject.of(history.getBucketName(), currentName),
                 file.getInputStream(),
@@ -159,9 +173,29 @@ public class UserAvatarController implements InitializingBean {
 
         String bucketName = type + Casts.DEFAULT_DOT_SYMBOL + applicationConfig.getUserAvatar().getBucketName();
 
-        InputStream is = minioTemplate.getObject(FileObject.of(bucketName, filename));
+        InputStream is;
+
         HttpHeaders headers = new HttpHeaders();
-        headers.setContentType(MediaType.IMAGE_JPEG);
+
+        try {
+            is = minioTemplate.getObject(FileObject.of(bucketName, filename));
+            headers.setContentType(MediaType.IMAGE_JPEG);
+        } catch (Exception e) {
+            String token = StringUtils.substringBefore(applicationConfig.getUserAvatar().getCurrentUseFileToken(), Casts.PATH_VARIABLE_SYMBOL_START);
+            Integer id = NumberUtils.toInt(StringUtils.replace(filename, token, StringUtils.EMPTY));
+
+            SystemUserEntity user;
+
+            if (ResourceSourceEnum.CONSOLE_SOURCE_VALUE.equals(type)) {
+                user = consoleUserService.get(id);
+            } else if (ResourceSourceEnum.USER_CENTER_SOURCE_VALUE.equals(type)) {
+                user = memberUserService.get(id);
+            } else {
+                throw new SystemException("找不到类型为 [" + type + "] 的头像获取内容");
+            }
+
+            is = applicationConfig.getUserAvatar().getDefaultAvatarPath(user.getGender(), id);
+        }
 
         return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
     }
@@ -189,7 +223,7 @@ public class UserAvatarController implements InitializingBean {
             throw new SystemException("图片不存在，可能已经被删除。");
         }
 
-        String currentName = getCurrentAvatarFilename(userDetails);
+        String currentName = getCurrentAvatarFilename(userDetails.getId());
         minioTemplate.copyObject(
                 FileObject.of(history.getBucketName(), filename),
                 FileObject.of(history.getBucketName(), currentName)
@@ -205,13 +239,13 @@ public class UserAvatarController implements InitializingBean {
     /**
      * 获取当前头像文件名称
      *
-     * @param userDetails 用户明细实体
+     * @param suffix 后缀
      *
      * @return 当前头像文件名称
      */
-    private String getCurrentAvatarFilename(SecurityUserDetails userDetails) {
+    private String getCurrentAvatarFilename(Object suffix) {
         String token = applicationConfig.getUserAvatar().getCurrentUseFileToken();
-        return MessageFormat.format(token, userDetails.getId());
+        return MessageFormat.format(token, suffix);
     }
 
     /**

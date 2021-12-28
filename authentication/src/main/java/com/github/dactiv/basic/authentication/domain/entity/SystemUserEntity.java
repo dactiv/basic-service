@@ -3,6 +3,7 @@ package com.github.dactiv.basic.authentication.domain.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.github.dactiv.basic.authentication.enumerate.GenderEnum;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
@@ -62,6 +63,11 @@ public class SystemUserEntity implements NumberIdEntity<Integer> {
      */
     @NotNull
     private UserStatus status;
+
+    /**
+     * 性别
+     */
+    private GenderEnum gender;
 
     /**
      * 登录帐号

@@ -1,12 +1,17 @@
 package com.github.dactiv.basic.authentication.enumerate;
 
 import com.github.dactiv.framework.commons.enumerate.NameEnum;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
 /**
  * 登录类型
  *
  * @author maurice
  */
+@Getter
+@AllArgsConstructor(access = AccessLevel.PRIVATE)
 public enum LoginTypeEnum implements NameEnum {
 
     /**
@@ -18,14 +23,5 @@ public enum LoginTypeEnum implements NameEnum {
      */
     Mobile("移动验证码登录");
 
-    LoginTypeEnum(String name) {
-        this.name = name;
-    }
-
     private final String name;
-
-    @Override
-    public String getName() {
-        return name;
-    }
 }

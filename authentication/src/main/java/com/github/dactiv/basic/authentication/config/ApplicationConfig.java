@@ -1,5 +1,6 @@
 package com.github.dactiv.basic.authentication.config;
 
+import com.github.dactiv.basic.authentication.enumerate.GenderEnum;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;
@@ -8,10 +9,16 @@ import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 import org.springframework.boot.context.properties.ConfigurationProperties;
+import org.springframework.core.io.DefaultResourceLoader;
+import org.springframework.core.io.ResourceLoader;
 import org.springframework.stereotype.Component;
 
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -225,6 +232,10 @@ public class ApplicationConfig {
     @EqualsAndHashCode
     @NoArgsConstructor
     public static class UserAvatar {
+
+
+        private final ResourceLoader resourceLoader = new DefaultResourceLoader();
+
         /**
          * 桶名称
          */
@@ -246,6 +257,11 @@ public class ApplicationConfig {
         private Integer historyCount = 5;
 
         /**
+         * 默认头像位置
+         */
+        private String defaultPath = "classpath:/avatar/";
+
+        /**
          * 用户来源，用于默认服务启动时创建桶使用。
          */
         private List<String> userSources = Arrays.asList(
@@ -253,6 +269,21 @@ public class ApplicationConfig {
                 ResourceSourceEnum.USER_CENTER_SOURCE_VALUE,
                 ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE
         );
+
+        /**
+         * 获取默认头像路径
+         *
+         * @param genderEnum 性别
+         * @param userId 用户主键 id
+         *
+         * @return 头像路径
+         */
+        public InputStream getDefaultAvatarPath(GenderEnum genderEnum, Integer userId) throws IOException {
+            String folder = defaultPath + genderEnum.toString().toLowerCase();
+            String[] fileList = Objects.requireNonNull(resourceLoader.getResource(folder).getFile().list());
+            int index = userId % fileList.length;
+            return resourceLoader.getResource(folder + File.separator + fileList[index]).getInputStream();
+        }
     }
 
 }
