@@ -617,10 +617,9 @@ public class SocketClientTemplate implements DisposableBean {
 
             String url = this.createUrl(instance.getUri().toString(), type);
 
-            ResponseEntity<List<Map<String, Object>>> response = exchangeOperation(url, entity, HttpMethod.POST);
-            List<Map<String, Object>> restData = response.getBody();
-            if (Objects.nonNull(restData)) {
-                result.addAll(restData);
+            List<Map<String, Object>> response = exchangeOperation(url, entity, HttpMethod.POST);
+            if (Objects.nonNull(response)) {
+                result.addAll(response);
             }
         }
 

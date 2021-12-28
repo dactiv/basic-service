@@ -175,11 +175,8 @@ public class UserAvatarController implements InitializingBean {
 
         InputStream is;
 
-        HttpHeaders headers = new HttpHeaders();
-
         try {
             is = minioTemplate.getObject(FileObject.of(bucketName, filename));
-            headers.setContentType(MediaType.IMAGE_JPEG);
         } catch (Exception e) {
             String token = StringUtils.substringBefore(applicationConfig.getUserAvatar().getCurrentUseFileToken(), Casts.PATH_VARIABLE_SYMBOL_START);
             Integer id = NumberUtils.toInt(StringUtils.replace(filename, token, StringUtils.EMPTY));
@@ -193,11 +190,10 @@ public class UserAvatarController implements InitializingBean {
             } else {
                 throw new SystemException("找不到类型为 [" + type + "] 的头像获取内容");
             }
-
             is = applicationConfig.getUserAvatar().getDefaultAvatarPath(user.getGender(), id);
         }
 
-        return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
+        return new ResponseEntity<>(IOUtils.toByteArray(is), new HttpHeaders(), HttpStatus.OK);
     }
 
     /**
