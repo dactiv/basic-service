@@ -121,6 +121,13 @@ public class UserAvatarController implements InitializingBean {
 
     }
 
+    /**
+     * 获取历史头像
+     *
+     * @param securityContext 安全上下文
+     *
+     * @return 用户头像历史记录实体
+     */
     @GetMapping("history")
     @PreAuthorize("isFullyAuthenticated()")
     public RestResult<UserAvatarHistoryEntity> history(@CurrentSecurityContext SecurityContext securityContext) {
