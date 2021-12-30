@@ -60,11 +60,12 @@ public class ChatController {
     @Plugin(name = "发送消息", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> sendMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestParam Integer recipientId,
+                                     @RequestParam Integer type,
                                      @RequestParam String content) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer senderId = Casts.cast(userDetails.getId());
-        GlobalMessageMeta.Message message = chatService.sendMessage(senderId, recipientId, content);
+        GlobalMessageMeta.Message message = chatService.sendMessage(senderId, type, recipientId, content);
 
         return RestResult.ofSuccess("发送消息成功", message);
     }

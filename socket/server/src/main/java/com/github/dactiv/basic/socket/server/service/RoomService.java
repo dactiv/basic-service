@@ -66,7 +66,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
 
         List<RoomParticipantEntity> roomParticipants = userIds
                 .stream()
-                .map(id -> RoomParticipantEntity.of(id, RoomParticipantRoleEnum.Participant, room.getId()))
+                .map(id -> RoomParticipantEntity.of(id, RoomParticipantRoleEnum.PARTICIPANT, room.getId()))
                 .collect(Collectors.toList());
 
         Optional<RoomParticipantEntity> optional = roomParticipants
@@ -75,9 +75,9 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                 .findFirst();
 
         if (optional.isPresent()) {
-            optional.get().setRole(RoomParticipantRoleEnum.Owner);
+            optional.get().setRole(RoomParticipantRoleEnum.OWNER);
         } else {
-            roomParticipants.add(RoomParticipantEntity.of(ownerId, RoomParticipantRoleEnum.Owner, room.getId()));
+            roomParticipants.add(RoomParticipantEntity.of(ownerId, RoomParticipantRoleEnum.OWNER, room.getId()));
         }
 
         roomParticipantService.save(roomParticipants);
@@ -167,7 +167,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                 ErrorCodeConstants.NOT_CONTENT_CODE
         );
 
-        boolean result = RoomParticipantRoleEnum.Owner.equals(entity.getRole());
+        boolean result = RoomParticipantRoleEnum.OWNER.equals(entity.getRole());
         // 如果为群主，直接解散房间。
         if (result) {
 

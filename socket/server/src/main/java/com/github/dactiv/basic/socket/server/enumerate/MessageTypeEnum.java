@@ -6,22 +6,26 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 全局消息类型
+ * 消息类型类型
  *
  * @author maurice.chen
  */
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)
-public enum GlobalMessageTypeEnum implements NameValueEnum<Integer> {
+public enum MessageTypeEnum implements NameValueEnum<Integer> {
 
-    /**
-     * 全局消息
-     */
-    GLOBAL(10, "全局消息"),
     /**
      * 联系人消息
      */
-    CONTACT(20, "联系人消息");
+    PERSON(10, "联系人消息"),
+    /**
+     * 联系人消息
+     */
+    GROUP(20, "群聊消息"),
+    /**
+     * 全局消息
+     */
+    GLOBAL(30, "全局消息");
     /**
      * 值
      */

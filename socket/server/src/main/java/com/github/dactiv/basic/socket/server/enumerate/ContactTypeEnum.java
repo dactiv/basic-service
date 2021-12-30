@@ -17,12 +17,12 @@ public enum ContactTypeEnum implements NameValueEnum<Integer> {
     /**
      * 参与者
      */
-    Person(10, "人员"),
+    PERSON(10, "人员"),
 
     /**
      * 拥有者
      */
-    Group(20, "群组");
+    GROUP(20, "群组");
 
     /**
      * 值

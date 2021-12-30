@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server.domain.meta;
 
 import com.github.dactiv.basic.commons.SystemConstants;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
@@ -66,6 +67,11 @@ public class BasicMessageMeta implements Serializable {
          * 发送者 id
          */
         private Integer senderId;
+
+        /**
+         * 消息类型
+         */
+        private MessageTypeEnum type;
 
         /**
          * 密钥值

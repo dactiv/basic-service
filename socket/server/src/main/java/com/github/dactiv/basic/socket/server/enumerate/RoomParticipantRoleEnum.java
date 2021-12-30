@@ -17,11 +17,11 @@ public enum RoomParticipantRoleEnum implements NameValueEnum<Integer> {
     /**
      * 参与者
      */
-    Participant(10, "参与者"),
+    PARTICIPANT(10, "参与者"),
     /**
      * 拥有者
      */
-    Owner(20, "拥有者");
+    OWNER(20, "拥有者");
 
     /**
      * 值

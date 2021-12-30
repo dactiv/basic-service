@@ -44,8 +44,8 @@ public class SaveMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
         // 添加双方常用联系人信息
-        chatService.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactTypeEnum.Person);
-        chatService.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactTypeEnum.Person);
+        chatService.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactTypeEnum.PERSON);
+        chatService.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactTypeEnum.PERSON);
 
         channel.basicAck(tag, false);
 

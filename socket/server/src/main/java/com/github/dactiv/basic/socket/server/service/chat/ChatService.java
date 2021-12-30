@@ -15,11 +15,14 @@ import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.RecentContactMeta;
 import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.basic.socket.server.enumerate.GlobalMessageTypeEnum;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
 import com.github.dactiv.basic.socket.server.receiver.SaveMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
+import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
@@ -286,7 +289,7 @@ public class ChatService implements InitializingBean {
 
             globalMessage.setFilename(filename);
             globalMessage.setBucketName(minioBucket.getBucketName());
-            globalMessage.setType(global ? GlobalMessageTypeEnum.Global : GlobalMessageTypeEnum.Contact);
+            globalMessage.setType(global ? GlobalMessageTypeEnum.GLOBAL : GlobalMessageTypeEnum.CONTACT);
         }
 
         return globalMessage;
@@ -340,7 +343,7 @@ public class ChatService implements InitializingBean {
         String globalFilename = MessageFormat.format(chatConfig.getContact().getFileToken(), sourceId, targetId);
         Integer historyFileCount = chatConfig.getContact().getHistoryMessageFileCount();
 
-        if (GlobalMessageTypeEnum.Global.getValue().equals(global.getType())) {
+        if (GlobalMessageTypeEnum.GLOBAL.getValue().equals(global.getType())) {
             Integer min = Math.min(sourceId, targetId);
             Integer max = Math.max(sourceId, targetId);
             globalFilename = MessageFormat.format(chatConfig.getGlobal().getPersonFileToken(), min, max);
@@ -366,7 +369,7 @@ public class ChatService implements InitializingBean {
 
         Bucket bucket = chatConfig.getContact().getContactBucket();
 
-        if (GlobalMessageTypeEnum.Global.getValue().equals(global.getType())) {
+        if (GlobalMessageTypeEnum.GLOBAL.getValue().equals(global.getType())) {
             bucket = chatConfig.getGlobal().getBucket();
         }
 
@@ -493,10 +496,10 @@ public class ChatService implements InitializingBean {
      */
     @SocketMessage
     @Concurrent(
-            value = "socket:chat:send:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
+            value = "socket:chat:send:type:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
             exception = "请不要过快的发送消息"
     )
-    public GlobalMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
+    public GlobalMessageMeta.Message sendMessage(Integer senderId, Integer type, Integer recipientId, String content) throws Exception {
 
         GlobalMessageMeta.Message message = new GlobalMessageMeta.Message();
 
@@ -505,6 +508,7 @@ public class ChatService implements InitializingBean {
         message.setSenderId(senderId);
         message.setCryptoType(chatConfig.getCryptoType());
         message.setCryptoKey(chatConfig.getCryptoKey());
+        message.setType(ValueEnumUtils.parse(type, MessageTypeEnum.class));
 
         List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
@@ -537,7 +541,7 @@ public class ChatService implements InitializingBean {
         );
 
         contactMessage.setId(senderId);
-        contactMessage.setType(ContactTypeEnum.Person);
+        contactMessage.setType(ContactTypeEnum.PERSON);
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
@@ -806,7 +810,7 @@ public class ChatService implements InitializingBean {
                     CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
                             IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            IdentityNamingStrategy.TYPE_KEY, ContactTypeEnum.Person.getValue(),
+                            IdentityNamingStrategy.TYPE_KEY, ContactTypeEnum.PERSON.getValue(),
                             GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
