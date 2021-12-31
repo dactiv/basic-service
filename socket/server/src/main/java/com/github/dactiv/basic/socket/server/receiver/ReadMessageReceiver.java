@@ -6,6 +6,8 @@ import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
+import com.github.dactiv.basic.socket.server.service.chat.resolver.MessageResolver;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
 import org.apache.commons.collections.MapUtils;
@@ -15,6 +17,7 @@ import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.amqp.support.AmqpHeaders;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
@@ -39,10 +42,10 @@ public class ReadMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "read.chat.message";
 
-    private final ChatService chatService;
+    private final List<MessageResolver> messageResolvers;
 
-    public ReadMessageReceiver(ChatService chatService) {
-        this.chatService = chatService;
+    public ReadMessageReceiver(ObjectProvider<MessageResolver> messageResolvers) {
+        this.messageResolvers = messageResolvers.orderedStream().collect(Collectors.toList());
     }
 
     @RabbitListener(
@@ -62,70 +65,21 @@ public class ReadMessageReceiver {
     }
 
     private void readMessage(ReadMessageRequestBody body) throws Exception {
-        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = chatService.getUnreadMessageData(body.getRecipientId());
 
-        if (MapUtils.isEmpty(map)) {
-            return ;
-        }
-
-        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(body.getSenderId());
-
-        if (Objects.isNull(message)) {
-            return ;
-        }
-
-        List<BasicMessageMeta.UserMessageBody> userMessageBodies = message
-                .getMessages()
+        MessageResolver messageResolver = messageResolvers
                 .stream()
-                .filter(umb -> body.getMessageIds().contains(umb.getId()))
-                .collect(Collectors.toList());
+                .filter(r -> r.isSupport(body.getType()))
+                .findFirst()
+                .orElseThrow(() -> new SystemException("找不到类型为 [" + body.getType().getValue() + "] 的消息解析器"));
 
-        if (CollectionUtils.isEmpty(userMessageBodies)) {
-            return;
-        }
-
-        for (BasicMessageMeta.UserMessageBody userMessageBody : userMessageBodies) {
-
-            for (String filename : userMessageBody.getFilenames()) {
-
-                FileObject messageFileObject = FileObject.of(
-                        chatService.getChatConfig().getMessage().getBucket(),
-                        filename
-                );
-
-                List<BasicMessageMeta.FileMessage> messageList = chatService.getMinioTemplate().readJsonValue(
-                        messageFileObject,
-                        new TypeReference<>() {
-                        }
-                );
-
-                Optional<BasicMessageMeta.FileMessage> messageOptional = messageList
-                        .stream()
-                        .filter(m -> m.getId().equals(userMessageBody.getId()))
-                        .findFirst();
-
-                if (messageOptional.isPresent()) {
-                    BasicMessageMeta.FileMessage fileMessage = messageOptional.get();
-                    fileMessage.setRead(true);
-                    fileMessage.setReadTime(body.getCreationTime());
-                }
-
-                chatService.getMinioTemplate().writeJsonValue(messageFileObject, messageList);
-            }
-        }
-        message.getMessages().removeIf(m -> userMessageBodies.stream().anyMatch(umb -> umb.getId().equals(m.getId())));
-
-        if (CollectionUtils.isEmpty(message.getMessages())) {
-            map.remove(body.getSenderId());
-        }
-
-        String filename = MessageFormat.format(
-                chatService.getChatConfig().getContact().getUnreadMessageFileToken(),
-                body.getRecipientId()
+        messageResolver.consumeReadMessage(
+                body.getSenderId(),
+                body.getRecipientId(),
+                body.getMessageIds(),
+                body.getCreationTime()
         );
 
-        FileObject fileObject = FileObject.of(chatService.getChatConfig().getContact().getUnreadBucket(), filename);
-        chatService.getMinioTemplate().writeJsonValue(fileObject, map);
+
     }
 
 }

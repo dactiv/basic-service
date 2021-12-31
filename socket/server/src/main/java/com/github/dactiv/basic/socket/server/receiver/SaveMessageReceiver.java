@@ -4,6 +4,7 @@ import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.basic.socket.server.service.chat.ChatService;
+import com.github.dactiv.basic.socket.server.service.chat.resolver.support.PersonMessageResolver;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -27,10 +28,10 @@ public class SaveMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "save.chat.message";
 
-    private final ChatService chatService;
+    private final PersonMessageResolver messageResolver;
 
-    public SaveMessageReceiver(ChatService chatService) {
-        this.chatService = chatService;
+    public SaveMessageReceiver(PersonMessageResolver messageResolver) {
+        this.messageResolver = messageResolver;
     }
 
     @RabbitListener(
@@ -44,10 +45,11 @@ public class SaveMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
         // 添加双方常用联系人信息
-        chatService.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactTypeEnum.PERSON);
-        chatService.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactTypeEnum.PERSON);
+        messageResolver.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactTypeEnum.PERSON);
+        messageResolver.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactTypeEnum.PERSON);
 
         channel.basicAck(tag, false);
 
     }
+
 }

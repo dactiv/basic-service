@@ -111,27 +111,11 @@ public class ChatController {
     }
 
     /**
-     * 获取未读消息
-     *
-     * @param securityContext 安全上下文
-     *
-     * @return 未读消息集合
-     */
-    @Deprecated
-    @GetMapping("getUnreadMessages")
-    @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
-    public List<ContactMessage<BasicMessageMeta.UserMessageBody>> getUnreadMessages(@CurrentSecurityContext SecurityContext securityContext) {
-        SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
-        Integer userId = Casts.cast(userDetails.getId());
-        return chatService.getUnreadMessages(userId);
-    }
-
-    /**
      * 获取历史消息分页
      *
      * @param securityContext 安全上下文
-     * @param targetId 目标用户 id（对方用户 id）
+     * @param targetId 目标 id（对方用户 id/群聊 id）
+     * @param type 目标类型
      * @param time 时间节点
      * @param pageRequest 分页请求
      *
@@ -142,20 +126,22 @@ public class ChatController {
     @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                    @RequestParam Integer targetId,
+                                                   @RequestParam Integer type,
                                                    @RequestParam @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") Date time,
                                                    ScrollPageRequest pageRequest) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        return chatService.getHistoryMessagePage(userId, targetId, time, pageRequest);
+        return chatService.getHistoryMessagePage(userId, type, targetId, time, pageRequest);
     }
 
     /**
      * 获取历史消息日期集合
      *
      * @param securityContext 安全上下文
-     * @param targetId 目标用户 id（对方用户 id）
+     * @param type 类型
+     * @param targetId 目标 id（对方用户 id/ 群聊 id）
      *
      * @return 历史消息日期集合
      */
@@ -163,11 +149,12 @@ public class ChatController {
     @PostMapping("getHistoryMessageDateList")
     @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
+                                                @RequestParam Integer type,
                                                 @RequestParam Integer targetId) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        return chatService.getHistoryMessageDateList(userId, targetId);
+        return chatService.getHistoryMessageDateList(userId, type, targetId);
     }
 
 }

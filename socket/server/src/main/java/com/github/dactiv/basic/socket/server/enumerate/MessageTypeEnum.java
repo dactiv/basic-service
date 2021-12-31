@@ -15,11 +15,11 @@ import lombok.Getter;
 public enum MessageTypeEnum implements NameValueEnum<Integer> {
 
     /**
-     * 联系人消息
+     * 人员聊天消息
      */
-    PERSON(10, "联系人消息"),
+    PERSON(10, "人员聊天消息"),
     /**
-     * 联系人消息
+     * 群聊消息
      */
     GROUP(20, "群聊消息"),
     /**

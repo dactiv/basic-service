@@ -35,7 +35,7 @@ public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMes
     private ContactTypeEnum type;
 
     /**
-     * 目标用户 id
+     * 目标 id
      */
     @JsonIgnore
     private Integer targetId;
