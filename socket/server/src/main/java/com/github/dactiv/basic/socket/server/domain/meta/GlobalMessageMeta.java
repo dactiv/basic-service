@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.domain.meta;
 
-import com.github.dactiv.basic.socket.server.enumerate.GlobalMessageTypeEnum;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
@@ -35,7 +35,7 @@ public class GlobalMessageMeta extends BasicMessageMeta {
     /**
      * 类型
      */
-    private GlobalMessageTypeEnum type;
+    private MessageTypeEnum type;
 
     /**
      * 当前文件名

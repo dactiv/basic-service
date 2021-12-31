@@ -1,17 +1,10 @@
 package com.github.dactiv.basic.socket.server.receiver;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.SystemConstants;
-import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
-import com.github.dactiv.basic.socket.server.service.chat.ChatService;
-import com.github.dactiv.basic.socket.server.service.chat.resolver.MessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.MessageResolver;
 import com.github.dactiv.framework.commons.exception.SystemException;
-import com.github.dactiv.framework.minio.data.FileObject;
 import com.rabbitmq.client.Channel;
-import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections4.CollectionUtils;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
 import org.springframework.amqp.rabbit.annotation.QueueBinding;
@@ -22,11 +15,7 @@ import org.springframework.messaging.handler.annotation.Header;
 import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
-import java.text.MessageFormat;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -59,12 +48,7 @@ public class ReadMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
-        readMessage(body);
 
-        channel.basicAck(tag, false);
-    }
-
-    private void readMessage(ReadMessageRequestBody body) throws Exception {
 
         MessageResolver messageResolver = messageResolvers
                 .stream()
@@ -72,14 +56,8 @@ public class ReadMessageReceiver {
                 .findFirst()
                 .orElseThrow(() -> new SystemException("找不到类型为 [" + body.getType().getValue() + "] 的消息解析器"));
 
-        messageResolver.consumeReadMessage(
-                body.getSenderId(),
-                body.getRecipientId(),
-                body.getMessageIds(),
-                body.getCreationTime()
-        );
+        messageResolver.consumeReadMessage(body);
 
-
+        channel.basicAck(tag, false);
     }
-
 }

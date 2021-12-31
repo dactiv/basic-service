@@ -6,7 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Getter;
 
 /**
- * 消息类型类型
+ * 消息类型
  *
  * @author maurice.chen
  */
@@ -15,9 +15,9 @@ import lombok.Getter;
 public enum MessageTypeEnum implements NameValueEnum<Integer> {
 
     /**
-     * 人员聊天消息
+     * 联系人消息
      */
-    PERSON(10, "人员聊天消息"),
+    CONTACT(10, "联系人消息"),
     /**
      * 群聊消息
      */

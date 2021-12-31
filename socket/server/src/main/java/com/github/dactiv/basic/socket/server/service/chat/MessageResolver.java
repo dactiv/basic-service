@@ -1,6 +1,7 @@
-package com.github.dactiv.basic.socket.server.service.chat.resolver;
+package com.github.dactiv.basic.socket.server.service.chat;
 
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
@@ -14,6 +15,15 @@ import java.util.List;
  * @author maurice.chen
  */
 public interface MessageResolver {
+
+    /**
+     * 聊天信息事件名称
+     */
+    String CHAT_MESSAGE_EVENT_NAME = "chat_message";
+    /**
+     * 聊天信息读取事件名称
+     */
+    String CHAT_READ_MESSAGE_EVENT_NAME = "chat_read_message";
 
     /**
      * 是否支持消息类型
@@ -48,25 +58,20 @@ public interface MessageResolver {
     /**
      * 读取信息
      *
-     * @param senderId 发送者用户 id
-     * @param recipientId 接收方 id
-     * @param messageIds 消息 id 集合
+     * @param body 读取消息 request body
      *
      * @throws Exception 执行时错误时抛出
      */
-    void readMessage(Integer senderId, Integer recipientId, List<String> messageIds) throws Exception;
+    void readMessage(ReadMessageRequestBody body) throws Exception;
 
     /**
      * 消费异步读取信息的队列消息
      *
-     * @param senderId 发送者用户 id
-     * @param recipientId 接收方 id
-     * @param messageIds 消息 id 集合
-     * @param readTime 读取消息实现
+     * @param body 读取消息 request body
      *
      * @throws Exception 执行时错误时抛出
      */
-    void consumeReadMessage(Integer senderId, Integer recipientId, List<String> messageIds, Date readTime) throws Exception;
+    void consumeReadMessage(ReadMessageRequestBody body) throws Exception;
 
     /**
      * 发送消息

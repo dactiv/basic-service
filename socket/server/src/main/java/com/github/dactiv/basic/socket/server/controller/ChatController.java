@@ -1,19 +1,22 @@
 package com.github.dactiv.basic.socket.server.controller;
 
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
-import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.RecentContactMeta;
-import com.github.dactiv.basic.socket.server.service.chat.ChatService;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
+import com.github.dactiv.basic.socket.server.service.chat.MessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageResolver;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
+import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
 import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
@@ -22,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 /**
  * 聊天控制器
@@ -40,12 +44,11 @@ import java.util.List;
 )
 public class ChatController {
 
-    private final ChatService chatService;
+    private final List<MessageResolver> messageResolvers;
 
-    public ChatController(ChatService chatService) {
-        this.chatService = chatService;
+    public ChatController(ObjectProvider<MessageResolver> messageResolvers) {
+        this.messageResolvers = messageResolvers.orderedStream().collect(Collectors.toList());
     }
-
     /**
      * 发送消息
      *
@@ -63,9 +66,12 @@ public class ChatController {
                                      @RequestParam Integer type,
                                      @RequestParam String content) throws Exception {
 
+        MessageResolver messageResolver = getMessageResolver(type);
+
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer senderId = Casts.cast(userDetails.getId());
-        GlobalMessageMeta.Message message = chatService.sendMessage(senderId, type, recipientId, content);
+
+        GlobalMessageMeta.Message message = messageResolver.sendMessage(senderId, recipientId, content);
 
         return RestResult.ofSuccess("发送消息成功", message);
     }
@@ -89,7 +95,13 @@ public class ChatController {
         Integer readUserId = Casts.cast(userDetails.getId());
         body.setRecipientId(readUserId);
 
-        chatService.readMessage(body);
+        MessageResolver messageResolver = messageResolvers
+                .stream()
+                .filter(r -> r.isSupport(body.getType()))
+                .findFirst()
+                .orElseThrow(() -> new SystemException("找不到类型为 [" + body.getType().getValue() + "] 的消息解析器"));
+
+        messageResolver.readMessage(body);
 
         return RestResult.ofSuccess("读取信息成功");
     }
@@ -107,7 +119,15 @@ public class ChatController {
     public List<RecentContactMeta> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
-        return chatService.getRecentContacts(userId);
+
+        PersonMessageResolver messageResolver = messageResolvers
+                .stream()
+                .filter(r -> r.isSupport(MessageTypeEnum.CONTACT))
+                .map(r -> Casts.cast(r, PersonMessageResolver.class))
+                .findFirst()
+                .orElseThrow(() -> new SystemException("找不到类型为 [" + MessageTypeEnum.CONTACT.getValue() + "] 的消息解析器"));
+
+        return messageResolver.getRecentContacts(userId);
     }
 
     /**
@@ -133,7 +153,9 @@ public class ChatController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        return chatService.getHistoryMessagePage(userId, type, targetId, time, pageRequest);
+        MessageResolver messageResolver = getMessageResolver(type);
+
+        return messageResolver.getHistoryMessagePage(userId, targetId, time, pageRequest);
     }
 
     /**
@@ -151,10 +173,24 @@ public class ChatController {
     public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
                                                 @RequestParam Integer type,
                                                 @RequestParam Integer targetId) {
+
+        MessageResolver messageResolver = getMessageResolver(type);
+
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        return chatService.getHistoryMessageDateList(userId, type, targetId);
+        return messageResolver.getHistoryMessageDateList(userId, targetId);
+    }
+
+    private MessageResolver getMessageResolver(Integer type) {
+
+        MessageTypeEnum messageType = ValueEnumUtils.parse(type, MessageTypeEnum.class);
+
+        return messageResolvers
+                .stream()
+                .filter(r -> r.isSupport(messageType))
+                .findFirst()
+                .orElseThrow(() -> new SystemException("找不到类型为 [" + type + "] 的消息解析器"));
     }
 
 }

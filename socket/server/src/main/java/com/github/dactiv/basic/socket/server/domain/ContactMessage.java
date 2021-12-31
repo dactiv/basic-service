@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.domain;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
-import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -30,9 +30,8 @@ public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMes
     /**
      * 联系人类型
      *
-     * @see ContactTypeEnum
      */
-    private ContactTypeEnum type;
+    private MessageTypeEnum type;
 
     /**
      * 目标 id

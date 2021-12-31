@@ -2,9 +2,8 @@ package com.github.dactiv.basic.socket.server.receiver;
 
 import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
-import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
-import com.github.dactiv.basic.socket.server.service.chat.ChatService;
-import com.github.dactiv.basic.socket.server.service.chat.resolver.support.PersonMessageResolver;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
+import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageResolver;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -45,8 +44,8 @@ public class SaveMessageReceiver {
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
         // 添加双方常用联系人信息
-        messageResolver.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), ContactTypeEnum.PERSON);
-        messageResolver.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), ContactTypeEnum.PERSON);
+        messageResolver.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), MessageTypeEnum.CONTACT);
+        messageResolver.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), MessageTypeEnum.CONTACT);
 
         channel.basicAck(tag, false);
 

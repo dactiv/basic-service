@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.socket.server.domain.meta;
 
-import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
+import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -19,7 +19,6 @@ public class RecentContactMeta extends IntegerIdEntity {
     /**
      * 类型
      *
-     * @see ContactTypeEnum
      */
-    private ContactTypeEnum type;
+    private MessageTypeEnum type;
 }

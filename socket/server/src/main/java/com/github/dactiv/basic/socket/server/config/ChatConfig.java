@@ -71,6 +71,9 @@ public class ChatConfig {
          */
         private String personFileToken = "global_message_{0}_and_{1}.json";
 
+        /**
+         * 群聊的文件 token
+         */
         private String groupFileToken = "global_group_message_{0}.json";
 
         /**

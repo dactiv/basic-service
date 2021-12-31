@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.socket.server.service.chat.resolver.support;
+package com.github.dactiv.basic.socket.server.service.chat.support;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.SystemConstants;
@@ -9,37 +9,50 @@ import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.RecentContactMeta;
-import com.github.dactiv.basic.socket.server.enumerate.ContactTypeEnum;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
+import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
 import com.github.dactiv.basic.socket.server.receiver.SaveMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
-import com.github.dactiv.basic.socket.server.service.chat.ChatService;
-import com.github.dactiv.basic.socket.server.service.chat.resolver.AbstractMessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageResolver;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
+import com.github.dactiv.framework.crypto.algorithm.Base64;
+import com.github.dactiv.framework.crypto.algorithm.ByteSource;
+import com.github.dactiv.framework.crypto.algorithm.CodecUtils;
+import com.github.dactiv.framework.crypto.algorithm.cipher.CipherService;
+import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.minio.MinioTemplate;
+import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
+import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Component;
 
+import java.io.UnsupportedEncodingException;
+import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.ChronoUnit;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -50,16 +63,22 @@ import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_
  *
  * @author maurice.chen
  */
+@Slf4j
 @Component
 public class PersonMessageResolver extends AbstractMessageResolver implements InitializingBean {
 
-    public PersonMessageResolver(ChatConfig chatConfig, MinioTemplate minioTemplate, SocketServerManager socketServerManager, AmqpTemplate amqpTemplate, CipherAlgorithmService cipherAlgorithmService, RedissonClient redissonClient) {
+    public PersonMessageResolver(ChatConfig chatConfig,
+                                 MinioTemplate minioTemplate,
+                                 SocketServerManager socketServerManager,
+                                 AmqpTemplate amqpTemplate,
+                                 CipherAlgorithmService cipherAlgorithmService,
+                                 RedissonClient redissonClient) {
         super(chatConfig, minioTemplate, socketServerManager, amqpTemplate, cipherAlgorithmService, redissonClient);
     }
 
     @Override
     public boolean isSupport(MessageTypeEnum type) {
-        return MessageTypeEnum.PERSON.equals(type);
+        return MessageTypeEnum.CONTACT.equals(type);
     }
 
     @Override
@@ -125,30 +144,36 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
 
     @Override
     @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
-    public void readMessage(Integer senderId, Integer recipientId, List<String> messageIds) throws Exception {
-        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(senderId);
+    public void readMessage(ReadMessageRequestBody body) throws Exception {
+        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(body.getSenderId());
 
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
 
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
-                    ChatService.CHAT_READ_MESSAGE_EVENT_NAME,
+                    CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
-                            IdEntity.ID_FIELD_NAME, recipientId,
-                            IdentityNamingStrategy.TYPE_KEY, ContactTypeEnum.PERSON.getValue(),
-                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+                            IdEntity.ID_FIELD_NAME, body.getRecipientId(),
+                            IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.CONTACT.getValue(),
+                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
         } else {
             getSocketServerManager().saveTempMessage(
-                    senderId,
-                    ChatService.CHAT_READ_MESSAGE_EVENT_NAME,
+                    body.getSenderId(),
+                    CHAT_READ_MESSAGE_EVENT_NAME,
                     Map.of(
-                            IdEntity.ID_FIELD_NAME, recipientId,
-                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+                            IdEntity.ID_FIELD_NAME, body.getRecipientId(),
+                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                     )
             );
         }
+
+        getAmqpTemplate().convertAndSend(
+                SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                ReadMessageReceiver.DEFAULT_QUEUE_NAME,
+                body
+        );
     }
 
     /**
@@ -175,14 +200,14 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
     }
 
     @Override
-    public void consumeReadMessage(Integer senderId, Integer recipientId, List<String> messageIds, Date readTime) throws Exception {
-        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(recipientId);
+    public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
+        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(body.getRecipientId());
 
         if (MapUtils.isEmpty(map)) {
             return ;
         }
 
-        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(senderId);
+        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(body.getSenderId());
 
         if (Objects.isNull(message)) {
             return ;
@@ -191,7 +216,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         List<BasicMessageMeta.UserMessageBody> userMessageBodies = message
                 .getMessages()
                 .stream()
-                .filter(umb -> messageIds.contains(umb.getId()))
+                .filter(umb -> body.getMessageIds().contains(umb.getId()))
                 .collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(userMessageBodies)) {
@@ -221,7 +246,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
                 if (messageOptional.isPresent()) {
                     BasicMessageMeta.FileMessage fileMessage = messageOptional.get();
                     fileMessage.setRead(true);
-                    fileMessage.setReadTime(readTime);
+                    fileMessage.setReadTime(body.getCreationTime());
                 }
 
                 getMinioTemplate().writeJsonValue(messageFileObject, messageList);
@@ -230,12 +255,12 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         message.getMessages().removeIf(m -> userMessageBodies.stream().anyMatch(umb -> umb.getId().equals(m.getId())));
 
         if (CollectionUtils.isEmpty(message.getMessages())) {
-            map.remove(senderId);
+            map.remove(body.getSenderId());
         }
 
         String filename = MessageFormat.format(
                 getChatConfig().getContact().getUnreadMessageFileToken(),
-                recipientId
+                body.getRecipientId()
         );
 
         FileObject fileObject = FileObject.of(getChatConfig().getContact().getUnreadBucket(), filename);
@@ -243,6 +268,10 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
     }
 
     @Override
+    @Concurrent(
+            value = "socket:chat:person:send:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
+            exception = "请不要过快的发送消息"
+    )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
         GlobalMessageMeta.Message message = new GlobalMessageMeta.Message();
 
@@ -251,7 +280,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         message.setSenderId(senderId);
         message.setCryptoType(getChatConfig().getCryptoType());
         message.setCryptoKey(getChatConfig().getCryptoKey());
-        message.setType(MessageTypeEnum.PERSON);
+        message.setType(MessageTypeEnum.CONTACT);
 
         List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
@@ -284,7 +313,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         );
 
         contactMessage.setId(senderId);
-        contactMessage.setType(ContactTypeEnum.PERSON);
+        contactMessage.setType(MessageTypeEnum.CONTACT);
         contactMessage.setTargetId(recipientId);
         contactMessage.setLastSendTime(new Date());
         contactMessage.setLastMessage(lastMessage);
@@ -313,13 +342,13 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
-                    ChatService.CHAT_MESSAGE_EVENT_NAME,
+                    CHAT_MESSAGE_EVENT_NAME,
                     unicastMessage
             );
         } else {
             getSocketServerManager().saveTempMessage(
                     recipientId,
-                    ChatService.CHAT_MESSAGE_EVENT_NAME,
+                    CHAT_MESSAGE_EVENT_NAME,
                     unicastMessage
             );
         }
@@ -367,37 +396,6 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
 
         return result;
     }
-
-    /**
-     * 判断历史消息文件是否小于指定时间
-     *
-     * @param filename 文件名称
-     * @param time 时间
-     *
-     * @return true 是，否则 false
-     */
-    private boolean isHistoryMessageFileBeforeCurrentTime(String filename, LocalDateTime time) {
-        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
-        String text = getHistoryFileCreationTime(filename);
-        LocalDateTime creationTime = LocalDateTime.parse(text, formatter);
-        return creationTime.isBefore(time);
-    }
-
-    /**
-     * 获取消息历史文件创建时间
-     *
-     * @param filename 文件名称
-     *
-     * @return 创建时间戳
-     */
-    private String getHistoryFileCreationTime(String filename) {
-        return StringUtils.substringBefore(
-                StringUtils.substringAfterLast(filename, "_"),
-                ".json"
-        );
-    }
-
-
 
     /**
      * 获取常用联系人 id 集合
@@ -453,7 +451,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
      * @param contactId 联系人 id
      * @param type 联系人类型
      */
-    public void addRecentContact(Integer userId, Integer contactId, ContactTypeEnum type) throws Exception {
+    public void addRecentContact(Integer userId, Integer contactId, MessageTypeEnum type) throws Exception {
         List<RecentContactMeta> recentContacts = getRecentContactData(userId);
 
         RecentContactMeta recentContact = recentContacts
@@ -485,6 +483,262 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         }
         FileObject fileObject = getRecentContactFileObject(userId);
         getMinioTemplate().writeJsonValue(fileObject, recentContacts);
+    }
+
+
+
+    /**
+     * 解密消息内容
+     *
+     * @param message 文件消息
+     */
+    protected void decryptMessageContent(BasicMessageMeta.FileMessage message) {
+        CipherService cipherService = getCipherAlgorithmService().getCipherService(message.getCryptoType());
+        String content = message.getContent();
+        String key = message.getCryptoKey();
+
+        byte[] bytes = cipherService.decrypt(com.github.dactiv.framework.crypto.algorithm.Base64.decode(content), com.github.dactiv.framework.crypto.algorithm.Base64.decode(key)).obtainBytes();
+
+        try {
+            message.setContent(new String(bytes, CodecUtils.DEFAULT_ENCODING));
+        } catch (UnsupportedEncodingException e) {
+            String msg = "对内容为 [" + content + "] 的消息通过密钥 [" +
+                    key + "] 使用 [" + message.getCryptoType() + "] 解密失败";
+            log.warn(msg, e);
+        }
+    }
+
+    /**
+     * 添加历史记录消息
+     *
+     * @param messages 消息内容
+     * @param sourceId 来源 id(发送者用户 id)
+     * @param targetId 目标 id(收信者用户 id)
+     * @param global   是否全局消息（由系统保存的历史记录消息）
+     *
+     * @throws Exception 存储消息记录失败时抛出
+     */
+    public List<BasicMessageMeta.FileMessage> addHistoryMessage(List<GlobalMessageMeta.Message> messages,
+                                                                Integer sourceId,
+                                                                Integer targetId,
+                                                                boolean global) throws Exception {
+
+        GlobalMessageMeta globalMessage = getGlobalMessage(sourceId, targetId, global);
+        String filename = getGlobalMessageCurrentFilename(globalMessage, sourceId, targetId);
+        List<BasicMessageMeta.FileMessage> fileMessageList = new LinkedList<>();
+        for (GlobalMessageMeta.Message message : messages) {
+
+            String lastMessage = RegExUtils.replaceAll(
+                    message.getContent(),
+                    SystemConstants.REPLACE_HTML_TAG_REX,
+                    StringUtils.EMPTY
+            );
+
+            globalMessage.setLastMessage(lastMessage);
+            globalMessage.setLastSendTime(new Date());
+
+            BasicMessageMeta.FileMessage fileMessage = BasicMessageMeta.FileMessage.of(message, filename);
+            CipherService cipherService = getCipherAlgorithmService().getCipherService(fileMessage.getCryptoType());
+
+            byte[] key = Base64.decode(fileMessage.getCryptoKey());
+            byte[] plainText = fileMessage.getContent().getBytes(StandardCharsets.UTF_8);
+
+            ByteSource cipherText = cipherService.encrypt(plainText, key);
+            fileMessage.setContent(cipherText.getBase64());
+            fileMessageList.add(fileMessage);
+        }
+
+        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
+        List<GlobalMessageMeta.Message> senderMessageList = getMinioTemplate().readJsonValue(
+                messageFileObject,
+                new TypeReference<>() {
+                }
+        );
+
+        if (CollectionUtils.isEmpty(senderMessageList)) {
+            senderMessageList = new ArrayList<>();
+        }
+
+        senderMessageList.addAll(fileMessageList);
+        getMinioTemplate().writeJsonValue(messageFileObject, senderMessageList);
+
+        globalMessage.getMessageFileMap().put(filename, senderMessageList.size());
+        FileObject globalFileObject = FileObject.of(globalMessage.getBucketName(), globalMessage.getFilename());
+        getMinioTemplate().writeJsonValue(globalFileObject, globalMessage);
+
+        RBucket<GlobalMessageMeta> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename(), global);
+        CacheProperties cache = getGlobalMessageCacheProperties(global);
+
+        if (Objects.nonNull(cache.getExpiresTime())) {
+            bucket.setAsync(globalMessage, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
+        } else {
+            bucket.setAsync(globalMessage);
+        }
+
+        if (Objects.nonNull(getChatConfig().getContact().getCache().getExpiresTime())) {
+            bucket.expire(
+                    getChatConfig().getContact().getCache().getExpiresTime().getValue(),
+                    getChatConfig().getContact().getCache().getExpiresTime().getUnit()
+            );
+        }
+
+        return fileMessageList;
+    }
+
+    /**
+     * 获取全局消息
+     *
+     * @param sourceId 来源 id (发送者用户 id)
+     * @param targetId 目标 id (收信者用户 id)
+     * @param global   是否全局消息（由系统保存的历史记录消息）
+     *
+     * @return 全局消息
+     */
+    public GlobalMessageMeta getGlobalMessage(Integer sourceId, Integer targetId, boolean global) {
+
+        String filename = MessageFormat.format(getChatConfig().getContact().getFileToken(), sourceId, targetId);
+
+        Bucket minioBucket = getChatConfig().getContact().getContactBucket();
+
+        if (global) {
+            Integer min = Math.min(sourceId, targetId);
+            Integer max = Math.max(sourceId, targetId);
+
+            filename = MessageFormat.format(getChatConfig().getGlobal().getPersonFileToken(), min, max);
+            minioBucket = getChatConfig().getGlobal().getBucket();
+        }
+
+        RBucket<GlobalMessageMeta> redisBucket = getRedisGlobalMessageBucket(filename, global);
+
+        GlobalMessageMeta globalMessage = redisBucket.get();
+
+        if (Objects.isNull(globalMessage)) {
+            FileObject fileObject = FileObject.of(minioBucket, filename);
+            globalMessage = getMinioTemplate().readJsonValue(fileObject, GlobalMessageMeta.class);
+        }
+
+        if (Objects.isNull(globalMessage)) {
+            globalMessage = new GlobalMessageMeta();
+
+            globalMessage.setFilename(filename);
+            globalMessage.setBucketName(minioBucket.getBucketName());
+            globalMessage.setType(global ? MessageTypeEnum.GLOBAL : MessageTypeEnum.CONTACT);
+        }
+
+        return globalMessage;
+    }
+
+    /**
+     * 获取 redis 全局消息桶
+     *
+     * @param filename 文件名称
+     *
+     * @return redis 桶
+     */
+    private RBucket<GlobalMessageMeta> getRedisGlobalMessageBucket(String filename, boolean global) {
+        String key = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
+
+        CacheProperties cache = getGlobalMessageCacheProperties(global);
+
+        return getRedissonClient().getBucket(cache.getName(key));
+    }
+
+    /**
+     * 获取全局消息缓存配置
+     *
+     * @param global 是否全局消息，true 是，否则 用户消息
+     *
+     * @return 缓存配置
+     */
+    private CacheProperties getGlobalMessageCacheProperties(boolean global) {
+        return global ? getChatConfig().getGlobal().getCache() : getChatConfig().getContact().getCache();
+    }
+
+    /**
+     * 获取全局消息当前索引存储消息的文件名称
+     *
+     * @param global   全局消息
+     * @param sourceId 来源 id(发送者用户 id)
+     * @param targetId 目标 id(收信者用户 id)
+     *
+     * @return 文件名称
+     *
+     * @throws Exception 获取错误时抛出
+     */
+    private String getGlobalMessageCurrentFilename(GlobalMessageMeta global, Integer sourceId, Integer targetId) throws Exception {
+        String filename;
+
+        if (MapUtils.isNotEmpty(global.getMessageFileMap())) {
+            filename = global.getCurrentMessageFile();
+            Integer count = global.getMessageFileMap().get(filename);
+            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
+            String text = getHistoryFileCreationTime(filename);
+
+            LocalDate before = LocalDate.parse(text, formatter);
+            LocalDate now = LocalDate.now();
+
+            if (count > getChatConfig().getMessage().getBatchSize() || ChronoUnit.DAYS.between(before, now) >= 1) {
+                filename = createHistoryMessageFile(global, sourceId, targetId);
+            }
+        } else {
+            filename = createHistoryMessageFile(global, sourceId, targetId);
+        }
+
+        return filename;
+    }
+
+    /**
+     * 创建历史消息文件
+     *
+     * @param global   全局消息
+     * @param sourceId 来源 id(发送者用户 id)
+     * @param targetId 目标 id(收信者用户 id)
+     *
+     * @return 文件名称
+     *
+     * @throws Exception 创建文件失败时抛出
+     */
+    private String createHistoryMessageFile(GlobalMessageMeta global, Integer sourceId, Integer targetId) throws Exception {
+        String globalFilename = MessageFormat.format(getChatConfig().getContact().getFileToken(), sourceId, targetId);
+        Integer historyFileCount = getChatConfig().getContact().getHistoryMessageFileCount();
+
+        if (MessageTypeEnum.GLOBAL.equals(global.getType())) {
+            Integer min = Math.min(sourceId, targetId);
+            Integer max = Math.max(sourceId, targetId);
+            globalFilename = MessageFormat.format(getChatConfig().getGlobal().getPersonFileToken(), min, max);
+            historyFileCount = getChatConfig().getGlobal().getHistoryMessageFileCount();
+        }
+
+        String filename = createHistoryMessageFilename(globalFilename);
+        global.setCurrentMessageFile(filename);
+        global.getMessageFileMap().put(filename, 0);
+
+        if (global.getMessageFileMap().size() > historyFileCount) {
+            Optional<String> optional = global
+                    .getMessageFileMap()
+                    .keySet()
+                    .stream()
+                    .min(Comparator.comparing(this::getHistoryFileCreationTime));
+
+            if (optional.isPresent()) {
+                String minKey = optional.get();
+                global.getMessageFileMap().remove(minKey);
+            }
+        }
+
+        Bucket bucket = getChatConfig().getContact().getContactBucket();
+
+        if (MessageTypeEnum.GLOBAL.equals(global.getType())) {
+            bucket = getChatConfig().getGlobal().getBucket();
+        }
+
+        FileObject globalFileObject = FileObject.of(bucket, globalFilename);
+        getMinioTemplate().writeJsonValue(globalFileObject, global);
+
+        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
+        getMinioTemplate().writeJsonValue(messageFileObject, new LinkedList<BasicMessageMeta.Message>());
+
+        return filename;
     }
 
     @Override
