@@ -2,7 +2,7 @@ package com.github.dactiv.basic.socket.server.receiver;
 
 import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
-import com.github.dactiv.basic.socket.server.service.chat.MessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.MessageOperation;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
@@ -31,10 +31,10 @@ public class ReadMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "read.chat.message";
 
-    private final List<MessageResolver> messageResolvers;
+    private final List<MessageOperation> messageOperations;
 
-    public ReadMessageReceiver(ObjectProvider<MessageResolver> messageResolvers) {
-        this.messageResolvers = messageResolvers.orderedStream().collect(Collectors.toList());
+    public ReadMessageReceiver(ObjectProvider<MessageOperation> messageResolvers) {
+        this.messageOperations = messageResolvers.orderedStream().collect(Collectors.toList());
     }
 
     @RabbitListener(
@@ -50,13 +50,13 @@ public class ReadMessageReceiver {
 
 
 
-        MessageResolver messageResolver = messageResolvers
+        MessageOperation messageOperation = messageOperations
                 .stream()
                 .filter(r -> r.isSupport(body.getType()))
                 .findFirst()
                 .orElseThrow(() -> new SystemException("找不到类型为 [" + body.getType().getValue() + "] 的消息解析器"));
 
-        messageResolver.consumeReadMessage(body);
+        messageOperation.consumeReadMessage(body);
 
         channel.basicAck(tag, false);
     }

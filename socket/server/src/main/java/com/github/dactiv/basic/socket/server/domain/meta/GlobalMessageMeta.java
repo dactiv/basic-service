@@ -9,7 +9,7 @@ import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * 联系人实体
+ * 全局消息元数据实现
  *
  * @author maurice.chen
  */

@@ -17,7 +17,7 @@ import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
 import com.github.dactiv.basic.socket.server.receiver.SaveMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
-import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageOperation;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -59,20 +59,20 @@ import java.util.stream.Collectors;
 import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE;
 
 /**
- * 人员聊天信息的消息解析实现
+ * 人员聊天信息的消息操作实现
  *
  * @author maurice.chen
  */
 @Slf4j
 @Component
-public class PersonMessageResolver extends AbstractMessageResolver implements InitializingBean {
+public class PersonMessageOperation extends AbstractMessageOperation implements InitializingBean {
 
-    public PersonMessageResolver(ChatConfig chatConfig,
-                                 MinioTemplate minioTemplate,
-                                 SocketServerManager socketServerManager,
-                                 AmqpTemplate amqpTemplate,
-                                 CipherAlgorithmService cipherAlgorithmService,
-                                 RedissonClient redissonClient) {
+    public PersonMessageOperation(ChatConfig chatConfig,
+                                  MinioTemplate minioTemplate,
+                                  SocketServerManager socketServerManager,
+                                  AmqpTemplate amqpTemplate,
+                                  CipherAlgorithmService cipherAlgorithmService,
+                                  RedissonClient redissonClient) {
         super(chatConfig, minioTemplate, socketServerManager, amqpTemplate, cipherAlgorithmService, redissonClient);
     }
 
@@ -268,19 +268,13 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
     }
 
     @Override
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     @Concurrent(
             value = "socket:chat:person:send:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
             exception = "请不要过快的发送消息"
     )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
-        GlobalMessageMeta.Message message = new GlobalMessageMeta.Message();
-
-        message.setContent(content);
-        message.setId(UUID.randomUUID().toString());
-        message.setSenderId(senderId);
-        message.setCryptoType(getChatConfig().getCryptoType());
-        message.setCryptoKey(getChatConfig().getCryptoKey());
-        message.setType(MessageTypeEnum.CONTACT);
+        GlobalMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.CONTACT);
 
         List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),
@@ -525,46 +519,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
 
         GlobalMessageMeta globalMessage = getGlobalMessage(sourceId, targetId, global);
         String filename = getGlobalMessageCurrentFilename(globalMessage, sourceId, targetId);
-        List<BasicMessageMeta.FileMessage> fileMessageList = new LinkedList<>();
-        for (GlobalMessageMeta.Message message : messages) {
-
-            String lastMessage = RegExUtils.replaceAll(
-                    message.getContent(),
-                    SystemConstants.REPLACE_HTML_TAG_REX,
-                    StringUtils.EMPTY
-            );
-
-            globalMessage.setLastMessage(lastMessage);
-            globalMessage.setLastSendTime(new Date());
-
-            BasicMessageMeta.FileMessage fileMessage = BasicMessageMeta.FileMessage.of(message, filename);
-            CipherService cipherService = getCipherAlgorithmService().getCipherService(fileMessage.getCryptoType());
-
-            byte[] key = Base64.decode(fileMessage.getCryptoKey());
-            byte[] plainText = fileMessage.getContent().getBytes(StandardCharsets.UTF_8);
-
-            ByteSource cipherText = cipherService.encrypt(plainText, key);
-            fileMessage.setContent(cipherText.getBase64());
-            fileMessageList.add(fileMessage);
-        }
-
-        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
-        List<GlobalMessageMeta.Message> senderMessageList = getMinioTemplate().readJsonValue(
-                messageFileObject,
-                new TypeReference<>() {
-                }
-        );
-
-        if (CollectionUtils.isEmpty(senderMessageList)) {
-            senderMessageList = new ArrayList<>();
-        }
-
-        senderMessageList.addAll(fileMessageList);
-        getMinioTemplate().writeJsonValue(messageFileObject, senderMessageList);
-
-        globalMessage.getMessageFileMap().put(filename, senderMessageList.size());
-        FileObject globalFileObject = FileObject.of(globalMessage.getBucketName(), globalMessage.getFilename());
-        getMinioTemplate().writeJsonValue(globalFileObject, globalMessage);
+        List<BasicMessageMeta.FileMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
 
         RBucket<GlobalMessageMeta> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename(), global);
         CacheProperties cache = getGlobalMessageCacheProperties(global);
@@ -632,6 +587,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
      * 获取 redis 全局消息桶
      *
      * @param filename 文件名称
+     * @param global 是否获取全局文件的通
      *
      * @return redis 桶
      */
@@ -670,11 +626,9 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
 
         if (MapUtils.isNotEmpty(global.getMessageFileMap())) {
             filename = global.getCurrentMessageFile();
-            Integer count = global.getMessageFileMap().get(filename);
-            DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
-            String text = getHistoryFileCreationTime(filename);
 
-            LocalDate before = LocalDate.parse(text, formatter);
+            LocalDate before = getFileLocalDate(global);
+            Integer count = global.getMessageFileMap().get(filename);
             LocalDate now = LocalDate.now();
 
             if (count > getChatConfig().getMessage().getBatchSize() || ChronoUnit.DAYS.between(before, now) >= 1) {
@@ -709,22 +663,7 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
             historyFileCount = getChatConfig().getGlobal().getHistoryMessageFileCount();
         }
 
-        String filename = createHistoryMessageFilename(globalFilename);
-        global.setCurrentMessageFile(filename);
-        global.getMessageFileMap().put(filename, 0);
-
-        if (global.getMessageFileMap().size() > historyFileCount) {
-            Optional<String> optional = global
-                    .getMessageFileMap()
-                    .keySet()
-                    .stream()
-                    .min(Comparator.comparing(this::getHistoryFileCreationTime));
-
-            if (optional.isPresent()) {
-                String minKey = optional.get();
-                global.getMessageFileMap().remove(minKey);
-            }
-        }
+        setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount);
 
         Bucket bucket = getChatConfig().getContact().getContactBucket();
 
@@ -735,10 +674,10 @@ public class PersonMessageResolver extends AbstractMessageResolver implements In
         FileObject globalFileObject = FileObject.of(bucket, globalFilename);
         getMinioTemplate().writeJsonValue(globalFileObject, global);
 
-        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
+        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), global.getFilename());
         getMinioTemplate().writeJsonValue(messageFileObject, new LinkedList<BasicMessageMeta.Message>());
 
-        return filename;
+        return global.getFilename();
     }
 
     @Override

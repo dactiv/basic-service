@@ -3,7 +3,7 @@ package com.github.dactiv.basic.socket.server.receiver;
 import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
-import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageOperation;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -27,9 +27,9 @@ public class SaveMessageReceiver {
      */
     public static final String DEFAULT_QUEUE_NAME = "save.chat.message";
 
-    private final PersonMessageResolver messageResolver;
+    private final PersonMessageOperation messageResolver;
 
-    public SaveMessageReceiver(PersonMessageResolver messageResolver) {
+    public SaveMessageReceiver(PersonMessageOperation messageResolver) {
         this.messageResolver = messageResolver;
     }
 

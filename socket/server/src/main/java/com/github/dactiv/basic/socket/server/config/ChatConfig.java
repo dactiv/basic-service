@@ -37,10 +37,17 @@ public class ChatConfig {
      * 全局文件消息配置
      */
     private Global global = new Global();
+
     /**
      * 联系人配置
      */
     private Contact contact = new Contact();
+
+    /**
+     * 群聊配置
+     */
+    private Group group = new Group();
+
     /**
      * 消息配置
      */
@@ -82,6 +89,39 @@ public class ChatConfig {
         private CacheProperties cache = new CacheProperties(
                 "socket:server:chat:global:",
                 new TimeProperties(7, TimeUnit.DAYS)
+        );
+    }
+
+    /**
+     * 群聊配置
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode
+    public static class Group {
+        /**
+         * 保存历史聊天消息的文件数量
+         */
+        private Integer historyMessageFileCount = 3000;
+
+        /**
+         * 联系人桶信息
+         */
+        private Bucket bucket = Bucket.of("socket.server.chat.group");
+
+        /**
+         * 常用联系人文件 token
+         */
+        private String fileToken = "group_{0}.json";
+
+        /**
+         * 全局消息缓存配置
+         */
+        private CacheProperties cache = new CacheProperties(
+                "socket:server:chat:group:",
+                new TimeProperties(1, TimeUnit.DAYS)
         );
     }
 

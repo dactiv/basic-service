@@ -10,11 +10,11 @@ import java.util.Date;
 import java.util.List;
 
 /**
- * 消息解析器, 用于针对消息类型，做消息的展示、发送、读取的处理
+ * 消息操作, 用于针对消息类型，做消息的展示、发送、读取的处理
  *
  * @author maurice.chen
  */
-public interface MessageResolver {
+public interface MessageOperation {
 
     /**
      * 聊天信息事件名称

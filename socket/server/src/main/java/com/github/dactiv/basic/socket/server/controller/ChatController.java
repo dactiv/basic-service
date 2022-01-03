@@ -6,8 +6,8 @@ import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequ
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.RecentContactMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
-import com.github.dactiv.basic.socket.server.service.chat.MessageResolver;
-import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageResolver;
+import com.github.dactiv.basic.socket.server.service.chat.MessageOperation;
+import com.github.dactiv.basic.socket.server.service.chat.support.PersonMessageOperation;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.enumerate.ValueEnumUtils;
@@ -44,10 +44,10 @@ import java.util.stream.Collectors;
 )
 public class ChatController {
 
-    private final List<MessageResolver> messageResolvers;
+    private final List<MessageOperation> messageOperations;
 
-    public ChatController(ObjectProvider<MessageResolver> messageResolvers) {
-        this.messageResolvers = messageResolvers.orderedStream().collect(Collectors.toList());
+    public ChatController(ObjectProvider<MessageOperation> messageResolvers) {
+        this.messageOperations = messageResolvers.orderedStream().collect(Collectors.toList());
     }
     /**
      * 发送消息
@@ -66,12 +66,12 @@ public class ChatController {
                                      @RequestParam Integer type,
                                      @RequestParam String content) throws Exception {
 
-        MessageResolver messageResolver = getMessageResolver(type);
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer senderId = Casts.cast(userDetails.getId());
 
-        GlobalMessageMeta.Message message = messageResolver.sendMessage(senderId, recipientId, content);
+        MessageOperation messageOperation = getMessageResolver(type);
+        GlobalMessageMeta.Message message = messageOperation.sendMessage(senderId, recipientId, content);
 
         return RestResult.ofSuccess("发送消息成功", message);
     }
@@ -95,13 +95,13 @@ public class ChatController {
         Integer readUserId = Casts.cast(userDetails.getId());
         body.setRecipientId(readUserId);
 
-        MessageResolver messageResolver = messageResolvers
+        MessageOperation messageOperation = messageOperations
                 .stream()
                 .filter(r -> r.isSupport(body.getType()))
                 .findFirst()
                 .orElseThrow(() -> new SystemException("找不到类型为 [" + body.getType().getValue() + "] 的消息解析器"));
 
-        messageResolver.readMessage(body);
+        messageOperation.readMessage(body);
 
         return RestResult.ofSuccess("读取信息成功");
     }
@@ -120,10 +120,10 @@ public class ChatController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        PersonMessageResolver messageResolver = messageResolvers
+        PersonMessageOperation messageResolver = messageOperations
                 .stream()
                 .filter(r -> r.isSupport(MessageTypeEnum.CONTACT))
-                .map(r -> Casts.cast(r, PersonMessageResolver.class))
+                .map(r -> Casts.cast(r, PersonMessageOperation.class))
                 .findFirst()
                 .orElseThrow(() -> new SystemException("找不到类型为 [" + MessageTypeEnum.CONTACT.getValue() + "] 的消息解析器"));
 
@@ -153,9 +153,9 @@ public class ChatController {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        MessageResolver messageResolver = getMessageResolver(type);
+        MessageOperation messageOperation = getMessageResolver(type);
 
-        return messageResolver.getHistoryMessagePage(userId, targetId, time, pageRequest);
+        return messageOperation.getHistoryMessagePage(userId, targetId, time, pageRequest);
     }
 
     /**
@@ -174,19 +174,26 @@ public class ChatController {
                                                 @RequestParam Integer type,
                                                 @RequestParam Integer targetId) {
 
-        MessageResolver messageResolver = getMessageResolver(type);
+        MessageOperation messageOperation = getMessageResolver(type);
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
 
-        return messageResolver.getHistoryMessageDateList(userId, targetId);
+        return messageOperation.getHistoryMessageDateList(userId, targetId);
     }
 
-    private MessageResolver getMessageResolver(Integer type) {
+    /**
+     * 获取消息操作解析者
+     *
+     * @param type 消息类型
+     *
+     * @return 消息操作解析者
+     */
+    private MessageOperation getMessageResolver(Integer type) {
 
         MessageTypeEnum messageType = ValueEnumUtils.parse(type, MessageTypeEnum.class);
 
-        return messageResolvers
+        return messageOperations
                 .stream()
                 .filter(r -> r.isSupport(messageType))
                 .findFirst()
