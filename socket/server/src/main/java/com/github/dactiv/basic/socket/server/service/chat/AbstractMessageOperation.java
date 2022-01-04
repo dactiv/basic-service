@@ -3,19 +3,24 @@ package com.github.dactiv.basic.socket.server.service.chat;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
+import com.github.dactiv.basic.socket.server.domain.ContactMessage;
+import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.algorithm.Base64;
 import com.github.dactiv.framework.crypto.algorithm.ByteSource;
+import com.github.dactiv.framework.crypto.algorithm.CodecUtils;
 import com.github.dactiv.framework.crypto.algorithm.cipher.CipherService;
 import com.github.dactiv.framework.minio.MinioTemplate;
+import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import lombok.Getter;
-import org.apache.commons.collections.MapUtils;
+import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -23,19 +28,22 @@ import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.web.bind.WebDataBinder;
 
+import java.io.UnsupportedEncodingException;
 import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
-import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 抽象的消息操作实现，用于分离一下可复用的公共方法
  *
  * @author maurice.chen
  */
+@Slf4j
 public abstract class AbstractMessageOperation implements MessageOperation {
 
     @Getter
@@ -158,10 +166,13 @@ public abstract class AbstractMessageOperation implements MessageOperation {
      * @param global 全局消息元数据实现
      * @param globalFilename 当前全局文件名
      * @param historyFileCount 历史文件数量
+     *
+     * @return 当前全局消息名称
      */
-    protected void setGlobalMessageCurrentFilename(GlobalMessageMeta global,
-                                                   String globalFilename,
-                                                   Integer historyFileCount) {
+    protected String setGlobalMessageCurrentFilename(GlobalMessageMeta global,
+                                                     String globalFilename,
+                                                     Integer historyFileCount,
+                                                     Bucket bucket) throws Exception {
         String filename = createHistoryMessageFilename(globalFilename);
         global.setCurrentMessageFile(filename);
         global.getMessageFileMap().put(filename, 0);
@@ -178,8 +189,31 @@ public abstract class AbstractMessageOperation implements MessageOperation {
                 global.getMessageFileMap().remove(minKey);
             }
         }
+
+        if (MessageTypeEnum.GLOBAL.equals(global.getType())) {
+            bucket = getChatConfig().getGlobal().getBucket();
+        }
+
+        FileObject globalFileObject = FileObject.of(bucket, globalFilename);
+        getMinioTemplate().writeJsonValue(globalFileObject, global);
+
+        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), global.getCurrentMessageFile());
+        getMinioTemplate().writeJsonValue(messageFileObject, new LinkedList<BasicMessageMeta.Message>());
+
+        return global.getCurrentMessageFile();
     }
 
+    /**
+     * 保存消息
+     *
+     * @param messages 消息集合
+     * @param globalMessage 全局消息元数据实现
+     * @param filename 文件名称
+     *
+     * @return 带对应文件的消息
+     *
+     * @throws Exception 保存错误时候抛出
+     */
     protected List<BasicMessageMeta.FileMessage> saveMessages(List<GlobalMessageMeta.Message> messages,
                                                               GlobalMessageMeta globalMessage,
                                                               String filename) throws Exception {
@@ -226,4 +260,114 @@ public abstract class AbstractMessageOperation implements MessageOperation {
 
         return fileMessageList;
     }
+
+    /**
+     * 创建联系人消息
+     *
+     * @param message 消息实体
+     * @param senderId 发送者 id
+     * @param recipientId 接收者 id
+     * @param type 消息类型
+     *
+     * @return 联系人消息
+     */
+    protected ContactMessage<BasicMessageMeta.Message> createContactMessage(GlobalMessageMeta.Message message,
+                                                                            Integer senderId,
+                                                                            Integer recipientId,
+                                                                            MessageTypeEnum type) {
+
+        ContactMessage<BasicMessageMeta.Message> contactMessage = new ContactMessage<>();
+
+        String lastMessage = RegExUtils.replaceAll(
+                message.getContent(),
+                SystemConstants.REPLACE_HTML_TAG_REX,
+                StringUtils.EMPTY
+        );
+
+        contactMessage.setId(senderId);
+        contactMessage.setType(type);
+        contactMessage.setTargetId(recipientId);
+        contactMessage.setLastSendTime(new Date());
+        contactMessage.setLastMessage(lastMessage);
+        contactMessage.getMessages().add(message);
+
+        return contactMessage;
+    }
+
+    /**
+     * 解密消息内容
+     *
+     * @param message 文件消息
+     */
+    protected void decryptMessageContent(BasicMessageMeta.FileMessage message) {
+        CipherService cipherService = getCipherAlgorithmService().getCipherService(message.getCryptoType());
+        String content = message.getContent();
+        String key = message.getCryptoKey();
+
+        byte[] bytes = cipherService.decrypt(Base64.decode(content), Base64.decode(key)).obtainBytes();
+
+        try {
+            message.setContent(new String(bytes, CodecUtils.DEFAULT_ENCODING));
+        } catch (UnsupportedEncodingException e) {
+            String msg = "对内容为 [" + content + "] 的消息通过密钥 [" +
+                    key + "] 使用 [" + message.getCryptoType() + "] 解密失败";
+            log.warn(msg, e);
+        }
+    }
+
+    /**
+     * 获取全局消息分页
+     *
+     * @param globalMessage 全局消息元数据实现
+     * @param time 时间（在改时间之后的聊天信息）
+     * @param pageRequest 分页请求
+     *
+     * @return 全局消息分页
+     */
+    protected GlobalMessagePage getGlobalMessagePage(GlobalMessageMeta globalMessage,
+                                                     Date time,
+                                                     ScrollPageRequest pageRequest) {
+
+        List<GlobalMessageMeta.FileMessage> messages = new LinkedList<>();
+        LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
+        List<String> historyFiles = globalMessage
+                .getMessageFileMap()
+                .keySet()
+                .stream()
+                .filter(s -> this.isHistoryMessageFileBeforeCurrentTime(s, dateTime))
+                .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
+                .collect(Collectors.toList());
+
+        for (String file : historyFiles) {
+            FileObject fileObject = FileObject.of(getChatConfig().getMessage().getBucket(), file);
+            List<GlobalMessageMeta.FileMessage> fileMessageList = getMinioTemplate().readJsonValue(
+                    fileObject,
+                    new TypeReference<>() {
+                    }
+            );
+
+            List<GlobalMessageMeta.FileMessage> temps = fileMessageList
+                    .stream()
+                    .filter(f -> f.getCreationTime().before(time))
+                    .sorted(Comparator.comparing(BasicMessageMeta.Message::getCreationTime).reversed())
+                    .limit(pageRequest.getSize() - messages.size())
+                    .peek(this::decryptMessageContent)
+                    .collect(Collectors.toList());
+
+            messages.addAll(temps);
+
+            if (messages.size() >= pageRequest.getSize()) {
+                break;
+            }
+
+        }
+
+        GlobalMessagePage result = GlobalMessagePage.of(pageRequest, messages);
+
+        result.setLastMessage(globalMessage.getLastMessage());
+        result.setLastSendTime(globalMessage.getLastSendTime());
+
+        return result;
+    }
+
 }

@@ -92,8 +92,8 @@ public class ChatController {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
-        Integer readUserId = Casts.cast(userDetails.getId());
-        body.setRecipientId(readUserId);
+        Integer readerId = Casts.cast(userDetails.getId());
+        body.setReaderId(readerId);
 
         MessageOperation messageOperation = messageOperations
                 .stream()

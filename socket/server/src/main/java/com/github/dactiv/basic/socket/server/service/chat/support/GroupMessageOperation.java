@@ -2,42 +2,50 @@ package com.github.dactiv.basic.socket.server.service.chat.support;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.github.dactiv.basic.commons.SystemConstants;
+import com.github.dactiv.basic.socket.client.domain.BroadcastMessage;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
+import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
+import com.github.dactiv.basic.socket.server.domain.MessageDeleteRecord;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
+import com.github.dactiv.basic.socket.server.receiver.SaveGroupTempMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageOperation;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
-import com.github.dactiv.framework.crypto.algorithm.Base64;
-import com.github.dactiv.framework.crypto.algorithm.ByteSource;
-import com.github.dactiv.framework.crypto.algorithm.cipher.CipherService;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
-import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Component;
 
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.ChronoUnit;
 import java.util.*;
+import java.util.stream.Collectors;
+
+import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE;
 
 /**
  * 群聊聊天信息的消息操作实现
@@ -63,23 +71,114 @@ public class GroupMessageOperation extends AbstractMessageOperation {
     }
 
     @Override
-    public GlobalMessagePage getHistoryMessagePage(Integer userId, Integer targetId, Date time, ScrollPageRequest pageRequest) {
-        return null;
+    public GlobalMessagePage getHistoryMessagePage(Integer userId,
+                                                   Integer targetId,
+                                                   Date time,
+                                                   ScrollPageRequest pageRequest) {
+        GlobalMessageMeta globalMessage = getGlobalMessage(targetId);
+
+        GlobalMessagePage messagePage = getGlobalMessagePage(globalMessage, time, pageRequest);
+        MessageDeleteRecord dto = getGroupMessageDeleteRecord(userId, targetId);
+
+        List<BasicMessageMeta.FileMessage> filterElements = messagePage
+                .getElements()
+                .stream()
+                .filter(m -> !dto.getDeleteMap().getOrDefault(m.getFilename(), new LinkedList<>()).contains(m.getId()))
+                .collect(Collectors.toList());
+
+        messagePage.setElements(filterElements);
+
+        return messagePage;
     }
 
     @Override
     public List<Date> getHistoryMessageDateList(Integer userId, Integer targetId) {
-        return null;
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
+        GlobalMessageMeta globalMessage = getGlobalMessage(targetId);
+
+        MessageDeleteRecord dto = getGroupMessageDeleteRecord(userId, targetId);
+
+        globalMessage
+                .getMessageFileMap()
+                .entrySet()
+                .removeIf(p -> dto.getDeleteMap().getOrDefault(p.getKey(), new LinkedList<>()).size() == p.getValue());
+
+        return globalMessage
+                .getMessageFileMap()
+                .keySet()
+                .stream()
+                .map(this::getHistoryFileCreationTime)
+                .map(k -> LocalDateTime.parse(k, formatter))
+                .map(ldt -> Date.from(ldt.atZone(ZoneId.systemDefault()).toInstant()))
+                .collect(Collectors.toList());
     }
 
     @Override
-    public void readMessage(ReadMessageRequestBody body) throws Exception {
+    public void readMessage(ReadMessageRequestBody body) {
 
+        List<String> messageIds = body
+                .getMessageMap()
+                .values()
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        BroadcastMessage<Map<String, Object>> message = BroadcastMessage.of(
+                body.getReaderId().toString(),
+                CHAT_READ_MESSAGE_EVENT_NAME,
+                Map.of(
+                        IdEntity.ID_FIELD_NAME, body.getReaderId(),
+                        IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.GROUP.getValue(),
+                        GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+                )
+        );
+
+        SocketResultHolder.get().addBroadcastSocketMessage(message);
+
+        getAmqpTemplate().convertAndSend(
+                SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                SaveGroupTempMessageReceiver.DEFAULT_QUEUE_NAME,
+                message
+        );
     }
 
     @Override
     public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
 
+        List<FileObject> fileObjects = body
+                .getMessageMap()
+                .keySet()
+                .stream()
+                .map(filename -> FileObject.of(getChatConfig().getMessage().getBucket(), filename))
+                .collect(Collectors.toList());
+
+        for (FileObject messageFileObject : fileObjects) {
+
+            List<BasicMessageMeta.FileMessage> messageList = getMinioTemplate().readJsonValue(
+                    messageFileObject,
+                    new TypeReference<>() {
+                    }
+            );
+
+            List<String> ids = body.getMessageMap().get(messageFileObject.getObjectName());
+
+            Optional<BasicMessageMeta.FileMessage> messageOptional = messageList
+                    .stream()
+                    .filter(m -> ids.contains(m.getId()))
+                    .findFirst();
+
+            if (messageOptional.isPresent()) {
+                BasicMessageMeta.GroupReadableMessage fileMessage = Casts.cast(
+                        messageOptional.get(),
+                        BasicMessageMeta.GroupReadableMessage.class
+                );
+                IntegerIdEntity idEntity = new IntegerIdEntity();
+                idEntity.setId(body.getTargetId());
+                fileMessage.getReaderInfo().add(idEntity);
+            }
+
+            getMinioTemplate().writeJsonValue(messageFileObject, messageList);
+        }
     }
 
     @Override
@@ -92,7 +191,43 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         GlobalMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.GROUP);
         message.setType(MessageTypeEnum.GROUP);
 
-        return null;
+        // 添加全局聊天记录文件
+        List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
+                Collections.singletonList(message),
+                recipientId
+        );
+
+        ContactMessage<BasicMessageMeta.Message> contactMessage = createContactMessage(
+                message,
+                senderId,
+                recipientId,
+                MessageTypeEnum.GROUP
+        );
+
+        //noinspection unchecked
+        ContactMessage<BasicMessageMeta.FileMessage> broadcastMessage = Casts.of(contactMessage, ContactMessage.class);
+        broadcastMessage.setMessages(globalMessages);
+        broadcastMessage.getMessages().forEach(this::decryptMessageContent);
+
+        SocketResultHolder.get().addBroadcastSocketMessage(
+                recipientId.toString(),
+                CHAT_MESSAGE_EVENT_NAME,
+                broadcastMessage
+        );
+
+        BroadcastMessage<GlobalMessageMeta.Message> tempMessage = BroadcastMessage.of(
+                recipientId.toString(),
+                CHAT_MESSAGE_EVENT_NAME,
+                RestResult.ofSuccess(message)
+        );
+
+        getAmqpTemplate().convertAndSend(
+                SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                SaveGroupTempMessageReceiver.DEFAULT_QUEUE_NAME,
+                tempMessage
+        );
+
+        return globalMessages.iterator().next();
     }
 
     /**
@@ -111,7 +246,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         List<BasicMessageMeta.FileMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
 
         RBucket<GlobalMessageMeta> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename());
-        CacheProperties cache = getChatConfig().getGroup().getCache();
+        CacheProperties cache = getChatConfig().getGroup().getGroupCache();
 
         if (Objects.nonNull(cache.getExpiresTime())) {
             bucket.setAsync(globalMessage, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
@@ -164,18 +299,37 @@ public class GroupMessageOperation extends AbstractMessageOperation {
     private String createHistoryMessageFile(GlobalMessageMeta global, Integer targetId) throws Exception {
         String globalFilename = MessageFormat.format(getChatConfig().getGroup().getFileToken(), targetId);
         Integer historyFileCount = getChatConfig().getContact().getHistoryMessageFileCount();
-
-        setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount);
-
         Bucket bucket = getChatConfig().getGlobal().getBucket();
+        return setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount, bucket);
+    }
 
-        FileObject globalFileObject = FileObject.of(bucket, globalFilename);
-        getMinioTemplate().writeJsonValue(globalFileObject, global);
+    public MessageDeleteRecord getGroupMessageDeleteRecord(Integer userId, Integer roomId) {
 
-        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), global.getCurrentMessageFile());
-        getMinioTemplate().writeJsonValue(messageFileObject, new LinkedList<BasicMessageMeta.Message>());
+        String filename = MessageFormat.format(getChatConfig().getGroup().getDeleteRecordFileToken(), userId, roomId);
 
-        return global.getCurrentMessageFile();
+        RBucket<MessageDeleteRecord> redisBucket = getRedisGroupMessageDeleteRecordBucket(filename);
+
+        MessageDeleteRecord dto = redisBucket.get();
+
+        Bucket minioBucket = getChatConfig().getGroup().getDeleteMessageRecordBucket();
+        if (Objects.isNull(dto)) {
+            FileObject fileObject = FileObject.of(minioBucket, filename);
+            dto = getMinioTemplate().readJsonValue(fileObject, MessageDeleteRecord.class);
+        }
+
+        if (Objects.isNull(dto)) {
+            dto = MessageDeleteRecord.of(userId, roomId);
+        }
+
+        return dto;
+    }
+
+    private RBucket<MessageDeleteRecord> getRedisGroupMessageDeleteRecordBucket(String filename) {
+        String key = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
+
+        CacheProperties cache = getChatConfig().getGroup().getDeleteRecordCache();
+
+        return getRedissonClient().getBucket(cache.getName(key));
     }
 
     /**
@@ -189,12 +343,11 @@ public class GroupMessageOperation extends AbstractMessageOperation {
 
         String filename = MessageFormat.format(getChatConfig().getGroup().getFileToken(), targetId);
 
-        Bucket minioBucket = getChatConfig().getContact().getContactBucket();
-
         RBucket<GlobalMessageMeta> redisBucket = getRedisGlobalMessageBucket(filename);
 
         GlobalMessageMeta globalMessage = redisBucket.get();
 
+        Bucket minioBucket = getChatConfig().getGroup().getGroupBucket();
         if (Objects.isNull(globalMessage)) {
             FileObject fileObject = FileObject.of(minioBucket, filename);
             globalMessage = getMinioTemplate().readJsonValue(fileObject, GlobalMessageMeta.class);
@@ -221,7 +374,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
     private RBucket<GlobalMessageMeta> getRedisGlobalMessageBucket(String filename) {
         String key = StringUtils.substringBeforeLast(filename, Casts.DEFAULT_DOT_SYMBOL);
 
-        CacheProperties cache = getChatConfig().getGroup().getCache();
+        CacheProperties cache = getChatConfig().getGroup().getGroupCache();
 
         return getRedissonClient().getBucket(cache.getName(key));
     }

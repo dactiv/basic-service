@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 import java.io.Serializable;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 /**
  * 读取消息 request body
@@ -27,9 +28,9 @@ public class ReadMessageRequestBody implements Serializable {
     private Date creationTime;
 
     /**
-     * 发送者用户 id
+     * 目标 id（被读取消息的对方 id）
      */
-    private Integer senderId;
+    private Integer targetId;
 
     /**
      * 目标类型
@@ -37,12 +38,12 @@ public class ReadMessageRequestBody implements Serializable {
     private MessageTypeEnum type;
 
     /**
-     * 收信者用户 id
+     * 读取者 id
      */
-    private Integer recipientId;
+    private Integer readerId;
 
     /**
      * 消息 id 集合
      */
-    private List<String> messageIds;
+    private Map<String, List<String>> messageMap;
 }

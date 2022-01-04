@@ -25,10 +25,6 @@ import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
-import com.github.dactiv.framework.crypto.algorithm.Base64;
-import com.github.dactiv.framework.crypto.algorithm.ByteSource;
-import com.github.dactiv.framework.crypto.algorithm.CodecUtils;
-import com.github.dactiv.framework.crypto.algorithm.cipher.CipherService;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.Bucket;
@@ -36,7 +32,6 @@ import com.github.dactiv.framework.minio.data.FileObject;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
-import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
@@ -45,8 +40,6 @@ import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Component;
 
-import java.io.UnsupportedEncodingException;
-import java.nio.charset.StandardCharsets;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -84,47 +77,7 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
     @Override
     public GlobalMessagePage getHistoryMessagePage(Integer userId, Integer targetId, Date time, ScrollPageRequest pageRequest) {
         GlobalMessageMeta globalMessage = getGlobalMessage(userId, targetId, false);
-
-        List<GlobalMessageMeta.FileMessage> messages = new LinkedList<>();
-        LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
-        List<String> historyFiles = globalMessage
-                .getMessageFileMap()
-                .keySet()
-                .stream()
-                .filter(s -> this.isHistoryMessageFileBeforeCurrentTime(s, dateTime))
-                .sorted(Comparator.comparing(this::getHistoryFileCreationTime).reversed())
-                .collect(Collectors.toList());
-
-        for (String file : historyFiles) {
-            FileObject fileObject = FileObject.of(getChatConfig().getMessage().getBucket(), file);
-            List<GlobalMessageMeta.FileMessage> fileMessageList = getMinioTemplate().readJsonValue(
-                    fileObject,
-                    new TypeReference<>() {
-                    }
-            );
-
-            List<GlobalMessageMeta.FileMessage> temps = fileMessageList
-                    .stream()
-                    .filter(f -> f.getCreationTime().before(time))
-                    .sorted(Comparator.comparing(BasicMessageMeta.Message::getCreationTime).reversed())
-                    .limit(pageRequest.getSize() - messages.size())
-                    .peek(this::decryptMessageContent)
-                    .collect(Collectors.toList());
-
-            messages.addAll(temps);
-
-            if (messages.size() >= pageRequest.getSize()) {
-                break;
-            }
-
-        }
-
-        GlobalMessagePage result = GlobalMessagePage.of(pageRequest, messages);
-
-        result.setLastMessage(globalMessage.getLastMessage());
-        result.setLastSendTime(globalMessage.getLastSendTime());
-
-        return result;
+        return getGlobalMessagePage(globalMessage, time, pageRequest);
     }
 
     @Override
@@ -132,6 +85,7 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
         GlobalMessageMeta globalMessage = getGlobalMessage(userId, targetId, false);
+
         return  globalMessage
                 .getMessageFileMap()
                 .keySet()
@@ -145,27 +99,32 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
     @Override
     @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     public void readMessage(ReadMessageRequestBody body) throws Exception {
-        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(body.getSenderId());
+        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(body.getTargetId());
+
+        List<String> messageIds = body
+                .getMessageMap()
+                .values()
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
+        Map<String, Object> message = Map.of(
+                IdEntity.ID_FIELD_NAME, body.getReaderId(),
+                IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.CONTACT.getValue(),
+                GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+        );
 
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
-
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
                     CHAT_READ_MESSAGE_EVENT_NAME,
-                    Map.of(
-                            IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.CONTACT.getValue(),
-                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
-                    )
+                    message
             );
         } else {
             getSocketServerManager().saveTempMessage(
-                    body.getSenderId(),
+                    body.getTargetId(),
                     CHAT_READ_MESSAGE_EVENT_NAME,
-                    Map.of(
-                            IdEntity.ID_FIELD_NAME, body.getRecipientId(),
-                            GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
-                    )
+                    message
             );
         }
 
@@ -201,22 +160,29 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
     @Override
     public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
-        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(body.getRecipientId());
+        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(body.getReaderId());
 
         if (MapUtils.isEmpty(map)) {
             return ;
         }
 
-        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(body.getSenderId());
+        ContactMessage<BasicMessageMeta.UserMessageBody> message = map.get(body.getTargetId());
 
         if (Objects.isNull(message)) {
             return ;
         }
 
+        List<String> messageIds = body
+                .getMessageMap()
+                .values()
+                .stream()
+                .flatMap(Collection::stream)
+                .collect(Collectors.toList());
+
         List<BasicMessageMeta.UserMessageBody> userMessageBodies = message
                 .getMessages()
                 .stream()
-                .filter(umb -> body.getMessageIds().contains(umb.getId()))
+                .filter(umb -> messageIds.contains(umb.getId()))
                 .collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(userMessageBodies)) {
@@ -225,12 +191,13 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
         for (BasicMessageMeta.UserMessageBody userMessageBody : userMessageBodies) {
 
-            for (String filename : userMessageBody.getFilenames()) {
+            List<FileObject> list = userMessageBody
+                    .getFilenames()
+                    .stream()
+                    .map(f -> FileObject.of(getChatConfig().getMessage().getBucket(), f))
+                    .collect(Collectors.toList());
 
-                FileObject messageFileObject = FileObject.of(
-                        getChatConfig().getMessage().getBucket(),
-                        filename
-                );
+            for (FileObject messageFileObject : list) {
 
                 List<BasicMessageMeta.FileMessage> messageList = getMinioTemplate().readJsonValue(
                         messageFileObject,
@@ -244,7 +211,9 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
                         .findFirst();
 
                 if (messageOptional.isPresent()) {
-                    BasicMessageMeta.FileMessage fileMessage = messageOptional.get();
+                    BasicMessageMeta.ContactReadableMessage fileMessage = Casts.of(
+                            messageOptional.get(), BasicMessageMeta.ContactReadableMessage.class
+                    );
                     fileMessage.setRead(true);
                     fileMessage.setReadTime(body.getCreationTime());
                 }
@@ -252,15 +221,16 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
                 getMinioTemplate().writeJsonValue(messageFileObject, messageList);
             }
         }
+
         message.getMessages().removeIf(m -> userMessageBodies.stream().anyMatch(umb -> umb.getId().equals(m.getId())));
 
         if (CollectionUtils.isEmpty(message.getMessages())) {
-            map.remove(body.getSenderId());
+            map.remove(body.getTargetId());
         }
 
         String filename = MessageFormat.format(
                 getChatConfig().getContact().getUnreadMessageFileToken(),
-                body.getRecipientId()
+                body.getReaderId()
         );
 
         FileObject fileObject = FileObject.of(getChatConfig().getContact().getUnreadBucket(), filename);
@@ -298,20 +268,12 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
         SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(recipientId);
 
-        ContactMessage<BasicMessageMeta.Message> contactMessage = new ContactMessage<>();
-
-        String lastMessage = RegExUtils.replaceAll(
-                message.getContent(),
-                SystemConstants.REPLACE_HTML_TAG_REX,
-                StringUtils.EMPTY
+        ContactMessage<BasicMessageMeta.Message> contactMessage = createContactMessage(
+                message,
+                senderId,
+                recipientId,
+                MessageTypeEnum.CONTACT
         );
-
-        contactMessage.setId(senderId);
-        contactMessage.setType(MessageTypeEnum.CONTACT);
-        contactMessage.setTargetId(recipientId);
-        contactMessage.setLastSendTime(new Date());
-        contactMessage.setLastMessage(lastMessage);
-        contactMessage.getMessages().add(message);
 
         List<BasicMessageMeta.UserMessageBody> userMessageBodies = targetUserMessages
                 .stream()
@@ -321,7 +283,10 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
         // 构造未读消息内容，用于已读时能够更改所有文件的状态为已读
         //noinspection unchecked
-        ContactMessage<BasicMessageMeta.UserMessageBody> recipientMessage = Casts.of(contactMessage, ContactMessage.class);
+        ContactMessage<BasicMessageMeta.UserMessageBody> recipientMessage = Casts.of(
+                contactMessage,
+                ContactMessage.class
+        );
         // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
         // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
         // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
@@ -477,29 +442,6 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
         }
         FileObject fileObject = getRecentContactFileObject(userId);
         getMinioTemplate().writeJsonValue(fileObject, recentContacts);
-    }
-
-
-
-    /**
-     * 解密消息内容
-     *
-     * @param message 文件消息
-     */
-    protected void decryptMessageContent(BasicMessageMeta.FileMessage message) {
-        CipherService cipherService = getCipherAlgorithmService().getCipherService(message.getCryptoType());
-        String content = message.getContent();
-        String key = message.getCryptoKey();
-
-        byte[] bytes = cipherService.decrypt(com.github.dactiv.framework.crypto.algorithm.Base64.decode(content), com.github.dactiv.framework.crypto.algorithm.Base64.decode(key)).obtainBytes();
-
-        try {
-            message.setContent(new String(bytes, CodecUtils.DEFAULT_ENCODING));
-        } catch (UnsupportedEncodingException e) {
-            String msg = "对内容为 [" + content + "] 的消息通过密钥 [" +
-                    key + "] 使用 [" + message.getCryptoType() + "] 解密失败";
-            log.warn(msg, e);
-        }
     }
 
     /**
@@ -663,21 +605,10 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
             historyFileCount = getChatConfig().getGlobal().getHistoryMessageFileCount();
         }
 
-        setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount);
-
         Bucket bucket = getChatConfig().getContact().getContactBucket();
+        return setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount, bucket);
 
-        if (MessageTypeEnum.GLOBAL.equals(global.getType())) {
-            bucket = getChatConfig().getGlobal().getBucket();
-        }
 
-        FileObject globalFileObject = FileObject.of(bucket, globalFilename);
-        getMinioTemplate().writeJsonValue(globalFileObject, global);
-
-        FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), global.getFilename());
-        getMinioTemplate().writeJsonValue(messageFileObject, new LinkedList<BasicMessageMeta.Message>());
-
-        return global.getFilename();
     }
 
     @Override

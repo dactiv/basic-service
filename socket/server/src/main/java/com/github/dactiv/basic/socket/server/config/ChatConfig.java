@@ -109,7 +109,7 @@ public class ChatConfig {
         /**
          * 联系人桶信息
          */
-        private Bucket bucket = Bucket.of("socket.server.chat.group");
+        private Bucket groupBucket = Bucket.of("socket.server.chat.group");
 
         /**
          * 常用联系人文件 token
@@ -117,10 +117,28 @@ public class ChatConfig {
         private String fileToken = "group_{0}.json";
 
         /**
+         * 删除聊天记录的痛配置
+         */
+        private Bucket deleteMessageRecordBucket = Bucket.of("socket.server.chat.group.delete");;
+
+        /**
+         * 用户删除聊天记录文件 token
+         */
+        private String deleteRecordFileToken = "group_delete_record_{0}_{1}.json";
+
+        /**
          * 全局消息缓存配置
          */
-        private CacheProperties cache = new CacheProperties(
+        private CacheProperties groupCache = new CacheProperties(
                 "socket:server:chat:group:",
+                new TimeProperties(1, TimeUnit.DAYS)
+        );
+
+        /**
+         * 全局消息缓存配置
+         */
+        private CacheProperties deleteRecordCache = new CacheProperties(
+                "socket:server:chat:group:delete:",
                 new TimeProperties(1, TimeUnit.DAYS)
         );
     }

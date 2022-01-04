@@ -4,15 +4,15 @@ import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
+import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;
 
 import java.io.Serializable;
-import java.util.Date;
-import java.util.LinkedList;
-import java.util.List;
+import java.util.*;
 
 /**
  * 全局消息基类
@@ -85,6 +85,48 @@ public class BasicMessageMeta implements Serializable {
         @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
         private String cryptoType;
 
+    }
+
+    /**
+     * 带文件名称的消息实体
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class FileMessage extends Message {
+
+        /**
+         * 消息存在的文件名称
+         */
+        private String filename;
+
+        /**
+         * 创建带文件名称的消息实体
+         *
+         * @param message  消息实体
+         * @param filename 存储的文件名称
+         *
+         * @return 带文件名称的消息实体
+         */
+        public static FileMessage of(Message message, String filename) {
+            FileMessage result = Casts.of(message, FileMessage.class);
+            result.setFilename(filename);
+            return result;
+        }
+    }
+
+    /**
+     * 联系人的可读取消息实体
+     *
+     * @author maurice.chen
+     */
+    @Data
+    @NoArgsConstructor
+    @EqualsAndHashCode(callSuper = true)
+    public static class ContactReadableMessage extends FileMessage {
+
         /**
          * 是否已读
          */
@@ -94,39 +136,22 @@ public class BasicMessageMeta implements Serializable {
          * 已读时间
          */
         private Date readTime;
-
     }
 
     /**
-     * 带文件名的消息实体，用于存在用户消息时使用
+     * 群聊的可读取消息实体
      *
      * @author maurice.chen
      */
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
-    public static class FileMessage extends Message {
-
-        private static final long serialVersionUID = -4084857751977048367L;
+    public static class GroupReadableMessage extends FileMessage {
 
         /**
-         * 消息存在的文件名称
+         * 已读信息
          */
-        private String filename;
-
-        /**
-         * 创建带文件名的消息实体
-         *
-         * @param message  消息实体
-         * @param filename 存储的文件名称
-         *
-         * @return 带文件名的消息实体
-         */
-        public static FileMessage of(Message message, String filename) {
-            FileMessage userMessage = Casts.of(message, FileMessage.class);
-            userMessage.setFilename(filename);
-            return userMessage;
-        }
+        private List<IntegerIdEntity> readerInfo = new LinkedList<>();
     }
 
     /**
@@ -141,7 +166,7 @@ public class BasicMessageMeta implements Serializable {
 
         private static final long serialVersionUID = -8782946827274914400L;
         /**
-         * 消息存在的文件名称
+         * 消息存储在对应文件的名称
          */
         private List<String> filenames = new LinkedList<>();
     }
