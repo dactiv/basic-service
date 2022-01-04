@@ -147,4 +147,18 @@ public class RoomController {
         Integer userId = Casts.cast(userDetails.getId());
         return roomService.findByUserId(userId);
     }
+
+    /**
+     * 获取房间实体集合信息
+     *
+     * @param ids 房间 id 集合
+     *
+     * @return 房间实体集合
+     */
+    @PostMapping("getRooms")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "获取当前用户房间集合", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE)
+    public List<RoomDto> getRooms(@RequestParam List<Integer> ids) {
+        return roomService.getRomDto(ids);
+    }
 }

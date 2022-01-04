@@ -1,6 +1,5 @@
 package com.github.dactiv.basic.socket.server.domain;
 
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
@@ -22,6 +21,8 @@ import java.util.List;
 public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMessageMeta implements NumberIdEntity<Integer> {
     private static final long serialVersionUID = 6725391155534568648L;
 
+    public static final String TARGET_ID_FIELD = "targetId";
+
     /**
      * 主键 id 或 联系人 id（A 用户 对应有 B 联系人的话。该值为 B 的 id）
      */
@@ -36,7 +37,6 @@ public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMes
     /**
      * 目标 id
      */
-    @JsonIgnore
     private Integer targetId;
 
     /**

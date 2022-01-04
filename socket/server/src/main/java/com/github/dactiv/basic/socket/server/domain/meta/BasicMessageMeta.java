@@ -76,13 +76,13 @@ public class BasicMessageMeta implements Serializable {
         /**
          * 密钥值
          */
-        @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
+        @Exclude(SystemConstants.CHAT_FILTER_RESULT_ID)
         private String cryptoKey;
 
         /**
          * 密钥类型
          */
-        @Exclude(SystemConstants.WEB_FILTER_RESULT_ID)
+        @Exclude(SystemConstants.CHAT_FILTER_RESULT_ID)
         private String cryptoType;
 
     }
@@ -97,6 +97,7 @@ public class BasicMessageMeta implements Serializable {
     @EqualsAndHashCode(callSuper = true)
     public static class FileMessage extends Message {
 
+        private static final long serialVersionUID = 1156805823503290540L;
         /**
          * 消息存在的文件名称
          */
@@ -127,6 +128,7 @@ public class BasicMessageMeta implements Serializable {
     @EqualsAndHashCode(callSuper = true)
     public static class ContactReadableMessage extends FileMessage {
 
+        private static final long serialVersionUID = -7530473279126004040L;
         /**
          * 是否已读
          */
@@ -148,6 +150,7 @@ public class BasicMessageMeta implements Serializable {
     @EqualsAndHashCode(callSuper = true)
     public static class GroupReadableMessage extends FileMessage {
 
+        private static final long serialVersionUID = -7932031035796113862L;
         /**
          * 已读信息
          */

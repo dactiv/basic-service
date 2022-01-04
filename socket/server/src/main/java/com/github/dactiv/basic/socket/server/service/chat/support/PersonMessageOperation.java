@@ -23,6 +23,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
@@ -110,6 +111,7 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
 
         Map<String, Object> message = Map.of(
                 IdEntity.ID_FIELD_NAME, body.getReaderId(),
+                NumberIdEntity.CREATION_TIME_FIELD_NAME, body.getCreationTime(),
                 IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.CONTACT.getValue(),
                 GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
         );
@@ -244,7 +246,7 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
             exception = "请不要过快的发送消息"
     )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
-        GlobalMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.CONTACT);
+        BasicMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.CONTACT);
 
         List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
                 Collections.singletonList(message),

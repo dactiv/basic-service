@@ -21,6 +21,7 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
@@ -124,10 +125,12 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                 .collect(Collectors.toList());
 
         BroadcastMessage<Map<String, Object>> message = BroadcastMessage.of(
-                body.getReaderId().toString(),
+                body.getTargetId().toString(),
                 CHAT_READ_MESSAGE_EVENT_NAME,
                 Map.of(
                         IdEntity.ID_FIELD_NAME, body.getReaderId(),
+                        ContactMessage.TARGET_ID_FIELD, body.getTargetId(),
+                        NumberIdEntity.CREATION_TIME_FIELD_NAME, body.getCreationTime(),
                         IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.GROUP.getValue(),
                         GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
                 )
@@ -173,7 +176,10 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                         BasicMessageMeta.GroupReadableMessage.class
                 );
                 IntegerIdEntity idEntity = new IntegerIdEntity();
+
                 idEntity.setId(body.getTargetId());
+                idEntity.setCreationTime(body.getCreationTime());
+
                 fileMessage.getReaderInfo().add(idEntity);
             }
 
@@ -188,9 +194,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
             exception = "请不要过快的发送消息"
     )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
-        GlobalMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.GROUP);
-        message.setType(MessageTypeEnum.GROUP);
-
+        BasicMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.GROUP);
         // 添加全局聊天记录文件
         List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
                 Collections.singletonList(message),
@@ -203,23 +207,19 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                 recipientId,
                 MessageTypeEnum.GROUP
         );
-
+        // FIXME 这里有点啰嗦，为什么要转型成 BasicMessageMeta.FileMessage 而不是在 createContactMessage 直接返回 createContactMessage 类型 ？
         //noinspection unchecked
         ContactMessage<BasicMessageMeta.FileMessage> broadcastMessage = Casts.of(contactMessage, ContactMessage.class);
         broadcastMessage.setMessages(globalMessages);
         broadcastMessage.getMessages().forEach(this::decryptMessageContent);
-
-        SocketResultHolder.get().addBroadcastSocketMessage(
-                recipientId.toString(),
-                CHAT_MESSAGE_EVENT_NAME,
-                broadcastMessage
-        );
 
         BroadcastMessage<GlobalMessageMeta.Message> tempMessage = BroadcastMessage.of(
                 recipientId.toString(),
                 CHAT_MESSAGE_EVENT_NAME,
                 RestResult.ofSuccess(message)
         );
+
+        SocketResultHolder.get().addBroadcastSocketMessage(tempMessage);
 
         getAmqpTemplate().convertAndSend(
                 SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,

@@ -122,6 +122,18 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
             return new LinkedList<>();
         }
 
+        return getRomDto(ids);
+
+    }
+
+    /**
+     * 获取房间 dto
+     *
+     * @param ids 房间主键 id 集合
+     *
+     * @return 房间 dto 集合
+     */
+    public List<RoomDto> getRomDto(List<Integer> ids) {
         List<RoomEntity> rooms = lambdaQuery()
                 .in(RoomEntity::getId, ids)
                 .list();
@@ -141,7 +153,6 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
                                 .collect(Collectors.toList())
                 ))
                 .collect(Collectors.toList());
-
     }
 
     /**

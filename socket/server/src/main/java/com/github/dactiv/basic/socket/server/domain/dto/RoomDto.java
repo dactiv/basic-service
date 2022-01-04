@@ -10,7 +10,7 @@ import java.util.LinkedList;
 import java.util.List;
 
 /**
- * 房间 dto
+ * 房间 dto，用于房间关联房间参与者实体集合合并的的对象。
  *
  * @author maurice.chen
  */

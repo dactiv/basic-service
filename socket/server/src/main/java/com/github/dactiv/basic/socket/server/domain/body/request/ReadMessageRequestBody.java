@@ -25,7 +25,7 @@ public class ReadMessageRequestBody implements Serializable {
     /**
      * 创建时间
      */
-    private Date creationTime;
+    private Date creationTime = new Date();
 
     /**
      * 目标 id（被读取消息的对方 id）
