@@ -78,7 +78,7 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
     @Override
     public GlobalMessagePage getHistoryMessagePage(Integer userId, Integer targetId, Date time, ScrollPageRequest pageRequest) {
         GlobalMessageMeta globalMessage = getGlobalMessage(userId, targetId, false);
-        return getGlobalMessagePage(globalMessage, time, pageRequest);
+        return getGlobalMessagePage(globalMessage, time, pageRequest, BasicMessageMeta.ContactReadableMessage.class);
     }
 
     @Override
@@ -246,35 +246,35 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
             exception = "请不要过快的发送消息"
     )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
-        BasicMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.CONTACT);
 
-        List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
-                Collections.singletonList(message),
-                senderId,
-                recipientId,
-                false
-        );
-        List<BasicMessageMeta.FileMessage> targetUserMessages = addHistoryMessage(
-                Collections.singletonList(message),
-                recipientId,
-                senderId,
-                false
-        );
-        // 添加全局聊天记录文件
-        List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
-                Collections.singletonList(message),
-                senderId,
-                recipientId,
-                true
-        );
-
-        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(recipientId);
+        BasicMessageMeta.Message basic = createMessage(senderId, content, MessageTypeEnum.CONTACT);
+        BasicMessageMeta.ContactReadableMessage message = Casts.of(basic, BasicMessageMeta.ContactReadableMessage.class);
 
         ContactMessage<BasicMessageMeta.Message> contactMessage = createContactMessage(
                 message,
                 senderId,
                 recipientId,
                 MessageTypeEnum.CONTACT
+        );
+
+        List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
+                List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
+                senderId,
+                recipientId,
+                false
+        );
+        List<BasicMessageMeta.FileMessage> targetUserMessages = addHistoryMessage(
+                List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
+                recipientId,
+                senderId,
+                false
+        );
+        // 添加全局聊天记录文件
+        List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
+                List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
+                senderId,
+                recipientId,
+                true
         );
 
         List<BasicMessageMeta.UserMessageBody> userMessageBodies = targetUserMessages
@@ -290,27 +290,30 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
                 ContactMessage.class
         );
         // 由于 ContactMessage 类的 messages 字段是 new 出来的，copy bean 会注解将对象引用到字段中，
-        // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message记录，
+        // 而下面由调用了 contactMessage.getMessages().add(message); 就会产生这个 list 由两条 message 记录，
         // 所以在这里直接对一个新的集合给 recipientMessage 隔离开来添加数据
         recipientMessage.setMessages(userMessageBodies);
+        // 保存未读记录
+        addUnreadMessage(recipientId, recipientMessage);
 
         //noinspection unchecked
         ContactMessage<BasicMessageMeta.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
         unicastMessage.setMessages(targetUserMessages);
         unicastMessage.getMessages().forEach(this::decryptMessageContent);
 
+        SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(recipientId);
         // 如果当前用户在线，推送消息到客户端
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
             SocketResultHolder.get().addUnicastMessage(
                     userDetails.getDeviceIdentified(),
                     CHAT_MESSAGE_EVENT_NAME,
-                    unicastMessage
+                    contactMessage
             );
         } else {
             getSocketServerManager().saveTempMessage(
                     recipientId,
                     CHAT_MESSAGE_EVENT_NAME,
-                    unicastMessage
+                    contactMessage
             );
         }
 
@@ -321,6 +324,42 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
         );
 
         return sourceUserMessages.iterator().next();
+    }
+    /**
+     * 添加未读消息
+     *
+     * @param userId         用户 id
+     * @param contactMessage 联系人消息
+     */
+    @Deprecated
+    private void addUnreadMessage(Integer userId, ContactMessage<BasicMessageMeta.UserMessageBody> contactMessage) throws Exception {
+        Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(userId);
+
+        ContactMessage<BasicMessageMeta.UserMessageBody> targetMessage = map.get(contactMessage.getId());
+
+        if (Objects.isNull(targetMessage)) {
+            map.put(contactMessage.getId(), contactMessage);
+        } else {
+            targetMessage.setLastSendTime(contactMessage.getLastSendTime());
+            targetMessage.setLastMessage(contactMessage.getLastMessage());
+            targetMessage.getMessages().addAll(contactMessage.getMessages());
+        }
+
+        FileObject fileObject = getUnreadMessageFileObject(userId);
+        getMinioTemplate().writeJsonValue(fileObject, map);
+    }
+
+    /**
+     * 获取未读消息文件对象
+     *
+     * @param userId 用户 id
+     *
+     * @return 未读消息文件对象
+     */
+    @Deprecated
+    public FileObject getUnreadMessageFileObject(Integer userId) {
+        String filename = MessageFormat.format(getChatConfig().getContact().getUnreadMessageFileToken(), userId);
+        return FileObject.of(getChatConfig().getContact().getUnreadBucket(), filename);
     }
 
     /**

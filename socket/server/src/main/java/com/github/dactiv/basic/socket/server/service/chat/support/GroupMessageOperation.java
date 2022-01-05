@@ -13,6 +13,7 @@ import com.github.dactiv.basic.socket.server.domain.MessageDeleteRecord;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
+import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
 import com.github.dactiv.basic.socket.server.receiver.SaveGroupTempMessageReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageOperation;
@@ -78,7 +79,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                                                    ScrollPageRequest pageRequest) {
         GlobalMessageMeta globalMessage = getGlobalMessage(targetId);
 
-        GlobalMessagePage messagePage = getGlobalMessagePage(globalMessage, time, pageRequest);
+        GlobalMessagePage messagePage = getGlobalMessagePage(globalMessage, time, pageRequest, BasicMessageMeta.GroupReadableMessage.class);
         MessageDeleteRecord dto = getGroupMessageDeleteRecord(userId, targetId);
 
         List<BasicMessageMeta.FileMessage> filterElements = messagePage
@@ -143,6 +144,12 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                 SaveGroupTempMessageReceiver.DEFAULT_QUEUE_NAME,
                 message
         );
+
+        getAmqpTemplate().convertAndSend(
+                SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
+                ReadMessageReceiver.DEFAULT_QUEUE_NAME,
+                body
+        );
     }
 
     @Override
@@ -194,10 +201,11 @@ public class GroupMessageOperation extends AbstractMessageOperation {
             exception = "请不要过快的发送消息"
     )
     public BasicMessageMeta.Message sendMessage(Integer senderId, Integer recipientId, String content) throws Exception {
-        BasicMessageMeta.Message message = createMessage(senderId, content, MessageTypeEnum.GROUP);
+        BasicMessageMeta.Message basic = createMessage(senderId, content, MessageTypeEnum.GROUP);
+        BasicMessageMeta.GroupReadableMessage message = Casts.of(basic, BasicMessageMeta.GroupReadableMessage.class);
         // 添加全局聊天记录文件
         List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
-                Collections.singletonList(message),
+                List.of(message),
                 recipientId
         );
 
@@ -213,10 +221,10 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         broadcastMessage.setMessages(globalMessages);
         broadcastMessage.getMessages().forEach(this::decryptMessageContent);
 
-        BroadcastMessage<GlobalMessageMeta.Message> tempMessage = BroadcastMessage.of(
+        BroadcastMessage<ContactMessage<BasicMessageMeta.FileMessage>> tempMessage = BroadcastMessage.of(
                 recipientId.toString(),
                 CHAT_MESSAGE_EVENT_NAME,
-                RestResult.ofSuccess(message)
+                RestResult.ofSuccess(broadcastMessage)
         );
 
         SocketResultHolder.get().addBroadcastSocketMessage(tempMessage);

@@ -229,7 +229,14 @@ public abstract class AbstractMessageOperation implements MessageOperation {
             globalMessage.setLastMessage(lastMessage);
             globalMessage.setLastSendTime(new Date());
 
-            BasicMessageMeta.FileMessage fileMessage = BasicMessageMeta.FileMessage.of(message, filename);
+            BasicMessageMeta.FileMessage fileMessage;
+            if (BasicMessageMeta.FileMessage.class.isAssignableFrom(message.getClass())) {
+                fileMessage = Casts.cast(message);
+            } else {
+                fileMessage = BasicMessageMeta.FileMessage.of(message, filename);
+            }
+            fileMessage.setFilename(filename);
+
             CipherService cipherService = getCipherAlgorithmService().getCipherService(fileMessage.getCryptoType());
 
             byte[] key = Base64.decode(fileMessage.getCryptoKey());
@@ -326,7 +333,8 @@ public abstract class AbstractMessageOperation implements MessageOperation {
      */
     protected GlobalMessagePage getGlobalMessagePage(GlobalMessageMeta globalMessage,
                                                      Date time,
-                                                     ScrollPageRequest pageRequest) {
+                                                     ScrollPageRequest pageRequest,
+                                                     Class<? extends GlobalMessageMeta.FileMessage> messageClass) {
 
         List<GlobalMessageMeta.FileMessage> messages = new LinkedList<>();
         LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
@@ -340,13 +348,18 @@ public abstract class AbstractMessageOperation implements MessageOperation {
 
         for (String file : historyFiles) {
             FileObject fileObject = FileObject.of(getChatConfig().getMessage().getBucket(), file);
-            List<GlobalMessageMeta.FileMessage> fileMessageList = getMinioTemplate().readJsonValue(
+            List<Map<String, Object>> fileMessageList = getMinioTemplate().readJsonValue(
                     fileObject,
                     new TypeReference<>() {
                     }
             );
 
-            List<GlobalMessageMeta.FileMessage> temps = fileMessageList
+            List<GlobalMessageMeta.FileMessage> classList = fileMessageList
+                    .stream()
+                    .map(m -> Casts.convertValue(m , messageClass))
+                    .collect(Collectors.toList());
+
+            List<GlobalMessageMeta.FileMessage> temps = classList
                     .stream()
                     .filter(f -> f.getCreationTime().before(time))
                     .sorted(Comparator.comparing(BasicMessageMeta.Message::getCreationTime).reversed())

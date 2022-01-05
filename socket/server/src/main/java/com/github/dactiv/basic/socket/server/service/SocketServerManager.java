@@ -587,7 +587,6 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     public SocketUserDetails getSocketUserDetails(Integer userId) {
         String name = authenticationProperties.getDeviceId().getCache().getName(userId.toString());
         RBucket<SocketUserDetails> userDetailsRBucket = redissonClient.getBucket(name);
-
         return userDetailsRBucket.get();
     }
 
