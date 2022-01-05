@@ -102,18 +102,11 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
     public void readMessage(ReadMessageRequestBody body) throws Exception {
         SocketUserDetails userDetails = getSocketServerManager().getSocketUserDetails(body.getTargetId());
 
-        List<String> messageIds = body
-                .getMessageMap()
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
         Map<String, Object> message = Map.of(
                 IdEntity.ID_FIELD_NAME, body.getReaderId(),
                 NumberIdEntity.CREATION_TIME_FIELD_NAME, body.getCreationTime(),
                 IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.CONTACT.getValue(),
-                GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+                GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
         );
 
         if (Objects.nonNull(userDetails) && ConnectStatus.Connect.getValue().equals(userDetails.getConnectStatus())) {
@@ -174,17 +167,10 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
             return ;
         }
 
-        List<String> messageIds = body
-                .getMessageMap()
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
         List<BasicMessageMeta.UserMessageBody> userMessageBodies = message
                 .getMessages()
                 .stream()
-                .filter(umb -> messageIds.contains(umb.getId()))
+                .filter(umb -> body.getMessageIds().contains(umb.getId()))
                 .collect(Collectors.toList());
 
         if (CollectionUtils.isEmpty(userMessageBodies)) {
@@ -331,7 +317,6 @@ public class PersonMessageOperation extends AbstractMessageOperation implements 
      * @param userId         用户 id
      * @param contactMessage 联系人消息
      */
-    @Deprecated
     private void addUnreadMessage(Integer userId, ContactMessage<BasicMessageMeta.UserMessageBody> contactMessage) throws Exception {
         Map<Integer, ContactMessage<BasicMessageMeta.UserMessageBody>> map = getUnreadMessageData(userId);
 

@@ -118,13 +118,6 @@ public class GroupMessageOperation extends AbstractMessageOperation {
     @Override
     public void readMessage(ReadMessageRequestBody body) {
 
-        List<String> messageIds = body
-                .getMessageMap()
-                .values()
-                .stream()
-                .flatMap(Collection::stream)
-                .collect(Collectors.toList());
-
         BroadcastMessage<Map<String, Object>> message = BroadcastMessage.of(
                 body.getTargetId().toString(),
                 CHAT_READ_MESSAGE_EVENT_NAME,
@@ -133,7 +126,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
                         ContactMessage.TARGET_ID_FIELD, body.getTargetId(),
                         NumberIdEntity.CREATION_TIME_FIELD_NAME, body.getCreationTime(),
                         IdentityNamingStrategy.TYPE_KEY, MessageTypeEnum.GROUP.getValue(),
-                        GlobalMessageMeta.DEFAULT_MESSAGE_IDS, messageIds
+                        GlobalMessageMeta.DEFAULT_MESSAGE_IDS, body.getMessageIds()
                 )
         );
 
@@ -155,7 +148,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
     @Override
     public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
 
-        List<FileObject> fileObjects = body
+        /*List<FileObject> fileObjects = body
                 .getMessageMap()
                 .keySet()
                 .stream()
@@ -191,7 +184,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
             }
 
             getMinioTemplate().writeJsonValue(messageFileObject, messageList);
-        }
+        }*/
     }
 
     @Override

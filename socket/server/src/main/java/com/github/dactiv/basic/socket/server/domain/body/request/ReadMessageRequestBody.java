@@ -45,5 +45,5 @@ public class ReadMessageRequestBody implements Serializable {
     /**
      * 消息 id 集合
      */
-    private Map<String, List<String>> messageMap;
+    private List<String> messageIds;
 }
