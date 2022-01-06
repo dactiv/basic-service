@@ -63,7 +63,7 @@ public class SocketClientTemplate implements DisposableBean {
      * 构造加入/离开房间的 Http 实体
      *
      * @param deviceIdentifies 设备唯一识别集合
-     * @param rooms 房间集合
+     * @param rooms            房间集合
      *
      * @return Http 实体
      */
@@ -83,34 +83,34 @@ public class SocketClientTemplate implements DisposableBean {
      * 加入房间
      *
      * @param deviceIdentifies 设备唯一是被
-     * @param rooms 房间集合
+     * @param rooms            房间集合
      *
      * @return 执行结果
      */
     public List<Map<String, Object>> joinRoom(List<String> deviceIdentifies, List<String> rooms) {
         HttpEntity<MultiValueMap<String, String>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
-        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  JOIN_ROOM_TYPE);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST, JOIN_ROOM_TYPE);
     }
 
     /**
      * 离开房间
      *
      * @param deviceIdentifies 设备唯一是被
-     * @param rooms 房间集合
+     * @param rooms            房间集合
      *
      * @return 执行结果
      */
     public List<Map<String, Object>> leaveRoom(List<String> deviceIdentifies, List<String> rooms) {
         HttpEntity<MultiValueMap<String, String>> entity = createRoomHttpEntity(deviceIdentifies, rooms);
-        return exchangeDiscoveryOperation(entity, HttpMethod.POST,  LEAVE_ROOM_TYPE);
+        return exchangeDiscoveryOperation(entity, HttpMethod.POST, LEAVE_ROOM_TYPE);
     }
 
     /**
      * 执行房间操作
      *
      * @param details 用户明细集合
-     * @param rooms 房间集合
-     * @param type 类型:"leaveRoom" -> 离开房间, "joinRoom" -> 加入房间
+     * @param rooms   房间集合
+     * @param type    类型:"leaveRoom" -> 离开房间, "joinRoom" -> 加入房间
      *
      * @return 执行结果
      */
@@ -597,7 +597,8 @@ public class SocketClientTemplate implements DisposableBean {
         HttpHeaders httpHeaders = FeignAuthenticationConfiguration.of(properties);
         httpHeaders.setContentType(MediaType.APPLICATION_JSON);
 
-        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {});
+        List<Map<String, Object>> data = Casts.convertValue(values, new TypeReference<>() {
+        });
 
         HttpEntity<List<Map<String, Object>>> entity = new HttpEntity<>(data, httpHeaders);
         List<Map<String, Object>> result = new LinkedList<>();
@@ -631,7 +632,7 @@ public class SocketClientTemplate implements DisposableBean {
      *
      * @param entity http 实体
      * @param method 提交方式
-     * @param name 执行后缀
+     * @param name   执行后缀
      *
      * @return 每个服务执行结果集合
      */
@@ -672,7 +673,7 @@ public class SocketClientTemplate implements DisposableBean {
     /**
      * 根据服务实例和接口名称创建 url
      *
-     * @param uri 服务地址 uri
+     * @param uri  服务地址 uri
      * @param name 接口名称
      *
      * @return 完整 url 路径

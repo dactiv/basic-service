@@ -27,7 +27,7 @@ import java.util.Map;
 @Data
 @EqualsAndHashCode
 @NoArgsConstructor
-@TableName(value = "tb_authentication_info",autoResultMap = true)
+@TableName(value = "tb_authentication_info", autoResultMap = true)
 public class AuthenticationInfoEntity implements NumberIdEntity<Integer> {
 
     public static final String DEFAULT_INDEX = "authentication-info";

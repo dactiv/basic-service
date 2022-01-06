@@ -274,7 +274,7 @@ public class ApplicationConfig {
          * 获取默认头像路径
          *
          * @param genderEnum 性别
-         * @param userId 用户主键 id
+         * @param userId     用户主键 id
          *
          * @return 头像路径
          */

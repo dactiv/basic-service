@@ -11,10 +11,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_group - 用户组</p>
  *
- * @see GroupEntity
- *
  * @author maurice
- *
+ * @see GroupEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper

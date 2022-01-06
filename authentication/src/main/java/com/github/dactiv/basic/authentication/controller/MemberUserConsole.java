@@ -137,7 +137,7 @@ public class MemberUserConsole {
     @PostMapping("updateUsername")
     @PreAuthorize("hasRole('ORDINARY') and isFullyAuthenticated()")
     @Plugin(
-            name = "修改登录账户", 
+            name = "修改登录账户",
             sources = {ResourceSourceEnum.USER_CENTER_SOURCE_VALUE, ResourceSourceEnum.MOBILE_SOURCE_VALUE},
             audit = true
     )

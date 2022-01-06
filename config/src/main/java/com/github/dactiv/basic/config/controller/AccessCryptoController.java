@@ -82,7 +82,7 @@ public class AccessCryptoController {
      */
     @GetMapping("getAll")
     @PreAuthorize("hasRole('BASIC')")
-    public List<AccessCryptoEntity> getAll(){
+    public List<AccessCryptoEntity> getAll() {
         return accessCryptoService.getAll();
     }
 

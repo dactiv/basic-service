@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_authentication_info - 认证信息</p>
  *
- * @see AuthenticationInfoEntity
- *
  * @author maurice
- *
+ * @see AuthenticationInfoEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper

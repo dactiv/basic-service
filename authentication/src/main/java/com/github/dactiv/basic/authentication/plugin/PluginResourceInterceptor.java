@@ -15,7 +15,7 @@ public interface PluginResourceInterceptor {
     /**
      * 同步插件完成后的处理
      *
-     * @param instance 插件实例
+     * @param instance        插件实例
      * @param newResourceList 插件新资源集合
      */
     void postSyncPlugin(PluginInstance instance, List<ResourceMeta> newResourceList);

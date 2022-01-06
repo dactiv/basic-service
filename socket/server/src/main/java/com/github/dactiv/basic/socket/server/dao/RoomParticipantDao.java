@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_room_participant - 房间参与者，用于说明某个房间里存在些什么人</p>
  *
- * @see RoomParticipantEntity
- *
  * @author maurice
- *
+ * @see RoomParticipantEntity
  * @since 2021-10-08 10:36:59
  */
 @Mapper

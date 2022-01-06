@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_room - 房间信息，用于说明当前用户存在些什么房间。</p>
  *
- * @see RoomEntity
- *
  * @author maurice
- *
+ * @see RoomEntity
  * @since 2021-10-08 10:36:59
  */
 @Mapper

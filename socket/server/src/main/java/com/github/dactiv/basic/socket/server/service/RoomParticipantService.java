@@ -14,15 +14,12 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- *
  * tb_room_participant 的业务逻辑
  *
  * <p>Table: tb_room_participant - 房间参与者，用于说明某个房间里存在些什么人</p>
  *
- * @see RoomParticipantEntity
- *
  * @author maurice.chen
- *
+ * @see RoomParticipantEntity
  * @since 2021-12-10 11:17:49
  */
 @Service
@@ -73,8 +70,8 @@ public class RoomParticipantService extends BasicService<RoomParticipantDao, Roo
         }
 
         count = lambdaQuery()
-            .eq(RoomParticipantEntity::getRoomId, roomId)
-            .count();
+                .eq(RoomParticipantEntity::getRoomId, roomId)
+                .count();
 
         if (Objects.nonNull(cache.getExpiresTime())) {
             bucket.setAsync(count, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());

@@ -23,15 +23,12 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 /**
- *
  * tb_access_crypto 的业务逻辑
  *
  * <p>Table: tb_access_crypto - 访问加解密表</p>
  *
- * @see AccessCryptoEntity
- *
  * @author maurice.chen
- *
+ * @see AccessCryptoEntity
  * @since 2021-12-09 11:28:04
  */
 @Service
@@ -57,7 +54,7 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, AccessCry
      *
      * @return 访问加解密集合
      */
-    public List<AccessCryptoEntity> getAll(){
+    public List<AccessCryptoEntity> getAll() {
         RList<AccessCryptoEntity> accessCryptoEntities = redissonClient.getList(config.getAccessCryptoCache().getName());
         if (CollectionUtils.isNotEmpty(accessCryptoEntities)) {
             return accessCryptoEntities;

@@ -36,7 +36,6 @@ import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RBucket;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
-import org.springframework.beans.factory.InitializingBean;
 import org.springframework.jmx.export.naming.IdentityNamingStrategy;
 import org.springframework.stereotype.Component;
 
@@ -58,7 +57,7 @@ import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_
  */
 @Slf4j
 @Component
-public class PersonMessageOperation extends AbstractMessageOperation {
+public class PersonMessageOperation extends AbstractMessageOperation<BasicMessageMeta.ContactReadableMessage> {
 
     public PersonMessageOperation(ChatConfig chatConfig,
                                   MinioTemplate minioTemplate,
@@ -123,7 +122,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
     @Override
     public GlobalMessagePage getHistoryMessagePage(Integer userId, Integer targetId, Date time, ScrollPageRequest pageRequest) {
         GlobalMessageMeta globalMessage = getGlobalMessage(userId, targetId, false);
-        return getGlobalMessagePage(globalMessage, time, pageRequest, BasicMessageMeta.ContactReadableMessage.class);
+        return getGlobalMessagePage(globalMessage, time, pageRequest);
     }
 
     @Override
@@ -132,7 +131,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
         GlobalMessageMeta globalMessage = getGlobalMessage(userId, targetId, false);
 
-        return  globalMessage
+        return globalMessage
                 .getMessageFileMap()
                 .keySet()
                 .stream()
@@ -186,20 +185,20 @@ public class PersonMessageOperation extends AbstractMessageOperation {
         BasicMessageMeta.Message basic = createMessage(senderId, content, MessageTypeEnum.CONTACT);
         BasicMessageMeta.ContactReadableMessage message = Casts.of(basic, BasicMessageMeta.ContactReadableMessage.class);
 
-        List<BasicMessageMeta.FileMessage> sourceUserMessages = addHistoryMessage(
+        List<BasicMessageMeta.ContactReadableMessage> sourceUserMessages = addHistoryMessage(
                 List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
                 senderId,
                 recipientId,
                 false
         );
-        List<BasicMessageMeta.FileMessage> targetUserMessages = addHistoryMessage(
+        List<BasicMessageMeta.ContactReadableMessage> targetUserMessages = addHistoryMessage(
                 List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
                 recipientId,
                 senderId,
                 false
         );
         // 添加全局聊天记录文件
-        List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
+        List<BasicMessageMeta.ContactReadableMessage> globalMessages = addHistoryMessage(
                 List.of(Casts.of(message, BasicMessageMeta.ContactReadableMessage.class)),
                 senderId,
                 recipientId,
@@ -219,7 +218,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
                 ContactMessage.class
         );
 
-        List<BasicMessageMeta.FileMessage> sourceMessages = new ArrayList<>(List.copyOf(sourceUserMessages));
+        List<BasicMessageMeta.ContactReadableMessage> sourceMessages = new ArrayList<>(List.copyOf(sourceUserMessages));
         sourceMessages.addAll(List.copyOf(globalMessages));
         // 通过 sourceUserMessages 和 globalMessages 构造消息对应出指定多个文件
         List<BasicMessageMeta.FileLinkMessage> fileLinkMessages = targetUserMessages
@@ -235,7 +234,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
         addUnreadMessage(recipientId, MessageTypeEnum.CONTACT, recipientMessage);
 
         //noinspection unchecked
-        ContactMessage<BasicMessageMeta.FileMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
+        ContactMessage<BasicMessageMeta.ContactReadableMessage> unicastMessage = Casts.of(contactMessage, ContactMessage.class);
         unicastMessage.setMessages(targetUserMessages);
         unicastMessage.getMessages().forEach(this::decryptMessageContent);
 
@@ -290,7 +289,8 @@ public class PersonMessageOperation extends AbstractMessageOperation {
     public List<RecentContactMeta> getRecentContactData(Integer userId) {
         String filename = MessageFormat.format(getChatConfig().getContact().getRecentFileToken(), userId);
         FileObject fileObject = FileObject.of(getChatConfig().getContact().getRecentBucket(), filename);
-        List<RecentContactMeta> recentContacts = getMinioTemplate().readJsonValue(fileObject, new TypeReference<>() {});
+        List<RecentContactMeta> recentContacts = getMinioTemplate().readJsonValue(fileObject, new TypeReference<>() {
+        });
 
         if (CollectionUtils.isEmpty(recentContacts)) {
             recentContacts = new LinkedList<>();
@@ -316,7 +316,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
      *
      * @param userId    用户 id
      * @param contactId 联系人 id
-     * @param type 联系人类型
+     * @param type      联系人类型
      */
     public void addRecentContact(Integer userId, Integer contactId, MessageTypeEnum type) throws Exception {
         List<RecentContactMeta> recentContacts = getRecentContactData(userId);
@@ -362,14 +362,14 @@ public class PersonMessageOperation extends AbstractMessageOperation {
      *
      * @throws Exception 存储消息记录失败时抛出
      */
-    public List<BasicMessageMeta.FileMessage> addHistoryMessage(List<GlobalMessageMeta.Message> messages,
-                                                                Integer sourceId,
-                                                                Integer targetId,
-                                                                boolean global) throws Exception {
+    public List<BasicMessageMeta.ContactReadableMessage> addHistoryMessage(List<BasicMessageMeta.ContactReadableMessage> messages,
+                                                                           Integer sourceId,
+                                                                           Integer targetId,
+                                                                           boolean global) throws Exception {
 
         GlobalMessageMeta globalMessage = getGlobalMessage(sourceId, targetId, global);
         String filename = getGlobalMessageCurrentFilename(globalMessage, sourceId, targetId);
-        List<BasicMessageMeta.FileMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
+        List<BasicMessageMeta.ContactReadableMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
 
         RBucket<GlobalMessageMeta> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename(), global);
         CacheProperties cache = getGlobalMessageCacheProperties(global);
@@ -437,7 +437,7 @@ public class PersonMessageOperation extends AbstractMessageOperation {
      * 获取 redis 全局消息桶
      *
      * @param filename 文件名称
-     * @param global 是否获取全局文件的通
+     * @param global   是否获取全局文件的通
      *
      * @return redis 桶
      */

@@ -221,7 +221,8 @@ public class MemberUserDetailsService implements UserDetailsService {
         GroupEntity group = groupService.get(applicationConfig.getRegister().getDefaultGroup());
         IdRoleAuthority roleAuthority = new IdRoleAuthority(group.getId(), group.getName(), group.getAuthority());
         List<IdRoleAuthority> roleAuthorities = Collections.singletonList(roleAuthority);
-        user.setGroupsInfo(Casts.convertValue(roleAuthorities, new TypeReference<>() {}));
+        user.setGroupsInfo(Casts.convertValue(roleAuthorities, new TypeReference<>() {
+        }));
 
         memberUserService.save(user);
         userDetails.setId(user.getId());

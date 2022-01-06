@@ -11,6 +11,7 @@ import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.page.ScrollPageRequest;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.algorithm.Base64;
@@ -47,7 +48,7 @@ import java.util.stream.Collectors;
  * @author maurice.chen
  */
 @Slf4j
-public abstract class AbstractMessageOperation implements MessageOperation, InitializingBean {
+public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMessage> implements MessageOperation, InitializingBean {
 
     @Getter
     private final ChatConfig chatConfig;
@@ -67,6 +68,8 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
     @Getter
     private final RedissonClient redissonClient;
 
+    protected final Class<T> messageType;
+
     public AbstractMessageOperation(ChatConfig chatConfig,
                                     MinioTemplate minioTemplate,
                                     SocketServerManager socketServerManager,
@@ -79,6 +82,8 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
         this.amqpTemplate = amqpTemplate;
         this.cipherAlgorithmService = cipherAlgorithmService;
         this.redissonClient = redissonClient;
+
+        this.messageType = ReflectionUtils.getGenericClass(getClass(), 0);
     }
 
     /**
@@ -99,7 +104,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      * 判断历史消息文件是否小于指定时间
      *
      * @param filename 文件名称
-     * @param time 时间
+     * @param time     时间
      *
      * @return true 是，否则 false
      */
@@ -127,8 +132,8 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
     /**
      * 创建消息
      *
-     * @param senderId 发送者 id
-     * @param content 发送内容
+     * @param senderId    发送者 id
+     * @param content     发送内容
      * @param messageType 消息类型
      *
      * @return 消息
@@ -160,14 +165,14 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
         DateTimeFormatter formatter = DateTimeFormatter.ofPattern(getChatConfig().getMessage().getFileSuffix());
         String text = getHistoryFileCreationTime(filename);
 
-        return  LocalDate.parse(text, formatter);
+        return LocalDate.parse(text, formatter);
     }
 
     /**
      * 设置全局消息元数据当前文件名称
      *
-     * @param global 全局消息元数据实现
-     * @param globalFilename 当前全局文件名
+     * @param global           全局消息元数据实现
+     * @param globalFilename   当前全局文件名
      * @param historyFileCount 历史文件数量
      *
      * @return 当前全局消息名称
@@ -209,19 +214,17 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
     /**
      * 保存消息
      *
-     * @param messages 消息集合
+     * @param messages      消息集合
      * @param globalMessage 全局消息元数据实现
-     * @param filename 文件名称
+     * @param filename      文件名称
      *
      * @return 带对应文件的消息
      *
      * @throws Exception 保存错误时候抛出
      */
-    protected List<BasicMessageMeta.FileMessage> saveMessages(List<GlobalMessageMeta.Message> messages,
-                                                              GlobalMessageMeta globalMessage,
-                                                              String filename) throws Exception {
-        List<BasicMessageMeta.FileMessage> fileMessageList = new LinkedList<>();
-        for (GlobalMessageMeta.Message message : messages) {
+    protected List<T> saveMessages(List<T> messages, GlobalMessageMeta globalMessage, String filename) throws Exception {
+        List<T> fileMessageList = new LinkedList<>();
+        for (T message : messages) {
 
             String lastMessage = RegExUtils.replaceAll(
                     message.getContent(),
@@ -232,29 +235,22 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
             globalMessage.setLastMessage(lastMessage);
             globalMessage.setLastSendTime(new Date());
 
-            BasicMessageMeta.FileMessage fileMessage;
-            if (BasicMessageMeta.FileMessage.class.isAssignableFrom(message.getClass())) {
-                fileMessage = Casts.cast(message);
-            } else {
-                fileMessage = BasicMessageMeta.FileMessage.of(message, filename);
-            }
-            fileMessage.setFilename(filename);
+            message.setFilename(filename);
 
-            CipherService cipherService = getCipherAlgorithmService().getCipherService(fileMessage.getCryptoType());
+            CipherService cipherService = getCipherAlgorithmService().getCipherService(message.getCryptoType());
 
-            byte[] key = Base64.decode(fileMessage.getCryptoKey());
-            byte[] plainText = fileMessage.getContent().getBytes(StandardCharsets.UTF_8);
+            byte[] key = Base64.decode(message.getCryptoKey());
+            byte[] plainText = message.getContent().getBytes(StandardCharsets.UTF_8);
 
             ByteSource cipherText = cipherService.encrypt(plainText, key);
-            fileMessage.setContent(cipherText.getBase64());
-            fileMessageList.add(fileMessage);
+            message.setContent(cipherText.getBase64());
+            fileMessageList.add(message);
         }
 
         FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
-        List<GlobalMessageMeta.Message> senderMessageList = getMinioTemplate().readJsonValue(
+        List<T> senderMessageList = getMinioTemplate().readJsonValue(
                 messageFileObject,
-                new TypeReference<>() {
-                }
+                Casts.getTypeFactory().constructCollectionType(List.class, messageType)
         );
 
         if (CollectionUtils.isEmpty(senderMessageList)) {
@@ -274,10 +270,10 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
     /**
      * 创建联系人消息
      *
-     * @param message 消息实体
-     * @param senderId 发送者 id
+     * @param message     消息实体
+     * @param senderId    发送者 id
      * @param recipientId 接收者 id
-     * @param type 消息类型
+     * @param type        消息类型
      *
      * @return 联系人消息
      */
@@ -309,7 +305,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      *
      * @param message 文件消息
      */
-    protected void decryptMessageContent(BasicMessageMeta.FileMessage message) {
+    protected void decryptMessageContent(T message) {
         CipherService cipherService = getCipherAlgorithmService().getCipherService(message.getCryptoType());
         String content = message.getContent();
         String key = message.getCryptoKey();
@@ -329,15 +325,14 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      * 获取全局消息分页
      *
      * @param globalMessage 全局消息元数据实现
-     * @param time 时间（在改时间之后的聊天信息）
-     * @param pageRequest 分页请求
+     * @param time          时间（在改时间之后的聊天信息）
+     * @param pageRequest   分页请求
      *
      * @return 全局消息分页
      */
     protected GlobalMessagePage getGlobalMessagePage(GlobalMessageMeta globalMessage,
                                                      Date time,
-                                                     ScrollPageRequest pageRequest,
-                                                     Class<? extends GlobalMessageMeta.FileMessage> messageClass) {
+                                                     ScrollPageRequest pageRequest) {
 
         List<GlobalMessageMeta.FileMessage> messages = new LinkedList<>();
         LocalDateTime dateTime = LocalDateTime.ofInstant(time.toInstant(), ZoneId.systemDefault());
@@ -351,18 +346,12 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
 
         for (String file : historyFiles) {
             FileObject fileObject = FileObject.of(getChatConfig().getMessage().getBucket(), file);
-            List<Map<String, Object>> fileMessageList = getMinioTemplate().readJsonValue(
+            List<T> fileMessageList = getMinioTemplate().readJsonValue(
                     fileObject,
-                    new TypeReference<>() {
-                    }
+                    Casts.getTypeFactory().constructCollectionType(List.class, messageType)
             );
 
-            List<GlobalMessageMeta.FileMessage> classList = fileMessageList
-                    .stream()
-                    .map(m -> Casts.convertValue(m , messageClass))
-                    .collect(Collectors.toList());
-
-            List<GlobalMessageMeta.FileMessage> temps = classList
+            List<GlobalMessageMeta.FileMessage> temps = fileMessageList
                     .stream()
                     .filter(f -> f.getCreationTime().before(time))
                     .sorted(Comparator.comparing(BasicMessageMeta.Message::getCreationTime).reversed())
@@ -417,7 +406,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      * 获取未读消息文件对象
      *
      * @param targetId 目标 id
-     * @param type 消息类型
+     * @param type     消息类型
      *
      * @return 未读消息文件对象
      */
@@ -438,8 +427,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      *
      * @return 消息关联文件的实体
      */
-    protected BasicMessageMeta.FileLinkMessage createFileLinkMessage(BasicMessageMeta.FileMessage message,
-                                                                   List<BasicMessageMeta.FileMessage> sourceMessages) {
+    protected BasicMessageMeta.FileLinkMessage createFileLinkMessage(T message, List<T> sourceMessages) {
 
         BasicMessageMeta.FileLinkMessage result = Casts.of(message, BasicMessageMeta.FileLinkMessage.class);
         result.getFilenames().add(message.getFilename());
@@ -456,7 +444,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
      * 获取未读消息数据
      *
      * @param targetId 目标 id
-     * @param type 消息类型
+     * @param type     消息类型
      *
      * @return 未读消息数据
      */
@@ -467,6 +455,7 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
                 type.toString().toLowerCase(),
                 targetId
         );
+
         FileObject fileObject = FileObject.of(getChatConfig().getGlobal().getUnreadBucket(), filename);
         Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getMinioTemplate().readJsonValue(
                 fileObject,
@@ -486,13 +475,13 @@ public abstract class AbstractMessageOperation implements MessageOperation, Init
         Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(body.getReaderId(), MessageTypeEnum.CONTACT);
 
         if (MapUtils.isEmpty(map)) {
-            return ;
+            return;
         }
 
         ContactMessage<BasicMessageMeta.FileLinkMessage> message = map.get(body.getTargetId());
 
         if (Objects.isNull(message)) {
-            return ;
+            return;
         }
 
         List<BasicMessageMeta.FileLinkMessage> fileLinkMessages = message

@@ -49,7 +49,6 @@ public class ReadMessageReceiver {
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
 
 
-
         MessageOperation messageOperation = messageOperations
                 .stream()
                 .filter(r -> r.isSupport(body.getType()))

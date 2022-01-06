@@ -50,7 +50,7 @@ public class SocketServerController {
      * 加入房间频道
      *
      * @param deviceIdentifies 用户唯一识别集合
-     * @param rooms   房间集合
+     * @param rooms            房间集合
      *
      * @return rest 结果集
      */
@@ -72,7 +72,7 @@ public class SocketServerController {
      * 离开房间频道
      *
      * @param deviceIdentifies 用户唯一识别集合
-     * @param rooms   房间集合
+     * @param rooms            房间集合
      *
      * @return rest 结果集
      */
@@ -153,7 +153,7 @@ public class SocketServerController {
      * 获取临时消息
      *
      * @param securityContext 安全上下文
-     * @param types 消息类型集合
+     * @param types           消息类型集合
      *
      * @return 临时消息 map
      */
@@ -183,7 +183,7 @@ public class SocketServerController {
      * 清除临时消息
      *
      * @param securityContext 安全上下文
-     * @param types 消息类型集合
+     * @param types           消息类型集合
      *
      * @return rest 结果集
      */

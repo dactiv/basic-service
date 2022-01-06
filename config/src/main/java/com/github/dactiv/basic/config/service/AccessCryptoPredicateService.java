@@ -7,15 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- *
  * tb_access_crypto_predicate 的业务逻辑
  *
  * <p>Table: tb_access_crypto_predicate - 访问加解密条件表</p>
  *
- * @see AccessCryptoPredicateEntity
- *
  * @author maurice.chen
- *
+ * @see AccessCryptoPredicateEntity
  * @since 2021-12-09 11:28:04
  */
 @Service

@@ -130,7 +130,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      * 加入房间
      *
      * @param userDetails socket 用户明细
-     * @param room 房间名称
+     * @param room        房间名称
      */
     public void joinRoom(SocketUserDetails userDetails, String room) {
         joinRoom(userDetails, Collections.singletonList(room));
@@ -140,14 +140,14 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      * 加入聊天房间频道
      *
      * @param userDetails socket 用户明细
-     * @param rooms 房间名称集合
+     * @param rooms       房间名称集合
      */
     public void joinRoom(SocketUserDetails userDetails, List<String> rooms) {
 
         SocketIOClient client = socketServer.getClient(UUID.fromString(userDetails.getDeviceIdentified()));
 
-        if (Objects.isNull(client) ) {
-            return ;
+        if (Objects.isNull(client)) {
+            return;
         }
 
         Set<String> allRooms = client.getAllRooms();
@@ -162,13 +162,13 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      * 离开聊天房间频道
      *
      * @param userDetails socket 用户明细
-     * @param rooms 房间名称集合
+     * @param rooms       房间名称集合
      */
     public void leaveRoom(SocketUserDetails userDetails, List<String> rooms) {
         SocketIOClient client = socketServer.getClient(UUID.fromString(userDetails.getDeviceIdentified()));
 
-        if (Objects.isNull(client) ) {
-            return ;
+        if (Objects.isNull(client)) {
+            return;
         }
 
         Set<String> allRooms = client.getAllRooms();
@@ -507,7 +507,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      * 清除临时消息
      *
      * @param userId 用户 id
-     * @param type 消息类型
+     * @param type   消息类型
      *
      * @throws Exception 清除临时消息
      */
@@ -520,7 +520,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
      * 获取临时消息
      *
      * @param userId 用户 id
-     * @param type 消息类型
+     * @param type   消息类型
      *
      * @return 临时消息集合
      */
@@ -543,8 +543,8 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     /**
      * 保存临时消息
      *
-     * @param userId 用户 id
-     * @param type 消息类型
+     * @param userId      用户 id
+     * @param type        消息类型
      * @param tempMessage 临时消息集合
      *
      * @throws Exception 保存错误时抛出
@@ -552,7 +552,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     @Async
     public void saveTempMessage(Integer userId, String type, Object tempMessage) throws Exception {
         if (Objects.isNull(tempMessage)) {
-            return ;
+            return;
         }
         saveTempMessages(userId, type, Collections.singletonList(tempMessage));
     }
@@ -560,8 +560,8 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     /**
      * 保存临时消息
      *
-     * @param userId 用户 id
-     * @param type 消息类型
+     * @param userId       用户 id
+     * @param type         消息类型
      * @param tempMessages 临时消息集合
      *
      * @throws Exception 保存错误时抛出
@@ -569,7 +569,7 @@ public class SocketServerManager implements CommandLineRunner, DisposableBean,
     @Async
     public void saveTempMessages(Integer userId, String type, List<Object> tempMessages) throws Exception {
         if (CollectionUtils.isEmpty(tempMessages)) {
-            return ;
+            return;
         }
         String filename = MessageFormat.format(applicationConfig.getTempMessageFileToken(), userId, type);
         List<Object> objects = getTempMessages(userId, type);

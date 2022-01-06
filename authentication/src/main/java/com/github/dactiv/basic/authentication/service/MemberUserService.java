@@ -13,15 +13,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- *
  * tb_member_user 的业务逻辑
  *
  * <p>Table: tb_member_user - 会员用户表</p>
  *
- * @see MemberUserEntity
- *
  * @author maurice.chen
- *
+ * @see MemberUserEntity
  * @since 2021-11-25 02:42:57
  */
 @Service
@@ -37,7 +34,7 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
     /**
      * 更新会员用户密码
      *
-     * @param userId 会员用户 id
+     * @param userId      会员用户 id
      * @param oldPassword 旧密码
      * @param newPassword 新密码
      */
@@ -70,7 +67,7 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
     /**
      * 更新会员登录账户
      *
-     * @param userId 会员用户 id
+     * @param userId      会员用户 id
      * @param newUsername 新登录账户
      */
     public void updateMemberUserUsername(Integer userId, String newUsername) {

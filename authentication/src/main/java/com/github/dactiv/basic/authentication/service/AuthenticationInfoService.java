@@ -32,15 +32,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.*;
 
 /**
- *
  * tb_authentication_info 的业务逻辑
  *
  * <p>Table: tb_authentication_info - 认证信息表</p>
  *
- * @see AuthenticationInfoEntity
- *
  * @author maurice.chen
- *
+ * @see AuthenticationInfoEntity
  * @since 2021-11-25 02:42:57
  */
 @Slf4j

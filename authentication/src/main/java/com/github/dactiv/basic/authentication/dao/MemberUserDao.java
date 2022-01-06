@@ -10,10 +10,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_member_user - 会员用户</p>
  *
- * @see MemberUserEntity
- *
  * @author maurice
- *
+ * @see MemberUserEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper

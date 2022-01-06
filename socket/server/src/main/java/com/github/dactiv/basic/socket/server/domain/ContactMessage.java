@@ -30,7 +30,6 @@ public class ContactMessage<T extends BasicMessageMeta.Message> extends BasicMes
 
     /**
      * 联系人类型
-     *
      */
     private MessageTypeEnum type;
 

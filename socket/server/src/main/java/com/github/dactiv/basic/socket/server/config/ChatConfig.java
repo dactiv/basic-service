@@ -124,7 +124,8 @@ public class ChatConfig {
         /**
          * 删除聊天记录的痛配置
          */
-        private Bucket deleteMessageRecordBucket = Bucket.of("socket.server.chat.group.delete");;
+        private Bucket deleteMessageRecordBucket = Bucket.of("socket.server.chat.group.delete");
+        ;
 
         /**
          * 用户删除聊天记录文件 token

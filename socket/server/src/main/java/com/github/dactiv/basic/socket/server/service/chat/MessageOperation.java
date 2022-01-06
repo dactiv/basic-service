@@ -48,7 +48,7 @@ public interface MessageOperation {
     /**
      * 获取历史消息日期集合
      *
-     * @param userId 用户 id
+     * @param userId   用户 id
      * @param targetId 目标 id（对方用户 id/ 群聊 id）
      *
      * @return 历史消息日期集合
@@ -76,9 +76,9 @@ public interface MessageOperation {
     /**
      * 发送消息
      *
-     * @param senderId 发送者用户 id
+     * @param senderId    发送者用户 id
      * @param recipientId 接受者 id
-     * @param content 消息内容
+     * @param content     消息内容
      *
      * @return 消息实体
      *

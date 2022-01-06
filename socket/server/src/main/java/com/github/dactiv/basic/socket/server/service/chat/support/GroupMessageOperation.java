@@ -8,9 +8,8 @@ import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
-import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.MessageDeleteRecord;
-import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
@@ -59,7 +58,7 @@ import static com.github.dactiv.basic.commons.SystemConstants.SYS_SOCKET_SERVER_
  */
 @Slf4j
 @Component
-public class GroupMessageOperation extends AbstractMessageOperation {
+public class GroupMessageOperation extends AbstractMessageOperation<BasicMessageMeta.GroupReadableMessage> {
 
 
     /**
@@ -95,8 +94,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         GlobalMessagePage messagePage = getGlobalMessagePage(
                 globalMessage,
                 time,
-                pageRequest,
-                BasicMessageMeta.GroupReadableMessage.class
+                pageRequest
         );
 
         MessageDeleteRecord dto = getGroupMessageDeleteRecord(userId, targetId);
@@ -171,7 +169,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         Long count = roomParticipantService.countByRoomId(body.getTargetId());
 
         if (Objects.isNull(count) || count <= 0) {
-            return ;
+            return;
         }
 
         ContactMessage<BasicMessageMeta.FileLinkMessage> message = unreadMessageData.get(body.getTargetId());
@@ -235,7 +233,7 @@ public class GroupMessageOperation extends AbstractMessageOperation {
         BasicMessageMeta.Message basic = createMessage(senderId, content, MessageTypeEnum.GROUP);
         BasicMessageMeta.GroupReadableMessage message = Casts.of(basic, BasicMessageMeta.GroupReadableMessage.class);
         // 添加全局聊天记录文件
-        List<BasicMessageMeta.FileMessage> globalMessages = addHistoryMessage(
+        List<BasicMessageMeta.GroupReadableMessage> globalMessages = addHistoryMessage(
                 List.of(Casts.of(message, BasicMessageMeta.GroupReadableMessage.class)),
                 recipientId
         );
@@ -292,12 +290,12 @@ public class GroupMessageOperation extends AbstractMessageOperation {
      *
      * @throws Exception 存储消息记录失败时抛出
      */
-    public List<BasicMessageMeta.FileMessage> addHistoryMessage(List<GlobalMessageMeta.Message> messages,
-                                                                Integer targetId) throws Exception {
+    public List<BasicMessageMeta.GroupReadableMessage> addHistoryMessage(List<GlobalMessageMeta.GroupReadableMessage> messages,
+                                                                         Integer targetId) throws Exception {
 
         GlobalMessageMeta globalMessage = getGlobalMessage(targetId);
         String filename = getGlobalMessageCurrentFilename(globalMessage, targetId);
-        List<BasicMessageMeta.FileMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
+        List<BasicMessageMeta.GroupReadableMessage> fileMessageList = saveMessages(messages, globalMessage, filename);
 
         RBucket<GlobalMessageMeta> bucket = getRedisGlobalMessageBucket(globalMessage.getFilename());
         CacheProperties cache = getChatConfig().getGroup().getGroupCache();

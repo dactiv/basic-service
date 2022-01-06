@@ -7,15 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- *
  * tb_attachment 的业务逻辑
  *
  * <p>Table: tb_attachment - 消息附件</p>
  *
- * @see AttachmentEntity
- *
  * @author maurice.chen
- *
+ * @see AttachmentEntity
  * @since 2021-12-10 09:02:07
  */
 @Service

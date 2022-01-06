@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import com.github.dactiv.basic.authentication.enumerate.GenderEnum;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -53,8 +53,8 @@ public class RoomController {
      * 创建房间
      *
      * @param securityContext 安全上下文
-     * @param room 房间信息
-     * @param userIds 参与者用户 id
+     * @param room            房间信息
+     * @param userIds         参与者用户 id
      *
      * @return rest 结果集
      */
@@ -77,8 +77,8 @@ public class RoomController {
      * 修改房间名称
      *
      * @param securityContext 安全上下文
-     * @param name 新名称
-     * @param id 房间 id
+     * @param name            新名称
+     * @param id              房间 id
      *
      * @return rest 结果集
      */
@@ -116,7 +116,7 @@ public class RoomController {
      * 退出/解散房间
      *
      * @param securityContext 安全上下文
-     * @param id 房间信息 id
+     * @param id              房间信息 id
      *
      * @return rest 结果集
      */

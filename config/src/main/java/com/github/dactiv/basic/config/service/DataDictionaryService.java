@@ -12,15 +12,12 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- *
  * tb_data_dictionary 的业务逻辑
  *
  * <p>Table: tb_data_dictionary - 数据字典表</p>
  *
- * @see DataDictionaryEntity
- *
  * @author maurice.chen
- *
+ * @see DataDictionaryEntity
  * @since 2021-12-09 11:28:04
  */
 @Service

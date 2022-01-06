@@ -50,6 +50,7 @@ public class ChatController {
     public ChatController(ObjectProvider<MessageOperation> messageResolvers) {
         this.messageOperations = messageResolvers.orderedStream().collect(Collectors.toList());
     }
+
     /**
      * 发送消息
      *
@@ -139,10 +140,10 @@ public class ChatController {
      * 获取历史消息分页
      *
      * @param securityContext 安全上下文
-     * @param targetId 目标 id（对方用户 id/群聊 id）
-     * @param type 目标类型
-     * @param time 时间节点
-     * @param pageRequest 分页请求
+     * @param targetId        目标 id（对方用户 id/群聊 id）
+     * @param type            目标类型
+     * @param time            时间节点
+     * @param pageRequest     分页请求
      *
      * @return 滚动分页结果
      */
@@ -167,8 +168,8 @@ public class ChatController {
      * 获取历史消息日期集合
      *
      * @param securityContext 安全上下文
-     * @param type 类型
-     * @param targetId 目标 id（对方用户 id/ 群聊 id）
+     * @param type            类型
+     * @param targetId        目标 id（对方用户 id/ 群聊 id）
      *
      * @return 历史消息日期集合
      */

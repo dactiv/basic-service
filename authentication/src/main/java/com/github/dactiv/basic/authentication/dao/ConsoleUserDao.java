@@ -11,10 +11,8 @@ import org.springframework.stereotype.Repository;
  *
  * <p>Table: tb_console_user - 系统用户</p>
  *
- * @see ConsoleUserEntity
- *
  * @author maurice
- *
+ * @see ConsoleUserEntity
  * @since 2021-08-22 04:45:14
  */
 @Mapper

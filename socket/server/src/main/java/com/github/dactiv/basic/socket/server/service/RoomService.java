@@ -28,15 +28,12 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
- *
  * tb_room 的业务逻辑
  *
  * <p>Table: tb_room - 房间信息，用于说明当前用户存在些什么房间。</p>
  *
- * @see RoomEntity
- *
  * @author maurice.chen
- *
+ * @see RoomEntity
  * @since 2021-12-10 11:17:49
  */
 @Service
@@ -55,7 +52,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
     /**
      * 创建房间实体
      *
-     * @param room 房间信息
+     * @param room    房间信息
      * @param userIds 用户 id 集合
      * @param ownerId 拥有者 id
      */
@@ -100,7 +97,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      * @return 房间集合
      */
     public List<Integer> findRoomIdsByUserId(Integer userId) {
-        Wrapper<RoomParticipantEntity>  wrapper = Wrappers
+        Wrapper<RoomParticipantEntity> wrapper = Wrappers
                 .<RoomParticipantEntity>lambdaQuery()
                 .select(RoomParticipantEntity::getRoomId)
                 .eq(RoomParticipantEntity::getUserId, userId);
@@ -159,7 +156,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      * 退出/解散房间
      *
      * @param userId 当前用户 id
-     * @param id 房间 id
+     * @param id     房间 id
      *
      * @return true 解散房间，false 退出房间
      */
@@ -203,8 +200,9 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
      * 修改房间名称
      *
      * @param userId 修改用户 id
-     * @param name 新的房间名称
-     * @param id 房间 id
+     * @param name   新的房间名称
+     * @param id     房间 id
+     *
      * @return true 修改成功, false 不做任何修改
      */
     public boolean rename(Integer userId, String name, Integer id) {

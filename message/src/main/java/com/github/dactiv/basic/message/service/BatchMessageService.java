@@ -7,15 +7,12 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 /**
- *
  * tb_batch_message 的业务逻辑
  *
  * <p>Table: tb_batch_message - 批量消息</p>
  *
- * @see BatchMessageEntity
- *
  * @author maurice.chen
- *
+ * @see BatchMessageEntity
  * @since 2021-12-10 09:02:07
  */
 @Service

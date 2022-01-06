@@ -148,7 +148,6 @@ public class DictionaryService {
      * 删除数据字典
      *
      * @param ids 主键 id 集合
-     *
      */
     public void deleteDataDictionary(List<Integer> ids) {
 

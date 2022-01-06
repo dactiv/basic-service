@@ -124,7 +124,7 @@ public class AuthorizationService implements InitializingBean {
      */
     public List<ResourceMeta> getGroupResource(GroupEntity group) {
         List<ResourceMeta> result = new LinkedList<>();
-        for (Map.Entry<String, List<String>> entry: group.getResourceMap().entrySet()) {
+        for (Map.Entry<String, List<String>> entry : group.getResourceMap().entrySet()) {
             List<ResourceMeta> resources = getResources(entry.getKey());
             List<ResourceMeta> findResources = resources
                     .stream()
@@ -185,7 +185,7 @@ public class AuthorizationService implements InitializingBean {
     }
 
     public void deleteSystemUseAuthenticationCache(UserDetailsService userDetailsService,
-                                                    PrincipalAuthenticationToken token) {
+                                                   PrincipalAuthenticationToken token) {
         CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);
 
         if (Objects.nonNull(authenticationCache)) {
@@ -206,8 +206,8 @@ public class AuthorizationService implements InitializingBean {
     /**
      * 获取系统用户资源
      *
-     * @param user 系统用户
-     * @param type 资源类型
+     * @param user           系统用户
+     * @param type           资源类型
      * @param sourceContains 资源来源
      *
      * @return 系统用户资源集合
@@ -227,11 +227,12 @@ public class AuthorizationService implements InitializingBean {
     /**
      * 设置系统用户权限信息
      *
-     * @param user 系统用户
+     * @param user        系统用户
      * @param userDetails 当前的安全用户明细
      */
     public void setSystemUserAuthorities(SystemUserEntity user, SecurityUserDetails userDetails) {
-        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
+        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {
+        });
         userDetails.getRoleAuthorities().addAll(roleAuthorities);
         // 构造用户的组资源
         List<ResourceMeta> userResource = getSystemUserResource(user);

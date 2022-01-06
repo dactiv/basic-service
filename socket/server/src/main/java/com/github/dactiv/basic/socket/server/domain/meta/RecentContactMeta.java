@@ -18,7 +18,6 @@ public class RecentContactMeta extends IntegerIdEntity {
     private static final long serialVersionUID = 7454008176314089935L;
     /**
      * 类型
-     *
      */
     private MessageTypeEnum type;
 }

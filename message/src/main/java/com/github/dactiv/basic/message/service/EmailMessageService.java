@@ -13,15 +13,12 @@ import java.io.Serializable;
 import java.util.List;
 
 /**
- *
  * tb_email_message 的业务逻辑
  *
  * <p>Table: tb_email_message - 邮件消息</p>
  *
- * @see EmailMessageEntity
- *
  * @author maurice.chen
- *
+ * @see EmailMessageEntity
  * @since 2021-12-10 09:02:07
  */
 @Service

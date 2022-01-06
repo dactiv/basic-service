@@ -174,7 +174,7 @@ public class SecurityController {
      * 获取用户信息
      *
      * @param type 来源类型
-     * @param ids   用户 id
+     * @param ids  用户 id
      *
      * @return 用户信息
      */

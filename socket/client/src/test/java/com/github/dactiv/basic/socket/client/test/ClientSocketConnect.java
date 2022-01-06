@@ -74,7 +74,7 @@ public class ClientSocketConnect {
 
             IO.Options options = new IO.Options();
             options.query = Casts.castRequestBodyMapToString(queryMap);
-            options.transports = new String[] {WebSocket.NAME};
+            options.transports = new String[]{WebSocket.NAME};
             options.port = 8800;
 
             try {

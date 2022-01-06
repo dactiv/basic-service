@@ -190,7 +190,7 @@ public class PluginResourceService {
         // 启用資源得到新的資源集合
         List<ResourceMeta> newResourceList = pluginList
                 .stream()
-                .map(p -> createResource(p, instance,null))
+                .map(p -> createResource(p, instance, null))
                 .collect(Collectors.toList());
 
         List<ResourceMeta> unmergeResourceList = TreeUtils.unBuildGenericTree(newResourceList);
@@ -286,7 +286,7 @@ public class PluginResourceService {
 
         if (StringUtils.equals(plugin.getParent(), PluginInfo.DEFAULT_ROOT_PARENT_NAME)) {
             target.setParentId(null);
-        } else if (Objects.nonNull(parent)){
+        } else if (Objects.nonNull(parent)) {
             target.setParentId(parent.getId());
         }
 

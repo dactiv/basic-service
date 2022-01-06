@@ -5,7 +5,6 @@ import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.Exclude;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

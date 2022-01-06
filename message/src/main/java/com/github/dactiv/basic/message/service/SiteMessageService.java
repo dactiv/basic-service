@@ -19,15 +19,12 @@ import java.util.List;
 import java.util.Map;
 
 /**
- *
  * tb_site_message 的业务逻辑
  *
  * <p>Table: tb_site_message - 站内信消息</p>
  *
- * @see SiteMessageEntity
- *
  * @author maurice.chen
- *
+ * @see SiteMessageEntity
  * @since 2021-12-10 09:02:07
  */
 @Service

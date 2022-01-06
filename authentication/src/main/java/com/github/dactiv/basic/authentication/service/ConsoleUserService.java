@@ -19,15 +19,12 @@ import java.util.Collection;
 import java.util.List;
 
 /**
- *
  * tb_console_user 的业务逻辑
  *
  * <p>Table: tb_console_user - 后台用户表</p>
  *
- * @see ConsoleUserEntity
- *
  * @author maurice.chen
- *
+ * @see ConsoleUserEntity
  * @since 2021-11-25 02:42:57
  */
 @Service
@@ -43,7 +40,7 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
     /**
      * 更新后台用户密码
      *
-     * @param userId 用户 id
+     * @param userId      用户 id
      * @param oldPassword 旧密码
      * @param newPassword 新密码
      */

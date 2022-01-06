@@ -9,15 +9,12 @@ import org.springframework.transaction.annotation.Transactional;
 import java.util.List;
 
 /**
- *
  * tb_dictionary_type 的业务逻辑
  *
  * <p>Table: tb_dictionary_type - 数据字典类型表</p>
  *
- * @see DictionaryTypeEntity
- *
  * @author maurice.chen
- *
+ * @see DictionaryTypeEntity
  * @since 2021-12-09 11:28:04
  */
 @Service

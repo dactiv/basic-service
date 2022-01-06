@@ -153,7 +153,7 @@ public class ConfigController {
      */
     @PreAuthorize("hasRole('BASIC')")
     @GetMapping("obtainAccessToken")
-    public AccessToken obtainAccessToken(@RequestParam String id){
+    public AccessToken obtainAccessToken(@RequestParam String id) {
         return getAccessTokeBucket(id).get();
     }
 

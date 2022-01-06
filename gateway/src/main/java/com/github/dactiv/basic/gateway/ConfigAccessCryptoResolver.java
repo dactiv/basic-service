@@ -55,7 +55,7 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
 
         Map<String, Object> tokenMap = configFeignClient.obtainAccessToken(accessToken);
 
-        if(MapUtils.isEmpty(tokenMap)) {
+        if (MapUtils.isEmpty(tokenMap)) {
             return null;
         }
 
@@ -82,7 +82,7 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
         }
 
         if (CollectionUtils.isEmpty(result)) {
-            return ;
+            return;
         }
 
         cache = result

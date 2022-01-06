@@ -19,15 +19,12 @@ import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
- *
  * tb_group 的业务逻辑
  *
  * <p>Table: tb_group - 用户组表</p>
  *
- * @see GroupEntity
- *
  * @author maurice.chen
- *
+ * @see GroupEntity
  * @since 2021-11-25 02:42:57
  */
 @Service
@@ -79,7 +76,7 @@ public class GroupService extends BasicService<GroupDao, GroupEntity> {
                 .one();
 
         if (Objects.nonNull(exist)) {
-            throw new ServiceException("用户组名称 [" + entity.getName() + "] 或 authority 值 ["+ entity.getAuthority()+"] 已存在");
+            throw new ServiceException("用户组名称 [" + entity.getName() + "] 或 authority 值 [" + entity.getAuthority() + "] 已存在");
         }
 
         return super.insert(entity);
