@@ -69,6 +69,16 @@ public class ChatConfig {
         private Bucket bucket = Bucket.of("socket.server.chat.global");
 
         /**
+         * 未读消息桶信息
+         */
+        private Bucket unreadBucket = Bucket.of("socket.server.chat.global.unread");
+
+        /**
+         * 未读消息文件 token
+         */
+        private String unreadMessageFileToken = "unread_message_{0}_{1}.json";
+
+        /**
          * 保存历史聊天消息的文件数量
          */
         private Integer historyMessageFileCount = 100;
@@ -76,12 +86,7 @@ public class ChatConfig {
         /**
          * 用户对用户的文件 token
          */
-        private String personFileToken = "global_message_{0}_and_{1}.json";
-
-        /**
-         * 群聊的文件 token
-         */
-        private String groupFileToken = "global_group_message_{0}.json";
+        private String personFileToken = "global_person_message_{0}_and_{1}.json";
 
         /**
          * 缓存配置
@@ -160,10 +165,6 @@ public class ChatConfig {
          * 常用联系人桶信息
          */
         private Bucket recentBucket = Bucket.of("socket.server.chat.contact.recent");
-        /**
-         * 未读消息桶信息
-         */
-        private Bucket unreadBucket = Bucket.of("socket.server.chat.contact.unread");
 
         /**
          * 保存历史聊天消息的文件数量
@@ -179,11 +180,6 @@ public class ChatConfig {
          * 近期联系人文件 token
          */
         private String recentFileToken = "recent_contact_{0}.json";
-
-        /**
-         * 未读消息文件 token
-         */
-        private String unreadMessageFileToken = "unread_message_{0}.json";
 
         /**
          * 常用联系人存储个数

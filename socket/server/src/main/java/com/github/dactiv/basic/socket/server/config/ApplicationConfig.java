@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server.config;
 
 import com.corundumstudio.socketio.Configuration;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.minio.data.Bucket;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -42,4 +43,9 @@ public class ApplicationConfig extends Configuration {
      * 临时消息文件 token
      */
     private String tempMessageFileToken = "temp_message_{0}_{1}.json";
+
+    /**
+     * 房间参数这统计缓存
+     */
+    private CacheProperties roomParticipantCountCache = CacheProperties.of("socket:server:room:participant-count");
 }

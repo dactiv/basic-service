@@ -10,7 +10,7 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * 群聊消息删除记录 dto, 用于记录用户在群聊中已删除的记录信息
+ * 群聊消息删除记录, 用于记录用户在群聊中已删除的记录信息
  *
  * @author maurice.chen
  */

@@ -1,12 +1,17 @@
 package com.github.dactiv.basic.socket.server.service;
 
+import com.github.dactiv.basic.socket.server.config.ApplicationConfig;
 import com.github.dactiv.basic.socket.server.dao.RoomParticipantDao;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
+import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
+import org.redisson.api.RBucket;
+import org.redisson.api.RedissonClient;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
+import java.util.Objects;
 
 /**
  *
@@ -24,6 +29,15 @@ import java.util.List;
 @Transactional(rollbackFor = Exception.class)
 public class RoomParticipantService extends BasicService<RoomParticipantDao, RoomParticipantEntity> {
 
+    private final RedissonClient redissonClient;
+
+    private final ApplicationConfig config;
+
+    public RoomParticipantService(RedissonClient redissonClient, ApplicationConfig config) {
+        this.redissonClient = redissonClient;
+        this.config = config;
+    }
+
     /**
      * 根据房间 id 查找 table : tb_room_participant 实体
      *
@@ -37,5 +51,37 @@ public class RoomParticipantService extends BasicService<RoomParticipantDao, Roo
         return lambdaQuery()
                 .eq(RoomParticipantEntity::getRoomId, roomId)
                 .list();
+    }
+
+    /**
+     * 统计参与者数量
+     *
+     * @param roomId 房间 id
+     *
+     * @return 参与者数量
+     */
+    public Long countByRoomId(Integer roomId) {
+
+        CacheProperties cache = config.getRoomParticipantCountCache();
+
+        RBucket<Long> bucket = redissonClient.getBucket(cache.getName(roomId));
+
+        Long count = bucket.get();
+
+        if (Objects.nonNull(count)) {
+            return count;
+        }
+
+        count = lambdaQuery()
+            .eq(RoomParticipantEntity::getRoomId, roomId)
+            .count();
+
+        if (Objects.nonNull(cache.getExpiresTime())) {
+            bucket.setAsync(count, cache.getExpiresTime().getValue(), cache.getExpiresTime().getUnit());
+        } else {
+            bucket.setAsync(count);
+        }
+
+        return count;
     }
 }

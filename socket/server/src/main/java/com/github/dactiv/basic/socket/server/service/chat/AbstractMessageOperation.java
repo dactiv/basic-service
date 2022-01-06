@@ -5,6 +5,7 @@ import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.socket.server.config.ChatConfig;
 import com.github.dactiv.basic.socket.server.domain.ContactMessage;
 import com.github.dactiv.basic.socket.server.domain.GlobalMessagePage;
+import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.domain.meta.BasicMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
@@ -21,11 +22,13 @@ import com.github.dactiv.framework.minio.data.Bucket;
 import com.github.dactiv.framework.minio.data.FileObject;
 import lombok.Getter;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections.MapUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.RegExUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.redisson.api.RedissonClient;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.InitializingBean;
 import org.springframework.web.bind.WebDataBinder;
 
 import java.io.UnsupportedEncodingException;
@@ -44,7 +47,7 @@ import java.util.stream.Collectors;
  * @author maurice.chen
  */
 @Slf4j
-public abstract class AbstractMessageOperation implements MessageOperation {
+public abstract class AbstractMessageOperation implements MessageOperation, InitializingBean {
 
     @Getter
     private final ChatConfig chatConfig;
@@ -383,4 +386,158 @@ public abstract class AbstractMessageOperation implements MessageOperation {
         return result;
     }
 
+
+    /**
+     * 添加未读消息
+     *
+     * @param targetId       目标 id
+     * @param type           消息类型
+     * @param contactMessage 联系人消息
+     */
+    protected void addUnreadMessage(Integer targetId,
+                                    MessageTypeEnum type,
+                                    ContactMessage<BasicMessageMeta.FileLinkMessage> contactMessage) throws Exception {
+        Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(targetId, type);
+
+        ContactMessage<BasicMessageMeta.FileLinkMessage> targetMessage = map.get(contactMessage.getId());
+
+        if (Objects.isNull(targetMessage)) {
+            map.put(contactMessage.getId(), contactMessage);
+        } else {
+            targetMessage.setLastSendTime(contactMessage.getLastSendTime());
+            targetMessage.setLastMessage(contactMessage.getLastMessage());
+            targetMessage.getMessages().addAll(contactMessage.getMessages());
+        }
+
+        FileObject fileObject = getUnreadMessageFileObject(targetId, type);
+        getMinioTemplate().writeJsonValue(fileObject, map);
+    }
+
+    /**
+     * 获取未读消息文件对象
+     *
+     * @param targetId 目标 id
+     * @param type 消息类型
+     *
+     * @return 未读消息文件对象
+     */
+    protected FileObject getUnreadMessageFileObject(Integer targetId, MessageTypeEnum type) {
+        String filename = MessageFormat.format(
+                getChatConfig().getGlobal().getUnreadMessageFileToken(),
+                type.toString().toLowerCase(),
+                targetId
+        );
+        return FileObject.of(getChatConfig().getGlobal().getUnreadBucket(), filename);
+    }
+
+    /**
+     * 创建消息关联文件的实体
+     *
+     * @param message        消息实体
+     * @param sourceMessages 来源消息集合
+     *
+     * @return 消息关联文件的实体
+     */
+    protected BasicMessageMeta.FileLinkMessage createFileLinkMessage(BasicMessageMeta.FileMessage message,
+                                                                   List<BasicMessageMeta.FileMessage> sourceMessages) {
+
+        BasicMessageMeta.FileLinkMessage result = Casts.of(message, BasicMessageMeta.FileLinkMessage.class);
+        result.getFilenames().add(message.getFilename());
+
+        sourceMessages
+                .stream()
+                .filter(r -> r.getId().equals(result.getId()))
+                .forEach(s -> result.getFilenames().add(s.getFilename()));
+
+        return result;
+    }
+
+    /**
+     * 获取未读消息数据
+     *
+     * @param targetId 目标 id
+     * @param type 消息类型
+     *
+     * @return 未读消息数据
+     */
+    protected Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> getUnreadMessageData(Integer targetId,
+                                                                                                  MessageTypeEnum type) {
+        String filename = MessageFormat.format(
+                getChatConfig().getGlobal().getUnreadMessageFileToken(),
+                type.toString().toLowerCase(),
+                targetId
+        );
+        FileObject fileObject = FileObject.of(getChatConfig().getGlobal().getUnreadBucket(), filename);
+        Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getMinioTemplate().readJsonValue(
+                fileObject,
+                new TypeReference<>() {
+                }
+        );
+
+        if (MapUtils.isEmpty(map)) {
+            map = new LinkedHashMap<>();
+        }
+
+        return map;
+    }
+
+    @Override
+    public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
+        Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(body.getReaderId(), MessageTypeEnum.CONTACT);
+
+        if (MapUtils.isEmpty(map)) {
+            return ;
+        }
+
+        ContactMessage<BasicMessageMeta.FileLinkMessage> message = map.get(body.getTargetId());
+
+        if (Objects.isNull(message)) {
+            return ;
+        }
+
+        List<BasicMessageMeta.FileLinkMessage> fileLinkMessages = message
+                .getMessages()
+                .stream()
+                .filter(umb -> body.getMessageIds().contains(umb.getId()))
+                .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(fileLinkMessages)) {
+            return;
+        }
+
+        for (BasicMessageMeta.FileLinkMessage fileLinkMessage : fileLinkMessages) {
+
+            List<FileObject> list = fileLinkMessage
+                    .getFilenames()
+                    .stream()
+                    .map(f -> FileObject.of(getChatConfig().getMessage().getBucket(), f))
+                    .collect(Collectors.toList());
+
+            for (FileObject messageFileObject : list) {
+                doReadMessage(messageFileObject, fileLinkMessage, body);
+            }
+        }
+        postReadMessage(map, fileLinkMessages, body);
+
+    }
+
+    protected abstract void postReadMessage(Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> unreadMessageData,
+                                            List<BasicMessageMeta.FileLinkMessage> fileLinkMessages,
+                                            ReadMessageRequestBody body) throws Exception;
+
+    protected abstract void doReadMessage(FileObject messageFileObject,
+                                          BasicMessageMeta.FileLinkMessage fileLinkMessage,
+                                          ReadMessageRequestBody body) throws Exception;
+
+    @Override
+    public void afterPropertiesSet() throws Exception {
+        getMinioTemplate().makeBucketIfNotExists(getChatConfig().getGlobal().getBucket());
+        getMinioTemplate().makeBucketIfNotExists(getChatConfig().getGlobal().getUnreadBucket());
+        getMinioTemplate().makeBucketIfNotExists(getChatConfig().getMessage().getBucket());
+        install();
+    }
+
+    protected void install() throws Exception {
+
+    }
 }

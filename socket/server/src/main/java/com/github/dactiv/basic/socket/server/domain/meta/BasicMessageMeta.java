@@ -151,6 +151,7 @@ public class BasicMessageMeta implements Serializable {
     public static class GroupReadableMessage extends FileMessage {
 
         private static final long serialVersionUID = -7932031035796113862L;
+
         /**
          * 已读信息
          */
@@ -158,19 +159,23 @@ public class BasicMessageMeta implements Serializable {
     }
 
     /**
-     * 响应给用户的消息实体
+     * 消息关联文件的实体，用于通过消息 id 快速定位所在的文件使用，在将消息设置为已读时用到。
      *
      * @author maurice.chen
      */
     @Data
     @NoArgsConstructor
     @EqualsAndHashCode(callSuper = true)
-    public static class UserMessageBody extends Message {
+    public static class FileLinkMessage extends Message {
 
         private static final long serialVersionUID = -8782946827274914400L;
         /**
          * 消息存储在对应文件的名称
          */
         private List<String> filenames = new LinkedList<>();
+        /**
+         * 负载信息
+         */
+        private Map<String, Object> payload = new LinkedHashMap<>();
     }
 }

@@ -25,6 +25,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Date;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Collectors;
 
 /**
@@ -94,6 +95,10 @@ public class ChatController {
 
         Integer readerId = Casts.cast(userDetails.getId());
         body.setReaderId(readerId);
+
+        if (Objects.isNull(body.getCreationTime())) {
+            body.setCreationTime(new Date());
+        }
 
         MessageOperation messageOperation = messageOperations
                 .stream()
