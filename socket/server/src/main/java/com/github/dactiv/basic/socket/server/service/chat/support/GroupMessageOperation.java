@@ -133,6 +133,7 @@ public class GroupMessageOperation extends AbstractMessageOperation<BasicMessage
     }
 
     @Override
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     public void readMessage(ReadMessageRequestBody body) {
 
         BroadcastMessage<Map<String, Object>> message = BroadcastMessage.of(
@@ -160,6 +161,16 @@ public class GroupMessageOperation extends AbstractMessageOperation<BasicMessage
                 ReadMessageReceiver.DEFAULT_QUEUE_NAME,
                 body
         );
+    }
+
+    @Override
+    protected Integer getUnreadMessageDataTargetId(ReadMessageRequestBody body) {
+        return body.getTargetId();
+    }
+
+    @Override
+    protected Integer getUnreadMessageMapDataTargetId(ContactMessage<BasicMessageMeta.FileLinkMessage> contactMessage) {
+        return contactMessage.getTargetId();
     }
 
     @Override
@@ -349,7 +360,7 @@ public class GroupMessageOperation extends AbstractMessageOperation<BasicMessage
      * @throws Exception 创建文件失败时抛出
      */
     private String createHistoryMessageFile(GlobalMessageMeta global, Integer targetId) throws Exception {
-        String globalFilename = MessageFormat.format(getChatConfig().getGroup().getFileToken(), targetId);
+        String globalFilename = MessageFormat.format(getChatConfig().getGlobal().getGroupFileToken(), targetId);
         Integer historyFileCount = getChatConfig().getContact().getHistoryMessageFileCount();
         Bucket bucket = getChatConfig().getGlobal().getBucket();
         return setGlobalMessageCurrentFilename(global, globalFilename, historyFileCount, bucket);
@@ -408,13 +419,13 @@ public class GroupMessageOperation extends AbstractMessageOperation<BasicMessage
      */
     public GlobalMessageMeta getGlobalMessage(Integer targetId) {
 
-        String filename = MessageFormat.format(getChatConfig().getGroup().getFileToken(), targetId);
+        String filename = MessageFormat.format(getChatConfig().getGlobal().getGroupFileToken(), targetId);
 
         RBucket<GlobalMessageMeta> redisBucket = getRedisGlobalMessageBucket(filename);
 
         GlobalMessageMeta globalMessage = redisBucket.get();
 
-        Bucket minioBucket = getChatConfig().getGroup().getGroupBucket();
+        Bucket minioBucket = getChatConfig().getGlobal().getBucket();
         if (Objects.isNull(globalMessage)) {
             FileObject fileObject = FileObject.of(minioBucket, filename);
             globalMessage = getMinioTemplate().readJsonValue(fileObject, GlobalMessageMeta.class);
@@ -449,7 +460,6 @@ public class GroupMessageOperation extends AbstractMessageOperation<BasicMessage
     @Override
     protected void install() throws Exception {
         super.install();
-        getMinioTemplate().makeBucketIfNotExists(getChatConfig().getGroup().getGroupBucket());
         getMinioTemplate().makeBucketIfNotExists(getChatConfig().getGroup().getDeleteMessageRecordBucket());
     }
 }

@@ -250,7 +250,7 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
         FileObject messageFileObject = FileObject.of(getChatConfig().getMessage().getBucket(), filename);
         List<T> senderMessageList = getMinioTemplate().readJsonValue(
                 messageFileObject,
-                Casts.getTypeFactory().constructCollectionType(List.class, messageType)
+                Casts.getObjectMapper().getTypeFactory().constructCollectionType(List.class, messageType)
         );
 
         if (CollectionUtils.isEmpty(senderMessageList)) {
@@ -348,7 +348,7 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
             FileObject fileObject = FileObject.of(getChatConfig().getMessage().getBucket(), file);
             List<T> fileMessageList = getMinioTemplate().readJsonValue(
                     fileObject,
-                    Casts.getTypeFactory().constructCollectionType(List.class, messageType)
+                    Casts.getObjectMapper().getTypeFactory().constructCollectionType(List.class, messageType)
             );
 
             List<GlobalMessageMeta.FileMessage> temps = fileMessageList
@@ -375,7 +375,6 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
         return result;
     }
 
-
     /**
      * 添加未读消息
      *
@@ -388,10 +387,12 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
                                     ContactMessage<BasicMessageMeta.FileLinkMessage> contactMessage) throws Exception {
         Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(targetId, type);
 
-        ContactMessage<BasicMessageMeta.FileLinkMessage> targetMessage = map.get(contactMessage.getId());
+        Integer id = getUnreadMessageMapDataTargetId(contactMessage);
+
+        ContactMessage<BasicMessageMeta.FileLinkMessage> targetMessage = map.get(id);
 
         if (Objects.isNull(targetMessage)) {
-            map.put(contactMessage.getId(), contactMessage);
+            map.put(id, contactMessage);
         } else {
             targetMessage.setLastSendTime(contactMessage.getLastSendTime());
             targetMessage.setLastMessage(contactMessage.getLastMessage());
@@ -472,8 +473,8 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
 
     @Override
     public void consumeReadMessage(ReadMessageRequestBody body) throws Exception {
-        Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(body.getReaderId(), MessageTypeEnum.CONTACT);
-
+        Integer id = getUnreadMessageDataTargetId(body);
+        Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> map = getUnreadMessageData(id, body.getType());
         if (MapUtils.isEmpty(map)) {
             return;
         }
@@ -508,6 +509,21 @@ public abstract class AbstractMessageOperation<T extends BasicMessageMeta.FileMe
         }
         postReadMessage(map, fileLinkMessages, body);
 
+    }
+
+    /**
+     * 获取未读消息数据文件的目标 id
+     *
+     * @param body 读取消息请求体
+     *
+     * @return 目标 id
+     */
+    protected Integer getUnreadMessageDataTargetId(ReadMessageRequestBody body) {
+        return body.getReaderId();
+    }
+
+    protected Integer getUnreadMessageMapDataTargetId(ContactMessage<BasicMessageMeta.FileLinkMessage> contactMessage) {
+        return contactMessage.getId();
     }
 
     protected abstract void postReadMessage(Map<Integer, ContactMessage<BasicMessageMeta.FileLinkMessage>> unreadMessageData,

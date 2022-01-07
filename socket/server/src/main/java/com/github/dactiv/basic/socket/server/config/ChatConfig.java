@@ -89,6 +89,11 @@ public class ChatConfig {
         private String personFileToken = "global_person_message_{0}_and_{1}.json";
 
         /**
+         * 群聊的文件 token
+         */
+        private String groupFileToken = "global_group_message_{0}.json";
+
+        /**
          * 缓存配置
          */
         private CacheProperties cache = new CacheProperties(
@@ -112,20 +117,9 @@ public class ChatConfig {
         private Integer historyMessageFileCount = 3000;
 
         /**
-         * 联系人桶信息
-         */
-        private Bucket groupBucket = Bucket.of("socket.server.chat.group");
-
-        /**
-         * 常用联系人文件 token
-         */
-        private String fileToken = "group_{0}.json";
-
-        /**
          * 删除聊天记录的痛配置
          */
         private Bucket deleteMessageRecordBucket = Bucket.of("socket.server.chat.group.delete");
-        ;
 
         /**
          * 用户删除聊天记录文件 token
