@@ -68,7 +68,7 @@ public class SaveGroupTempMessageReceiver {
                 .collect(Collectors.toList());
 
         for (Integer id : offLine) {
-            socketServerManager.saveTempMessage(id, message.getType(), message.getMessage());
+            socketServerManager.saveTempMessage(id, message.getEvent(), message.getMessage().getData());
         }
 
         channel.basicAck(tag, false);

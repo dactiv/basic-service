@@ -1,14 +1,12 @@
 package com.github.dactiv.basic.socket.server.receiver;
 
 import com.github.dactiv.basic.commons.SystemConstants;
-import com.github.dactiv.basic.socket.client.SocketClientTemplate;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomEntity;
 import com.github.dactiv.basic.socket.server.domain.enitty.RoomParticipantEntity;
 import com.github.dactiv.basic.socket.server.service.RoomParticipantService;
 import com.github.dactiv.basic.socket.server.service.RoomService;
-import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.rabbitmq.client.Channel;
 import org.springframework.amqp.rabbit.annotation.Exchange;
 import org.springframework.amqp.rabbit.annotation.Queue;
@@ -39,21 +37,12 @@ public class ExitRoomMessageReceiver {
 
     private final RoomParticipantService roomParticipantService;
 
-    private final SocketClientTemplate socketClientTemplate;
-
-    private final SocketServerManager socketServerManager;
-
-    public ExitRoomMessageReceiver(RoomService roomService,
-                                   RoomParticipantService roomParticipantService,
-                                   SocketClientTemplate socketClientTemplate,
-                                   SocketServerManager socketServerManager) {
+    public ExitRoomMessageReceiver(RoomService roomService, RoomParticipantService roomParticipantService) {
         this.roomService = roomService;
         this.roomParticipantService = roomParticipantService;
-        this.socketClientTemplate = socketClientTemplate;
-        this.socketServerManager = socketServerManager;
     }
 
-    @SocketMessage
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),

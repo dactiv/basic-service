@@ -15,7 +15,7 @@ import com.github.dactiv.basic.socket.server.domain.meta.GlobalMessageMeta;
 import com.github.dactiv.basic.socket.server.domain.meta.RecentContactMeta;
 import com.github.dactiv.basic.socket.server.enumerate.MessageTypeEnum;
 import com.github.dactiv.basic.socket.server.receiver.ReadMessageReceiver;
-import com.github.dactiv.basic.socket.server.receiver.SaveMessageReceiver;
+import com.github.dactiv.basic.socket.server.receiver.SaveRecentContactReceiver;
 import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.basic.socket.server.service.chat.AbstractMessageOperation;
 import com.github.dactiv.framework.commons.CacheProperties;
@@ -175,7 +175,7 @@ public class PersonMessageOperation extends AbstractMessageOperation<BasicMessag
     }
 
     @Override
-    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
+    @SocketMessage(value = SystemConstants.CHAT_FILTER_RESULT_ID, ignoreOtherIds = true)
     @Concurrent(
             value = "socket:chat:person:send:[T(Math).min(#senderId, #recipientId)]_[T(Math).max(#senderId, #recipientId)]",
             exception = "请不要过快的发送消息"
@@ -256,7 +256,7 @@ public class PersonMessageOperation extends AbstractMessageOperation<BasicMessag
 
         getAmqpTemplate().convertAndSend(
                 SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
-                SaveMessageReceiver.DEFAULT_QUEUE_NAME,
+                SaveRecentContactReceiver.DEFAULT_QUEUE_NAME,
                 contactMessage
         );
 
