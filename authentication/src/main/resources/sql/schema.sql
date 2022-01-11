@@ -1,6 +1,5 @@
 SET NAMES utf8mb4;
-SET
-FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for tb_authentication_info
@@ -94,18 +93,9 @@ CREATE TABLE `tb_member_user`
 ) ENGINE=InnoDB COMMENT='会员用户表';
 
 
-SET
-FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 1;
 
-INSERT INTO `tb_group` (`id`, `creation_time`, `name`, `authority`, `sources`, `parent_id`, `removable`, `modifiable`,
-                        `status`, `resource_map`, `remark`)
-VALUES (1, '2021-09-13 13:24:01.080', '超级管理员', 'ADMIN', '[
-  \"Console\", \"System\", \"All\"]', NULL, 0, 1, 1, '{}', NULL);
+INSERT INTO `tb_group` (`id`, `creation_time`, `name`, `authority`, `sources`, `parent_id`, `removable`, `modifiable`,`status`, `resource_map`, `remark`) VALUES (1, '2021-09-13 13:24:01.080', '超级管理员', 'ADMIN', '[\"Console\", \"System\", \"All\"]', NULL, 0, 1, 1, '{}', NULL);
 
-INSERT INTO `tb_console_user` (`id`, `creation_time`, `email`, `password`, `status`, `username`, `real_name`,
-                               `groups_info`, `resource_map`, `remark`)
-VALUES (1, '2021-08-18 09:40:46.953', 'admin@domian.com',
-        '$2a$10$U2787VFuFP9NMyxwdsP1bOmtvofTgwU5nLcdV7Gj3ZyhdiZO.T8mG', 1, 'admin', '超级管理员', '[
-    {
-      \
-    "id\": 1, \"name\": \"超级管理员\", \"authority\": \"ADMIN\"}]', '{}', NULL);
+INSERT INTO `tb_console_user` (`id`, `creation_time`, `email`, `password`, `status`, `username`, `real_name`,`groups_info`, `resource_map`, `remark`)
+VALUES (1, '2021-08-18 09:40:46.953', 'admin@domian.com','$2a$10$U2787VFuFP9NMyxwdsP1bOmtvofTgwU5nLcdV7Gj3ZyhdiZO.T8mG', 1, 'admin', '超级管理员', '[{\"id\": 1, \"name\": \"超级管理员\", \"authority\": \"ADMIN\"}]', '{}', NULL);

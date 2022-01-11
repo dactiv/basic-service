@@ -1,6 +1,5 @@
 SET NAMES utf8mb4;
-SET
-FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for tb_room
@@ -34,5 +33,4 @@ CREATE TABLE `tb_room_participant`
     UNIQUE KEY `ux_user_id_room_id` (`user_id`,`room_id`)
 ) ENGINE=InnoDB COMMENT='房间参与者，用于说明某个房间里存在些什么人';
 
-SET
-FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 1;

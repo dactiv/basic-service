@@ -10,7 +10,7 @@ spring:
     driverClassName: com.mysql.cj.jdbc.Driver
     username: 用户名
     password: 密码
-    type: com.zaxxer.hikari.HikariDataSourceAccessCryptoService
+    type: com.zaxxer.hikari.HikariDataSource
   redis:
     host: localhost
     port: 6379
