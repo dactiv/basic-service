@@ -1,6 +1,5 @@
 SET NAMES utf8mb4;
-SET
-FOREIGN_KEY_CHECKS = 0;
+SET FOREIGN_KEY_CHECKS = 0;
 
 -- ----------------------------
 -- Table structure for tb_attachment
@@ -120,5 +119,4 @@ CREATE TABLE `tb_sms_message`
     KEY               `ix_phone_number` (`phone_number`) USING BTREE
 ) ENGINE=InnoDB COMMENT='短信消息';
 
-SET
-FOREIGN_KEY_CHECKS = 1;
+SET FOREIGN_KEY_CHECKS = 1;
