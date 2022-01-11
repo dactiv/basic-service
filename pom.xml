@@ -78,6 +78,7 @@
     </profiles>
 
     <modules>
+        <module>parent</module>
         <module>authentication</module>
         <module>config</module>
         <module>gateway</module>
@@ -85,7 +86,6 @@
         <module>message</module>
         <module>commons</module>
         <module>socket</module>
-        <module>parent</module>
     </modules>
 
 </project>
