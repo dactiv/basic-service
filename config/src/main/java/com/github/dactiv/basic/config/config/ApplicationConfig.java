@@ -42,7 +42,7 @@ public class ApplicationConfig {
      * 存储所有访问加解密的缓存配置
      */
     private CacheProperties accessCryptoCache = CacheProperties.of(
-            "access:crypto:all:",
+            "access:crypto:all",
             new TimeProperties(1800, TimeUnit.SECONDS)
     );
 

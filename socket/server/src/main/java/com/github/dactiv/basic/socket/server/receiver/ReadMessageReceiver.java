@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.socket.server.receiver;
 
 import com.github.dactiv.basic.commons.SystemConstants;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.basic.socket.server.domain.body.request.ReadMessageRequestBody;
 import com.github.dactiv.basic.socket.server.service.chat.MessageOperation;
 import com.github.dactiv.framework.commons.exception.SystemException;
@@ -37,6 +38,7 @@ public class ReadMessageReceiver {
         this.messageOperations = messageResolvers.orderedStream().collect(Collectors.toList());
     }
 
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),

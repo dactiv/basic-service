@@ -15,21 +15,21 @@ import org.springframework.messaging.handler.annotation.Payload;
 import org.springframework.stereotype.Component;
 
 /**
- * 保存聊天信息 MQ 接收者
+ * 保存常用联系人 MQ 接收者
  *
  * @author maurice.chen
  */
 @Component
-public class SaveMessageReceiver {
+public class SaveRecentContactReceiver {
 
     /**
      * MQ 队列名称
      */
-    public static final String DEFAULT_QUEUE_NAME = "save.chat.message";
+    public static final String DEFAULT_QUEUE_NAME = "save.chat.recent-contact";
 
     private final PersonMessageOperation messageResolver;
 
-    public SaveMessageReceiver(PersonMessageOperation messageResolver) {
+    public SaveRecentContactReceiver(PersonMessageOperation messageResolver) {
         this.messageResolver = messageResolver;
     }
 
@@ -43,9 +43,20 @@ public class SaveMessageReceiver {
     public void onMessage(@Payload ContactMessage<?> contactMessage,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
-        // 添加双方常用联系人信息
-        messageResolver.addRecentContact(contactMessage.getId(), contactMessage.getTargetId(), MessageTypeEnum.CONTACT);
-        messageResolver.addRecentContact(contactMessage.getTargetId(), contactMessage.getId(), MessageTypeEnum.CONTACT);
+        messageResolver.addRecentContact(
+                contactMessage.getId(),
+                contactMessage.getTargetId(),
+                contactMessage.getType()
+        );
+
+        if (MessageTypeEnum.CONTACT.equals(contactMessage.getType())) {
+            // 添加双方常用联系人信息
+            messageResolver.addRecentContact(
+                    contactMessage.getTargetId(),
+                    contactMessage.getId(),
+                    MessageTypeEnum.CONTACT
+            );
+        }
 
         channel.basicAck(tag, false);
 

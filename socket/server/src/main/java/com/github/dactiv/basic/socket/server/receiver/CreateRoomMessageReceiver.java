@@ -57,6 +57,7 @@ public class CreateRoomMessageReceiver {
         this.roomParticipantService = roomParticipantService;
     }
 
+    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     @RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
@@ -64,7 +65,6 @@ public class CreateRoomMessageReceiver {
                     key = DEFAULT_QUEUE_NAME
             )
     )
-    @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
     public void onMessage(@Payload RoomDto dto,
                           Channel channel,
                           @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws Exception {
