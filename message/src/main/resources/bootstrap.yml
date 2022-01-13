@@ -1,18 +1,15 @@
 server:
-  port: 8084
+  port: @server.port@
 
 spring:
   main:
     banner-mode: "off"
   application:
     name: @artifactId@
-  elasticsearch:
-    rest:
-      uris: http://localhost:9200
   cloud:
     nacos:
       discovery:
-        server-addr: localhost:8848
+        server-addr: @spring.cloud.discovery.address@
         metadata:
           version: ${info.version}
           name: ${info.name}

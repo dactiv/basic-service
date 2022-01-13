@@ -21,7 +21,9 @@ spring:
   http:
     encoding:
       force: true
-
+  elasticsearch:
+    rest:
+      uris: http://localhost:9200
 dactiv:
   authentication:
     users:

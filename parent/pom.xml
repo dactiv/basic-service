@@ -175,13 +175,13 @@
             <dependency>
                 <groupId>com.github.dactiv.basic.socket</groupId>
                 <artifactId>client</artifactId>
-                <version>${parent.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
 
             <dependency>
                 <groupId>com.github.dactiv.basic</groupId>
                 <artifactId>commons</artifactId>
-                <version>${parent.version}</version>
+                <version>${project.parent.version}</version>
             </dependency>
 
             <dependency>
@@ -249,6 +249,20 @@
                         <forkMode>once</forkMode>
                         <argLine>-Dfile.encoding=UTF-8</argLine>
                     </configuration>
+                </plugin>
+
+                <plugin>
+                    <groupId>com.google.cloud.tools</groupId>
+                    <artifactId>jib-maven-plugin</artifactId>
+                    <version>3.1.4</version>
+                    <executions>
+                        <execution>
+                            <phase>package</phase>
+                            <goals>
+                                <goal>build</goal>
+                            </goals>
+                        </execution>
+                    </executions>
                 </plugin>
 
                 <plugin>
