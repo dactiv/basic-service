@@ -90,7 +90,7 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
                 .map(m -> Casts.convertValue(m, AccessCrypto.class))
                 .collect(Collectors.toList());
 
-        LOGGER.info("同步 redis 访问加解密加载出" + cache.size() + "条记录:");
+        LOGGER.info("同步访问加解密加载出" + cache.size() + "条记录:");
 
         for (AccessCrypto accessCrypto : cache) {
 

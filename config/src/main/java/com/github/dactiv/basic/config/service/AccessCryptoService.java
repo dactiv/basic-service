@@ -55,10 +55,12 @@ public class AccessCryptoService extends BasicService<AccessCryptoDao, AccessCry
      * @return 访问加解密集合
      */
     public List<AccessCryptoEntity> getAll() {
+
         RList<AccessCryptoEntity> accessCryptoEntities = redissonClient.getList(config.getAccessCryptoCache().getName());
         if (CollectionUtils.isNotEmpty(accessCryptoEntities)) {
             return accessCryptoEntities;
         }
+
         List<AccessCryptoEntity> result = lambdaQuery()
                 .eq(AccessCrypto::getEnabled, DisabledOrEnabled.Enabled.getValue())
                 .list()

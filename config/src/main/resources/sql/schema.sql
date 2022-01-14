@@ -80,9 +80,9 @@ SET
 
 INSERT INTO `config`.`tb_access_crypto` (`id`, `creation_time`, `name`, `type`, `value`, `request_decrypt`, `response_encrypt`, `enabled`, `remark`) VALUES (1, '2021-09-08 15:29:37.688', '移动认证加解', 'mobile', '/authentication/login/**', 1, 1, 1, '移动端登录访问加解密');
 
-INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (36, '2021-09-08 15:27:10.240', 'Method', 'methods=POST', '必须是 post', 2);
-INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (37, '2021-09-08 15:27:10.277', 'Header', 'header=X-ACCESS-TOKEN regexp=^\\S+$', '必须是 Header 的 X-ACCESS-TOKEN 有值', 2);
-INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (38, '2021-09-08 15:27:10.291', 'Header', 'header=X-DEVICE-IDENTIFIED regexp=[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}', '必须是 Header 的 X-DEVICE-IDENTIFIED=UUID 值', 2);
+INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (36, '2021-09-08 15:27:10.240', 'Method', 'methods=POST', '必须是 post', 1);
+INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (37, '2021-09-08 15:27:10.277', 'Header', 'header=X-ACCESS-TOKEN regexp=^\\S+$', '必须是 Header 的 X-ACCESS-TOKEN 有值', 1);
+INSERT INTO `config`.`tb_access_crypto_predicate` (`id`, `creation_time`, `name`, `value`, `remark`, `access_crypto_id`) VALUES (38, '2021-09-08 15:27:10.291', 'Header', 'header=X-DEVICE-IDENTIFIED regexp=[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}', '必须是 Header 的 X-DEVICE-IDENTIFIED=UUID 值', 1);
 
 INSERT INTO `config`.`tb_dictionary_type` (`id`, `creation_time`, `code`, `name`, `parent_id`, `remark`) VALUES (1, '2020-03-29 13:48:39.000', 'system', '系统配置项', NULL, NULL);
 INSERT INTO `config`.`tb_dictionary_type` (`id`, `creation_time`, `code`, `name`, `parent_id`, `remark`) VALUES (2, '2020-03-29 13:49:01.000', 'system.crypto', '加解密', 1, NULL);
