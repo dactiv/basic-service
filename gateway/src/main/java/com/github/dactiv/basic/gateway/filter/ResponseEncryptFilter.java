@@ -35,8 +35,11 @@ import java.util.Optional;
 @Component
 public class ResponseEncryptFilter implements GlobalFilter, Ordered {
 
-    @Autowired
-    private AccessCryptoResolver accessCryptoResolver;
+    private final AccessCryptoResolver accessCryptoResolver;
+
+    public ResponseEncryptFilter(AccessCryptoResolver accessCryptoResolver) {
+        this.accessCryptoResolver = accessCryptoResolver;
+    }
 
     @Override
     public Mono<Void> filter(ServerWebExchange exchange, GatewayFilterChain chain) {

@@ -249,7 +249,4 @@ public class MemberUserDetailsService implements UserDetailsService {
         return passwordEncoder;
     }
 
-    public AuthorizationService getAuthorizationService() {
-        return authorizationService;
-    }
 }

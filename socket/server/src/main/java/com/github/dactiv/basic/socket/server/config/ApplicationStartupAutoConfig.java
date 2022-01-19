@@ -13,6 +13,7 @@ import org.redisson.api.RedissonClient;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 
 /**
  * socket 服务配置
@@ -32,7 +33,8 @@ public class ApplicationStartupAutoConfig {
      * @return socket io 服务
      */
     @Bean
-    public SocketIOServer socketIoServer(ApplicationConfig applicationConfig, SocketServerManager socketServerManager) {
+    public SocketIOServer socketIoServer(ApplicationConfig applicationConfig,
+                                         @Lazy SocketServerManager socketServerManager) {
 
         applicationConfig.setAuthorizationListener(socketServerManager);
 

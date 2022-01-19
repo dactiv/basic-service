@@ -33,7 +33,7 @@ public enum UmengMessageTypeEnum implements NameEnum {
     /**
      * 名称
      */
-    private String name;
+    private final String name;
 
     @Override
     public String getName() {

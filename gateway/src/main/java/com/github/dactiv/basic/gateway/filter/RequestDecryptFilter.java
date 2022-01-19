@@ -34,8 +34,11 @@ import java.util.Optional;
 @SuppressWarnings({"rawtypes", "unchecked"})
 public class RequestDecryptFilter implements GlobalFilter, Ordered {
 
-    @Autowired
-    private AccessCryptoResolver accessCryptoResolver;
+    private final AccessCryptoResolver accessCryptoResolver;
+
+    public RequestDecryptFilter(AccessCryptoResolver accessCryptoResolver) {
+        this.accessCryptoResolver = accessCryptoResolver;
+    }
 
     @Override
     public Mono filter(ServerWebExchange exchange, GatewayFilterChain chain) {

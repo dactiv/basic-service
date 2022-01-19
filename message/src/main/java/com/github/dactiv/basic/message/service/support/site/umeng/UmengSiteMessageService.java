@@ -234,12 +234,6 @@ public class UmengSiteMessageService implements SiteMessageChannelSender {
 
         androidPayloadBody.setAfterOpen("go_app");
 
-        /*try {
-            androidPayloadBody.setActivity(objectMapper.writeValueAsString(entity.getLink()));
-        } catch (JsonProcessingException e) {
-            e.printStackTrace();
-        }*/
-
         androidPayload.setBody(androidPayloadBody);
         result.setPayload(androidPayload);
 
