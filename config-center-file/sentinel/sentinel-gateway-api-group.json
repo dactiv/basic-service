@@ -58,5 +58,20 @@
         "matchStrategy": 1
       }
     ]
+  },
+  {
+    "id": 5,
+    "app": "gateway",
+    "ip": "localhost",
+    "port": 8080,
+    "gmtCreate": null,
+    "gmtModified": null,
+    "apiName": "socket-server",
+    "predicateItems": [
+      {
+        "pattern": "/socket-server/**",
+        "matchStrategy": 1
+      }
+    ]
   }
 ]
