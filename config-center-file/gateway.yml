@@ -9,7 +9,7 @@ spring:
         dashboard: localhost:8787
       eager: true
       datasource:
-        gateway-api-group-api-group:
+        gateway-api-group:
           nacos:
             server-addr: ${spring.cloud.nacos.discovery.server-addr}
             data-id: sentinel-gateway-api-group.json
