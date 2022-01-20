@@ -16,6 +16,8 @@ import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
+import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.classify.DeviceClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.cloud.client.discovery.DiscoveryClient;
 import org.springframework.http.HttpStatus;
@@ -291,7 +293,11 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
             result.getData().putAll(buildToken);
         }
-        // FIXME 添加一个数据加密密钥给客户端对一些敏感数据进行加密，如聊天信息。
+        UserAgent userAgent = DeviceUtils.getCurrentDevice(request);
+        String agentClass = userAgent.getValue(UserAgent.DEVICE_NAME);
+        if (DeviceClass.DESKTOP.getValue().equals(agentClass)) {
+            // TODO 添加一个数据加密密钥给客户端对一些敏感数据进行加密，如聊天信息。
+        }
         result.setExecuteCode(CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE);
     }
 }
