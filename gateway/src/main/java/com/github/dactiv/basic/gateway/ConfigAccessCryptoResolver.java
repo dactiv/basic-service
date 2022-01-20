@@ -1,7 +1,6 @@
 package com.github.dactiv.basic.gateway;
 
 import com.alibaba.nacos.common.utils.CollectionUtils;
-import com.alibaba.nacos.common.utils.MapUtils;
 import com.github.dactiv.basic.commons.feign.config.ConfigFeignClient;
 import com.github.dactiv.basic.gateway.config.ApplicationConfig;
 import com.github.dactiv.framework.commons.Casts;
@@ -10,14 +9,20 @@ import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import com.github.dactiv.framework.crypto.access.AccessToken;
 import com.github.dactiv.framework.crypto.access.token.SimpleExpirationToken;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
+import lombok.NonNull;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.propertyeditors.StringArrayPropertyEditor;
+import org.springframework.boot.CommandLineRunner;
 import org.springframework.cloud.gateway.handler.predicate.RoutePredicateFactory;
+import org.springframework.context.annotation.Lazy;
+import org.springframework.scheduling.annotation.Async;
+import org.springframework.scheduling.concurrent.ThreadPoolTaskExecutor;
 import org.springframework.stereotype.Component;
 
 import java.text.MessageFormat;
@@ -33,7 +38,7 @@ import java.util.stream.Collectors;
  */
 @Slf4j
 @Component
-public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver implements InitializingBean {
+public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver implements CommandLineRunner {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(ConfigAccessCryptoResolver.class);
 
@@ -45,7 +50,7 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
     public ConfigAccessCryptoResolver(ApplicationConfig config,
                                       ObjectProvider<RoutePredicateFactory> predicates,
                                       ObjectProvider<CipherAlgorithmService> cipherAlgorithmService,
-                                      ConfigFeignClient configFeignClient) {
+                                      @Lazy ConfigFeignClient configFeignClient) {
         super(config, predicates.stream().collect(Collectors.toList()), cipherAlgorithmService);
         this.configFeignClient = configFeignClient;
     }
@@ -65,11 +70,6 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
     @Override
     public List<AccessCrypto> getAccessCryptoList() {
         return cache;
-    }
-
-    @Override
-    public void afterPropertiesSet() {
-        syncAccessCryptos();
     }
 
     @NacosCronScheduled(cron = "${dactiv.gateway.crypto.access.sync-cron:0 0/3 * * * ?}")
@@ -110,4 +110,8 @@ public class ConfigAccessCryptoResolver extends AbstractAccessCryptoResolver imp
         }
     }
 
+    @Override
+    public void run(String... args) {
+        syncAccessCryptos();
+    }
 }

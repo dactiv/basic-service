@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.databind.annotation.JsonSerialize;
 import com.github.dactiv.basic.authentication.domain.meta.MemberUserInitializationMeta;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
@@ -29,6 +30,7 @@ import java.util.Date;
 @Alias("memberUser")
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_member_user", autoResultMap = true)
+@JsonIgnoreProperties(SystemUserEntity.PASSWORD_FIELD_NAME)
 public class MemberUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 2708129983369081033L;

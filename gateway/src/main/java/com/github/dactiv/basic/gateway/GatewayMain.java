@@ -17,6 +17,7 @@ import org.springframework.core.Ordered;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.converter.HttpMessageConverter;
 import org.springframework.http.converter.json.Jackson2ObjectMapperBuilder;
+import org.springframework.scheduling.annotation.EnableAsync;
 import org.springframework.scheduling.annotation.EnableScheduling;
 
 import java.util.stream.Collectors;
@@ -35,7 +36,8 @@ import java.util.stream.Collectors;
                 ReactiveSecurityAutoConfiguration.class,
                 ReactiveManagementWebSecurityAutoConfiguration.class,
                 ReactiveUserDetailsServiceAutoConfiguration.class
-        })
+        }
+)
 public class GatewayMain {
 
     public static void main(String[] args) {
@@ -61,5 +63,4 @@ public class GatewayMain {
         Casts.setObjectMapper(objectMapper);
         return objectMapper;
     }
-
 }
