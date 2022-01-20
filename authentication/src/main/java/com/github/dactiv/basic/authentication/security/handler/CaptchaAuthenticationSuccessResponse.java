@@ -9,14 +9,20 @@ import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
+import com.github.dactiv.framework.crypto.CipherAlgorithmService;
+import com.github.dactiv.framework.crypto.algorithm.ByteSource;
+import com.github.dactiv.framework.crypto.algorithm.SimpleByteSource;
+import com.github.dactiv.framework.crypto.algorithm.cipher.AesCipherService;
 import com.github.dactiv.framework.spring.security.authentication.handler.JsonAuthenticationSuccessResponse;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import nl.basjes.parse.useragent.UserAgent;
+import nl.basjes.parse.useragent.classify.DeviceClass;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.amqp.core.AmqpTemplate;
+import org.springframework.beans.factory.xml.BeanDefinitionParserDelegate;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -37,12 +43,16 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
     private final AmqpTemplate amqpTemplate;
 
+    private final CipherAlgorithmService cipherAlgorithmService;
+
     public CaptchaAuthenticationSuccessResponse(MobileUserDetailsService mobileAuthenticationService,
                                                 CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler,
-                                                AmqpTemplate amqpTemplate) {
+                                                AmqpTemplate amqpTemplate,
+                                                CipherAlgorithmService cipherAlgorithmService) {
         this.mobileAuthenticationService = mobileAuthenticationService;
         this.jsonAuthenticationFailureHandler = jsonAuthenticationFailureHandler;
         this.amqpTemplate = amqpTemplate;
+        this.cipherAlgorithmService = cipherAlgorithmService;
     }
 
     @Override
@@ -81,6 +91,15 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
                     data = createUserCenterDetailsData(identified, device, isNew, userDetails);
                 } else {
                     data = createUserDetailsData(identified, device, userDetails);
+                }
+
+                UserAgent userAgent = DeviceUtils.getCurrentDevice(request);
+                String agentClass = userAgent.getValue(UserAgent.DEVICE_NAME);
+                if (DeviceClass.DESKTOP.getValue().equals(agentClass)) {
+                    AesCipherService aesCipherService = cipherAlgorithmService.getCipherService("AES");
+                    ByteSource keyByteSource = new SimpleByteSource(aesCipherService.generateKey().getEncoded());
+                    data.put(BeanDefinitionParserDelegate.KEY_ATTRIBUTE, keyByteSource);
+                    // TODO 存储到 session 或其他地方。
                 }
 
                 result.setData(data);

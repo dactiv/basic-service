@@ -293,11 +293,6 @@ public class JsonLogoutSuccessHandler implements LogoutSuccessHandler {
 
             result.getData().putAll(buildToken);
         }
-        UserAgent userAgent = DeviceUtils.getCurrentDevice(request);
-        String agentClass = userAgent.getValue(UserAgent.DEVICE_NAME);
-        if (DeviceClass.DESKTOP.getValue().equals(agentClass)) {
-            // TODO 添加一个数据加密密钥给客户端对一些敏感数据进行加密，如聊天信息。
-        }
         result.setExecuteCode(CaptchaAuthenticationFailureResponse.CAPTCHA_EXECUTE_CODE);
     }
 }

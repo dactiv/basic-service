@@ -30,6 +30,11 @@
 
         <dependency>
             <groupId>com.github.dactiv.framework</groupId>
+            <artifactId>access-crypto</artifactId>
+        </dependency>
+
+        <dependency>
+            <groupId>com.github.dactiv.framework</groupId>
             <artifactId>idempotent</artifactId>
         </dependency>
 
