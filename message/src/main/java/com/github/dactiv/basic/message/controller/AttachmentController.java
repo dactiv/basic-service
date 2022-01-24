@@ -30,7 +30,8 @@ import java.util.*;
 @Plugin(
         name = "附件管理",
         id = "attachment",
-        parent = "message"
+        parent = "message",
+        sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class AttachmentController {
 
@@ -54,8 +55,8 @@ public class AttachmentController {
      * @throws Exception 删除错误时抛出
      */
     @PostMapping("delete")
-    @Plugin(name = "删除附件", audit = true)
     @PreAuthorize("hasAuthority('perms[attachment:delete]') and isFullyAuthenticated()")
+    @Plugin(name = "删除附件", audit = true, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public RestResult<?> delete(@RequestParam("type") String type, @RequestParam("filename") String filename) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),
@@ -76,8 +77,8 @@ public class AttachmentController {
      * @throws Exception 上传错误时抛出
      */
     @PostMapping("upload/{type}")
-    @Plugin(name = "上传文件", audit = true)
     @PreAuthorize("hasAuthority('perms[attachment:upload]') and isFullyAuthenticated()")
+    @Plugin(name = "上传文件", audit = true, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file,
                                                   @PathVariable("type") String type) throws Exception {
         FileObject fileObject = FileObject.of(
