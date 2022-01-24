@@ -58,17 +58,22 @@ public class ValidAuthenticationInfoReceiver {
     public void validAuthenticationInfo(@Payload AuthenticationInfoEntity info,
                                         Channel channel,
                                         @Header(AmqpHeaders.DELIVERY_TAG) long tag) throws IOException {
+
         IpRegionMeta ipRegionMeta = info.getIpRegion();
         Optional<IpResolver> ipResolver = ipResolvers
                 .stream()
                 .filter(resolver -> resolver.isSupport(config.getIpResolverType()))
                 .findFirst();
 
-        if (ipResolver.isEmpty()) {
-            log.warn("找不到类型为 [" + config.getIpResolverType() + "] 的 ip 解析器");
+        if (ipResolver.isPresent()) {
+            try {
+                IpRegionMeta source = ipResolver.get().getIpRegionMeta(ipRegionMeta.getIpAddress());
+                info.setIpRegion(source);
+            } catch (Exception e) {
+                log.error("执行 ip 解析出错", e);
+            }
         } else {
-            IpRegionMeta source = ipResolver.get().getIpRegionMeta(ipRegionMeta.getIpAddress());
-            info.setIpRegion(source);
+            log.warn("找不到类型为 [" + config.getIpResolverType() + "] 的 ip 解析器");
         }
 
         authenticationInfoService.save(info);
