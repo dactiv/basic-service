@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.basic.authentication.domain.meta.IpRegionMeta;
 import com.github.dactiv.framework.commons.enumerate.support.ExecuteStatus;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
@@ -63,7 +64,8 @@ public class AuthenticationInfoEntity implements NumberIdEntity<Integer> {
      * ip 地址
      */
     @NotEmpty
-    private String ip;
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private IpRegionMeta ipRegion;
 
     /**
      * 设备名称
@@ -72,21 +74,6 @@ public class AuthenticationInfoEntity implements NumberIdEntity<Integer> {
     @EqualsAndHashCode.Exclude
     @TableField(typeHandler = JacksonJsonTypeHandler.class)
     private Map<String, String> device;
-
-    /**
-     * 省
-     */
-    private String province;
-
-    /**
-     * 市
-     */
-    private String city;
-
-    /**
-     * 区域
-     */
-    private String area;
 
     /**
      * 同步 es 状态：0.处理中，1.成功，99.失败

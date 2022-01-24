@@ -11,17 +11,13 @@ CREATE TABLE `tb_authentication_info`
     `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
     `user_id`       int(20) NOT NULL COMMENT '用户 id',
     `type`          varchar(32) NOT NULL COMMENT '用户类型',
-    `ip`            varchar(32) NOT NULL COMMENT 'ip 地址',
-    `device`        json         DEFAULT NULL COMMENT '设备信息',
-    `province`      varchar(64)  DEFAULT NULL COMMENT '省',
-    `city`          varchar(64)  DEFAULT NULL COMMENT '市',
-    `area`          varchar(64)  DEFAULT NULL COMMENT '区域',
-    `sync_status`   tinyint(4) DEFAULT '0' COMMENT '同步 es 状态：0.处理中，1.成功，99.失败',
-    `retry_count`   tinyint(4) DEFAULT '0' COMMENT '重试次数',
+    `ipRegion`      json        NOT NULL COMMENT 'ip 区域信息',
+    `device`        json        NOT NULL COMMENT '设备信息',
+    `sync_status`   tinyint(4)  NOT NULL DEFAULT '0' COMMENT '同步 es 状态：0.处理中，1.成功，99.失败',
+    `retry_count`   tinyint(4)  NOT NULL DEFAULT '0' COMMENT '重试次数',
     `remark`        varchar(512) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`) USING BTREE
 ) ENGINE=InnoDB COMMENT='认证信息表';
-
 -- ----------------------------
 -- Table structure for tb_console_user
 -- ----------------------------

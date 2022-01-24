@@ -117,6 +117,11 @@ public class ApplicationConfig {
     private UserAvatar userAvatar = new UserAvatar();
 
     /**
+     * id 解析器类型
+     */
+    private String ipResolverType = "ip.ws.126.net";
+
+    /**
      * 注册配置
      *
      * @author maurice.chen

@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.security.handler;
 
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
+import com.github.dactiv.basic.authentication.domain.meta.IpRegionMeta;
 import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
@@ -43,16 +44,12 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
     private final AmqpTemplate amqpTemplate;
 
-    private final CipherAlgorithmService cipherAlgorithmService;
-
     public CaptchaAuthenticationSuccessResponse(MobileUserDetailsService mobileAuthenticationService,
                                                 CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler,
-                                                AmqpTemplate amqpTemplate,
-                                                CipherAlgorithmService cipherAlgorithmService) {
+                                                AmqpTemplate amqpTemplate) {
         this.mobileAuthenticationService = mobileAuthenticationService;
         this.jsonAuthenticationFailureHandler = jsonAuthenticationFailureHandler;
         this.amqpTemplate = amqpTemplate;
-        this.cipherAlgorithmService = cipherAlgorithmService;
     }
 
     @Override
@@ -100,8 +97,8 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
             info.setUserId(Casts.cast(userDetails.getId(), Integer.class));
             info.setType(userDetails.getType());
         }
-
-        info.setIp(SpringMvcUtils.getIpAddress(request));
+        String ip = SpringMvcUtils.getIpAddress(request);
+        info.setIpRegion(IpRegionMeta.of(ip));
         info.setRetryCount(0);
 
         amqpTemplate.convertAndSend(
