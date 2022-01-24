@@ -43,7 +43,7 @@ public class IpWs126NetResolver implements IpResolver {
             String text = body.getBody();
 
             String content = StringUtils.substringBetween(text, Casts.PATH_VARIABLE_SYMBOL_START, Casts.PATH_VARIABLE_SYMBOL_END);
-            content = RegExUtils.replaceAll(content, " ", "");
+            content = RegExUtils.replaceAll(content, StringUtils.SPACE, StringUtils.EMPTY);
             content = StringUtils.replace(content, IpRegionMeta.CITY_NAME, "\"" + IpRegionMeta.CITY_NAME + "\"");
             content = StringUtils.replace(content, IpRegionMeta.PROVINCE_NAME, "\"" + IpRegionMeta.PROVINCE_NAME + "\"");
 
