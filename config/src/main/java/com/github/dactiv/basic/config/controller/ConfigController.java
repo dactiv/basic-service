@@ -40,6 +40,8 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -63,8 +65,6 @@ public class ConfigController {
 
     private final EnumerateResourceService enumerateResourceService;
 
-    private final RedissonClient redissonClient;
-
     private final DiscoveryClient discoveryClient;
 
     private final ApplicationConfig properties;
@@ -76,7 +76,6 @@ public class ConfigController {
     public ConfigController(DictionaryService dictionaryService,
                             AccessCryptoService accessCryptoService,
                             EnumerateResourceService enumerateResourceService,
-                            RedissonClient redissonClient,
                             DiscoveryClient discoveryClient,
                             ApplicationConfig properties,
                             RestTemplate restTemplate) {
@@ -84,7 +83,6 @@ public class ConfigController {
         this.dictionaryService = dictionaryService;
         this.accessCryptoService = accessCryptoService;
         this.enumerateResourceService = enumerateResourceService;
-        this.redissonClient = redissonClient;
         this.discoveryClient = discoveryClient;
         this.properties = properties;
         this.restTemplate = restTemplate;
@@ -154,7 +152,7 @@ public class ConfigController {
     @PreAuthorize("hasRole('BASIC')")
     @GetMapping("obtainAccessToken")
     public AccessToken obtainAccessToken(@RequestParam String id) {
-        return getAccessTokeBucket(id).get();
+        return accessCryptoService.getAccessTokeBucket(id).get();
     }
 
     /**
@@ -165,52 +163,8 @@ public class ConfigController {
      * @return 访问 token
      */
     @RequestMapping("getPublicToken")
-    public AccessToken getPublicToken(
-            @RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified) {
-
-        String token = new Hash(HashAlgorithmMode.SHA1.getName(), deviceIdentified).getHex();
-
-        RBucket<SimpleExpirationToken> bucket = getPrivateTokenBucket(token);
-
-        bucket.deleteAsync();
-
-        // 获取当前访问加解密的公共密钥
-        ByteSource publicByteSource = new SimpleByteSource(Base64.decode(properties.getRsa().getPublicKey()));
-        // 获取当前访问加解密的私有密钥
-        ByteSource privateByteSource = new SimpleByteSource(Base64.decode(properties.getRsa().getPrivateKey()));
-
-        // 创建一个生成密钥类型 token，设置密钥为公共密钥，返回给客户端
-        SimpleToken result = SimpleToken.generate(AccessToken.PUBLIC_TOKEN_KEY_NAME, publicByteSource);
-        result.setToken(token);
-        // 创建一个生成密钥类型 token，设置密钥为私有密钥，存储在缓存中
-        SimpleToken temp = SimpleToken.generate(AccessToken.ACCESS_TOKEN_KEY_NAME, privateByteSource);
-        // 将 token 设置为返回给客户端的 token，因为在获取访问 token 时，
-        // 可以通过客户端传过来的密钥获取出私有密钥 token 的信息，
-        // 详情查看本类的 getAccessToken 访问流程。
-        temp.setToken(result.getToken());
-        // 将私有密钥 token 转换为私有 token
-        SimpleExpirationToken privateToken = new SimpleExpirationToken(
-                temp,
-                properties.getPrivateKeyCache().getExpiresTime()
-        );
-
-        // 存储私有 token
-        if (Objects.nonNull(privateToken.getMaxInactiveInterval())) {
-            bucket.set(
-                    privateToken,
-                    privateToken.getMaxInactiveInterval().getValue(),
-                    privateToken.getMaxInactiveInterval().getUnit()
-            );
-        } else {
-            bucket.set(privateToken);
-        }
-
-        if (log.isDebugEnabled()) {
-            log.debug("生成 public token, 当前 token 为:"
-                    + result.getToken() + ", 密钥为:" + publicByteSource.getBase64());
-        }
-
-        return result;
+    public AccessToken getPublicToken(@RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified) {
+        return accessCryptoService.getPublicKey(deviceIdentified);
 
     }
 
@@ -225,12 +179,11 @@ public class ConfigController {
      */
     @PostMapping("getAccessToken")
     @Auditable(principal = "token", type = "获取访问密钥")
-    public AccessToken getAccessToken(
-            @RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified,
-            @RequestParam String token,
-            @RequestParam String key) {
+    public AccessToken getAccessToken(@RequestHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME) String deviceIdentified,
+                                      @RequestParam String token,
+                                      @RequestParam String key) {
 
-        RBucket<SimpleExpirationToken> bucket = getPrivateTokenBucket(token);
+        RBucket<SimpleExpirationToken> bucket = accessCryptoService.getPrivateTokenBucket(token);
         // 根据客户端请求过来的 token 获取私有 token， 如果没有。表示存在问题，返回一个伪装成功的 token
         SimpleExpirationToken privateToken = bucket.get();
 
@@ -241,41 +194,15 @@ public class ConfigController {
         }
 
         if (log.isDebugEnabled()) {
-            log.debug("正在生成 access token, 当前 token 为:" + token + ", 客户端密钥为:" + key);
+            log.debug("正在生成 access token, 当前 token 为:{}, 客户端密钥为:{}", token, key);
         }
 
         RsaCipherService rsa = cipherAlgorithmService.getCipherService("RSA");
         // 解析出客户端发给来的密钥
         ByteSource publicKey = rsa.decrypt(Base64.decode(key), privateToken.getKey().obtainBytes());
 
-        // 根据请求解密算法模型创建块密码服务
-        AbstractBlockCipherService cipherService = cipherAlgorithmService.getCipherService(properties.getAlgorithm());
-
-        // 生成请求解密访问 token 密钥
-        ByteSource requestAccessCryptoKey = new SimpleByteSource(cipherService.generateKey().getEncoded());
-
-        // 创建请求解密的 token 信息
-        SimpleExpirationToken requestToken = new SimpleExpirationToken(
-                SimpleToken.generate(SimpleToken.ACCESS_TOKEN_KEY_NAME, requestAccessCryptoKey),
-                properties.getAccessTokenKeyCache().getExpiresTime()
-        );
-
-        requestToken.setToken(token);
-
-        RBucket<SimpleExpirationToken> requestBucket = getAccessTokeBucket(requestToken.getToken());
-
-        requestBucket.set(requestToken);
-        // 存储到缓存中
-        if (Objects.nonNull(requestToken.getMaxInactiveInterval())) {
-            requestBucket.set(
-                    requestToken,
-                    requestToken.getMaxInactiveInterval().getValue(),
-                    requestToken.getMaxInactiveInterval().getUnit()
-            );
-        } else {
-            requestBucket.set(requestToken);
-        }
-
+        // 生成访问加 token
+        AccessToken requestToken = accessCryptoService.generateAccessToken(token);
 
         // 创建带签名校验的请求解密 token，这个是为了让客户端可以通过签名校验是否正确
         SignToken requestSignToken = createSignToken(
@@ -288,10 +215,27 @@ public class ConfigController {
         bucket.deleteAsync();
 
         if (log.isDebugEnabled()) {
-            log.debug("生成新的 access token, 给 [" + token + "] 客户端使用, 本次返回未加密信息为:" + requestSignToken + ", 原文的 AES 密钥为:" + requestAccessCryptoKey.getBase64());
+            log.debug(
+                    "生成新的 access token, 给 [{}] 客户端使用, 本次返回未加密信息为: {}, 原文的 AES 密钥为: {}",
+                    token,
+                    requestSignToken,
+                    requestToken.getKey().getBase64());
         }
 
         return requestSignToken;
+    }
+
+    /**
+     * 生成访问秘钥
+     *
+     * @param request http 请求
+     *
+     * @return 访问秘钥
+     */
+    @PostMapping("generateAccessToken")
+    public AccessToken generateAccessToken(HttpServletRequest request) {
+        String deviceId = request.getHeader(DeviceUtils.REQUEST_DEVICE_IDENTIFIED_HEADER_NAME);
+        return accessCryptoService.generateAccessToken(deviceId);
     }
 
     /**
@@ -319,28 +263,6 @@ public class ConfigController {
         ByteSource byteSourceSign = rsa.sign(encryptAccessCryptoKey.obtainBytes(), privateToken.getKey().obtainBytes());
 
         return new SignToken(temp, byteSourceSign);
-    }
-
-    /**
-     * 获取私有 token 的 redis 桶
-     *
-     * @param token token 值
-     *
-     * @return redis 桶
-     */
-    private RBucket<SimpleExpirationToken> getPrivateTokenBucket(String token) {
-        return redissonClient.getBucket(properties.getPrivateKeyCache().getName(token));
-    }
-
-    /**
-     * 获取访问 token 的 redis 桶
-     *
-     * @param token token 值
-     *
-     * @return redis 桶
-     */
-    private RBucket<SimpleExpirationToken> getAccessTokeBucket(String token) {
-        return redissonClient.getBucket(properties.getAccessTokenKeyCache().getName(token));
     }
 
     /**

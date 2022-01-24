@@ -93,15 +93,6 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
                     data = createUserDetailsData(identified, device, userDetails);
                 }
 
-                UserAgent userAgent = DeviceUtils.getCurrentDevice(request);
-                String agentClass = userAgent.getValue(UserAgent.DEVICE_NAME);
-                if (DeviceClass.DESKTOP.getValue().equals(agentClass)) {
-                    AesCipherService aesCipherService = cipherAlgorithmService.getCipherService("AES");
-                    ByteSource keyByteSource = new SimpleByteSource(aesCipherService.generateKey().getEncoded());
-                    data.put(BeanDefinitionParserDelegate.KEY_ATTRIBUTE, keyByteSource);
-                    // TODO 存储到 session 或其他地方。
-                }
-
                 result.setData(data);
 
             }
