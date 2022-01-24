@@ -85,7 +85,7 @@ public class UserAvatarController implements InitializingBean {
     @Plugin(name = "上传头像", parent = "user-avatar", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:user:avatar:upload:[#securityContext.authentication.details.id]")
     public RestResult<Map<String, Object>> upload(@CurrentSecurityContext SecurityContext securityContext,
-                                                  @RequestParam("file") MultipartFile file) throws Exception {
+                                                  @RequestParam MultipartFile file) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -215,7 +215,7 @@ public class UserAvatarController implements InitializingBean {
     @PostMapping("select")
     @PreAuthorize("isFullyAuthenticated()")
     public RestResult<?> select(@CurrentSecurityContext SecurityContext securityContext,
-                                @RequestParam("filename") String filename) throws Exception {
+                                @RequestParam String filename) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 
@@ -264,7 +264,7 @@ public class UserAvatarController implements InitializingBean {
     @PreAuthorize("isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:avatar:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@CurrentSecurityContext SecurityContext securityContext,
-                                @RequestParam("filename") String filename) throws Exception {
+                                @RequestParam String filename) throws Exception {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
 

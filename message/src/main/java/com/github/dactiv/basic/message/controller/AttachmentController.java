@@ -57,7 +57,7 @@ public class AttachmentController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[attachment:delete]') and isFullyAuthenticated()")
     @Plugin(name = "删除附件", audit = true, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public RestResult<?> delete(@RequestParam("type") String type, @RequestParam("filename") String filename) throws Exception {
+    public RestResult<?> delete(@RequestParam String type, @RequestParam String filename) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),
                 filename
@@ -79,8 +79,8 @@ public class AttachmentController {
     @PostMapping("upload/{type}")
     @PreAuthorize("hasAuthority('perms[attachment:upload]') and isFullyAuthenticated()")
     @Plugin(name = "上传文件", audit = true, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public RestResult<Map<String, Object>> upload(@RequestParam("file") MultipartFile file,
-                                                  @PathVariable("type") String type) throws Exception {
+    public RestResult<Map<String, Object>> upload(@RequestParam MultipartFile file,
+                                                  @PathVariable String type) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),
                 file.getOriginalFilename()
