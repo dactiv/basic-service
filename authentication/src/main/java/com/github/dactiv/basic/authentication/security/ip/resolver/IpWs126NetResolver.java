@@ -43,10 +43,10 @@ public class IpWs126NetResolver implements IpResolver {
             String text = body.getBody();
 
             String content = StringUtils.substringBetween(text, Casts.PATH_VARIABLE_SYMBOL_START, Casts.PATH_VARIABLE_SYMBOL_END);
-
             content = RegExUtils.replaceAll(content, " ", "");
             content = StringUtils.replace(content, IpRegionMeta.CITY_NAME, "\"" + IpRegionMeta.CITY_NAME + "\"");
             content = StringUtils.replace(content, IpRegionMeta.PROVINCE_NAME, "\"" + IpRegionMeta.PROVINCE_NAME + "\"");
+
             String json = Casts.PATH_VARIABLE_SYMBOL_START + content + Casts.PATH_VARIABLE_SYMBOL_END;
             //noinspection unchecked
             Map<String, Object> object = Casts.readValue(json, Map.class);
@@ -55,10 +55,6 @@ public class IpWs126NetResolver implements IpResolver {
         }
 
         return result;
-    }
-
-    public static void main(String[] args) {
-        System.out.println(Casts.readValue("{city:\"广州市\",province:\"广东省\"}", Map.class));
     }
 
     @Override
