@@ -71,7 +71,7 @@ public class MobileUserDetailsService extends MemberUserDetailsService {
             throw new UsernameNotFoundException("用户名或密码错误");
         }
 
-        if (!value.getStatus().equals(UserStatus.Enabled.getValue())) {
+        if (!value.getStatus().equals(UserStatus.Enabled)) {
             throw new DisabledException("你的账户已被"
                     + ValueEnumUtils.getName(value.getStatus(), UserStatus.class)
                     + ", 无法认证");

@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
+import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -177,7 +178,11 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断登录账户是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isUsernameUnique(@RequestParam String username) {
-        return Objects.isNull(consoleUserService.getByUsername(username));
+        return !consoleUserService
+                .lambdaQuery()
+                .select(SystemUserEntity::getId)
+                .eq(SystemUserEntity::getUsername, username)
+                .exists();
     }
 
     /**
@@ -191,7 +196,11 @@ public class ConsoleUserController {
     @PreAuthorize("isAuthenticated()")
     @Plugin(name = "判断邮件是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
-        return Objects.isNull(consoleUserService.getByEmail(email));
+        return !consoleUserService
+                .lambdaQuery()
+                .select(SystemUserEntity::getId)
+                .eq(SystemUserEntity::getEmail, email)
+                .exists();
     }
 
 }

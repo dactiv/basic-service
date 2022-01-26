@@ -17,6 +17,7 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Stream;
 
 /**
  * tb_console_user 的业务逻辑
@@ -55,52 +56,58 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
             throw new ServiceException("旧密码不正确");
         }
 
-        lambdaUpdate()
-                .set(SystemUserEntity::getPassword, passwordEncoder.encode(newPassword))
-                .eq(SystemUserEntity::getId, userId)
-                .update();
+        ConsoleUserEntity user = consoleUser.ofIdData();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        updateById(user);
 
         authorizationService.expireSystemUserSession(consoleUser.getUsername());
     }
 
     @Override
     public int deleteById(Collection<? extends Serializable> ids, boolean errorThrow) {
-        int result = super.deleteById(ids, errorThrow);
 
         Wrapper<ConsoleUserEntity> wrapper = Wrappers
                 .<ConsoleUserEntity>lambdaQuery()
                 .select(SystemUserEntity::getUsername)
                 .in(SystemUserEntity::getId, ids);
-        List<String> username = findObjects(wrapper, String.class);
 
-        username
+        List<ConsoleUserEntity> users = find(wrapper);
+
+        users
                 .stream()
-                .map(un -> new PrincipalAuthenticationToken(un, ResourceSourceEnum.CONSOLE.toString()))
+                .flatMap(this::createPrincipalAuthenticationTokenStream)
                 .peek(p -> authorizationService.deleteSystemUseAuthenticationCache(ResourceSourceEnum.CONSOLE, p))
                 .forEach(p -> authorizationService.expireSystemUserSession(p.getName()));
 
-        return result;
+        return super.deleteById(ids, errorThrow);
     }
 
     /**
-     * 通过登录账号获取后台用户
+     * 创建授权 token 流
      *
-     * @param username 登录账号
+     * @param user 后台用户实体
      *
-     * @return 后台用户
+     * @return 授权 token 流
      */
-    public ConsoleUserEntity getByUsername(String username) {
-        return lambdaQuery().eq(SystemUserEntity::getUsername, username).one();
+    private Stream<PrincipalAuthenticationToken> createPrincipalAuthenticationTokenStream(ConsoleUserEntity user) {
+        return Stream.of(
+                new PrincipalAuthenticationToken(user.getUsername(), ResourceSourceEnum.CONSOLE.toString()),
+                new PrincipalAuthenticationToken(user.getEmail(), ResourceSourceEnum.CONSOLE.toString())
+        );
     }
 
     /**
-     * 通过电子邮件获取后台用户
+     * 通过登录账号或邮箱获取后台用户
      *
-     * @param email 电子邮件
+     * @param identity 登录账号或邮箱
      *
      * @return 后台用户
      */
-    public ConsoleUserEntity getByEmail(String email) {
-        return lambdaQuery().eq(ConsoleUserEntity::getEmail, email).one();
+    public ConsoleUserEntity getByIdentity(String identity) {
+        return lambdaQuery()
+                .eq(SystemUserEntity::getUsername, identity)
+                .or()
+                .eq(SystemUserEntity::getEmail, identity)
+                .one();
     }
 }

@@ -9,8 +9,14 @@ import com.github.dactiv.framework.commons.Casts;
  */
 public interface SystemConstants {
 
+    /**
+     * web 响应过滤结果集 id
+     */
     String WEB_FILTER_RESULT_ID = "web";
 
+    /**
+     * 聊天响应过滤结果集 id
+     */
     String CHAT_FILTER_RESULT_ID = "chat";
 
     /**

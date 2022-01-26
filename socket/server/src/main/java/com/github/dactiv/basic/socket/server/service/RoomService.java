@@ -178,11 +178,11 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
         boolean result = RoomParticipantRoleEnum.OWNER.equals(entity.getRole());
         // 如果为群主，直接解散房间。
         if (result) {
+            RoomEntity roomEntity = new RoomEntity();
+            roomEntity.setId(id);
+            roomEntity.setStatus(DisabledOrEnabled.Disabled);
 
-            lambdaUpdate()
-                    .set(RoomEntity::getStatus, DisabledOrEnabled.Disabled.getValue())
-                    .eq(RoomEntity::getId, id)
-                    .update();
+            updateById(roomEntity);
 
             amqpTemplate.convertAndSend(
                     SystemConstants.SYS_SOCKET_SERVER_RABBITMQ_EXCHANGE,
@@ -223,7 +223,10 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
             return false;
         }
 
-        lambdaUpdate().set(RoomEntity::getName, name).eq(RoomEntity::getId, id).update();
+        RoomEntity roomEntity = room.ofIdData();
+        roomEntity.setName(name);
+        updateById(roomEntity);
+
         return true;
     }
 }

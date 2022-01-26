@@ -106,16 +106,6 @@ public class AuthorizationService implements InitializingBean {
     }
 
     /**
-     * 获取所有账户认证的用户明细服务
-     *
-     * @return 用户明细服务集合
-     */
-    public List<UserDetailsService> getUserDetailsServices() {
-        return authenticationProvider.getUserDetailsServices();
-    }
-
-
-    /**
      * 获取组资源集合
      *
      * @param group 组信息
@@ -138,7 +128,9 @@ public class AuthorizationService implements InitializingBean {
     }
 
     /**
-     * 所有删除认证缓存
+     * 删除所有认证缓存
+     *
+     * @param sources 资源来源枚举
      */
     public void deleteAuthorizationCache(List<ResourceSourceEnum> sources) {
         List<PrincipalAuthenticationToken> tokens = sources
@@ -177,6 +169,12 @@ public class AuthorizationService implements InitializingBean {
         return stream.sorted(Comparator.comparing(ResourceMeta::getSort)).collect(Collectors.toList());
     }
 
+    /**
+     * 删除系统用户的认证缓存
+     *
+     * @param source 资源来源
+     * @param token 认证 token
+     */
     public void deleteSystemUseAuthenticationCache(ResourceSourceEnum source, PrincipalAuthenticationToken token) {
 
         UserDetailsService userDetailsService = getUserDetailsService(source);
@@ -184,6 +182,12 @@ public class AuthorizationService implements InitializingBean {
         deleteSystemUseAuthenticationCache(userDetailsService, token);
     }
 
+    /**
+     * 删除系统用户的认证缓存
+     *
+     * @param userDetailsService 用户明细服务
+     * @param token 认证 token
+     */
     public void deleteSystemUseAuthenticationCache(UserDetailsService userDetailsService,
                                                    PrincipalAuthenticationToken token) {
         CacheProperties authenticationCache = userDetailsService.getAuthenticationCache(token);

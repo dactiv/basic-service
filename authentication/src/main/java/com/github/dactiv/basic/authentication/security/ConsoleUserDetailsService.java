@@ -41,7 +41,7 @@ public class ConsoleUserDetailsService implements UserDetailsService {
     public SecurityUserDetails getAuthenticationUserDetails(RequestAuthenticationToken token)
             throws AuthenticationException {
 
-        ConsoleUserEntity user = consoleUserService.getByUsername(token.getPrincipal().toString());
+        ConsoleUserEntity user = consoleUserService.getByIdentity(token.getPrincipal().toString());
 
         if (user == null) {
             throw new UsernameNotFoundException("用户名或密码错误");

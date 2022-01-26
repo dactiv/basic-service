@@ -55,11 +55,11 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
             memberUser.getInitialization().setRandomPassword(YesOrNo.No);
         }
 
-        lambdaUpdate()
-                .set(SystemUserEntity::getPassword, passwordEncoder.encode(newPassword))
-                .set(MemberUserEntity::getInitialization, memberUser.getInitialization())
-                .eq(SystemUserEntity::getId, userId)
-                .update();
+        MemberUserEntity user = memberUser.ofIdData();
+        user.setPassword(passwordEncoder.encode(newPassword));
+        user.setInitialization(memberUser.getInitialization());
+
+        updateById(user);
 
         authorizationService.expireSystemUserSession(memberUser.getUsername());
     }
@@ -81,13 +81,11 @@ public class MemberUserService extends BasicService<MemberUserDao, MemberUserEnt
             throw new ServiceException("登录账户 [" + newUsername + "] 已存在");
         }
 
-        memberUser.getInitialization().setRandomUsername(YesOrNo.No);
-
-        lambdaUpdate()
-                .set(SystemUserEntity::getUsername, newUsername)
-                .set(MemberUserEntity::getInitialization, memberUser.getInitialization())
-                .eq(SystemUserEntity::getId, memberUser.getId())
-                .update();
+        MemberUserEntity user = memberUser.ofIdData();
+        user.setInitialization(memberUser.getInitialization());
+        user.getInitialization().setRandomUsername(YesOrNo.No);
+        user.setUsername(newUsername);
+        updateById(user);
 
         authorizationService.expireSystemUserSession(memberUser.getUsername());
     }
