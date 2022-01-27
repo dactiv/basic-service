@@ -7,7 +7,7 @@ import com.github.dactiv.framework.commons.ReflectionUtils;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.minio.MinioTemplate;
 import com.github.dactiv.framework.minio.data.FileObject;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import io.minio.ObjectWriteResponse;
 import org.apache.commons.io.IOUtils;

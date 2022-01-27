@@ -13,7 +13,7 @@ import com.github.dactiv.framework.commons.enumerate.support.YesOrNo;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

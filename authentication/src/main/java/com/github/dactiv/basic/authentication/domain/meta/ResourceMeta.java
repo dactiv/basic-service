@@ -6,7 +6,7 @@ import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.commons.tree.Tree;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
+import com.github.dactiv.framework.security.enumerate.ResourceType;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

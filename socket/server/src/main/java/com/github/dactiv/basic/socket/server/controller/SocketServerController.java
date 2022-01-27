@@ -8,7 +8,7 @@ import com.github.dactiv.basic.socket.server.service.SocketServerManager;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.security.plugin.Plugin;
 import org.apache.commons.collections.CollectionUtils;
 import org.springframework.boot.actuate.health.Health;
 import org.springframework.security.access.prepost.PreAuthorize;

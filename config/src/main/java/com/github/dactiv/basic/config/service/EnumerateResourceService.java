@@ -10,7 +10,7 @@ import com.github.dactiv.framework.nacos.event.NacosInstancesChangeEvent;
 import com.github.dactiv.framework.nacos.event.NacosService;
 import com.github.dactiv.framework.nacos.event.NacosServiceSubscribeEvent;
 import com.github.dactiv.framework.nacos.event.NacosSpringEventManager;
-import com.github.dactiv.framework.spring.security.plugin.PluginInfo;
+import com.github.dactiv.framework.security.plugin.PluginInfo;
 import com.github.dactiv.framework.spring.web.endpoint.EnumerateEndpoint;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.collections.CollectionUtils;

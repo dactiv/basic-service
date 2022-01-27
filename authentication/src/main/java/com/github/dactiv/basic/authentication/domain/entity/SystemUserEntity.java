@@ -8,7 +8,7 @@ import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
-import com.github.dactiv.framework.spring.security.enumerate.UserStatus;
+import com.github.dactiv.framework.security.enumerate.UserStatus;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
 import lombok.NoArgsConstructor;

@@ -5,7 +5,7 @@ import com.github.dactiv.basic.message.service.MessageSender;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.security.plugin.Plugin;
 import org.springframework.http.MediaType;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;

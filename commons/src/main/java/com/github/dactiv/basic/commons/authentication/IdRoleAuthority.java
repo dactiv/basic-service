@@ -1,7 +1,7 @@
 package com.github.dactiv.basic.commons.authentication;
 
 import com.github.dactiv.framework.commons.id.BasicIdentification;
-import com.github.dactiv.framework.spring.security.entity.RoleAuthority;
+import com.github.dactiv.framework.security.entity.RoleAuthority;
 import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.EqualsAndHashCode;

@@ -9,17 +9,17 @@ import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.exception.SystemException;
+import com.github.dactiv.framework.commons.id.StringIdEntity;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
-import com.github.dactiv.framework.spring.security.audit.Auditable;
-import com.github.dactiv.framework.spring.security.audit.PluginAuditEventRepository;
-import com.github.dactiv.framework.spring.security.audit.StringIdEntity;
+import com.github.dactiv.framework.security.audit.Auditable;
+import com.github.dactiv.framework.security.audit.PluginAuditEventRepository;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
 import com.github.dactiv.framework.spring.security.entity.MobileUserDetails;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
-import com.github.dactiv.framework.spring.security.enumerate.ResourceType;
-import com.github.dactiv.framework.spring.security.plugin.Plugin;
+import com.github.dactiv.framework.security.enumerate.ResourceType;
+import com.github.dactiv.framework.security.plugin.Plugin;
 import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import org.redisson.api.RBucket;
 import org.springframework.boot.actuate.audit.AuditEvent;
@@ -130,7 +130,6 @@ public class SecurityController {
         StringIdEntity stringIdEntity = new StringIdEntity();
 
         stringIdEntity.setId(id);
-        stringIdEntity.setTimestamp(after.toInstant());
 
         return pluginAuditEventRepository.get(stringIdEntity);
     }

@@ -17,7 +17,7 @@ import com.github.dactiv.framework.commons.page.PageRequest;
 import com.github.dactiv.framework.idempotent.annotation.Concurrent;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
-import com.github.dactiv.framework.spring.security.audit.elasticsearch.index.support.DateIndexGenerator;
+import com.github.dactiv.framework.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
