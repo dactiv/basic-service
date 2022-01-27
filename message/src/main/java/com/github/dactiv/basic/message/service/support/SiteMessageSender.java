@@ -148,10 +148,7 @@ public class SiteMessageSender extends BatchMessageSender<SiteMessageBody, SiteM
 
         if (Objects.nonNull(entity.getBatchId())) {
             ConcurrentProperties properties = config.getBatchUpdateConcurrent().ofSuffix(entity.getBatchId());
-            concurrentInterceptor.invoke(properties, () -> {
-                updateBatchMessage(entity);
-                return null;
-            });
+            concurrentInterceptor.invoke(properties, () -> updateBatchMessage(entity));
         }
 
         return entity;
