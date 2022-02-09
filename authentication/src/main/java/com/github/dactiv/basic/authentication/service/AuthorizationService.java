@@ -19,6 +19,7 @@ import com.github.dactiv.framework.spring.security.entity.AnonymousUser;
 import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.security.enumerate.ResourceType;
 import lombok.Getter;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.MapUtils;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -235,8 +236,7 @@ public class AuthorizationService implements InitializingBean {
      * @param userDetails 当前的安全用户明细
      */
     public void setSystemUserAuthorities(SystemUserEntity user, SecurityUserDetails userDetails) {
-        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {
-        });
+        List<IdRoleAuthority> roleAuthorities = Casts.convertValue(user.getGroupsInfo(), new TypeReference<>() {});
         userDetails.getRoleAuthorities().addAll(roleAuthorities);
         // 构造用户的组资源
         List<ResourceMeta> userResource = getSystemUserResource(user);
@@ -264,6 +264,10 @@ public class AuthorizationService implements InitializingBean {
                 .stream()
                 .map(IdRoleAuthority::getId)
                 .collect(Collectors.toList());
+
+        if (CollectionUtils.isEmpty(groupIds)) {
+            return new ArrayList<>();
+        }
 
         List<GroupEntity> groups = groupService.get(groupIds);
 

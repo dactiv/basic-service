@@ -5,7 +5,11 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
+import com.github.dactiv.basic.commons.ErrorCodeConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
+import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
+import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
+import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
@@ -17,7 +21,10 @@ import org.springframework.transaction.annotation.Transactional;
 import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import java.util.stream.Stream;
+
+import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_ID;
 
 /**
  * tb_console_user 的业务逻辑
@@ -80,6 +87,45 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
                 .forEach(p -> authorizationService.expireSystemUserSession(p.getName()));
 
         return super.deleteById(ids, errorThrow);
+    }
+
+    @Override
+    @SocketMessage(WEB_FILTER_RESULT_ID)
+    public int save(ConsoleUserEntity entity) {
+        boolean isNew = Objects.isNull(entity.getId());
+
+        if (isNew) {
+
+            boolean usernameExist = lambdaQuery()
+                    .select(SystemUserEntity::getId)
+                    .eq(SystemUserEntity::getUsername, entity.getUsername())
+                    .exists();
+
+            if (usernameExist) {
+                throw new ErrorCodeException("登陆账户 [" + entity.getUsername() + "] 已存在", ErrorCodeConstants.CONTENT_EXIST);
+            }
+
+            boolean emailExist = lambdaQuery()
+                    .select(SystemUserEntity::getId)
+                    .eq(SystemUserEntity::getEmail, entity.getEmail())
+                    .exists();
+
+            if (emailExist) {
+                throw new ErrorCodeException("邮箱账户 [" + entity.getEmail() + "] 已存在", ErrorCodeConstants.CONTENT_EXIST);
+            }
+
+            PasswordEncoder passwordEncoder = authorizationService
+                    .getUserDetailsService(ResourceSourceEnum.CONSOLE)
+                    .getPasswordEncoder();
+
+            entity.setPassword(passwordEncoder.encode(entity.getPassword()));
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.CREATE_SOCKET_EVENT_NAME, entity);
+
+        } else {
+            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.UPDATE_SOCKET_EVENT_NAME, entity);
+        }
+
+        return super.save(entity);
     }
 
     /**

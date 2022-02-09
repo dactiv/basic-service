@@ -10,5 +10,10 @@ public interface ErrorCodeConstants {
     /**
      * 找不到内容代码
      */
-    String NOT_CONTENT_CODE = "100404";
+    String NOT_CONTENT = "100404";
+
+    /**
+     * 内容已存在
+     */
+    String CONTENT_EXIST = "100400";
 }

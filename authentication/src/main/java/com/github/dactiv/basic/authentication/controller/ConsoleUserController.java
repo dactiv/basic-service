@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
+import com.github.dactiv.basic.authentication.service.AuthorizationService;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
@@ -18,6 +19,7 @@ import com.github.dactiv.framework.security.plugin.Plugin;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
 import javax.servlet.http.HttpServletRequest;
@@ -46,11 +48,15 @@ public class ConsoleUserController {
 
     private final ConsoleUserService consoleUserService;
 
+    private final AuthorizationService authorizationService;
+
     private final MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator;
 
     public ConsoleUserController(ConsoleUserService consoleUserService,
+                                 AuthorizationService authorizationService,
                                  MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator) {
         this.consoleUserService = consoleUserService;
+        this.authorizationService = authorizationService;
         this.queryGenerator = queryGenerator;
     }
 
@@ -104,22 +110,12 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @SocketMessage(WEB_FILTER_RESULT_ID)
     @Plugin(name = "保存", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody ConsoleUserEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
-
-        boolean isNew = Objects.isNull(entity.getId());
-
         consoleUserService.save(entity);
-
-        if (isNew) {
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.CREATE_SOCKET_EVENT_NAME, entity);
-        } else {
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.UPDATE_SOCKET_EVENT_NAME, entity);
-        }
 
         return RestResult.ofSuccess("保存成功", entity.getId());
     }

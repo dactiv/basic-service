@@ -172,7 +172,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
         ErrorCodeException.isTrue(
                 Objects.nonNull(entity),
                 "该群聊不存在或者您已经不在此群聊内。",
-                ErrorCodeConstants.NOT_CONTENT_CODE
+                ErrorCodeConstants.NOT_CONTENT
         );
 
         boolean result = RoomParticipantRoleEnum.OWNER.equals(entity.getRole());
@@ -214,7 +214,7 @@ public class RoomService extends BasicService<RoomDao, RoomEntity> {
         ErrorCodeException.isTrue(
                 Objects.nonNull(entity),
                 "您不在此群聊内，无法修改名称。",
-                ErrorCodeConstants.NOT_CONTENT_CODE
+                ErrorCodeConstants.NOT_CONTENT
         );
 
         RoomEntity room = get(entity.getRoomId());
