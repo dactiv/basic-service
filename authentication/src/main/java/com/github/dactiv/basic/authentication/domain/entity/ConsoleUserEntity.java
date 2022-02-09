@@ -1,7 +1,12 @@
 package com.github.dactiv.basic.authentication.domain.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.github.dactiv.basic.authentication.domain.meta.ConsoleUserDepartmentMeta;
+import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
+import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
+import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
 import com.github.dactiv.framework.spring.web.result.filter.annotation.view.IncludeView;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -10,6 +15,9 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+
+import java.util.LinkedList;
+import java.util.List;
 
 import static com.github.dactiv.basic.commons.SystemConstants.CHAT_FILTER_RESULT_ID;
 
@@ -48,6 +56,13 @@ public class ConsoleUserEntity extends SystemUserEntity {
     @NotEmpty
     @Length(max = 16)
     private String realName;
+
+    /**
+     * 所属部门集合
+     */
+    @JsonCollectionGenericType(IdRoleAuthority.class)
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private List<ConsoleUserDepartmentMeta> departmentInfo = new LinkedList<>();
 
     /**
      * 备注

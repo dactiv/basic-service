@@ -48,15 +48,11 @@ public class ConsoleUserController {
 
     private final ConsoleUserService consoleUserService;
 
-    private final AuthorizationService authorizationService;
-
     private final MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator;
 
     public ConsoleUserController(ConsoleUserService consoleUserService,
-                                 AuthorizationService authorizationService,
                                  MybatisPlusQueryGenerator<ConsoleUserEntity> queryGenerator) {
         this.consoleUserService = consoleUserService;
-        this.authorizationService = authorizationService;
         this.queryGenerator = queryGenerator;
     }
 

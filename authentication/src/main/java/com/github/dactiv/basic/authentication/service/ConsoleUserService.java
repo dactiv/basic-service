@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.github.dactiv.basic.authentication.dao.ConsoleUserDao;
 import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
+import com.github.dactiv.basic.authentication.domain.entity.DepartmentEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.commons.ErrorCodeConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
@@ -11,8 +12,10 @@ import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
 import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
+import com.github.dactiv.framework.commons.id.IdEntity;
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import com.github.dactiv.framework.spring.security.authentication.token.PrincipalAuthenticationToken;
+import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
@@ -22,6 +25,7 @@ import java.io.Serializable;
 import java.util.Collection;
 import java.util.List;
 import java.util.Objects;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_ID;
@@ -41,8 +45,11 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
 
     private final AuthorizationService authorizationService;
 
-    public ConsoleUserService(AuthorizationService authorizationService) {
+    private final DepartmentService departmentService;
+
+    public ConsoleUserService(AuthorizationService authorizationService, DepartmentService departmentService) {
         this.authorizationService = authorizationService;
+        this.departmentService = departmentService;
     }
 
     /**
@@ -119,9 +126,52 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
                     .getPasswordEncoder();
 
             entity.setPassword(passwordEncoder.encode(entity.getPassword()));
+
+            if (CollectionUtils.isNotEmpty(entity.getDepartmentInfo())) {
+                List<Integer> ids = entity
+                        .getDepartmentInfo()
+                        .stream().map(IdEntity::getId)
+                        .collect(Collectors.toList());
+
+                List<DepartmentEntity> departmentEntities = departmentService.get(ids);
+                if (CollectionUtils.isNotEmpty(departmentEntities)) {
+                    departmentEntities.stream()
+                            .peek(d -> d.setCount(d.getCount() + 1))
+                            .forEach(departmentService::updateById);
+                }
+            }
+
             SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.CREATE_SOCKET_EVENT_NAME, entity);
 
         } else {
+
+            ConsoleUserEntity orm = lambdaQuery()
+                    .select(ConsoleUserEntity::getDepartmentInfo)
+                    .eq(SystemUserEntity::getId, entity.getId())
+                    .one();
+
+            if (Objects.nonNull(orm) && CollectionUtils.isNotEmpty(orm.getDepartmentInfo())) {
+                List<Integer> ids = entity
+                        .getDepartmentInfo()
+                        .stream().map(IdEntity::getId)
+                        .collect(Collectors.toList());
+
+                List<Integer> notExistIds = orm.getDepartmentInfo()
+                        .stream()
+                        .map(IdEntity::getId)
+                        .filter(s -> !ids.contains(s))
+                        .collect(Collectors.toList());
+
+                if (CollectionUtils.isNotEmpty(notExistIds)) {
+                    List<DepartmentEntity> departmentEntities = departmentService.get(notExistIds);
+                    if (CollectionUtils.isNotEmpty(departmentEntities)) {
+                        departmentEntities.stream()
+                                .peek(d -> d.setCount(d.getCount() - 1))
+                                .forEach(departmentService::updateById);
+                    }
+                }
+            }
+
             SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.UPDATE_SOCKET_EVENT_NAME, entity);
         }
 
