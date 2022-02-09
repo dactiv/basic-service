@@ -24,6 +24,7 @@ import org.apache.commons.collections.CollectionUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Component;
+import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.client.RestTemplate;
@@ -363,6 +364,7 @@ public class PluginResourceService {
     /**
      * 重新订阅所有服务
      */
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
     @Concurrent(value = "subscribe_or_unsubscribe:plugin", exception = "正在执行，请稍后在试。。", waitTime = @Time(0L))
     public void resubscribeAllService() {
         nacosSpringEventManager.expiredAllListener();

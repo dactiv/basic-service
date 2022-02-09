@@ -222,11 +222,15 @@ public class AuthorizationService implements InitializingBean {
                                                     List<ResourceSourceEnum> sourceContains) {
         List<ResourceMeta> userResource = getSystemUserResource(user);
 
-        return userResource
+        Stream<ResourceMeta> stream = userResource
                 .stream()
-                .filter(r -> r.getType().equals(type))
-                .filter(r -> r.getSources().stream().anyMatch(sourceContains::contains))
-                .collect(Collectors.toList());
+                .filter(r -> r.getSources().stream().anyMatch(sourceContains::contains));
+
+        if (Objects.nonNull(type)) {
+            stream = stream.filter(r -> r.getType().equals(type));
+        }
+
+        return stream.collect(Collectors.toList());
     }
 
     /**

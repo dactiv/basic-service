@@ -15,6 +15,7 @@ import com.github.dactiv.framework.spring.security.entity.SecurityUserDetails;
 import com.github.dactiv.framework.security.enumerate.ResourceType;
 import com.github.dactiv.framework.security.plugin.Plugin;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.annotation.CurrentSecurityContext;
 import org.springframework.security.core.context.SecurityContext;
@@ -125,7 +126,10 @@ public class ResourceController {
         );
 
         ConsoleUserEntity consoleUser = consoleUserService.get(Casts.cast(userDetails.getId(), Integer.class));
-        ResourceType resourceType = NameEnumUtils.parse(type, ResourceType.class);
+        ResourceType resourceType = null;
+        if (StringUtils.isNotBlank(type)) {
+            resourceType = NameEnumUtils.parse(type, ResourceType.class);
+        }
         List<ResourceMeta> resourceList = authorizationService.getSystemUserResource(
                 consoleUser,
                 resourceType,
