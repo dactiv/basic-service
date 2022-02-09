@@ -30,7 +30,6 @@ import java.util.Date;
 @Alias("memberUser")
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_member_user", autoResultMap = true)
-@JsonIgnoreProperties(SystemUserEntity.PASSWORD_FIELD_NAME)
 public class MemberUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 2708129983369081033L;

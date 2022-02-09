@@ -26,7 +26,6 @@ import static com.github.dactiv.basic.commons.SystemConstants.CHAT_FILTER_RESULT
 @EqualsAndHashCode(callSuper = true)
 @TableName(value = "tb_console_user", autoResultMap = true)
 @IncludeView(value = CHAT_FILTER_RESULT_ID, properties = {"id", "username", "realName"})
-@JsonIgnoreProperties(SystemUserEntity.PASSWORD_FIELD_NAME)
 public class ConsoleUserEntity extends SystemUserEntity {
 
     private static final long serialVersionUID = 542256170672538050L;
