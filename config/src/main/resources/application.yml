@@ -45,5 +45,5 @@ dactiv:
   enumerate:
     base-packages:
       - com.github.dactiv.framework.commons.enumerate
-      - com.github.dactiv.framework.spring.security.enumerate
+      - com.github.dactiv.framework.security.enumerate
       - com.github.dactiv.basic.commons.enumeration
