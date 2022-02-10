@@ -58,6 +58,13 @@ public class ConsoleUserEntity extends SystemUserEntity {
     private String realName;
 
     /**
+     * 联系电话
+     */
+    @NotEmpty
+    @Length(max = 32)
+    private String phoneNumber;
+
+    /**
      * 所属部门集合
      */
     @JsonCollectionGenericType(IdRoleAuthority.class)

@@ -1,10 +1,7 @@
 package com.github.dactiv.basic.authentication.domain.meta;
 
 import com.github.dactiv.framework.commons.id.number.IntegerIdEntity;
-import lombok.Data;
-import lombok.EqualsAndHashCode;
-import lombok.NoArgsConstructor;
-import lombok.RequiredArgsConstructor;
+import lombok.*;
 
 
 /**
@@ -23,5 +20,6 @@ public class ConsoleUserDepartmentMeta extends IntegerIdEntity {
     /**
      * 主键 id
      */
+    @NonNull
     private String name;
 }

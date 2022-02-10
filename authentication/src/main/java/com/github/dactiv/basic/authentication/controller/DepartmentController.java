@@ -6,6 +6,7 @@ import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
 import com.github.dactiv.framework.commons.page.PageRequest;
+import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.mybatis.plus.MybatisPlusQueryGenerator;
 import com.github.dactiv.framework.security.enumerate.ResourceType;
 import com.github.dactiv.framework.security.plugin.Plugin;
@@ -59,8 +60,14 @@ public class DepartmentController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[department:find]')")
     @Plugin(name = "获取全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public List<DepartmentEntity> find(HttpServletRequest request) {
-        return departmentService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
+    public List<DepartmentEntity> find(HttpServletRequest request,@RequestParam(required = false) boolean mergeTree) {
+        List<DepartmentEntity> result = departmentService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
+
+        if (mergeTree) {
+            return TreeUtils.buildGenericTree(result);
+        } else {
+            return result;
+        }
     }
 
     /**
@@ -92,10 +99,10 @@ public class DepartmentController {
      *
      * @see DepartmentEntity
      */
-    @GetMapping("get/{id}")
+    @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[department:get]')")
     @Plugin(name = "获取实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public DepartmentEntity get(@PathVariable("id") Integer id) {
+    public DepartmentEntity get(@RequestParam Integer id) {
         return departmentService.get(id);
     }
 
@@ -109,7 +116,7 @@ public class DepartmentController {
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[department:save]')")
     @Plugin(name = "保存实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
-    public RestResult<Integer> save(@Valid DepartmentEntity entity) {
+    public RestResult<Integer> save(@Valid @RequestBody DepartmentEntity entity) {
         departmentService.save(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
     }

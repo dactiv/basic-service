@@ -173,9 +173,7 @@ public class ResourceController {
     @Plugin(name = "同步插件资源", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[resource:sync_plugin_resource]') and isFullyAuthenticated()")
     public RestResult<?> syncPluginResource() {
-
         authorizationService.getPluginResourceService().resubscribeAllService();
-
         return RestResult.of("同步数据完成");
     }
 }
