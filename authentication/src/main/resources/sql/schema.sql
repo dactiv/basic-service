@@ -24,22 +24,37 @@ CREATE TABLE `tb_authentication_info`
 DROP TABLE IF EXISTS `tb_console_user`;
 CREATE TABLE `tb_console_user`
 (
-    `id`            int(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
-    `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
-    `email`         varchar(64)  DEFAULT NULL COMMENT '邮箱',
-    `password`      char(64)    NOT NULL COMMENT '密码',
-    `status`        tinyint(4) NOT NULL COMMENT '状态:1.启用、2.禁用、3.锁定',
-    `username`      varchar(32) NOT NULL COMMENT '登录帐号',
-    `gender`        tinyint     NOT NULL COMMENT '性别:10.男,20.女',
-    `real_name`     varchar(16) NOT NULL COMMENT '真实姓名',
-    `groups_info`   json         DEFAULT NULL COMMENT '组信息',
-    `resource_map`  json         DEFAULT NULL COMMENT '资源信息',
-    `remark`        varchar(128) DEFAULT NULL COMMENT '备注',
+    `id`                int(20) NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `creation_time`     datetime(3) NOT NULL COMMENT '创建时间',
+    `email`             varchar(64)  DEFAULT NULL COMMENT '邮箱',
+    `password`          char(64)    NOT NULL COMMENT '密码',
+    `status`            tinyint(4) NOT NULL COMMENT '状态:1.启用、2.禁用、3.锁定',
+    `username`          varchar(32) NOT NULL COMMENT '登录帐号',
+    `gender`            tinyint     NOT NULL COMMENT '性别:10.男,20.女',
+    `real_name`         varchar(16) NOT NULL COMMENT '真实姓名',
+    `phone_number`      varchar(64) DEFAULT NULL COMMENT '电话号码',
+    `departments_info`  json DEFAULT NULL COMMENT '部门信息',
+    `groups_info`       json DEFAULT NULL COMMENT '组信息',
+    `resource_map`      json DEFAULT NULL COMMENT '资源信息',
+    `remark`            varchar(256) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `ux_username` (`username`) USING BTREE,
     UNIQUE KEY `ux_email` (`email`) USING BTREE
 ) ENGINE=InnoDB COMMENT='后台用户表';
 
+-- ----------------------------
+-- Table structure for tb_department
+-- ----------------------------
+DROP TABLE IF EXISTS `tb_department`;
+CREATE TABLE `tb_department` (
+    `id`            int NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `creation_time` datetime(3) NOT NULL COMMENT '创建时间',
+    `name`          varchar(64) NOT NULL COMMENT '名称',
+    `parent_id`     int DEFAULT NULL COMMENT '父类 ID',
+    `count`         int NOT NULL COMMENT '人员总数',
+    `remark`        varchar(256) COLLATE utf8mb4_bin DEFAULT NULL COMMENT '备注',
+    PRIMARY KEY (`id`)
+) ENGINE=InnoDB COMMENT='部门表';
 
 -- ----------------------------
 -- Table structure for tb_group
@@ -57,7 +72,7 @@ CREATE TABLE `tb_group`
     `modifiable`    tinyint(4) NOT NULL COMMENT '是否可修改:0.否、1.是',
     `status`        tinyint(4) NOT NULL DEFAULT '1' COMMENT '状态:0.禁用、1.启用',
     `resource_map`  json         DEFAULT NULL COMMENT '资源信息',
-    `remark`        varchar(128) DEFAULT NULL COMMENT '备注',
+    `remark`        varchar(256) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `ux_name` (`name`) USING BTREE,
     UNIQUE KEY `ux_authority` (`authority`)

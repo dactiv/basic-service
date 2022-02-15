@@ -15,7 +15,7 @@ CREATE TABLE `tb_access_crypto`
     `request_decrypt`  tinyint(4) NOT NULL COMMENT '是否请求解密，0.否, 1.是',
     `response_encrypt` tinyint(4) NOT NULL COMMENT '是否响应加密，0.否, 1.是',
     `enabled`          tinyint(4) NOT NULL COMMENT '是否启用，1.是，0.否',
-    `remark`           varchar(128) DEFAULT NULL COMMENT '备注',
+    `remark`           varchar(256) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`) USING BTREE,
     KEY                `ix_value` (`value`) USING BTREE
 ) ENGINE=InnoDB COMMENT='访问加解密表';
@@ -30,7 +30,7 @@ CREATE TABLE `tb_access_crypto_predicate`
     `creation_time`    datetime(3) NOT NULL COMMENT '创建时间',
     `name`             varchar(32)  NOT NULL COMMENT '名称',
     `value`            varchar(256) NOT NULL COMMENT '值',
-    `remark`           varchar(128) DEFAULT NULL COMMENT '备注',
+    `remark`           varchar(256) DEFAULT NULL COMMENT '备注',
     `access_crypto_id` int(20) NOT NULL COMMENT '访问加解密 id',
     PRIMARY KEY (`id`) USING BTREE,
     KEY                `ix_access_crypto_id` (`access_crypto_id`) USING BTREE
@@ -70,7 +70,7 @@ CREATE TABLE `tb_dictionary_type`
     `code`          varchar(128) NOT NULL COMMENT '键名称',
     `name`          varchar(64)  NOT NULL COMMENT '类型名称',
     `parent_id`     int(20) DEFAULT NULL COMMENT '父字典类型,根节点为 null',
-    `remark`        varchar(128) DEFAULT NULL COMMENT '备注',
+    `remark`        varchar(256) DEFAULT NULL COMMENT '备注',
     PRIMARY KEY (`id`) USING BTREE,
     UNIQUE KEY `uk_type` (`code`) USING BTREE
 ) ENGINE=InnoDB COMMENT='数据字典类型表';
