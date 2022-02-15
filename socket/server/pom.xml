@@ -136,7 +136,7 @@
                         <ports>
                             <port>${server.port}</port>
                         </ports>
-                        <useCurrentTimestamp>true</useCurrentTimestamp>
+                        <creationTime>USE_CURRENT_TIMESTAMP</creationTime>
                         <args>
                             <arg>--spring.cloud.nacos.discovery.server-addr=${SPRING_CLOUD_DISCOVERY_ADDRESS}</arg>
                         </args>
