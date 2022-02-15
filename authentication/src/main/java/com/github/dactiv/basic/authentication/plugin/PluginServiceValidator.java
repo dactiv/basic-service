@@ -71,7 +71,7 @@ public class PluginServiceValidator implements NacosServiceListenerValidator {
             }
 
         } catch (Exception e) {
-            log.warn("获取服务 [" + nacosService.getName() + "] 的插件内容失败");
+            log.warn("获取服务 [" + nacosService.getName() + "] 的插件内容失败", e);
 
             if (HttpStatusCodeException.class.isAssignableFrom(e.getClass())) {
                 HttpStatusCodeException exception = Casts.cast(e);
