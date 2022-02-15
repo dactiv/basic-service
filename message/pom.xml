@@ -120,6 +120,10 @@
                         <image>${project.name}:${project.parent.version}</image>
                     </to>
                     <container>
+                        <ports>
+                            <port>${server.port}</port>
+                        </ports>
+                        <useCurrentTimestamp>true</useCurrentTimestamp>
                         <args>
                             <arg>--spring.cloud.nacos.discovery.server-addr=${SPRING_CLOUD_DISCOVERY_ADDRESS}</arg>
                         </args>
