@@ -4,7 +4,6 @@ import com.github.dactiv.basic.gateway.AccessCryptoResolver;
 import com.github.dactiv.framework.commons.exception.SystemException;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
 import org.reactivestreams.Publisher;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.cloud.gateway.filter.GlobalFilter;
 import org.springframework.cloud.gateway.filter.NettyWriteResponseFilter;

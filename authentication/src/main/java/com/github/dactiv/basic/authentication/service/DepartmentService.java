@@ -2,7 +2,6 @@ package com.github.dactiv.basic.authentication.service;
 
 import com.github.dactiv.basic.authentication.dao.DepartmentDao;
 import com.github.dactiv.basic.authentication.domain.entity.DepartmentEntity;
-
 import com.github.dactiv.framework.mybatis.plus.service.BasicService;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;

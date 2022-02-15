@@ -126,9 +126,9 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
 
             entity.setPassword(passwordEncoder.encode(entity.getPassword()));
 
-            if (CollectionUtils.isNotEmpty(entity.getDepartmentInfo())) {
+            if (CollectionUtils.isNotEmpty(entity.getDepartmentsInfo())) {
                 List<Integer> ids = entity
-                        .getDepartmentInfo()
+                        .getDepartmentsInfo()
                         .stream().map(IdEntity::getId)
                         .collect(Collectors.toList());
 
@@ -146,13 +146,13 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
 
             ConsoleUserEntity orm = get(entity.getId());
 
-            if (Objects.nonNull(orm) && CollectionUtils.isNotEmpty(orm.getDepartmentInfo())) {
+            if (Objects.nonNull(orm) && CollectionUtils.isNotEmpty(orm.getDepartmentsInfo())) {
                 List<Integer> ids = entity
-                        .getDepartmentInfo()
+                        .getDepartmentsInfo()
                         .stream().map(IdEntity::getId)
                         .collect(Collectors.toList());
 
-                List<Integer> notExistIds = orm.getDepartmentInfo()
+                List<Integer> notExistIds = orm.getDepartmentsInfo()
                         .stream()
                         .map(IdEntity::getId)
                         .filter(s -> !ids.contains(s))

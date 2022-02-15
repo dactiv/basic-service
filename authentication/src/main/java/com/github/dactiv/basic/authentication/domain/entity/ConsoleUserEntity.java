@@ -2,6 +2,7 @@ package com.github.dactiv.basic.authentication.domain.entity;
 
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
+import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.basic.commons.id.IdName;
 import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.mybatis.handler.JacksonJsonTypeHandler;
@@ -13,6 +14,7 @@ import org.apache.ibatis.type.Alias;
 import org.hibernate.validator.constraints.Length;
 
 import javax.validation.constraints.NotEmpty;
+import javax.validation.constraints.Pattern;
 import java.util.LinkedList;
 import java.util.List;
 
@@ -59,6 +61,7 @@ public class ConsoleUserEntity extends SystemUserEntity {
      */
     @NotEmpty
     @Length(max = 32)
+    @Pattern(regexp = MemberUserDetailsService.IS_MOBILE_PATTERN_STRING)
     private String phoneNumber;
 
     /**
@@ -66,7 +69,7 @@ public class ConsoleUserEntity extends SystemUserEntity {
      */
     @JsonCollectionGenericType(IdName.class)
     @TableField(typeHandler = JacksonJsonTypeHandler.class)
-    private List<IdName> departmentInfo = new LinkedList<>();
+    private List<IdName> departmentsInfo = new LinkedList<>();
 
     /**
      * 备注
