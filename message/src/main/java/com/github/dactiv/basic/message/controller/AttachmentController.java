@@ -120,7 +120,8 @@ public class AttachmentController {
     @GetMapping("get/{type}/{filename}")
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[attachment:get]')")
     @Plugin(name = "获取文件", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE, audit = true)
-    public ResponseEntity<byte[]> get(@PathVariable("type") String type, @PathVariable("filename") String filename) throws Exception {
+    public ResponseEntity<byte[]> get(@PathVariable("type") String type,
+                                      @PathVariable("filename") String filename) throws Exception {
         FileObject fileObject = FileObject.of(
                 attachmentConfig.getBucketName(type),
                 filename
