@@ -1,6 +1,6 @@
 package com.github.dactiv.basic.authentication.config;
 
-import com.github.dactiv.basic.authentication.enumerate.GenderEnum;
+import com.github.dactiv.basic.commons.enumeration.GenderEnum;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.CacheProperties;
 import com.github.dactiv.framework.commons.TimeProperties;

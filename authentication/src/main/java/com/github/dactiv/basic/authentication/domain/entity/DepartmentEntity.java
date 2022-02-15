@@ -1,19 +1,22 @@
 package com.github.dactiv.basic.authentication.domain.entity;
 
-import java.io.Serializable;
+import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
+import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.TableName;
+import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.framework.commons.Casts;
+import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
+import com.github.dactiv.framework.commons.tree.Tree;
+import lombok.Data;
+import lombok.EqualsAndHashCode;
+import lombok.NoArgsConstructor;
+import org.apache.ibatis.type.Alias;
+
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Objects;
-
-import com.github.dactiv.framework.commons.Casts;
-import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
-import com.github.dactiv.framework.commons.tree.Tree;
-import lombok.*;
-
-import org.apache.ibatis.type.Alias;
-import com.baomidou.mybatisplus.annotation.*;
-import com.fasterxml.jackson.annotation.JsonIgnore;
 
 
 /**

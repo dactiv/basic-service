@@ -1,6 +1,7 @@
 package com.github.dactiv.basic.authentication.controller;
 
 import com.github.dactiv.basic.authentication.domain.entity.DepartmentEntity;
+import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.service.DepartmentService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.RestResult;
@@ -35,7 +36,7 @@ import java.util.List;
 @Plugin(
     name = "部门管理",
     id = "department",
-    parent = "system",
+    parent = "organization",
     icon = "icon-department",
     type = ResourceType.Menu,
     sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
@@ -60,7 +61,8 @@ public class DepartmentController {
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[department:find]')")
     @Plugin(name = "获取全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public List<DepartmentEntity> find(HttpServletRequest request,@RequestParam(required = false) boolean mergeTree) {
+    public List<DepartmentEntity> find(HttpServletRequest request,
+                                       @RequestParam(required = false) boolean mergeTree) {
         List<DepartmentEntity> result = departmentService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
 
         if (mergeTree) {
@@ -134,6 +136,24 @@ public class DepartmentController {
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         departmentService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
+    }
+
+    /**
+     * 判断邮件是否唯一
+     *
+     * @param name 电子邮件
+     *
+     * @return true 是，否则 false
+     */
+    @GetMapping("isNameUnique")
+    @PreAuthorize("isAuthenticated()")
+    @Plugin(name = "判断邮件是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    public boolean isEmailUnique(@RequestParam String name) {
+        return !departmentService
+                .lambdaQuery()
+                .select(DepartmentEntity::getId)
+                .eq(DepartmentEntity::getName, name)
+                .exists();
     }
 
 }

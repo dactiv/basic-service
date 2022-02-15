@@ -35,6 +35,14 @@ dactiv:
           name: "系统管理"
           icon: "icon-setting"
           sources: "CONSOLE"
+        authority:
+          name: "权限管理"
+          icon: "icon-authority"
+          sources: "CONSOLE"
+        organization:
+          name: "机构管理"
+          icon: "icon-organization"
+          sources: "CONSOLE"
     permit-uri-ant-matchers:
       - "/prepare/**"
       - "/login/**"

@@ -277,17 +277,19 @@ public class DictionaryService {
 
         List<Integer> subIds = dictionaryTypeService.findObjects(wrapper, Integer.class);
 
-        List<Integer> dataDictionaryIds = dataDictionaryService.findIdByTypeId(subIds);
+        if (CollectionUtils.isNotEmpty(subIds)) {
+            List<Integer> dataDictionaryIds = dataDictionaryService.findIdByTypeId(subIds);
 
-        if (CollectionUtils.isNotEmpty(dataDictionaryIds)) {
-            dataDictionaryService.deleteById(dataDictionaryIds);
+            if (CollectionUtils.isNotEmpty(dataDictionaryIds)) {
+                dataDictionaryService.deleteById(dataDictionaryIds);
+            }
         }
 
         if (CollectionUtils.isNotEmpty(subIds)) {
             deleteDictionaryType(subIds);
         }
 
-        dataDictionaryService.deleteById(ids);
+        dictionaryTypeService.deleteById(ids);
     }
 
 }

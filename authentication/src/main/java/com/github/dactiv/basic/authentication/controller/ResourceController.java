@@ -34,7 +34,7 @@ import java.util.stream.Collectors;
 @Plugin(
         name = "资源管理",
         id = "resource",
-        parent = "system",
+        parent = "authority",
         icon = "icon-attachment",
         type = ResourceType.Menu,
         sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE

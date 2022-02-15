@@ -39,7 +39,7 @@ import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_
 @Plugin(
         name = "系统用户管理",
         id = "console_user",
-        parent = "system",
+        parent = "organization",
         icon = "icon-system-user",
         type = ResourceType.Menu,
         sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE

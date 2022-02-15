@@ -75,7 +75,6 @@ public class DataDictionaryEntity implements Tree<Integer, DataDictionaryEntity>
      * 是否启用:0.禁用,1.启用
      */
     @NotNull
-    @Range(min = 0, max = 1)
     private DisabledOrEnabled enabled;
 
     /**

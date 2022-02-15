@@ -102,7 +102,6 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
         boolean isNew = Objects.isNull(entity.getId());
 
         if (isNew) {
-
             boolean usernameExist = lambdaQuery()
                     .select(SystemUserEntity::getId)
                     .eq(SystemUserEntity::getUsername, entity.getUsername())
@@ -145,10 +144,7 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
 
         } else {
 
-            ConsoleUserEntity orm = lambdaQuery()
-                    .select(ConsoleUserEntity::getDepartmentInfo)
-                    .eq(SystemUserEntity::getId, entity.getId())
-                    .one();
+            ConsoleUserEntity orm = get(entity.getId());
 
             if (Objects.nonNull(orm) && CollectionUtils.isNotEmpty(orm.getDepartmentInfo())) {
                 List<Integer> ids = entity

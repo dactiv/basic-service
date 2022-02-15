@@ -1,4 +1,4 @@
-package com.github.dactiv.basic.authentication.enumerate;
+package com.github.dactiv.basic.commons.enumeration;
 
 import com.github.dactiv.framework.commons.enumerate.NameValueEnum;
 import lombok.AccessLevel;
@@ -8,7 +8,7 @@ import lombok.Getter;
 /**
  * 性别枚举
  *
- * @author chenxiaobo
+ * @author maurice.chen
  */
 @Getter
 @AllArgsConstructor(access = AccessLevel.PRIVATE)

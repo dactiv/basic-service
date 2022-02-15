@@ -33,7 +33,7 @@ import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_
 @Plugin(
         name = "组管理",
         id = "group",
-        parent = "system",
+        parent = "authority",
         icon = "icon-group",
         type = ResourceType.Menu,
         sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE

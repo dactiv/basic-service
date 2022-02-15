@@ -3,7 +3,7 @@ package com.github.dactiv.basic.authentication.domain.entity;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.github.dactiv.basic.authentication.enumerate.GenderEnum;
+import com.github.dactiv.basic.commons.enumeration.GenderEnum;
 import com.github.dactiv.basic.commons.authentication.IdRoleAuthority;
 import com.github.dactiv.framework.commons.annotation.JsonCollectionGenericType;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
