@@ -3,10 +3,8 @@ package com.github.dactiv.basic.authentication.security.handler;
 import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
 import com.github.dactiv.basic.authentication.domain.entity.MemberUserEntity;
 import com.github.dactiv.basic.authentication.domain.meta.IpRegionMeta;
-import com.github.dactiv.basic.authentication.receiver.ValidAuthenticationInfoReceiver;
 import com.github.dactiv.basic.authentication.security.MemberUserDetailsService;
 import com.github.dactiv.basic.authentication.security.MobileUserDetailsService;
-import com.github.dactiv.basic.commons.SystemConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
@@ -17,7 +15,6 @@ import com.github.dactiv.framework.spring.web.device.DeviceUtils;
 import com.github.dactiv.framework.spring.web.mvc.SpringMvcUtils;
 import nl.basjes.parse.useragent.UserAgent;
 import org.apache.commons.lang3.StringUtils;
-import org.springframework.amqp.core.AmqpTemplate;
 import org.springframework.stereotype.Component;
 
 import javax.servlet.http.HttpServletRequest;
@@ -36,14 +33,14 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
 
     private final CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler;
 
-    private final AmqpTemplate amqpTemplate;
+    /*private final AmqpTemplate amqpTemplate;*/
 
     public CaptchaAuthenticationSuccessResponse(MobileUserDetailsService mobileAuthenticationService,
-                                                CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler,
-                                                AmqpTemplate amqpTemplate) {
+                                                CaptchaAuthenticationFailureResponse jsonAuthenticationFailureHandler/*,
+                                                AmqpTemplate amqpTemplate*/) {
         this.mobileAuthenticationService = mobileAuthenticationService;
         this.jsonAuthenticationFailureHandler = jsonAuthenticationFailureHandler;
-        this.amqpTemplate = amqpTemplate;
+        /*this.amqpTemplate = amqpTemplate;*/
     }
 
     @Override
@@ -95,11 +92,11 @@ public class CaptchaAuthenticationSuccessResponse implements JsonAuthenticationS
         info.setIpRegion(IpRegionMeta.of(ip));
         info.setRetryCount(0);
 
-        amqpTemplate.convertAndSend(
+        /*amqpTemplate.convertAndSend(
                 SystemConstants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE,
                 ValidAuthenticationInfoReceiver.DEFAULT_QUEUE_NAME,
                 info
-        );
+        );*/
     }
 
     private Map<String, Object> createUserDetailsData(String identified,

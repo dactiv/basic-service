@@ -1,26 +1,12 @@
 package com.github.dactiv.basic.authentication.receiver;
 
 import com.github.dactiv.basic.authentication.config.ApplicationConfig;
-import com.github.dactiv.basic.authentication.domain.entity.AuthenticationInfoEntity;
-import com.github.dactiv.basic.authentication.domain.meta.IpRegionMeta;
 import com.github.dactiv.basic.authentication.security.ip.IpResolver;
 import com.github.dactiv.basic.authentication.service.AuthenticationInfoService;
-import com.github.dactiv.basic.commons.SystemConstants;
-import com.rabbitmq.client.Channel;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.amqp.rabbit.annotation.Exchange;
-import org.springframework.amqp.rabbit.annotation.Queue;
-import org.springframework.amqp.rabbit.annotation.QueueBinding;
-import org.springframework.amqp.rabbit.annotation.RabbitListener;
-import org.springframework.amqp.support.AmqpHeaders;
 import org.springframework.beans.factory.ObjectProvider;
-import org.springframework.messaging.handler.annotation.Header;
-import org.springframework.messaging.handler.annotation.Payload;
-import org.springframework.stereotype.Component;
 
-import java.io.IOException;
 import java.util.List;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
 /**
@@ -29,7 +15,7 @@ import java.util.stream.Collectors;
  * @author maurice.chen
  */
 @Slf4j
-@Component
+/*@Component*/
 public class ValidAuthenticationInfoReceiver {
 
     public static final String DEFAULT_QUEUE_NAME = "authentication.valid.info";
@@ -48,7 +34,7 @@ public class ValidAuthenticationInfoReceiver {
         this.config = config;
     }
 
-    @RabbitListener(
+    /*@RabbitListener(
             bindings = @QueueBinding(
                     value = @Queue(value = DEFAULT_QUEUE_NAME, durable = "true"),
                     exchange = @Exchange(value = SystemConstants.SYS_AUTHENTICATION_RABBITMQ_EXCHANGE),
@@ -81,5 +67,5 @@ public class ValidAuthenticationInfoReceiver {
 
         channel.basicAck(tag, false);
 
-    }
+    }*/
 }

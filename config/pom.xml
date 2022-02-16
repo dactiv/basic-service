@@ -18,7 +18,7 @@
 
     <properties>
         <server.port>8083</server.port>
-        <spring.cloud.discovery.address>120.77.242.122:8848</spring.cloud.discovery.address>
+        <spring.cloud.discovery.address>localhost:8848</spring.cloud.discovery.address>
     </properties>
 
     <dependencies>
