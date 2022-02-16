@@ -43,11 +43,21 @@
 
     <repositories>
         <repository>
-            <id>sonatype</id>
-            <name>Nexus Release Repository</name>
-            <url>https://oss.sonatype.org/repository/maven-public/</url>
+            <id>nexus-aliyun</id>
+            <name>Nexus public Repository</name>
+            <url>http://maven.aliyun.com/nexus/content/groups/public</url>
             <snapshots>
                 <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
+            </snapshots>
+        </repository>
+        <repository>
+            <id>nexus-sonatype</id>
+            <name>Nexus public Repository</name>
+            <url>https://oss.sonatype.org/content/groups/public</url>
+            <snapshots>
+                <enabled>true</enabled>
+                <updatePolicy>always</updatePolicy>
             </snapshots>
         </repository>
     </repositories>
