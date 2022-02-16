@@ -23,7 +23,7 @@ dactiv:
     ignore-classes: org.springframework.security.core.context.SecurityContext
   authentication:
     audit:
-      type: elasticsearch
+      type: memory
     plugin:
       base-packages: com.github.dactiv.basic.authentication.controller
       generate-sources:

@@ -18,7 +18,7 @@
 
     <properties>
         <server.port>8081</server.port>
-        <spring.cloud.discovery.address>localhost:8848</spring.cloud.discovery.address>
+        <spring.cloud.discovery.address>120.77.242.122:8848</spring.cloud.discovery.address>
     </properties>
 
     <dependencies>
@@ -78,10 +78,10 @@
             <artifactId>logstash-logback-encoder</artifactId>
         </dependency>
 
-        <dependency>
+        <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>com.github.dactiv.basic.socket</groupId>
