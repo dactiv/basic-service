@@ -81,12 +81,12 @@
         <!--<dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-elasticsearch</artifactId>
-        </dependency>-->
+        </dependency>
 
         <dependency>
             <groupId>com.github.dactiv.basic.socket</groupId>
             <artifactId>client</artifactId>
-        </dependency>
+        </dependency>-->
 
         <dependency>
             <groupId>org.projectlombok</groupId>

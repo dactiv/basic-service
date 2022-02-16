@@ -8,8 +8,6 @@ import com.github.dactiv.basic.authentication.domain.entity.DepartmentEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.commons.ErrorCodeConstants;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
-import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
-import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.exception.ErrorCodeException;
 import com.github.dactiv.framework.commons.exception.ServiceException;
 import com.github.dactiv.framework.commons.id.IdEntity;
@@ -97,7 +95,6 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
     }
 
     @Override
-    @SocketMessage(WEB_FILTER_RESULT_ID)
     public int save(ConsoleUserEntity entity) {
         boolean isNew = Objects.isNull(entity.getId());
 
@@ -140,8 +137,6 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
                 }
             }
 
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.CREATE_SOCKET_EVENT_NAME, entity);
-
         } else {
 
             ConsoleUserEntity orm = get(entity.getId());
@@ -167,8 +162,6 @@ public class ConsoleUserService extends BasicService<ConsoleUserDao, ConsoleUser
                     }
                 }
             }
-
-            SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.UPDATE_SOCKET_EVENT_NAME, entity);
         }
 
         return super.save(entity);

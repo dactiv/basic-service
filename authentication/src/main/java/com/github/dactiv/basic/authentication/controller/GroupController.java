@@ -3,8 +3,6 @@ package com.github.dactiv.basic.authentication.controller;
 import com.github.dactiv.basic.authentication.domain.entity.GroupEntity;
 import com.github.dactiv.basic.authentication.service.GroupService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
-import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
-import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.tree.TreeUtils;
 import com.github.dactiv.framework.idempotent.annotation.Idempotent;
@@ -19,9 +17,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-import java.util.Objects;
-
-import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_ID;
 
 /**
  * 用户用户组控制器
@@ -89,22 +84,13 @@ public class GroupController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @SocketMessage(WEB_FILTER_RESULT_ID)
     @PreAuthorize("hasAuthority('perms[group:save]') and isFullyAuthenticated()")
     @Plugin(name = "保存", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:authentication:group:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody GroupEntity entity,
                                     @CurrentSecurityContext SecurityContext securityContext) {
 
-        boolean isNew = Objects.isNull(entity.getId());
-
         groupService.save(entity);
-
-        if (isNew) {
-            SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.CREATE_SOCKET_EVENT_NAME, entity);
-        } else {
-            SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.UPDATE_SOCKET_EVENT_NAME, entity);
-        }
 
         return RestResult.ofSuccess("保存成功", entity.getId());
     }
@@ -124,8 +110,6 @@ public class GroupController {
                                 @CurrentSecurityContext SecurityContext securityContext) {
 
         groupService.deleteById(ids);
-
-        SocketResultHolder.get().addBroadcastSocketMessage(GroupEntity.DELETE_SOCKET_EVENT_NAME, ids);
 
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }

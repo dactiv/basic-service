@@ -4,8 +4,6 @@ import com.github.dactiv.basic.authentication.domain.entity.ConsoleUserEntity;
 import com.github.dactiv.basic.authentication.domain.entity.SystemUserEntity;
 import com.github.dactiv.basic.authentication.service.ConsoleUserService;
 import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
-import com.github.dactiv.basic.socket.client.holder.SocketResultHolder;
-import com.github.dactiv.basic.socket.client.holder.annotation.SocketMessage;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.commons.page.Page;
@@ -23,8 +21,6 @@ import org.springframework.web.bind.annotation.*;
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;
 import java.util.List;
-
-import static com.github.dactiv.basic.commons.SystemConstants.WEB_FILTER_RESULT_ID;
 
 /**
  * 系统用户控制器
@@ -121,7 +117,6 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("delete")
-    @SocketMessage(WEB_FILTER_RESULT_ID)
     @Plugin(name = "删除", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:delete]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:delete:[#securityContext.authentication.details.id]")
@@ -129,7 +124,6 @@ public class ConsoleUserController {
                                 @CurrentSecurityContext SecurityContext securityContext) {
 
         consoleUserService.deleteById(ids, false);
-        SocketResultHolder.get().addBroadcastSocketMessage(ConsoleUserEntity.DELETE_SOCKET_EVENT_NAME, ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
     }
 
