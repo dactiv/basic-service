@@ -48,7 +48,7 @@ public class ApplicationConfig {
     /**
      * 允许认证错误次数，当达到峰值时，出现验证码
      */
-    private Integer allowableFailureNumber = 1;
+    private Integer allowableFailureNumber = Integer.MAX_VALUE;
 
     /**
      * 用户名密码登录错误使用的验证码类型

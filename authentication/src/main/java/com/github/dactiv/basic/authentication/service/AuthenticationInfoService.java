@@ -20,11 +20,6 @@ import com.github.dactiv.framework.nacos.task.annotation.NacosCronScheduled;
 import com.github.dactiv.framework.security.audit.elasticsearch.index.support.DateIndexGenerator;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
-import org.springframework.data.elasticsearch.core.ElasticsearchRestTemplate;
-import org.springframework.data.elasticsearch.core.IndexOperations;
-import org.springframework.data.elasticsearch.core.mapping.IndexCoordinates;
-import org.springframework.data.elasticsearch.core.query.IndexQuery;
-import org.springframework.data.elasticsearch.core.query.IndexQueryBuilder;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -50,7 +45,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
     private final ApplicationConfig applicationConfig;
 
-    private final ElasticsearchRestTemplate elasticsearchRestTemplate;
+    //private final ElasticsearchRestTemplate elasticsearchRestTemplate;
 
     private final DateIndexGenerator dateIndexGenerator = new DateIndexGenerator(
             AuthenticationInfoEntity.DEFAULT_INDEX,
@@ -59,11 +54,11 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
     );
 
     public AuthenticationInfoService(MessageFeignClient messageFeignClient,
-                                     ApplicationConfig applicationConfig,
-                                     ElasticsearchRestTemplate elasticsearchRestTemplate) {
+                                     ApplicationConfig applicationConfig
+                                     /*ElasticsearchRestTemplate elasticsearchRestTemplate*/) {
         this.messageFeignClient = messageFeignClient;
         this.applicationConfig = applicationConfig;
-        this.elasticsearchRestTemplate = elasticsearchRestTemplate;
+        /*this.elasticsearchRestTemplate = elasticsearchRestTemplate;*/
     }
 
     /**
@@ -151,7 +146,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
     }
 
     public void onAuthenticationSuccess(AuthenticationInfoEntity info) {
-        try {
+        /*try {
 
             info.setSyncStatus(ExecuteStatus.Failure.getValue());
 
@@ -179,6 +174,6 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
             log.error("解析 ID 为 [" + info.getUserId() + "]的用户认证信息数据出错", e);
         }
 
-        save(info);
+        save(info);*/
     }
 }
