@@ -129,7 +129,7 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
     }
 
-    @NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
+    /*@NacosCronScheduled(cron = "${authentication.extend.sync.auth-info-cron:0 0/3 * * * ? }", name = "同步认证信息")
     @Concurrent(value = "sync:authentication:info", exception = "同步认证信息遇到并发，不执行重试操作", waitTime = @Time(0L))
     public void syncAuthenticationInfo() {
         Wrapper<AuthenticationInfoEntity> wrapper = Wrappers
@@ -143,10 +143,10 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
 
         page.getElements().forEach(this::onAuthenticationSuccess);
 
-    }
+    }*/
 
-    public void onAuthenticationSuccess(AuthenticationInfoEntity info) {
-        /*try {
+    /*public void onAuthenticationSuccess(AuthenticationInfoEntity info) {
+        try {
 
             info.setSyncStatus(ExecuteStatus.Failure.getValue());
 
@@ -174,6 +174,6 @@ public class AuthenticationInfoService extends BasicService<AuthenticationInfoDa
             log.error("解析 ID 为 [" + info.getUserId() + "]的用户认证信息数据出错", e);
         }
 
-        save(info);*/
-    }
+        save(info);
+    }*/
 }
