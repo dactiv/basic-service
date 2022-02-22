@@ -72,6 +72,12 @@ public class ConsoleUserEntity extends SystemUserEntity {
     private List<IdName> departmentsInfo = new LinkedList<>();
 
     /**
+     * 所属科目信息
+     */
+    @TableField(typeHandler = JacksonJsonTypeHandler.class)
+    private List<String> subjects;
+
+    /**
      * 备注
      */
     private String remark;
