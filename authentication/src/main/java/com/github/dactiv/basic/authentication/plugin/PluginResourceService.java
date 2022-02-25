@@ -328,6 +328,9 @@ public class PluginResourceService {
         resources.removeIf(r -> r.getApplicationName().equals(nacosService.getName()));
         // 查询所有符合条件的资源,并设置为禁用状态
         authorizationService.deleteAuthorizationCache(sources);
+        // 清除组的实例缓存
+        List<PluginInstance> instances = instanceCache.computeIfAbsent(nacosService.getGroupName(), k -> new LinkedList<>());
+        instances.removeIf(p -> p.getServiceName().equals(nacosService.getName()));
         if (CollectionUtils.isNotEmpty(pluginResourceInterceptor)) {
             pluginResourceInterceptor.forEach(i -> i.postDisabledApplicationResource(nacosService));
         }
