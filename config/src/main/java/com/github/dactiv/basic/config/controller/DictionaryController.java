@@ -77,6 +77,24 @@ public class DictionaryController {
     }
 
     /**
+     * 获取数据字典分页信息
+     *
+     * @param pageRequest 分页信息
+     * @param request     http servlet request
+     *
+     * @return 分页实体
+     */
+    @PostMapping("getDataDictionaryPage")
+    @PreAuthorize("hasAuthority('perms[data_dictionary:page]')")
+    @Plugin(name = "获取数据字典分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    public Page<DataDictionaryEntity> getDataDictionaryPage(PageRequest pageRequest, HttpServletRequest request) {
+        return dictionaryService.getDataDictionaryService().findPage(
+                pageRequest,
+                mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
+        );
+    }
+
+    /**
      * 判断数据字典唯一识别值是否唯一
      *
      * @param code 唯一识别值
