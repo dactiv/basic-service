@@ -46,4 +46,21 @@ public class EmailMessageService extends BasicService<EmailMessageDao, EmailMess
 
         return result;
     }
+
+    @Override
+    public int save(EmailMessageEntity entity) {
+        int result = super.save(entity);
+
+        if (YesOrNo.Yes.equals(entity.getHasAttachment())) {
+            result += entity
+                    .getAttachmentList()
+                    .stream()
+                    .peek(a -> a.setType(AttachmentTypeEnum.Email))
+                    .peek(a -> a.setMessageId(entity.getId()))
+                    .mapToInt(attachmentService::save)
+                    .sum();
+        }
+
+        return result;
+    }
 }

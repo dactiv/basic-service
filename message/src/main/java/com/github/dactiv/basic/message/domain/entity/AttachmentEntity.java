@@ -48,7 +48,7 @@ public class AttachmentEntity implements NumberIdEntity<Integer> {
      *
      * @see AttachmentTypeEnum
      */
-    private Integer type;
+    private AttachmentTypeEnum type;
 
     /**
      * 名称
