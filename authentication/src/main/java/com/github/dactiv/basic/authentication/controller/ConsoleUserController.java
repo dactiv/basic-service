@@ -59,7 +59,7 @@ public class ConsoleUserController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[console_user:page]')")
-    @Plugin(name = "查询分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<ConsoleUserEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return consoleUserService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -86,7 +86,7 @@ public class ConsoleUserController {
      */
     @GetMapping("get")
     @PreAuthorize("hasRole('BASIC') or hasAuthority('perms[console_user:get]')")
-    @Plugin(name = "获取信息", sources = {ResourceSourceEnum.SYSTEM_SOURCE_VALUE, ResourceSourceEnum.CONSOLE_SOURCE_VALUE})
+    @Plugin(name = "编辑信息", sources = {ResourceSourceEnum.SYSTEM_SOURCE_VALUE, ResourceSourceEnum.CONSOLE_SOURCE_VALUE})
     public ConsoleUserEntity get(@RequestParam Integer id) {
         return consoleUserService.get(id);
     }
@@ -99,7 +99,7 @@ public class ConsoleUserController {
      * @return 消息结果集
      */
     @PostMapping("save")
-    @Plugin(name = "保存", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "添加或保存信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:save]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> save(@Valid @RequestBody ConsoleUserEntity entity,
@@ -135,7 +135,7 @@ public class ConsoleUserController {
      * @param newPassword     新密码
      */
     @PostMapping("updatePassword")
-    @Plugin(name = "修改密码", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "修改登陆密码", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[console_user:updatePassword]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:authentication:user:update-password:[#securityContext.authentication.details.id]")
     public RestResult<?> updatePassword(@CurrentSecurityContext SecurityContext securityContext,
@@ -159,7 +159,6 @@ public class ConsoleUserController {
      */
     @GetMapping("isUsernameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断登录账户是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isUsernameUnique(@RequestParam String username) {
         return !consoleUserService
                 .lambdaQuery()
@@ -177,7 +176,6 @@ public class ConsoleUserController {
      */
     @GetMapping("isEmailUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断邮件是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String email) {
         return !consoleUserService
                 .lambdaQuery()

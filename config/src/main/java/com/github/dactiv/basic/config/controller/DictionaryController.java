@@ -52,24 +52,6 @@ public class DictionaryController {
     // ----------------------------------------------- 数据字典管理 ----------------------------------------------- //
 
     /**
-     * 获取数据字典分页信息
-     *
-     * @param pageRequest 分页信息
-     * @param request     http servlet request
-     *
-     * @return 分页实体
-     */
-    @PostMapping("getDataDictionaryPage")
-    @PreAuthorize("hasAuthority('perms[data_dictionary:page]')")
-    @Plugin(name = "获取数据字典分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public Page<DataDictionaryEntity> getDataDictionaryPage(PageRequest pageRequest, HttpServletRequest request) {
-        return dictionaryService.getDataDictionaryService().findPage(
-                pageRequest,
-                mybatisPlusQueryGenerator.getQueryWrapperByHttpRequest(request)
-        );
-    }
-
-    /**
      * 获取所有数据字典
      *
      * @param request   http servlet request
@@ -79,7 +61,7 @@ public class DictionaryController {
      */
     @PostMapping("findDataDictionary")
     @PreAuthorize("hasAuthority('perms[data_dictionary:find]')")
-    @Plugin(name = "查询全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<DataDictionaryEntity> findDataDictionary(HttpServletRequest request,
                                                          @RequestParam(required = false) boolean mergeTree) {
 
@@ -103,7 +85,6 @@ public class DictionaryController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("isDataDictionaryCodeUnique")
-    @Plugin(name = "判断数据字典唯一识别值是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isDataDictionaryCodeUnique(@RequestParam String code) {
         return Objects.isNull(dictionaryService.getDataDictionaryService().getByCode(code));
     }
@@ -117,7 +98,6 @@ public class DictionaryController {
      */
     @GetMapping("getDataDictionary")
     @PreAuthorize("hasAuthority('perms[data_dictionary:get]')")
-    @Plugin(name = "获取数据字典实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public DataDictionaryEntity getDataDictionary(@RequestParam Integer id) {
         return dictionaryService.getDataDictionaryService().get(id);
     }
@@ -129,7 +109,7 @@ public class DictionaryController {
      */
     @PostMapping("saveDataDictionary")
     @PreAuthorize("hasAuthority('perms[data_dictionary:save]') and isFullyAuthenticated()")
-    @Plugin(name = "保存数据字典实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "添加或保存数据字典", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:config:data-dictionary:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> saveDataDictionary(@Valid @RequestBody DataDictionaryEntity entity,
                                                   @CurrentSecurityContext SecurityContext securityContext) {
@@ -164,7 +144,7 @@ public class DictionaryController {
      */
     @PostMapping("findDictionaryType")
     @PreAuthorize("hasAuthority('perms[dictionary_type:find]')")
-    @Plugin(name = "查询全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<DictionaryTypeEntity> findDictionaryType(HttpServletRequest request,
                                                          @RequestParam(required = false) boolean mergeTree) {
 
@@ -187,7 +167,7 @@ public class DictionaryController {
      * @return 字典类型实体
      */
     @GetMapping("getDictionaryType")
-    @Plugin(name = "获取信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑字典类型", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[dictionary_type:get]')")
     public DictionaryTypeEntity getDictionaryType(@RequestParam Integer id) {
         return dictionaryService.getDictionaryTypeService().get(id);
@@ -202,7 +182,6 @@ public class DictionaryController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("isDictionaryTypeCodeUnique")
-    @Plugin(name = "判断字类型典唯一识别值是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isDictionaryTypeCodeUnique(@RequestParam String code) {
 
         return Objects.isNull(dictionaryService.getDictionaryTypeService().getByCode(code));
@@ -214,8 +193,8 @@ public class DictionaryController {
      * @param entity 数据字典类型实体
      */
     @PostMapping("saveDictionaryType")
-    @Plugin(name = "保存", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[dictionary_type:save]') and isFullyAuthenticated()")
+    @Plugin(name = "添加或保存字典类型", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:config:dictionary-type:save:[#securityContext.authentication.details.id]")
     public RestResult<Integer> saveDictionaryType(@Valid @RequestBody DictionaryTypeEntity entity,
                                                   @CurrentSecurityContext SecurityContext securityContext) {
@@ -229,7 +208,7 @@ public class DictionaryController {
      * @param ids 主键值集合
      */
     @PostMapping("deleteDictionaryType")
-    @Plugin(name = "删除", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除字典类型", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @PreAuthorize("hasAuthority('perms[dictionary_type:delete]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:config:dictionary-type:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> deleteDictionaryType(@RequestParam List<Integer> ids,

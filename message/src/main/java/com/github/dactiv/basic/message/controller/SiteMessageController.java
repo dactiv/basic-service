@@ -58,7 +58,7 @@ public class SiteMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[site:page]')")
-    @Plugin(name = "获取站内信消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<SiteMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return siteMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -72,10 +72,6 @@ public class SiteMessageController {
      */
     @GetMapping("unreadQuantity")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(
-            name = "按类型分组获取站内信未读数量",
-            sources = {ResourceSourceEnum.MOBILE_SOURCE_VALUE, ResourceSourceEnum.USER_CENTER_SOURCE_VALUE}
-    )
     public List<Map<String, Object>> unreadQuantity(@CurrentSecurityContext SecurityContext securityContext) {
 
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -95,13 +91,6 @@ public class SiteMessageController {
      */
     @PostMapping("read")
     @PreAuthorize("hasRole('ORDINARY')")
-    @Plugin(name = "阅读站内信",
-            sources = {
-                    ResourceSourceEnum.MOBILE_SOURCE_VALUE,
-                    ResourceSourceEnum.USER_CENTER_SOURCE_VALUE
-            },
-            audit = true
-    )
     public RestResult<?> read(@RequestParam(required = false) List<String> types,
                               @CurrentSecurityContext SecurityContext securityContext) {
 
@@ -123,7 +112,7 @@ public class SiteMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[site:get]')")
-    @Plugin(name = "获取站内信消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public SiteMessageEntity get(@RequestParam Integer id) {
         return siteMessageService.get(id);
     }
@@ -137,7 +126,7 @@ public class SiteMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[site:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除站内信消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:site:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {

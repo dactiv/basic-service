@@ -60,7 +60,7 @@ public class ResourceController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[resource:find]')")
-    @Plugin(name = "查找全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<ResourceMeta> find(@RequestParam(required = false) boolean mergeTree,
                                    @RequestParam(required = false) String applicationName,
                                    @RequestParam(required = false) List<String> sources) {
@@ -95,7 +95,6 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsoleUserResources")
-    @Plugin(name = "获取用户资源 id 集合", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<String> getConsoleUserResources(@RequestParam Integer userId) {
         SystemUserEntity systemUser = consoleUserService.get(userId);
         Set<Map.Entry<String, List<String>>> entrySet = systemUser.getResourceMap().entrySet();
@@ -112,7 +111,6 @@ public class ResourceController {
      */
     @PreAuthorize("isAuthenticated()")
     @GetMapping("getConsolePrincipalResources")
-    @Plugin(name = "获取当前用户资源", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<ResourceMeta> getConsolePrincipalResources(@CurrentSecurityContext SecurityContext securityContext,
                                                            @RequestParam(required = false) String type,
                                                            @RequestParam(required = false) boolean mergeTree) {
@@ -152,7 +150,7 @@ public class ResourceController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[resource:get]')")
-    @Plugin(name = "获取信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "查看信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public ResourceMeta get(@RequestParam String id) {
 
         return authorizationService

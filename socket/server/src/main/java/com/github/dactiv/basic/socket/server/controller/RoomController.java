@@ -60,7 +60,6 @@ public class RoomController {
      */
     @PostMapping("createRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
     public RestResult<?> createRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     RoomEntity room,
                                     @RequestParam List<Integer> userIds) {
@@ -85,7 +84,6 @@ public class RoomController {
     @PostMapping("renameRoom")
     @PreAuthorize("isFullyAuthenticated()")
     @SocketMessage(SystemConstants.CHAT_FILTER_RESULT_ID)
-    @Plugin(name = "修改房间名称", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
     public RestResult<?> renameRoom(@CurrentSecurityContext SecurityContext securityContext,
                                     @RequestParam String name,
                                     @RequestParam Integer id) {
@@ -122,7 +120,6 @@ public class RoomController {
      */
     @PostMapping("exitRoom")
     @PreAuthorize("isFullyAuthenticated()")
-    @Plugin(name = "创建房间", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE, audit = true)
     public RestResult<?> exitRoom(@CurrentSecurityContext SecurityContext securityContext, @RequestParam Integer id) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -141,7 +138,6 @@ public class RoomController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getCurrentPrincipalRooms")
-    @Plugin(name = "获取当前用户房间集合", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<RoomDto> getCurrentPrincipalRooms(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -157,7 +153,6 @@ public class RoomController {
      */
     @PostMapping("getRooms")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取当前用户房间集合", sources = ResourceSourceEnum.SYSTEM_SOURCE_VALUE)
     public List<RoomDto> getRooms(@RequestParam List<Integer> ids) {
         return roomService.getRomDto(ids);
     }

@@ -59,7 +59,6 @@ public class DepartmentController {
      */
     @PostMapping("find")
     @PreAuthorize("hasAuthority('perms[department:find]')")
-    @Plugin(name = "获取全部", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<DepartmentEntity> find(HttpServletRequest request,
                                        @RequestParam(required = false) boolean mergeTree) {
         List<DepartmentEntity> result = departmentService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
@@ -83,7 +82,7 @@ public class DepartmentController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[department:page]')")
-    @Plugin(name = "获取分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<DepartmentEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return departmentService.findPage(
                 pageRequest,
@@ -102,7 +101,7 @@ public class DepartmentController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[department:get]')")
-    @Plugin(name = "获取实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public DepartmentEntity get(@RequestParam Integer id) {
         return departmentService.get(id);
     }
@@ -116,7 +115,7 @@ public class DepartmentController {
      */
     @PostMapping("save")
     @PreAuthorize("hasAuthority('perms[department:save]')")
-    @Plugin(name = "保存实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "添加或保存信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     public RestResult<Integer> save(@Valid @RequestBody DepartmentEntity entity) {
         departmentService.save(entity);
         return RestResult.ofSuccess("保存成功", entity.getId());
@@ -131,7 +130,7 @@ public class DepartmentController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[department:delete]')")
-    @Plugin(name = "删除实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids) {
         departmentService.deleteById(ids);
         return RestResult.of("删除" + ids.size() + "条记录成功");
@@ -146,7 +145,6 @@ public class DepartmentController {
      */
     @GetMapping("isNameUnique")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "判断邮件是否唯一", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public boolean isEmailUnique(@RequestParam String name) {
         return !departmentService
                 .lambdaQuery()

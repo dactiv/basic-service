@@ -63,7 +63,7 @@ public class SmsMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[sms:page]')")
-    @Plugin(name = "获取短信消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<SmsMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return smsMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -77,7 +77,7 @@ public class SmsMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[sms:get]')")
-    @Plugin(name = "获取短信消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public SmsMessageEntity get(@RequestParam Integer id) {
         return smsMessageService.get(id);
     }
@@ -89,7 +89,7 @@ public class SmsMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[sms:delete]') and isFullyAuthenticated()")
-    @Plugin(name = "删除短信消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:sms:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
@@ -103,8 +103,8 @@ public class SmsMessageController {
      * @return 余额实体集合
      */
     @GetMapping("balance")
-    @Plugin(name = "获取短信余额", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     @PreAuthorize("hasAuthority('perms[sms:balance]')")
+    @Plugin(name = "查看短信余额", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public List<SmsBalanceMeta> balance() {
         return smsChannelSenders.stream().map(SmsChannelSender::getBalance).collect(Collectors.toList());
     }

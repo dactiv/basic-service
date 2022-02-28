@@ -42,7 +42,7 @@ public class AuthenticationInfoController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[authentication_info:page]')")
-    @Plugin(name = "获取认证信息表分页", parent = "audit", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "用户登陆信息查询", parent = "audit", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<AuthenticationInfoEntity> page(PageRequest pageRequest, HttpServletRequest request) {
 
         return authenticationInfoService.findPage(

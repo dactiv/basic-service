@@ -159,7 +159,6 @@ public class SocketServerController {
      */
     @PostMapping("getTempMessageMap")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取临时消息", parent = "socket-server", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public Map<String, List<Object>> getTempMessageMap(@CurrentSecurityContext SecurityContext securityContext,
                                                        @RequestParam List<String> types) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
@@ -189,7 +188,6 @@ public class SocketServerController {
      */
     @PostMapping("clearTempMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "清除临时消息", parent = "socket-server", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> clearTempMessage(@CurrentSecurityContext SecurityContext securityContext,
                                           @RequestParam List<String> types) throws Exception {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
