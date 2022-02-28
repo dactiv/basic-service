@@ -84,7 +84,7 @@ public class SecurityController {
     @PostMapping("audit")
     @PreAuthorize("hasAuthority('perms[audit:page]')")
     @Plugin(
-            name = "操作审计",
+            name = "操作审计查询",
             id = "audit",
             icon = "icon-audit",
             parent = "system",

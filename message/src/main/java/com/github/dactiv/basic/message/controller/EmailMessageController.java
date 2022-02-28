@@ -56,7 +56,7 @@ public class EmailMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[email:page]')")
-    @Plugin(name = "获取邮件消息分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<EmailMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return emailMessageService.findPage(pageRequest, queryGenerator.getQueryWrapperByHttpRequest(request));
     }
@@ -70,7 +70,7 @@ public class EmailMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[email:get]')")
-    @Plugin(name = "获取邮件消息实体信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public EmailMessageEntity get(@RequestParam Integer id) {
         return emailMessageService.get(id);
     }
@@ -83,7 +83,7 @@ public class EmailMessageController {
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[email:delete]') and isFullyAuthenticated()")
     @Idempotent(key = "idempotent:message:email:delete:[#securityContext.authentication.details.id]")
-    @Plugin(name = "删除邮件消息实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
         emailMessageService.deleteById(ids);

@@ -62,7 +62,6 @@ public class ChatController {
      */
     @PostMapping("sendMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "发送消息", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> sendMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestParam Integer recipientId,
                                      @RequestParam Integer type,
@@ -88,7 +87,6 @@ public class ChatController {
      */
     @PostMapping("readMessage")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "读取消息", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public RestResult<?> readMessage(@CurrentSecurityContext SecurityContext securityContext,
                                      @RequestBody ReadMessageRequestBody body) throws Exception {
 
@@ -121,7 +119,6 @@ public class ChatController {
      */
     @GetMapping("getRecentContacts")
     @PreAuthorize("isAuthenticated()")
-    @Plugin(name = "获取常用联系人", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<RecentContactMeta> getRecentContacts(@CurrentSecurityContext SecurityContext securityContext) {
         SecurityUserDetails userDetails = Casts.cast(securityContext.getAuthentication().getDetails());
         Integer userId = Casts.cast(userDetails.getId());
@@ -149,7 +146,6 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessagePage")
-    @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public GlobalMessagePage getHistoryMessagePage(@CurrentSecurityContext SecurityContext securityContext,
                                                    @RequestParam Integer targetId,
                                                    @RequestParam Integer type,
@@ -175,7 +171,6 @@ public class ChatController {
      */
     @PreAuthorize("isAuthenticated()")
     @PostMapping("getHistoryMessageDateList")
-    @Plugin(name = "获取历史消息分页", sources = ResourceSourceEnum.SOCKET_USER_SOURCE_VALUE)
     public List<Date> getHistoryMessageDateList(@CurrentSecurityContext SecurityContext securityContext,
                                                 @RequestParam Integer type,
                                                 @RequestParam Integer targetId) {

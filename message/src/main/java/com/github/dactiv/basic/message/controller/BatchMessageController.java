@@ -61,7 +61,7 @@ public class BatchMessageController {
      */
     @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[batch_message:page]')")
-    @Plugin(name = "获取分页", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Page<BatchMessageEntity> page(PageRequest pageRequest, HttpServletRequest request) {
         return batchMessageService.findPage(
                 pageRequest,
@@ -80,7 +80,7 @@ public class BatchMessageController {
      */
     @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[batch_message:get]')")
-    @Plugin(name = "获取实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "编辑信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public BatchMessageEntity get(@RequestParam("id") Integer id) {
         return batchMessageService.get(id);
     }
@@ -94,7 +94,7 @@ public class BatchMessageController {
      */
     @PostMapping("delete")
     @PreAuthorize("hasAuthority('perms[batch_message:delete]')")
-    @Plugin(name = "删除实体", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
+    @Plugin(name = "删除信息", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE, audit = true)
     @Idempotent(key = "idempotent:message:email:delete:[#securityContext.authentication.details.id]")
     public RestResult<?> delete(@RequestParam List<Integer> ids,
                                 @CurrentSecurityContext SecurityContext securityContext) {
