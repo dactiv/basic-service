@@ -28,7 +28,7 @@ import java.util.Objects;
 @RequestMapping("operational/audit")
 @Plugin(
         name = "操作审计查询",
-        id = "audit",
+        id = "operational-audit",
         icon = "icon-audit",
         parent = "system",
         type = ResourceType.Menu,
@@ -52,10 +52,10 @@ public class OperationalAuditController {
      *
      * @return 审计事件
      */
-    @PostMapping("audit")
+    @PostMapping("page")
     @PreAuthorize("hasAuthority('perms[audit:page]')")
     @Plugin(name = "首页展示", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public Page<AuditEvent> audit(PageRequest pageRequest,
+    public Page<AuditEvent> page(PageRequest pageRequest,
                                   @RequestParam(required = false) String principal,
                                   @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
                                   @RequestParam(required = false) String type) {
@@ -79,10 +79,10 @@ public class OperationalAuditController {
      *
      * @return 用户审计数据
      */
-    @GetMapping("getAudit")
+    @GetMapping("get")
     @PreAuthorize("hasAuthority('perms[audit:get]')")
     @Plugin(name = "查看详情", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public AuditEvent getAudit(@RequestParam(required = false) String id,
+    public AuditEvent get(@RequestParam(required = false) String id,
                                @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after) {
 
         if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
