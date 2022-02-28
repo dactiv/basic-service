@@ -32,7 +32,7 @@ dactiv:
         - "SYSTEM"
       parent:
         config:
-          name: '配置管理'
+          name: '系统配置'
           icon: 'icon-un-config-o'
           sources: "CONSOLE"
     permit-uri-ant-matchers:
