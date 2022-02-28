@@ -58,7 +58,7 @@ public class DepartmentController {
      * @see DepartmentEntity
      */
     @PostMapping("find")
-    @PreAuthorize("hasAuthority('perms[department:find]')")
+    @PreAuthorize("isAuthenticated()")
     public List<DepartmentEntity> find(HttpServletRequest request,
                                        @RequestParam(required = false) boolean mergeTree) {
         List<DepartmentEntity> result = departmentService.find(queryGenerator.getQueryWrapperByHttpRequest(request));
