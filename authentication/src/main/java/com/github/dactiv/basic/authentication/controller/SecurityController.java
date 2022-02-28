@@ -51,8 +51,6 @@ public class SecurityController {
 
     private final JsonLogoutSuccessHandler jsonLogoutSuccessHandler;
 
-    private final AuditEventRepository auditEventRepository;
-
     private final MobileUserDetailsService mobileUserDetailsService;
 
     private final MemberUserService memberUserService;
@@ -60,78 +58,13 @@ public class SecurityController {
     private final ConsoleUserService consoleUserService;
 
     public SecurityController(JsonLogoutSuccessHandler jsonLogoutSuccessHandler,
-                              AuditEventRepository auditEventRepository,
                               MobileUserDetailsService mobileUserDetailsService,
                               ConsoleUserService consoleUserService,
                               MemberUserService memberUserService) {
         this.jsonLogoutSuccessHandler = jsonLogoutSuccessHandler;
-        this.auditEventRepository = auditEventRepository;
         this.mobileUserDetailsService = mobileUserDetailsService;
         this.consoleUserService = consoleUserService;
         this.memberUserService = memberUserService;
-    }
-
-    /**
-     * 获取用户审计数据
-     *
-     * @param pageRequest 分页请求
-     * @param principal   用户登陆账户
-     * @param after       数据发生时间
-     * @param type        审计类型
-     *
-     * @return 审计事件
-     */
-    @PostMapping("audit")
-    @PreAuthorize("hasAuthority('perms[audit:page]')")
-    @Plugin(
-            name = "操作审计查询",
-            id = "audit",
-            icon = "icon-audit",
-            parent = "system",
-            type = ResourceType.Menu,
-            sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
-    )
-    public Page<AuditEvent> audit(PageRequest pageRequest,
-                                  @RequestParam(required = false) String principal,
-                                  @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after,
-                                  @RequestParam(required = false) String type) {
-
-        if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
-            throw new ServiceException("当前审计不支持分页查询");
-        }
-
-        PluginAuditEventRepository pageAuditEventRepository = Casts.cast(auditEventRepository);
-
-        Instant instant = Objects.nonNull(after) ? after.toInstant() : null;
-
-        return pageAuditEventRepository.findPage(pageRequest, principal, instant, type);
-    }
-
-    /**
-     * 获取用户审计数据
-     *
-     * @param id    主键 id
-     * @param after 数据发生时间
-     *
-     * @return 用户审计数据
-     */
-    @GetMapping("getAudit")
-    @PreAuthorize("hasAuthority('perms[audit:get]')")
-    @Plugin(name = "获取操作审计", parent = "audit", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
-    public AuditEvent getAudit(@RequestParam(required = false) String id,
-                               @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss") @RequestParam(required = false) Date after) {
-
-        if (!PluginAuditEventRepository.class.isAssignableFrom(auditEventRepository.getClass())) {
-            throw new ServiceException("当前审计不支持分页查询");
-        }
-
-        PluginAuditEventRepository pluginAuditEventRepository = Casts.cast(auditEventRepository);
-
-        StringIdEntity stringIdEntity = new StringIdEntity();
-
-        stringIdEntity.setId(id);
-
-        return pluginAuditEventRepository.get(stringIdEntity);
     }
 
     /**
