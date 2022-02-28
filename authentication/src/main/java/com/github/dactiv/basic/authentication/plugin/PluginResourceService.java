@@ -56,6 +56,8 @@ public class PluginResourceService {
 
     private final List<PluginResourceInterceptor> pluginResourceInterceptor;
 
+    private final PluginServiceValidator pluginServiceValidator;
+
     /**
      * 服务实例缓存，用于记录当前的插件信息是否需要更新资源
      */
@@ -69,10 +71,12 @@ public class PluginResourceService {
     public PluginResourceService(RestTemplate restTemplate,
                                  NacosSpringEventManager nacosSpringEventManager,
                                  AuthorizationService authorizationService,
+                                 PluginServiceValidator pluginServiceValidator,
                                  List<PluginResourceInterceptor> pluginResourceInterceptor) {
         this.restTemplate = restTemplate;
         this.nacosSpringEventManager = nacosSpringEventManager;
         this.authorizationService = authorizationService;
+        this.pluginServiceValidator = pluginServiceValidator;
         this.pluginResourceInterceptor = pluginResourceInterceptor;
     }
 
@@ -372,6 +376,9 @@ public class PluginResourceService {
     public void resubscribeAllService() {
         nacosSpringEventManager.expiredAllListener();
         nacosSpringEventManager.scanThenUnsubscribeService();
+
+        pluginServiceValidator.clearExceptionServices();
+
         nacosSpringEventManager.scanThenSubscribeService();
     }
 
