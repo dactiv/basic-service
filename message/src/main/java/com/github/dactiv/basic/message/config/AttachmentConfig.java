@@ -60,7 +60,7 @@ public class AttachmentConfig {
         /**
          * 链接 uri
          */
-        private String linkUri = "http://localhost:8080/message/attachment/get/{0}/{1}";
+        private String linkUri = "/message/attachment/get/{0}/{1}";
 
         /**
          * 链接参数名称
