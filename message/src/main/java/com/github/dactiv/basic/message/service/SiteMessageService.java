@@ -53,6 +53,23 @@ public class SiteMessageService extends BasicService<SiteMessageDao, SiteMessage
         return result;
     }
 
+    @Override
+    public int save(SiteMessageEntity entity) {
+        int result = super.save(entity);
+
+        if (YesOrNo.Yes.equals(entity.getHasAttachment())) {
+            result += entity
+                    .getAttachmentList()
+                    .stream()
+                    .peek(a -> a.setType(AttachmentTypeEnum.Site))
+                    .peek(a -> a.setMessageId(entity.getId()))
+                    .mapToInt(attachmentService::save)
+                    .sum();
+        }
+
+        return result;
+    }
+
     /**
      * 计数站内信未读数量
      *

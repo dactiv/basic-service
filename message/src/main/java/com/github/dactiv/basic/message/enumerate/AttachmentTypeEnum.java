@@ -26,26 +26,22 @@ public enum AttachmentTypeEnum implements NameValueEnum<Integer> {
     /**
      * 邮件
      */
-    Email("邮件", 20, EmailMessageBody.class),
-    /**
-     * 短信
-     */
-    Sms("短信", 30, SmsMessageBody.class);
+    Email("邮件", 20, EmailMessageBody.class);
 
     /**
      * 名称
      */
-    private String name;
+    private final String name;
 
     /**
      * 值
      */
-    private Integer value;
+    private final Integer value;
 
     /**
      * 类类型
      */
-    private Class<? extends BasicMessageEntity> type;
+    private final Class<? extends BasicMessageEntity> type;
 
     /**
      * 通过类类型获取枚举内容
