@@ -7,9 +7,11 @@ import com.github.dactiv.basic.commons.enumeration.ResourceSourceEnum;
 import com.github.dactiv.basic.config.config.ApplicationConfig;
 import com.github.dactiv.basic.config.domain.entity.AccessCryptoEntity;
 import com.github.dactiv.basic.config.domain.entity.DataDictionaryEntity;
+import com.github.dactiv.basic.config.domain.meta.DataDictionaryMeta;
 import com.github.dactiv.basic.config.service.AccessCryptoService;
 import com.github.dactiv.basic.config.service.DictionaryService;
 import com.github.dactiv.basic.config.service.EnumerateResourceService;
+import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.RestResult;
 import com.github.dactiv.framework.crypto.CipherAlgorithmService;
 import com.github.dactiv.framework.crypto.access.AccessCrypto;
@@ -39,10 +41,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.servlet.http.HttpServletRequest;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
+import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * 配置管理控制器
@@ -93,11 +93,18 @@ public class ConfigController {
      * @return 数据字典集合
      */
     @GetMapping("findDataDictionaries/{name:.*}")
-    public List<DataDictionaryEntity> findDataDictionaries(@PathVariable String name) {
+    public List<DataDictionaryMeta> findDataDictionaries(@PathVariable String name) {
 
         int index = StringUtils.indexOf(name, "*");
 
         LambdaQueryWrapper<DataDictionaryEntity> wrapper = Wrappers.lambdaQuery();
+
+        wrapper.select(
+                DataDictionaryEntity::getName,
+                DataDictionaryEntity::getValue,
+                DataDictionaryEntity::getValueType,
+                DataDictionaryEntity::getLevel
+        );
 
         if (index > 0) {
             wrapper.like(DataDictionaryEntity::getCode, StringUtils.substring(name, 0, index));
@@ -105,7 +112,15 @@ public class ConfigController {
             wrapper.eq(DataDictionaryEntity::getCode, name);
         }
 
-        return dictionaryService.getDataDictionaryService().find(wrapper);
+        wrapper.orderByAsc(DataDictionaryEntity::getSort);
+
+        return dictionaryService
+                .getDataDictionaryService()
+                .find(wrapper)
+                .stream()
+                .map(e -> Casts.of(e, DataDictionaryMeta.class))
+                .peek(e -> e.setValue(Casts.cast(e.getValue(), e.getValueType().getClassType())))
+                .collect(Collectors.toList());
 
     }
 
