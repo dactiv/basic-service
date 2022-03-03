@@ -120,6 +120,7 @@ public class ConfigController {
                 .stream()
                 .map(e -> Casts.of(e, DataDictionaryMeta.class))
                 .peek(e -> e.setValue(Casts.cast(e.getValue(), e.getValueType().getClassType())))
+                .peek(e -> e.setValueType(null))
                 .collect(Collectors.toList());
 
     }
