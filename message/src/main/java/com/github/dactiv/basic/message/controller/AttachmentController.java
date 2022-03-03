@@ -128,9 +128,7 @@ public class AttachmentController {
         );
 
         InputStream is = minioTemplate.getObject(fileObject);
-        HttpHeaders headers = new HttpHeaders();
-        headers.setContentDispositionFormData(SpringMvcUtils.DEFAULT_ATTACHMENT_NAME, filename);
-        return new ResponseEntity<>(IOUtils.toByteArray(is), headers, HttpStatus.OK);
+        return SpringMvcUtils.createDownloadResponseEntity(RestResult.ofSuccess(filename, IOUtils.toByteArray(is)));
     }
 
     /**
