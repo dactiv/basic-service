@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.fasterxml.jackson.annotation.JsonIgnore;
+import com.github.dactiv.basic.config.domain.meta.DataDictionaryMeta;
+import com.github.dactiv.basic.config.enumerate.ValueTypeEnum;
 import com.github.dactiv.framework.commons.Casts;
 import com.github.dactiv.framework.commons.enumerate.support.DisabledOrEnabled;
 import com.github.dactiv.framework.commons.id.number.NumberIdEntity;
@@ -31,11 +33,11 @@ import java.util.Objects;
  * @since 2021-05-06 11:59:41
  */
 @Data
-@EqualsAndHashCode
 @NoArgsConstructor
 @Alias("dataDictionary")
 @TableName("tb_data_dictionary")
-public class DataDictionaryEntity implements Tree<Integer, DataDictionaryEntity>, NumberIdEntity<Integer> {
+@EqualsAndHashCode(callSuper = true)
+public class DataDictionaryEntity extends DataDictionaryMeta implements Tree<Integer, DataDictionaryEntity>, NumberIdEntity<Integer> {
 
     private static final long serialVersionUID = 4219144269288469584L;
     /**
@@ -58,19 +60,6 @@ public class DataDictionaryEntity implements Tree<Integer, DataDictionaryEntity>
     private String code;
 
     /**
-     * 名称
-     */
-    @NotEmpty
-    @Length(max = 64)
-    private String name;
-
-    /**
-     * 值
-     */
-    @NotEmpty
-    private String value;
-
-    /**
      * 是否启用:0.禁用,1.启用
      */
     @NotNull
@@ -91,11 +80,6 @@ public class DataDictionaryEntity implements Tree<Integer, DataDictionaryEntity>
      */
     @Max(999)
     private Integer sort;
-
-    /**
-     * 等级
-     */
-    private String level;
 
     /**
      * 备注
