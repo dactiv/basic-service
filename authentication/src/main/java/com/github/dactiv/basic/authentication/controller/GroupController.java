@@ -26,7 +26,7 @@ import java.util.List;
 @RestController
 @RequestMapping("group")
 @Plugin(
-        name = "组管理",
+        name = "角色管理",
         id = "group",
         parent = "authority",
         icon = "icon-group",

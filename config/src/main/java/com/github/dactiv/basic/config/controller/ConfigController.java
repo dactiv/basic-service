@@ -309,7 +309,7 @@ public class ConfigController {
      */
     @GetMapping("enumerate")
     @PreAuthorize("hasAuthority('perms[enumerate:*]')")
-    @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", icon = "icon-enum-major-o", type = ResourceType.Menu, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "系统枚举查询", id = "enumerate", parent = "config", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Map<String, Map<String, Map<String, Object>>> enumerate() {
         return enumerateResourceService.getServiceEnumerate();
     }
@@ -338,7 +338,7 @@ public class ConfigController {
      */
     @GetMapping("environment")
     @PreAuthorize("hasAuthority('perms[environment:*]')")
-    @Plugin(name = "环境变量查询", id = "environment", parent = "config", icon = "icon-variable", type = ResourceType.Menu, sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
+    @Plugin(name = "环境变量查询", id = "environment", parent = "config", sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE)
     public Map<String, Object> environment() {
 
         Map<String, Object> result = new LinkedHashMap<>();

@@ -31,7 +31,6 @@ import java.util.List;
         id = "access_crypto",
         parent = "config",
         icon = "icon-crypto-currency-bitcoin-imac",
-        type = ResourceType.Menu,
         sources = ResourceSourceEnum.CONSOLE_SOURCE_VALUE
 )
 public class AccessCryptoController {
