@@ -86,6 +86,22 @@ public class ConfigController {
     }
 
     /**
+     * 根据名称集合，分组获取所有数据字典
+     *
+     * @param names 字典名称集合
+     *
+     * @return 分组数据字典
+     */
+    @GetMapping("findGroupDataDictionaries")
+    public Map<String, List<DataDictionaryMeta>> findGroupDataDictionaries(@RequestParam List<String> names) {
+        Map<String, List<DataDictionaryMeta>> group = new LinkedHashMap<>();
+        for (String name : names) {
+            group.put(name, findDataDictionaries(name));
+        }
+        return group;
+    }
+
+    /**
      * 获取数据字典
      *
      * @param name 字典名称
